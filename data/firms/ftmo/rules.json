@@ -1,0 +1,462 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "firmId": "ftmo",
+  "version": "1.0.0",
+  "effectiveDate": "2025-11-28T00:00:00Z",
+
+  "globalRules": {
+    "description": "Base rules that apply to ALL FTMO challenges unless overridden",
+    "newsTrading": {
+      "allowed": false,
+      "description": "News trading is not allowed"
+    },
+    "overnightHolding": {
+      "allowed": "partial",
+      "description": "Overnight holding is partially allowed"
+    },
+    "weekendHolding": {
+      "allowed": false,
+      "description": "Weekend holding is not allowed"
+    },
+    "maxInactivityDays": {
+      "type": "integer",
+      "value": 30,
+      "description": "Maximum 30 days of inactivity"
+    },
+    "maxLotsLimit": {
+      "SPX": 500,
+      "GOLD": 40,
+      "description": "Max lots: 500 for SPX, 40 for GOLD"
+    },
+    "reverseTrade": {
+      "allowed": true,
+      "description": "Reverse trading is allowed"
+    },
+    "consistencyRule": {
+      "enabled": false,
+      "description": "No consistency rule applied"
+    },
+    "expertAdvisors": {
+      "allowed": true,
+      "restrictions": [],
+      "description": "Expert Advisors (EAs) are allowed"
+    },
+    "leverage": {
+      "type": "ratio",
+      "value": "1:100",
+      "description": "Default leverage is 1:100"
+    }
+  },
+
+  "challengeTypes": [
+    {
+      "id": "ftmo-standard",
+      "name": "FTMO Challenge",
+      "type": "2-step",
+      "description": "Traditional two-phase evaluation with 1:100 leverage",
+
+      "ruleOverrides": {},
+
+      "accountConfigurations": [
+        {
+          "id": "ftmo-standard-10k",
+          "accountSize": 10000,
+          "currency": "USD",
+          "fee": {
+            "amount": 89,
+            "currency": "USD",
+            "refundable": true,
+            "refundConditions": "Upon receiving first profit split"
+          },
+
+          "ruleOverrides": {},
+
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "name": "FTMO Challenge - Phase 1",
+              "ruleOverrides": {
+                "profitTarget": {
+                  "type": "percentage",
+                  "value": 10,
+                  "description": "10% profit target ($1,000 on $10K account)",
+                  "calculationBase": "initial_balance"
+                },
+                "maxDailyLoss": {
+                  "type": "percentage",
+                  "value": 5,
+                  "description": "5% maximum daily loss ($500 on $10K account)",
+                  "calculationBase": "balance",
+                  "calculationType": "balance_based"
+                },
+                "maxTotalLoss": {
+                  "type": "percentage",
+                  "value": 10,
+                  "description": "10% maximum total loss ($1,000 on $10K account)",
+                  "calculationBase": "initial_balance"
+                },
+                "minTradingDays": {
+                  "type": "integer",
+                  "value": 4,
+                  "description": "Minimum 4 trading days required"
+                },
+                "maxTradingDays": {
+                  "type": "integer",
+                  "value": null,
+                  "description": "Unlimited trading period"
+                }
+              }
+            },
+            {
+              "phaseNumber": 2,
+              "name": "FTMO Verification - Phase 2",
+              "ruleOverrides": {
+                "profitTarget": {
+                  "type": "percentage",
+                  "value": 5,
+                  "description": "5% profit target ($500 on $10K account)",
+                  "calculationBase": "initial_balance"
+                }
+              }
+            }
+          ],
+
+          "fundedAccountRules": {
+            "profitSplit": {
+              "initial": 80,
+              "scaled": 90,
+              "scalingCondition": "After first withdrawal"
+            },
+            "withdrawalSchedule": {
+              "frequency": "bi-weekly",
+              "minDays": 14,
+              "description": "Withdrawals available every 14 days"
+            },
+            "scaling": {
+              "enabled": true,
+              "maxSize": 400000,
+              "description": "Can scale up to $400,000"
+            }
+          }
+        },
+        {
+          "id": "ftmo-standard-25k",
+          "accountSize": 25000,
+          "currency": "USD",
+          "fee": {
+            "amount": 250,
+            "currency": "USD",
+            "refundable": true
+          },
+          "ruleOverrides": {},
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "ruleOverrides": {}
+            },
+            {
+              "phaseNumber": 2,
+              "ruleOverrides": {}
+            }
+          ],
+          "fundedAccountRules": {
+            "profitSplit": {
+              "initial": 80,
+              "scaled": 90
+            }
+          }
+        },
+        {
+          "id": "ftmo-standard-50k",
+          "accountSize": 50000,
+          "currency": "USD",
+          "fee": {
+            "amount": 345,
+            "currency": "USD",
+            "refundable": true
+          },
+          "ruleOverrides": {},
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "ruleOverrides": {}
+            },
+            {
+              "phaseNumber": 2,
+              "ruleOverrides": {}
+            }
+          ],
+          "fundedAccountRules": {
+            "profitSplit": {
+              "initial": 80,
+              "scaled": 90
+            }
+          }
+        },
+        {
+          "id": "ftmo-standard-100k",
+          "accountSize": 100000,
+          "currency": "USD",
+          "fee": {
+            "amount": 540,
+            "currency": "USD",
+            "refundable": true
+          },
+          "ruleOverrides": {},
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "ruleOverrides": {}
+            },
+            {
+              "phaseNumber": 2,
+              "ruleOverrides": {}
+            }
+          ],
+          "fundedAccountRules": {
+            "profitSplit": {
+              "initial": 80,
+              "scaled": 90
+            }
+          }
+        },
+        {
+          "id": "ftmo-standard-200k",
+          "accountSize": 200000,
+          "currency": "USD",
+          "fee": {
+            "amount": 1080,
+            "currency": "USD",
+            "refundable": true
+          },
+          "ruleOverrides": {},
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "ruleOverrides": {}
+            },
+            {
+              "phaseNumber": 2,
+              "ruleOverrides": {}
+            }
+          ],
+          "fundedAccountRules": {
+            "profitSplit": {
+              "initial": 80,
+              "scaled": 90
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "ftmo-swing",
+      "name": "FTMO Swing",
+      "type": "2-step",
+      "description": "For swing traders with longer holding periods and 1:30 leverage",
+
+      "ruleOverrides": {
+        "leverage": {
+          "type": "ratio",
+          "value": "1:30",
+          "description": "Swing accounts use 1:30 leverage"
+        },
+        "newsTrading": {
+          "allowed": true,
+          "description": "News trading is allowed for swing accounts"
+        },
+        "overnightHolding": {
+          "allowed": true,
+          "description": "Overnight holding is allowed"
+        },
+        "weekendHolding": {
+          "allowed": true,
+          "description": "Weekend holding is allowed for swing traders"
+        }
+      },
+
+      "accountConfigurations": [
+        {
+          "id": "ftmo-swing-10k",
+          "accountSize": 10000,
+          "currency": "USD",
+          "fee": {
+            "amount": 89,
+            "currency": "USD",
+            "refundable": true
+          },
+          "ruleOverrides": {},
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "name": "FTMO Swing Challenge - Phase 1",
+              "ruleOverrides": {
+                "profitTarget": {
+                  "type": "percentage",
+                  "value": 10,
+                  "description": "10% profit target",
+                  "calculationBase": "initial_balance"
+                },
+                "maxDailyLoss": {
+                  "type": "percentage",
+                  "value": 5,
+                  "description": "5% maximum daily loss",
+                  "calculationBase": "equity",
+                  "calculationType": "equity_based"
+                },
+                "maxTotalLoss": {
+                  "type": "percentage",
+                  "value": 10,
+                  "description": "10% maximum total loss",
+                  "calculationBase": "equity"
+                },
+                "minTradingDays": {
+                  "type": "integer",
+                  "value": 4,
+                  "description": "Minimum 4 trading days required"
+                }
+              }
+            },
+            {
+              "phaseNumber": 2,
+              "name": "FTMO Swing Verification - Phase 2",
+              "ruleOverrides": {
+                "profitTarget": {
+                  "type": "percentage",
+                  "value": 5,
+                  "description": "5% profit target",
+                  "calculationBase": "initial_balance"
+                }
+              }
+            }
+          ],
+          "fundedAccountRules": {
+            "profitSplit": {
+              "initial": 80,
+              "scaled": 90
+            }
+          }
+        },
+        {
+          "id": "ftmo-swing-25k",
+          "accountSize": 25000,
+          "currency": "USD",
+          "fee": {
+            "amount": 250,
+            "currency": "USD",
+            "refundable": true
+          },
+          "ruleOverrides": {},
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "ruleOverrides": {}
+            },
+            {
+              "phaseNumber": 2,
+              "ruleOverrides": {}
+            }
+          ],
+          "fundedAccountRules": {
+            "profitSplit": {
+              "initial": 80,
+              "scaled": 90
+            }
+          }
+        },
+        {
+          "id": "ftmo-swing-50k",
+          "accountSize": 50000,
+          "currency": "USD",
+          "fee": {
+            "amount": 345,
+            "currency": "USD",
+            "refundable": true
+          },
+          "ruleOverrides": {},
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "ruleOverrides": {}
+            },
+            {
+              "phaseNumber": 2,
+              "ruleOverrides": {}
+            }
+          ],
+          "fundedAccountRules": {
+            "profitSplit": {
+              "initial": 80,
+              "scaled": 90
+            }
+          }
+        },
+        {
+          "id": "ftmo-swing-100k",
+          "accountSize": 100000,
+          "currency": "USD",
+          "fee": {
+            "amount": 540,
+            "currency": "USD",
+            "refundable": true
+          },
+          "ruleOverrides": {},
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "ruleOverrides": {}
+            },
+            {
+              "phaseNumber": 2,
+              "ruleOverrides": {}
+            }
+          ],
+          "fundedAccountRules": {
+            "profitSplit": {
+              "initial": 80,
+              "scaled": 90
+            }
+          }
+        },
+        {
+          "id": "ftmo-swing-200k",
+          "accountSize": 200000,
+          "currency": "USD",
+          "fee": {
+            "amount": 1080,
+            "currency": "USD",
+            "refundable": true
+          },
+          "ruleOverrides": {},
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "ruleOverrides": {}
+            },
+            {
+              "phaseNumber": 2,
+              "ruleOverrides": {}
+            }
+          ],
+          "fundedAccountRules": {
+            "profitSplit": {
+              "initial": 80,
+              "scaled": 90
+            }
+          }
+        }
+      ]
+    }
+  ],
+
+  "metadata": {
+    "lastUpdated": "2025-11-28T10:30:00Z",
+    "updatedBy": "initial-setup",
+    "changeLog": "Initial FTMO data import from demo/ftmo.md",
+    "source": "https://ftmo.com/en/challenge-rules/",
+    "verified": false,
+    "verifiedBy": null,
+    "verifiedDate": null
+  }
+}
