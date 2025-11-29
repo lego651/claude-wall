@@ -1,41 +1,85 @@
-# ShipFast — Javascript
+# 🏛 Prop Firm Directory — Open Source, AI-Driven, Community Powered
 
-Hey maker 👋 it's Marc from [ShipFast](https://shipfa.st/docs). Let's get your startup off the ground, FAST ⚡️
+A directory and rule-tracking platform for prop firm traders, inspired by cursor.directory.
 
-<sub>**Watch/Star the repo to be notified when updates are pushed**</sub>
+Our mission is simple:
 
-## Get Started
+> **Become the #1 open-source, real-time, trusted source of truth for prop firm rules, payouts, challenges, discounts, and updates.**
 
-1. Follow the [Get Started Tutorial](https://shipfa.st/docs) to clone the repo and run your local server 💻
+This platform centralizes rule data from prop firms, tracks changes automatically, and empowers the community to submit updates via pull requests. Everything is transparent, open, and versioned in GitHub.
 
-<sub>**Looking for the /pages router version?** Use this [documentation](https://shipfa.st/docs-old) instead</sub>
+---
 
-2. Follow the [Ship In 5 Minutes Tutorial](https://shipfa.st/docs/tutorials/ship-in-5-minutes) to learn the foundation and ship your app quickly ⚡️
+## 🚀 What This Project Does
 
-## Links
+### ✔ Prop Firm Directory
+Each firm has:
+- Rules (DD, trailing, payout %, scaling)
+- Challenge types
+- Prices
+- News
+- History (auto-tracked)
 
--   [📚 Documentation](https://shipfa.st/docs)
--   [📣 Updates](https://shipfast.beehiiv.com/)
--   [🧑‍💻 Discord](https://shipfa.st/dashboard)
--   [🥇 Leaderboard](https://shipfa.st/leaderboard)
+### ✔ Rule Change Diff Engine
+Automatically detects when a firm updates its:
+- Drawdown model
+- Payout rules
+- Min days
+- Scaling
+- Prices
 
-## Support
+Generates:
+- Human readable summary
+- Diff view
+- News post
+- Alerts (v2+)
 
-Reach out at hello@shipfa.st
+### ✔ Community Contributions
+Users submit updates → GitHub PR → AI agent verifies → merge → auto publish.
 
-Let's ship it, FAST ⚡️
+### ✔ Comparison Engine
+Compare up to 5 firms on:
+- Rules
+- Evaluation model
+- Weekend policy
+- Payout schedule
+- Scaling logic
 
-\_
+### ✔ Payout Transparency (v2)
+Leaderboard + verified payout data.
 
-**📈 Grow your startup with [DataFast](https://datafa.st?ref=shipfast_readme)**
+### ✔ Discount Aggregator (v2)
+Track all current prop firm discounts.
 
--   Analyze your traffic
--   Get insights on your customers
--   Make data-driven decisions
+### ✔ Marketplace + Tools (v3)
+Risk calculators, challenge simulators, dashboards, jobs, etc.
 
-ShipFast members get 30% OFF on all plans! 🎁
+---
 
-![datafast](https://github.com/user-attachments/assets/a6e78034-701a-49f1-a297-d33590f963be)
+## 🧱 Technical Overview
 
+- **Frontend**: Next.js + Tailwind  
+- **Backend**: GitHub-as-DB (JSON rules)  
+- **Automation**: GitHub Actions + Codex Agents  
+- **Deployment**: Vercel  
+- **Cron Jobs**: Automatically watch firm websites and detect rule changes.
 
-Just add semo more tests here in this linse
+---
+
+## 🗺 Roadmap
+
+See `ROADMAP.md`
+
+## 🎯 OKRs
+
+See `OKRs.md`
+
+## 🏃 Sprint Backlog
+
+See `SPRINTS.md`
+
+## 🤖 AI Agent Instructions
+
+See `AGENTS.md`
+
+---
