@@ -58,28 +58,59 @@ Risk calculators, challenge simulators, dashboards, jobs, etc.
 
 ## 🧱 Technical Overview
 
-- **Frontend**: Next.js + Tailwind  
-- **Backend**: GitHub-as-DB (JSON rules)  
-- **Automation**: GitHub Actions + Codex Agents  
-- **Deployment**: Vercel  
-- **Cron Jobs**: Automatically watch firm websites and detect rule changes.
+- **Frontend**: Next.js 15 + React 19 + Tailwind CSS v4 + DaisyUI v5
+- **Backend**: Hybrid Architecture (GitHub + Supabase)
+- **Data Storage**: GitHub as source of truth (JSON files) + Supabase for performance
+- **Automation**: GitHub Actions + AI Agents
+- **Deployment**: Vercel
+- **Auth**: Supabase Auth
+- **Payments**: Stripe (future)
+
+### Architecture Highlights
+
+**Hybrid Storage Strategy:**
+- GitHub stores all firm data (transparent, versioned, community-editable)
+- Supabase provides fast queries, user features, and real-time updates
+- One-way sync: GitHub → Supabase (GitHub is always the source of truth)
+
+**Community Workflow:**
+1. Fork repo → Edit JSON → Create PR
+2. Automated validation (JSON schema, business rules)
+3. Human review → Merge
+4. Auto-sync to Supabase → Trigger deployment
+5. Live in production
+
+---
+
+## 📚 Documentation
+
+### Technical Design Documents
+
+**Database Schema & Architecture:**
+- [EXECUTIVE_SUMMARY.md](documents/EXECUTIVE_SUMMARY.md) - High-level overview and key decisions
+- [TECHNICAL_DESIGN.md](documents/TECHNICAL_DESIGN.md) - Complete database schema, Supabase tables, migration strategy
+- [SCHEMA_EXAMPLES.md](documents/SCHEMA_EXAMPLES.md) - Real-world examples, edge cases, 10+ scenarios
+- [DATA_ARCHITECTURE.md](documents/DATA_ARCHITECTURE.md) - System diagrams, data flow, query patterns
+- [IMPLEMENTATION_GUIDE.md](documents/IMPLEMENTATION_GUIDE.md) - Step-by-step implementation instructions
+
+**Project Planning:**
+- [roadmap.md](documents/roadmap.md) - Product roadmap (v1, v2, v3)
+- [OKRs.md](documents/OKRs.md) - Objectives and Key Results
+- [sprints.md](documents/sprints.md) - Sprint planning (6 sprints)
+- [folder-structure.md](documents/folder-structure.md) - Directory structure
 
 ---
 
 ## 🗺 Roadmap
 
-See `ROADMAP.md`
+See [documents/roadmap.md](documents/roadmap.md)
 
 ## 🎯 OKRs
 
-See `OKRs.md`
+See [documents/OKRs.md](documents/OKRs.md)
 
 ## 🏃 Sprint Backlog
 
-See `SPRINTS.md`
-
-## 🤖 AI Agent Instructions
-
-See `AGENTS.md`
+See [documents/sprints.md](documents/sprints.md)
 
 ---
