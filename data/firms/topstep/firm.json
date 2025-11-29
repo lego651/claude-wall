@@ -1,0 +1,37 @@
+{
+  "firmId": "topstep",
+  "name": "TopStep",
+  "slug": "topstep",
+  "status": "active",
+  "metadata": {
+    "website": "https://www.topstep.com",
+    "country": "United States",
+    "founded": 2012,
+    "logo": "/logos/topstep.png",
+    "description": "TopStep is a leading futures prop trading firm offering funded accounts for traders who pass their Trading Combine evaluation. Known for their trader-friendly profit split structure.",
+    "trustpilot": {
+      "rating": 3.9,
+      "reviewCount": 2800,
+      "url": "https://trustpilot.com/review/topstep.com"
+    },
+    "social": {
+      "twitter": "@topsteptrader",
+      "discord": "https://discord.gg/topstep",
+      "youtube": "https://youtube.com/@topstep"
+    }
+  },
+  "features": {
+    "platforms": ["NinjaTrader", "TradingView", "TradeStation", "Quantower"],
+    "instruments": ["Futures: E-mini S&P 500", "NASDAQ 100", "Crude Oil", "Gold", "Interest Rates", "Micro Futures"],
+    "maxCapital": 150000,
+    "minCapital": 50000,
+    "profitSplit": {
+      "min": 90,
+      "max": 100,
+      "description": "100% of first $10K, then 90%"
+    }
+  },
+  "updatedAt": "2025-11-28T12:00:00Z",
+  "updatedBy": "web-research",
+  "verified": false
+}

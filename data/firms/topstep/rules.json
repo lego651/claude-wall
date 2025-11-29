@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "firmId": "topstep",
+  "version": "1.0.0",
+  "effectiveDate": "2025-11-28T00:00:00Z",
+
+  "globalRules": {
+    "description": "Base rules that apply to ALL TopStep Trading Combines",
+    "consistencyRule": {
+      "enabled": true,
+      "type": "best_day_percentage",
+      "value": 50,
+      "description": "Best trading day cannot exceed 50% of total profit"
+    },
+    "minTradingDays": {
+      "type": "integer",
+      "value": 5,
+      "description": "Minimum 5 trading days required (non-consecutive)"
+    },
+    "maxTradingDays": {
+      "type": "integer",
+      "value": null,
+      "description": "Unlimited time to complete the combine"
+    },
+    "weekendHolding": {
+      "allowed": true,
+      "description": "Weekend holding is allowed"
+    },
+    "newsTrading": {
+      "allowed": true,
+      "description": "News trading is allowed"
+    },
+    "expertAdvisors": {
+      "allowed": true,
+      "description": "Automated trading is allowed"
+    },
+    "drawdownCalculation": {
+      "type": "trailing",
+      "basis": "end_of_day_balance",
+      "description": "Trailing drawdown calculated from end-of-day balance highs"
+    }
+  },
+
+  "challengeTypes": [
+    {
+      "id": "topstep-combine",
+      "name": "Trading Combine",
+      "type": "1-step",
+      "description": "Single-phase evaluation for futures traders",
+
+      "ruleOverrides": {},
+
+      "accountConfigurations": [
+        {
+          "id": "topstep-50k",
+          "accountSize": 50000,
+          "currency": "USD",
+          "fee": {
+            "amount": 165,
+            "currency": "USD",
+            "refundable": false,
+            "billingCycle": "monthly",
+            "description": "$165/month subscription fee"
+          },
+
+          "ruleOverrides": {},
+
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "name": "Trading Combine Evaluation",
+              "ruleOverrides": {
+                "profitTarget": {
+                  "type": "fixed",
+                  "value": 3000,
+                  "currency": "USD",
+                  "description": "$3,000 profit target"
+                },
+                "maxDailyLoss": {
+                  "type": "fixed",
+                  "value": 2000,
+                  "currency": "USD",
+                  "description": "$2,000 daily loss limit",
+                  "note": "Daily Loss Limit removed for new accounts as of August 2024"
+                },
+                "maxTotalLoss": {
+                  "type": "trailing",
+                  "value": 2000,
+                  "currency": "USD",
+                  "description": "$2,000 trailing maximum loss limit (from end-of-day highs)",
+                  "calculationType": "trailing_eod"
+                },
+                "maxPositionSize": {
+                  "type": "contracts",
+                  "value": 5,
+                  "description": "Maximum 5 contracts"
+                }
+              }
+            }
+          ],
+
+          "fundedAccountRules": {
+            "profitSplit": {
+              "type": "tiered",
+              "tiers": [
+                {
+                  "threshold": 10000,
+                  "percentage": 100,
+                  "description": "First $10,000 is 100% yours"
+                },
+                {
+                  "threshold": null,
+                  "percentage": 90,
+                  "description": "90% thereafter"
+                }
+              ]
+            },
+            "activationFee": {
+              "amount": 149,
+              "currency": "USD",
+              "description": "One-time $149 activation fee for Express Funded Account"
+            },
+            "withdrawalSchedule": {
+              "frequency": "flexible",
+              "description": "Flexible withdrawals after milestones"
+            },
+            "scaling": {
+              "enabled": true,
+              "maxSize": 150000,
+              "description": "Can scale up to $150K"
+            }
+          }
+        },
+
+        {
+          "id": "topstep-100k",
+          "accountSize": 100000,
+          "currency": "USD",
+          "fee": {
+            "amount": 325,
+            "currency": "USD",
+            "refundable": false,
+            "billingCycle": "monthly"
+          },
+
+          "ruleOverrides": {},
+
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "name": "Trading Combine Evaluation",
+              "ruleOverrides": {
+                "profitTarget": {
+                  "type": "fixed",
+                  "value": 6000,
+                  "currency": "USD",
+                  "description": "$6,000 profit target"
+                },
+                "maxDailyLoss": {
+                  "type": "fixed",
+                  "value": 4000,
+                  "currency": "USD",
+                  "description": "$4,000 daily loss limit (may be removed)"
+                },
+                "maxTotalLoss": {
+                  "type": "trailing",
+                  "value": 3000,
+                  "currency": "USD",
+                  "description": "$3,000 trailing maximum loss limit",
+                  "calculationType": "trailing_eod"
+                },
+                "maxPositionSize": {
+                  "type": "contracts",
+                  "value": 10,
+                  "description": "Maximum 10 contracts"
+                }
+              }
+            }
+          ],
+
+          "fundedAccountRules": {
+            "profitSplit": {
+              "type": "tiered",
+              "tiers": [
+                {
+                  "threshold": 10000,
+                  "percentage": 100,
+                  "description": "First $10,000 is 100% yours"
+                },
+                {
+                  "threshold": null,
+                  "percentage": 90,
+                  "description": "90% thereafter"
+                }
+              ]
+            },
+            "activationFee": {
+              "amount": 149,
+              "currency": "USD"
+            }
+          }
+        },
+
+        {
+          "id": "topstep-150k",
+          "accountSize": 150000,
+          "currency": "USD",
+          "fee": {
+            "amount": 375,
+            "currency": "USD",
+            "refundable": false,
+            "billingCycle": "monthly"
+          },
+
+          "ruleOverrides": {
+            "minTradingDays": {
+              "type": "integer",
+              "value": 7,
+              "description": "Larger accounts require 7 minimum trading days"
+            }
+          },
+
+          "phases": [
+            {
+              "phaseNumber": 1,
+              "name": "Trading Combine Evaluation",
+              "ruleOverrides": {
+                "profitTarget": {
+                  "type": "fixed",
+                  "value": 9000,
+                  "currency": "USD",
+                  "description": "$9,000 profit target"
+                },
+                "maxDailyLoss": {
+                  "type": "fixed",
+                  "value": 6000,
+                  "currency": "USD",
+                  "description": "$6,000 daily loss limit (may be removed)"
+                },
+                "maxTotalLoss": {
+                  "type": "trailing",
+                  "value": 4500,
+                  "currency": "USD",
+                  "description": "$4,500 trailing maximum loss limit",
+                  "calculationType": "trailing_eod"
+                },
+                "maxPositionSize": {
+                  "type": "contracts",
+                  "value": 15,
+                  "description": "Maximum 15 contracts"
+                }
+              }
+            }
+          ],
+
+          "fundedAccountRules": {
+            "profitSplit": {
+              "type": "tiered",
+              "tiers": [
+                {
+                  "threshold": 10000,
+                  "percentage": 100,
+                  "description": "First $10,000 is 100% yours"
+                },
+                {
+                  "threshold": null,
+                  "percentage": 90,
+                  "description": "90% thereafter"
+                }
+              ]
+            },
+            "activationFee": {
+              "amount": 149,
+              "currency": "USD"
+            }
+          }
+        }
+      ]
+    }
+  ],
+
+  "metadata": {
+    "lastUpdated": "2025-11-28T12:00:00Z",
+    "updatedBy": "web-research",
+    "changeLog": "Initial TopStep data from web research - Daily Loss Limit being phased out as of August 2024",
+    "source": "https://www.topstep.com and help.topstep.com",
+    "verified": false,
+    "verifiedBy": null,
+    "verifiedDate": null,
+    "notes": "TopStep removed Daily Loss Limit for new accounts starting August 25, 2024. Some conflicting information found regarding minimum trading days (2 vs 5) - using 5 based on multiple sources."
+  }
+}
