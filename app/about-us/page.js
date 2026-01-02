@@ -64,7 +64,7 @@ const AboutUs = () => {
           About {config.appName}
         </h1>
         <p className="text-xl text-base-content/80 max-w-3xl mx-auto leading-relaxed">
-          We're a passionate team of developers and entrepreneurs on a mission to help you ship your ideas faster.
+          We&apos;re a passionate team of developers and entrepreneurs on a mission to help you ship your ideas faster.
           Built by makers, for makers.
         </p>
       </div>
@@ -170,7 +170,7 @@ const AboutUs = () => {
             </div>
             <h3 className="text-xl font-bold mb-2">Community</h3>
             <p className="text-base-content/70">
-              We're builders supporting builders. Join our community of makers shipping amazing products.
+              We&apos;re builders supporting builders. Join our community of makers shipping amazing products.
             </p>
           </div>
         </div>
@@ -182,7 +182,7 @@ const AboutUs = () => {
           <div className="card-body">
             <h2 className="card-title text-2xl justify-center mb-4">Get in Touch</h2>
             <p className="mb-6">
-              Have questions or want to collaborate? We'd love to hear from you.
+              Have questions or want to collaborate? We&apos;d love to hear from you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
