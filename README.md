@@ -12,7 +12,7 @@ This platform centralizes rule data from prop firms, tracks changes automaticall
 
 ## 🚀 What This Project Does
 
-### ✔ Prop Firm Directory
+### ✔ Prop Firm Directory 123
 Each firm has:
 - Rules (DD, trailing, payout %, scaling)
 - Challenge types
