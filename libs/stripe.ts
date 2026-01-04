@@ -1,5 +1,28 @@
 import Stripe from "stripe";
 
+interface CreateCheckoutParams {
+  priceId: string;
+  mode: "payment" | "subscription";
+  successUrl: string;
+  cancelUrl: string;
+  couponId?: string;
+  clientReferenceId?: string;
+  user?: {
+    customerId?: string;
+    email?: string;
+  };
+}
+
+interface CreateCustomerPortalParams {
+  customerId: string;
+  returnUrl: string;
+}
+
+// Initialize Stripe once to avoid repeated instantiation
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-02-24.acacia",
+});
+
 // This is used to create a Stripe Checkout for one-time payments. It's usually triggered with the <ButtonCheckout /> component. Webhooks are used to update the user's state in the database.
 export const createCheckout = async ({
   priceId,
@@ -9,10 +32,8 @@ export const createCheckout = async ({
   couponId,
   clientReferenceId,
   user,
-}) => {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-  const extraParams = {};
+}: CreateCheckoutParams): Promise<string | null> => {
+  const extraParams: Stripe.Checkout.SessionCreateParams = {};
 
   if (user?.customerId) {
     extraParams.customer = user.customerId;
@@ -55,10 +76,11 @@ export const createCheckout = async ({
 };
 
 // This is used to create Customer Portal sessions, so users can manage their subscriptions (payment methods, cancel, etc..)
-export const createCustomerPortal = async ({ customerId, returnUrl }) => {
+export const createCustomerPortal = async ({
+  customerId,
+  returnUrl,
+}: CreateCustomerPortalParams): Promise<string | null> => {
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,
@@ -71,11 +93,11 @@ export const createCustomerPortal = async ({ customerId, returnUrl }) => {
   }
 };
 
-// This is used to get the uesr checkout session and populate the data so we get the planId the user subscribed to
-export const findCheckoutSession = async (sessionId) => {
+// This is used to get the user checkout session and populate the data so we get the planId the user subscribed to
+export const findCheckoutSession = async (
+  sessionId: string
+): Promise<Stripe.Checkout.Session | null> => {
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ["line_items"],
     });
