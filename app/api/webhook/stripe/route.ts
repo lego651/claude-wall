@@ -2,14 +2,17 @@ import configFile from "@/config";
 import { findCheckoutSession } from "@/libs/stripe";
 import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import Stripe from "stripe";
+
+// Force dynamic rendering - don't try to statically analyze this route
+export const dynamic = 'force-dynamic';
 
 // This is where we receive Stripe webhook events
 // It used to update the user data, send emails, etc...
 // By default, it'll store the user in the database
 // See more: https://shipfa.st/docs/features/payments
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   // Check for required environment variables
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
     console.error("Missing required Stripe environment variables");
@@ -19,34 +22,40 @@ export async function POST(req) {
     );
   }
 
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("Missing required Supabase environment variables");
+    return NextResponse.json(
+      { error: "Server configuration error" },
+      { status: 500 }
+    );
+  }
+
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2023-08-16",
+    apiVersion: "2025-02-24.acacia",
   });
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   const body = await req.text();
   const signature = (await headers()).get("stripe-signature");
 
-  let eventType;
-  let event;
+  let eventType: string;
+  let event: Stripe.Event;
 
   // Create a private supabase client using the secret service_role API key
-  // Disable realtime to reduce Edge Runtime warnings
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
-      auth: { persistSession: false },
-      realtime: { disabled: true }
+      auth: { persistSession: false }
     }
   );
 
   // verify Stripe event is legit
   try {
-    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    event = stripe.webhooks.constructEvent(body, signature!, webhookSecret);
   } catch (err) {
-    console.error(`Webhook signature verification failed. ${err.message}`);
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    console.error(`Webhook signature verification failed. ${(err as Error).message}`);
+    return NextResponse.json({ error: (err as Error).message }, { status: 400 });
   }
 
   eventType = event.type;
@@ -56,20 +65,20 @@ export async function POST(req) {
       case "checkout.session.completed": {
         // First payment is successful and a subscription is created (if mode was set to "subscription" in ButtonCheckout)
         // ✅ Grant access to the product
-        const stripeObject = event.data.object;
+        const stripeObject: any = event.data.object;
 
         const session = await findCheckoutSession(stripeObject.id);
 
-        const customerId = session?.customer;
-        const priceId = session?.line_items?.data[0]?.price.id;
+        const customerId = session?.customer as string;
+        const priceId = session?.line_items?.data?.[0]?.price?.id;
         const userId = stripeObject.client_reference_id;
         const plan = configFile.stripe.plans.find((p) => p.priceId === priceId);
 
-        const customer = await stripe.customers.retrieve(customerId);
+        const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
 
         if (!plan) break;
 
-        let user;
+        let user: any;
         if (!userId) {
           // check if user already exists
           const { data: profile } = await supabase
@@ -82,7 +91,7 @@ export async function POST(req) {
           } else {
             // create a new user using supabase auth admin
             const { data, error: authError } = await supabase.auth.admin.createUser({
-              email: customer.email,
+              email: customer.email!,
             });
 
             if (authError) {
@@ -90,16 +99,16 @@ export async function POST(req) {
               throw authError;
             }
 
-            user = data?.user;            
+            user = data?.user;
             if (user?.id) {
               await new Promise(resolve => setTimeout(resolve, 100));
-              
+
               const { data: existingProfile } = await supabase
                 .from("profiles")
                 .select("*")
                 .eq("id", user.id)
                 .single();
-              
+
               if (existingProfile) {
                 user = existingProfile;
               }
@@ -162,7 +171,7 @@ export async function POST(req) {
       case "customer.subscription.deleted": {
         // The customer subscription stopped
         // ❌ Revoke access to the product
-        const stripeObject = event.data.object;
+        const stripeObject: any = event.data.object;
         const subscription = await stripe.subscriptions.retrieve(
           stripeObject.id
         );
@@ -177,7 +186,7 @@ export async function POST(req) {
       case "invoice.paid": {
         // Customer just paid an invoice (for instance, a recurring payment for a subscription)
         // ✅ Grant access to the product
-        const stripeObject = event.data.object;
+        const stripeObject: any = event.data.object;
         const priceId = stripeObject.lines.data[0].price.id;
         const customerId = stripeObject.customer;
 
@@ -187,6 +196,11 @@ export async function POST(req) {
           .select("*")
           .eq("customer_id", customerId)
           .single();
+
+        if (!profile) {
+          console.error(`No profile found for customer ${customerId}`);
+          break;
+        }
 
         // Make sure the invoice is for the same plan (priceId) the user subscribed to
         if (profile.price_id !== priceId) break;
@@ -212,9 +226,13 @@ export async function POST(req) {
       default:
       // Unhandled event type
     }
-  } catch (e) {
-    console.error("stripe error: ", e.message);
-  }
 
-  return NextResponse.json({});
+    return NextResponse.json({ received: true });
+  } catch (e) {
+    console.error("stripe webhook error:", (e as Error).message, (e as Error).stack);
+    return NextResponse.json(
+      { error: "Webhook processing failed" },
+      { status: 500 }
+    );
+  }
 }

@@ -2,11 +2,14 @@ import { Resend } from "resend";
 import config from "@/config";
 import type { EmailConfig } from "@/types";
 
-// Initialize Resend only if API key is available
-let resend: Resend | null = null;
-if (process.env.RESEND_API_KEY) {
-  resend = new Resend(process.env.RESEND_API_KEY);
-}
+// Lazy initialization - only create Resend instance when actually sending email
+// This prevents build-time errors when env vars aren't available
+const getResendClient = (): Resend | null => {
+  if (!process.env.RESEND_API_KEY) {
+    return null;
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+};
 
 export const sendEmail = async ({
   to,
@@ -15,6 +18,8 @@ export const sendEmail = async ({
   html,
   replyTo,
 }: Omit<EmailConfig, "from">): Promise<void> => {
+  const resend = getResendClient();
+
   if (!resend) {
     console.warn("RESEND_API_KEY is not set, skipping email send");
     return;
