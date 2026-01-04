@@ -13,12 +13,12 @@ import apiClient from "@/libs/api";
 //  2. Logout: sign out and go back to homepage
 // See more at https://shipfa.st/docs/components/buttonAccount
 const ButtonAccount = () => {
-	const supabase = createClient();
 	const [isLoading, setIsLoading] = useState(false);
 	const [user, setUser] = useState(null);
 
 	useEffect(() => {
 		const getUser = async () => {
+			const supabase = createClient();
 			const {
 				data: { user },
 			} = await supabase.auth.getUser();
@@ -27,9 +27,10 @@ const ButtonAccount = () => {
 		};
 
 		getUser();
-	}, [supabase]);
+	}, []);
 
 	const handleSignOut = async () => {
+		const supabase = createClient();
 		await supabase.auth.signOut();
 		window.location.href = "/";
 	};

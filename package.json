@@ -33,10 +33,14 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^25.0.3",
+    "@types/nodemailer": "^7.0.4",
+    "@types/react": "19.2.7",
     "autoprefixer": "^10.4.20",
     "daisyui": "^5.0.50",
     "postcss": "^8.4.49",
-    "tailwindcss": "^4.0.0"
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.9.3"
   },
   "overrides": {
     "react": "19.0.0",

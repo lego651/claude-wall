@@ -1,4 +1,6 @@
-const config = {
+import { AppConfig } from "./types";
+
+const config: AppConfig = {
   // REQUIRED
   appName: "ShipFast Supabase",
   // REQUIRED: a short description of your app for SEO tags (can be overwritten)
