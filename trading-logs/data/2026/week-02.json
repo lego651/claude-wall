@@ -1,0 +1,153 @@
+{
+  "weekNumber": 2,
+  "year": 2026,
+  "startDate": "2026-01-05",
+  "endDate": "2026-01-09",
+  "trades": {
+    "2026-01-05": {
+      "AS_1": 2.4,
+      "AS_2": 1,
+      "EU": 1,
+      "NQI": null,
+      "GOLD_1": null,
+      "GOLD_2": -1
+    },
+    "2026-01-06": {
+      "AS_1": -1.5,
+      "AS_2": 1.5,
+      "EU": -1,
+      "NQI": 1.5,
+      "GOLD_1": 1.5,
+      "GOLD_2": -1
+    },
+    "2026-01-07": {
+      "AS_1": null,
+      "AS_2": -1.5,
+      "EU": -1,
+      "NQI": 1.5,
+      "GOLD_1": null,
+      "GOLD_2": 1.5
+    },
+    "2026-01-08": {
+      "AS_1": -1,
+      "AS_2": 1.5,
+      "EU": 1.4,
+      "NQI": null,
+      "GOLD_1": 1.5,
+      "GOLD_2": 1.5
+    },
+    "2026-01-09": {
+      "AS_1": null,
+      "AS_2": null,
+      "EU": null,
+      "NQI": null,
+      "GOLD_1": null,
+      "GOLD_2": null
+    }
+  },
+  "summary": {
+    "byDay": {
+      "2026-01-05": {
+        "totalR": 3.4,
+        "averageR": 0.68,
+        "trades": 5,
+        "winning": 4,
+        "losing": 1
+      },
+      "2026-01-06": {
+        "totalR": 0.5,
+        "averageR": 0.08,
+        "trades": 6,
+        "winning": 3,
+        "losing": 3
+      },
+      "2026-01-07": {
+        "totalR": -0.5,
+        "averageR": -0.12,
+        "trades": 4,
+        "winning": 2,
+        "losing": 2
+      },
+      "2026-01-08": {
+        "totalR": 4.9,
+        "averageR": 0.98,
+        "trades": 5,
+        "winning": 4,
+        "losing": 1
+      },
+      "2026-01-09": {
+        "totalR": 0,
+        "averageR": 0,
+        "trades": 0,
+        "winning": 0,
+        "losing": 0
+      }
+    },
+    "byStrategy": {
+      "AS_1": {
+        "totalR": -0.1,
+        "averageR": -0.03,
+        "trades": 3,
+        "winning": 1,
+        "losing": 2,
+        "winRate": 33.3
+      },
+      "AS_2": {
+        "totalR": 2.5,
+        "averageR": 0.62,
+        "trades": 4,
+        "winning": 3,
+        "losing": 1,
+        "winRate": 75
+      },
+      "EU": {
+        "totalR": 0.4,
+        "averageR": 0.1,
+        "trades": 4,
+        "winning": 2,
+        "losing": 2,
+        "winRate": 50
+      },
+      "NQI": {
+        "totalR": 3,
+        "averageR": 1.5,
+        "trades": 2,
+        "winning": 2,
+        "losing": 0,
+        "winRate": 100
+      },
+      "GOLD_1": {
+        "totalR": 3,
+        "averageR": 1.5,
+        "trades": 2,
+        "winning": 2,
+        "losing": 0,
+        "winRate": 100
+      },
+      "GOLD_2": {
+        "totalR": 1,
+        "averageR": 0.25,
+        "trades": 4,
+        "winning": 2,
+        "losing": 2,
+        "winRate": 50
+      }
+    },
+    "weekly": {
+      "totalR": 8.3,
+      "averageR": 0.44,
+      "totalTrades": 19,
+      "winning": 13,
+      "losing": 6,
+      "winRate": 68.4,
+      "bestDay": {
+        "date": "2026-01-08",
+        "totalR": 4.9
+      },
+      "worstDay": {
+        "date": "2026-01-07",
+        "totalR": -0.5
+      }
+    }
+  }
+}

@@ -6,6 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is **ShipFast**, a Next.js SaaS boilerplate using modern technologies including Next.js 15, React 19, Tailwind CSS v4, DaisyUI v5, Supabase, and Stripe. The codebase is designed for rapid SaaS development with authentication, payments, database integration, and email functionality.
 
+### Trading Logs System
+
+This repo also contains a **trading log system** in `/trading-logs/` for tracking R-multiples across 6 trading strategies.
+
+**Important:** If the user mentions:
+- "trading log" or "weekly screenshot" or "trading data"
+- Screenshots with trading results (Mon-Fri grid)
+- Generating reports or aggregating data
+
+**→ Read `/trading-logs/CLAUDE-CONTEXT.md` first!** It contains complete instructions for parsing screenshots and generating files.
+
 ## Development Commands
 
 ```bash
