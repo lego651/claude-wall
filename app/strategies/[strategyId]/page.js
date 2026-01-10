@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import WeeklyBarChart from '../_components/WeeklyBarChart';
+import DailyPerformanceChart from '../_components/DailyPerformanceChart';
 
 const STRATEGIES = {
   'AS_1': { name: 'AS 1', description: 'Asian Session Strategy 1' },
@@ -16,6 +17,7 @@ const STRATEGIES = {
 export default function StrategyPage({ params }) {
   const [strategyData, setStrategyData] = useState(null);
   const [weeklyData, setWeeklyData] = useState(null);
+  const [dailyData, setDailyData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [strategyId, setStrategyId] = useState(null);
 
@@ -41,8 +43,13 @@ export default function StrategyPage({ params }) {
         const weeklyRes = await fetch('/data/trading/weekly-by-strategy.json');
         const weeklyJson = await weeklyRes.json();
 
+        // Fetch daily data for cumulative chart
+        const dailyRes = await fetch('/data/trading/daily-index.json');
+        const dailyJson = await dailyRes.json();
+
         setStrategyData(yearlyJson.summary.byStrategy[strategyId]);
         setWeeklyData(weeklyJson);
+        setDailyData(dailyJson);
       } catch (error) {
         console.error('Error fetching strategy data:', error);
       } finally {
@@ -160,6 +167,11 @@ export default function StrategyPage({ params }) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* DAILY CUMULATIVE CHART */}
+      <div className="card bg-base-100 card-border p-6 mb-12">
+        <DailyPerformanceChart strategyId={strategyId} dailyData={dailyData} height={450} />
       </div>
 
       {/* WEEKLY BAR CHART */}
