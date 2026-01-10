@@ -134,6 +134,40 @@ function createMonthlyAggregations(weeklyData) {
 }
 
 /**
+ * Create weekly summaries by strategy for charts
+ */
+function createWeeklyByStrategy(weeklyData) {
+  const strategies = ['AS_1', 'AS_2', 'EU', 'NQI', 'GOLD_1', 'GOLD_2'];
+
+  return weeklyData.map(week => {
+    const weekSummary = {
+      weekNumber: week.weekNumber,
+      year: week.year,
+      startDate: week.startDate,
+      endDate: week.endDate,
+    };
+
+    // Calculate total R for each strategy for this week
+    strategies.forEach(strategy => {
+      const strategyTrades = Object.values(week.trades)
+        .map(day => day[strategy])
+        .filter(r => r !== null);
+
+      const totalR = strategyTrades.reduce((sum, r) => sum + r, 0);
+      weekSummary[strategy] = parseFloat(totalR.toFixed(2));
+    });
+
+    // Add week total (sum of all strategy totals)
+    const strategyTotals = strategies.map(s => weekSummary[s] || 0);
+    weekSummary.totalR = parseFloat(
+      strategyTotals.reduce((sum, r) => sum + r, 0).toFixed(2)
+    );
+
+    return weekSummary;
+  });
+}
+
+/**
  * Create yearly summary
  */
 function createYearlySummary(weeklyData, monthlyData) {
@@ -214,6 +248,7 @@ function main() {
   // Create aggregations
   const dailyIndex = createDailyIndex(weeklyData);
   const monthlyData = createMonthlyAggregations(weeklyData);
+  const weeklyByStrategy = createWeeklyByStrategy(weeklyData);
   const yearlySummary = createYearlySummary(weeklyData, monthlyData);
 
   // Save files
@@ -240,6 +275,14 @@ function main() {
     summary: yearlySummary
   }, null, 2));
   console.log(`✅ Yearly summary: ${yearlyPath}`);
+
+  // Weekly by strategy (for charts)
+  const weeklyStrategyPath = path.join(aggregateDir, 'weekly-by-strategy.json');
+  fs.writeFileSync(weeklyStrategyPath, JSON.stringify({
+    year: parseInt(year),
+    weeks: weeklyByStrategy
+  }, null, 2));
+  console.log(`✅ Weekly by strategy: ${weeklyStrategyPath}`);
 
   // Create index file for easy navigation
   const indexPath = path.join(aggregateDir, 'index.json');

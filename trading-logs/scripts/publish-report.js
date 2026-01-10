@@ -116,11 +116,26 @@ function publishReport(jsonPath) {
   console.log(`   - Period: ${newReport.period}`);
   console.log(`   - Total R: ${newReport.summary.totalR > 0 ? '+' : ''}${newReport.summary.totalR}R`);
   console.log(`   - Win Rate: ${newReport.summary.winRate}%`);
+  console.log('\n🔄 Running data sync...');
+
+  // Auto-run aggregate and sync scripts
+  const { execSync } = require('child_process');
+  try {
+    execSync(`node ${path.join(__dirname, 'aggregate-data.js')} ${data.year}`, { stdio: 'inherit' });
+    execSync(`bash ${path.join(__dirname, 'sync-to-nextjs.sh')}`, { stdio: 'inherit' });
+    console.log('\n✅ Data synced to Next.js app!');
+  } catch (err) {
+    console.error('\n⚠️  Data sync failed. Run manually:');
+    console.log(`   node scripts/aggregate-data.js ${data.year}`);
+    console.log(`   bash scripts/sync-to-nextjs.sh`);
+  }
+
   console.log('\n🌐 Next Steps:');
   console.log('   1. Run: npm run build');
   console.log('   2. Test locally: npm run dev');
-  console.log(`   3. View at: http://localhost:3000/trading-logs/reports/${reportSlug}`);
-  console.log('   4. Commit and push to deploy to Vercel');
+  console.log(`   3. View report: http://localhost:3000/trading-logs/reports/${reportSlug}`);
+  console.log(`   4. View strategies: http://localhost:3000/strategies`);
+  console.log('   5. Commit and push to deploy to Vercel');
 }
 
 function getMonthName(monthNum) {
