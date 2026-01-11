@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
+import Footer from "@/components/Footer";
 
 const STRATEGIES = [
   { id: 'AS_1', name: 'AS 1', description: 'Asian Session Strategy 1', color: 'primary' },
@@ -260,6 +261,7 @@ export default function PortfolioPage() {
     : 0;
 
   return (
+    <>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* HEADER */}
       <div className="mb-8">
@@ -360,5 +362,7 @@ export default function PortfolioPage() {
         </>
       )}
     </div>
+    <Footer />
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { reports, getAllYears, getReportsByYear, reportTypes } from "./_assets/reports";
 import { getSEOTags } from "@/libs/seo";
+import Footer from "@/components/Footer";
 
 export const metadata = getSEOTags({
   title: "Trading Logs | Performance Reports",
@@ -72,6 +73,7 @@ export default function TradingLogsPage() {
   const totalTrades = reports.reduce((sum, r) => sum + r.summary.totalTrades, 0);
 
   return (
+    <>
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* HEADER */}
       <div className="mb-12">
@@ -174,5 +176,7 @@ export default function TradingLogsPage() {
         </section>
       )}
     </div>
+    <Footer />
+    </>
   );
 }
