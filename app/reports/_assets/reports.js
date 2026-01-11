@@ -9,7 +9,7 @@ export const reportTypes = {
 
 // Helper to read markdown files
 function getMarkdownContent(filename) {
-  const filePath = path.join(process.cwd(), 'app', 'trading-logs', '_assets', filename);
+  const filePath = path.join(process.cwd(), 'app', 'logs', '_assets', filename);
   return fs.readFileSync(filePath, 'utf8');
 }
 

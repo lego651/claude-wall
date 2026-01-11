@@ -36,15 +36,15 @@ export default function StrategyPage({ params }) {
         setLoading(true);
 
         // Fetch yearly summary for strategy stats
-        const yearlyRes = await fetch('/data/trading/yearly-summary.json');
+        const yearlyRes = await fetch('/api/trading-data/2026/aggregated/yearly-summary.json');
         const yearlyJson = await yearlyRes.json();
 
         // Fetch weekly data for chart
-        const weeklyRes = await fetch('/data/trading/weekly-by-strategy.json');
+        const weeklyRes = await fetch('/api/trading-data/2026/aggregated/weekly-by-strategy.json');
         const weeklyJson = await weeklyRes.json();
 
         // Fetch daily data for cumulative chart
-        const dailyRes = await fetch('/data/trading/daily-index.json');
+        const dailyRes = await fetch('/api/trading-data/2026/aggregated/daily-index.json');
         const dailyJson = await dailyRes.json();
 
         setStrategyData(yearlyJson.summary.byStrategy[strategyId]);
@@ -79,8 +79,8 @@ export default function StrategyPage({ params }) {
         <p className="text-base-content/70 mb-8">
           The strategy you're looking for doesn't exist.
         </p>
-        <Link href="/strategies" className="btn btn-primary">
-          Back to Strategies
+        <Link href="/portfolio" className="btn btn-primary">
+          Back to Portfolio
         </Link>
       </div>
     );
@@ -94,7 +94,7 @@ export default function StrategyPage({ params }) {
       {/* BACK LINK */}
       <div className="mb-6">
         <Link
-          href="/strategies"
+          href="/portfolio"
           className="link !no-underline text-base-content/80 hover:text-base-content inline-flex items-center gap-1"
         >
           <svg
@@ -109,7 +109,7 @@ export default function StrategyPage({ params }) {
               clipRule="evenodd"
             />
           </svg>
-          Back to Strategies
+          Back to Portfolio
         </Link>
       </div>
 

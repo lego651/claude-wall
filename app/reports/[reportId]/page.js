@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { reports, getReportBySlug } from "../../_assets/reports";
-import MarkdownRenderer from "../../_assets/components/MarkdownRenderer";
+import { reports, getReportBySlug } from "../_assets/reports";
+import MarkdownRenderer from "../_assets/components/MarkdownRenderer";
 import { getSEOTags } from "@/libs/seo";
 
 export async function generateMetadata({ params }) {
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }) {
   return getSEOTags({
     title: `Trading Report - ${report.title}`,
     description: `Trading performance report for ${report.period}. Total R: ${report.summary.totalR > 0 ? '+' : ''}${report.summary.totalR}R, Win Rate: ${report.summary.winRate}%`,
-    canonicalUrlRelative: `/trading-logs/reports/${report.slug}`,
+    canonicalUrlRelative: `/reports/reports/${report.slug}`,
   });
 }
 
@@ -38,7 +38,7 @@ export default async function ReportPage({ params }) {
         <p className="text-base-content/70 mb-8">
           The trading report you're looking for doesn't exist.
         </p>
-        <Link href="/trading-logs" className="btn btn-primary">
+        <Link href="/reports" className="btn btn-primary">
           Back to Reports
         </Link>
       </div>
@@ -52,7 +52,7 @@ export default async function ReportPage({ params }) {
       {/* BACK LINK */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Link
-          href="/trading-logs"
+          href="/reports"
           className="link !no-underline text-base-content/80 hover:text-base-content inline-flex items-center gap-1"
           title="Back to Trading Logs"
         >

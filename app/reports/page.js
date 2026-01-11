@@ -5,7 +5,7 @@ import { getSEOTags } from "@/libs/seo";
 export const metadata = getSEOTags({
   title: "Trading Logs | Performance Reports",
   description: "View detailed trading performance reports with R-multiples, win rates, and strategy breakdowns.",
-  canonicalUrlRelative: "/trading-logs",
+  canonicalUrlRelative: "/reports",
 });
 
 function ReportCard({ report }) {
@@ -13,7 +13,7 @@ function ReportCard({ report }) {
   const totalRBg = report.summary.totalR > 0 ? 'bg-success/10' : 'bg-error/10';
 
   return (
-    <Link href={`/trading-logs/reports/${report.slug}`} className="block group">
+    <Link href={`/reports/reports/${report.slug}`} className="block group">
       <div className="card bg-base-200 hover:bg-base-300 transition-all duration-200 card-border group-hover:shadow-lg">
         <div className="card-body">
           <div className="flex items-start justify-between mb-3">

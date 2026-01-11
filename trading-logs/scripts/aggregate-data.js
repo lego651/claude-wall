@@ -302,10 +302,9 @@ function main() {
   console.log(`✅ Index file: ${indexPath}`);
 
   console.log('\n🎉 Aggregation complete!');
-  console.log('\nFrontend can now easily query:');
-  console.log('  - Single day: daily-index.json');
-  console.log('  - Date range: Load relevant monthly files');
-  console.log('  - Full year: yearly-summary.json');
+  console.log('\nFrontend can now query:');
+  console.log('  - Aggregated data: trading-logs/data/YYYY/aggregated/');
+  console.log('  - Week details: trading-logs/data/YYYY/week-NN.json');
 }
 
 // Run
