@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   BarChart,
   Bar,
@@ -181,6 +182,17 @@ function CumulativeStrategyCard({ strategy, strategyData, weeklyData }) {
             Avg: {strategyData?.averageR || 0}R
           </div>
         </div>
+
+        {/* View Details Link */}
+        <Link
+          href={`/strategies/${strategy.id}`}
+          className="btn btn-sm btn-outline btn-primary mt-4 w-full group"
+        >
+          View Strategy Details
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
       </div>
     </div>
   );
