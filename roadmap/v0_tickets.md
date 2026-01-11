@@ -1,534 +1,430 @@
-# PropVerified v0 - Technical Tickets
+# PropVerified v0 - Simplified Tickets
 
-## Project Setup & Configuration
+## Total: 10 tickets (~12-16 hours / 2-3 days)
+
+---
+
+## Day 1: API Development (6 hours)
 
 ### TICKET-001: Environment Setup
-**Priority:** P0 (Blocker)
+**Priority:** P0
 **Estimate:** 30 mins
-**Type:** Setup
-
-**Description:**
-Set up environment variables and API keys for Arbiscan and CoinGecko.
 
 **Tasks:**
-- [ ] Sign up for Arbiscan API key (free tier)
-- [ ] Add `ARBISCAN_API_KEY` to `.env.local`
-- [ ] Add `NEXT_PUBLIC_TEST_WALLET_ADDRESS=0x1C969652D758f8Fc23C443758f8911086F676216` to `.env.local`
-- [ ] Update `.env.example` with new variables
-- [ ] Verify Arbiscan API works with a test request
+- [ ] Sign up for Arbiscan API key at https://arbiscan.io/apis
+- [ ] Add to `.env.local`:
+  ```
+  ARBISCAN_API_KEY=your_key_here
+  NEXT_PUBLIC_TEST_WALLET_ADDRESS=0x1C969652D758f8Fc23C443758f8911086F676216
+  ```
+- [ ] Update `.env.example` with these variables
+- [ ] Test API key with a simple curl request
 
-**Acceptance Criteria:**
-- Can make successful API calls to Arbiscan
-- Environment variables load correctly in Next.js
-
-**Dependencies:** None
+**Done when:** Can make successful Arbiscan API call
 
 ---
 
-### TICKET-002: Install Required Dependencies
-**Priority:** P0 (Blocker)
-**Estimate:** 15 mins
-**Type:** Setup
-
-**Description:**
-Install any additional npm packages needed for blockchain integration.
-
-**Tasks:**
-- [ ] Check if `ethers` or `viem` is needed (likely NOT needed for v0, just HTTP calls)
-- [ ] Install `axios` if not already present (for API calls)
-- [ ] Verify `recharts` is installed (for charts - should already exist)
-- [ ] Run `npm install` and verify no conflicts
-
-**Acceptance Criteria:**
-- All dependencies installed
-- `npm run dev` works without errors
-
-**Dependencies:** None
-
----
-
-## API Development
-
-### TICKET-003: Create Arbiscan API Helper
-**Priority:** P0 (Blocker)
+### TICKET-002: Create Arbiscan API Helper
+**Priority:** P0
 **Estimate:** 2 hours
-**Type:** Backend
-
-**Description:**
-Create utility functions to fetch transaction data from Arbiscan API.
 
 **File:** `lib/arbiscan.js`
 
 **Tasks:**
-- [ ] Create `fetchNativeTransactions(address)` function
-  - Endpoint: `https://api.arbiscan.io/api?module=account&action=txlist&address={address}&sort=desc`
-  - Parse response and extract relevant fields
-  - Handle pagination if needed (start with first 100)
-- [ ] Create `fetchTokenTransactions(address)` function
-  - Endpoint: `https://api.arbiscan.io/api?module=account&action=tokentx&address={address}&sort=desc`
-  - Support USDC and USDT specifically
-- [ ] Create error handling wrapper
-- [ ] Add rate limit handling (exponential backoff)
-- [ ] Add request logging for debugging
+- [ ] Create `fetchNativeTransactions(address, apiKey)` function
+  - Endpoint: `https://api.arbiscan.io/api?module=account&action=txlist&address={address}&sort=desc&apikey={apiKey}`
+  - Parse response, extract: hash, timeStamp, from, to, value, blockNumber
+- [ ] Create `fetchTokenTransactions(address, apiKey)` function
+  - Endpoint: `https://api.arbiscan.io/api?module=account&action=tokentx&address={address}&sort=desc&apikey={apiKey}`
+  - Parse response, extract: hash, timeStamp, from, to, value, tokenSymbol, tokenDecimal
+- [ ] **No error handling** - let errors bubble up
+- [ ] Add console.log for debugging
 
-**Acceptance Criteria:**
-- Functions return parsed transaction arrays
-- Error handling catches API failures gracefully
-- Console logs show clear debug info
+**Done when:** Both functions return raw transaction arrays from Arbiscan
 
-**Dependencies:** TICKET-001
+**Code template:**
+```javascript
+export async function fetchNativeTransactions(address, apiKey) {
+  const url = `https://api.arbiscan.io/api?module=account&action=txlist&address=${address}&sort=desc&apikey=${apiKey}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  console.log('Native txs:', data.result?.length || 0);
+  return data.result || [];
+}
 
-**Reference:**
-- Arbiscan API Docs: https://docs.arbiscan.io/
+export async function fetchTokenTransactions(address, apiKey) {
+  const url = `https://api.arbiscan.io/api?module=account&action=tokentx&address=${address}&sort=desc&apikey=${apiKey}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  console.log('Token txs:', data.result?.length || 0);
+  return data.result || [];
+}
+```
 
 ---
 
-### TICKET-004: Create Price Conversion Helper
-**Priority:** P0 (Blocker)
+### TICKET-003: Create Transaction Processor
+**Priority:** P0
 **Estimate:** 2 hours
-**Type:** Backend
-
-**Description:**
-Create utility to convert crypto amounts to USD using historical prices.
-
-**File:** `lib/priceConverter.js`
-
-**Tasks:**
-- [ ] Create `getHistoricalPrice(token, timestamp)` function
-  - Use CoinGecko API: `/api/v3/coins/{id}/history?date={DD-MM-YYYY}`
-  - Support ETH, USDC, USDT
-  - Cache prices by date to reduce API calls
-- [ ] Create `convertToUSD(amount, token, timestamp)` function
-  - Handle decimal precision correctly
-  - Return formatted USD value
-- [ ] Implement in-memory cache for prices (Map object)
-- [ ] Add fallback prices if API fails (hardcoded reasonable values)
-- [ ] Handle stablecoins (USDC/USDT = $1.00)
-
-**Acceptance Criteria:**
-- Converts ETH to USD accurately (within 5% of actual historical price)
-- Stablecoins always return ~$1.00
-- Caching reduces duplicate API calls
-- Graceful fallback if CoinGecko is down
-
-**Dependencies:** TICKET-001
-
-**Reference:**
-- CoinGecko API Docs: https://www.coingecko.com/en/api/documentation
-
----
-
-### TICKET-005: Create Transaction Processing Logic
-**Priority:** P0 (Blocker)
-**Estimate:** 3 hours
-**Type:** Backend
-
-**Description:**
-Process raw blockchain transactions into structured payout data.
 
 **File:** `lib/transactionProcessor.js`
 
 **Tasks:**
-- [ ] Create `processTransactions(nativeData, tokenData)` function
-  - Merge native ETH and ERC-20 transactions
-  - Filter only incoming transactions (to === targetAddress)
-  - Filter out transactions < $10 USD
+- [ ] Create constant price object:
+  ```javascript
+  const PRICES = { ETH: 2500, USDC: 1.00, USDT: 1.00 };
+  ```
+- [ ] Create `convertToUSD(amount, token)` function
+- [ ] Create `processTransactions(nativeData, tokenData, targetAddress)`:
+  - Merge both arrays
+  - Filter: only incoming (to === targetAddress)
+  - Convert to USD
+  - Filter: only >= $10 USD
   - Sort by timestamp (descending)
-- [ ] Create `calculateStats(transactions)` function
-  - Total transaction count
-  - Total payout (USD)
-  - Last 30 days payout (USD)
-  - Last 30 days count
-  - Average payout
-- [ ] Create `groupByMonth(transactions)` function
-  - For chart data (last 6 months)
-  - Return array of {month, amount}
-- [ ] Add transaction formatting
-  - Shorten addresses (0x1234...5678)
-  - Format USD with commas
-  - Add Arbiscan URL for each transaction
+  - Format fields: fromShort, arbiscanUrl, etc.
+  - Limit to 100 transactions
+- [ ] Create `calculateStats(transactions)`:
+  - totalTransactions
+  - totalPayoutUSD
+  - last30DaysPayoutUSD (filter by timestamp)
+  - last30DaysCount
+  - avgPayoutUSD
+- [ ] Create `groupByMonth(transactions)` for chart data (last 6 months)
 
-**Acceptance Criteria:**
-- Transactions are correctly filtered and sorted
-- Stats calculations are accurate
-- Monthly grouping works for chart visualization
-- All transactions have properly formatted fields
+**Done when:** Functions process raw Arbiscan data into clean format
 
-**Dependencies:** TICKET-003, TICKET-004
+**Code template:**
+```javascript
+const PRICES = { ETH: 2500, USDC: 1.00, USDT: 1.00 };
+
+export function convertToUSD(amount, token) {
+  return amount * (PRICES[token] || 0);
+}
+
+export function processTransactions(nativeData, tokenData, targetAddress) {
+  // Normalize native ETH transactions
+  const nativeTxs = nativeData
+    .filter(tx => tx.to.toLowerCase() === targetAddress.toLowerCase())
+    .map(tx => ({
+      txHash: tx.hash,
+      timestamp: parseInt(tx.timeStamp),
+      from: tx.from,
+      to: tx.to,
+      amount: parseFloat(tx.value) / 1e18, // Wei to ETH
+      token: 'ETH',
+      blockNumber: parseInt(tx.blockNumber)
+    }));
+
+  // Normalize ERC-20 token transactions
+  const tokenTxs = tokenData
+    .filter(tx => tx.to.toLowerCase() === targetAddress.toLowerCase())
+    .filter(tx => ['USDC', 'USDT'].includes(tx.tokenSymbol))
+    .map(tx => ({
+      txHash: tx.hash,
+      timestamp: parseInt(tx.timeStamp),
+      from: tx.from,
+      to: tx.to,
+      amount: parseFloat(tx.value) / Math.pow(10, parseInt(tx.tokenDecimal)),
+      token: tx.tokenSymbol,
+      blockNumber: parseInt(tx.blockNumber)
+    }));
+
+  // Merge and process
+  const allTxs = [...nativeTxs, ...tokenTxs]
+    .map(tx => ({
+      ...tx,
+      amountUSD: convertToUSD(tx.amount, tx.token),
+      date: new Date(tx.timestamp * 1000).toISOString(),
+      fromShort: `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`,
+      arbiscanUrl: `https://arbiscan.io/tx/${tx.txHash}`
+    }))
+    .filter(tx => tx.amountUSD >= 10) // Filter < $10
+    .sort((a, b) => b.timestamp - a.timestamp) // Most recent first
+    .slice(0, 100); // Limit to 100
+
+  return allTxs;
+}
+
+export function calculateStats(transactions) {
+  const now = Date.now() / 1000;
+  const thirtyDaysAgo = now - (30 * 24 * 60 * 60);
+
+  const totalPayoutUSD = transactions.reduce((sum, tx) => sum + tx.amountUSD, 0);
+  const last30DaysTxs = transactions.filter(tx => tx.timestamp >= thirtyDaysAgo);
+  const last30DaysPayoutUSD = last30DaysTxs.reduce((sum, tx) => sum + tx.amountUSD, 0);
+
+  return {
+    totalTransactions: transactions.length,
+    totalPayoutUSD: Math.round(totalPayoutUSD * 100) / 100,
+    last30DaysPayoutUSD: Math.round(last30DaysPayoutUSD * 100) / 100,
+    last30DaysCount: last30DaysTxs.length,
+    avgPayoutUSD: transactions.length > 0 ? Math.round((totalPayoutUSD / transactions.length) * 100) / 100 : 0
+  };
+}
+
+export function groupByMonth(transactions) {
+  // Group transactions by month for last 6 months
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const now = new Date();
+  const monthlyData = [];
+
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthName = months[d.getMonth()];
+    const monthStart = d.getTime() / 1000;
+    const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0).getTime() / 1000;
+
+    const monthTxs = transactions.filter(tx => tx.timestamp >= monthStart && tx.timestamp <= monthEnd);
+    const amount = monthTxs.reduce((sum, tx) => sum + tx.amountUSD, 0);
+
+    monthlyData.push({ month: monthName, amount: Math.round(amount) });
+  }
+
+  return monthlyData;
+}
+```
 
 ---
 
-### TICKET-006: Create API Route with Caching
-**Priority:** P0 (Blocker)
-**Estimate:** 2 hours
-**Type:** Backend
-
-**Description:**
-Implement the main API endpoint with caching to avoid rate limits.
+### TICKET-004: Create API Route
+**Priority:** P0
+**Estimate:** 1.5 hours
 
 **File:** `app/api/transactions/route.js`
 
 **Tasks:**
-- [ ] Create `GET` handler for `/api/transactions?address={address}`
-- [ ] Implement in-memory cache (Map with TTL)
-  - Cache key: `transactions:${address}`
-  - TTL: 5 minutes
-- [ ] Chain all helper functions:
-  1. Check cache first
-  2. Fetch from Arbiscan if cache miss
-  3. Convert to USD
-  4. Process and calculate stats
-  5. Store in cache
-  6. Return JSON response
-- [ ] Add error handling and return proper HTTP status codes
-  - 200: Success
-  - 400: Invalid address
-  - 500: API error
-- [ ] Add request logging
+- [ ] Create GET handler
+- [ ] Get `address` from query params
+- [ ] Call `fetchNativeTransactions()` and `fetchTokenTransactions()`
+- [ ] Process with `processTransactions()`
+- [ ] Calculate stats with `calculateStats()`
+- [ ] Generate monthly data with `groupByMonth()`
+- [ ] Return JSON response
+- [ ] **No caching, no complex error handling** - keep it simple
 
-**Response Schema:**
-```json
-{
-  "address": "string",
-  "totalTransactions": "number",
-  "totalPayoutUSD": "number",
-  "last30DaysPayoutUSD": "number",
-  "last30DaysCount": "number",
-  "avgPayoutUSD": "number",
-  "transactions": [
-    {
-      "txHash": "string",
-      "timestamp": "number",
-      "date": "ISO string",
-      "from": "string",
-      "fromShort": "string",
-      "to": "string",
-      "amount": "string",
-      "amountUSD": "number",
-      "token": "string",
-      "tokenAddress": "string | null",
-      "blockNumber": "number",
-      "status": "string",
-      "arbiscanUrl": "string"
-    }
-  ],
-  "monthlyData": [
-    {"month": "Jan", "amount": 4500}
-  ]
+**Done when:** Endpoint returns correct JSON structure
+
+**Code template:**
+```javascript
+import { NextResponse } from 'next/server';
+import { fetchNativeTransactions, fetchTokenTransactions } from '@/lib/arbiscan';
+import { processTransactions, calculateStats, groupByMonth } from '@/lib/transactionProcessor';
+
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const address = searchParams.get('address');
+
+  if (!address) {
+    return NextResponse.json({ error: 'Address required' }, { status: 400 });
+  }
+
+  const apiKey = process.env.ARBISCAN_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: 'Arbiscan API key not configured' }, { status: 500 });
+  }
+
+  // Fetch data from Arbiscan
+  const nativeData = await fetchNativeTransactions(address, apiKey);
+  const tokenData = await fetchTokenTransactions(address, apiKey);
+
+  // Process transactions
+  const transactions = processTransactions(nativeData, tokenData, address);
+  const stats = calculateStats(transactions);
+  const monthlyData = groupByMonth(transactions);
+
+  return NextResponse.json({
+    address,
+    ...stats,
+    transactions,
+    monthlyData
+  });
 }
 ```
 
-**Acceptance Criteria:**
-- API endpoint returns correct data structure
-- Caching works (second request is fast)
-- Error handling returns meaningful messages
-- API response time < 3 seconds (first call), < 100ms (cached)
-
-**Dependencies:** TICKET-003, TICKET-004, TICKET-005
-
 ---
 
-## Frontend Integration
+## Day 2: Frontend Integration (4.5 hours)
 
-### TICKET-007: Create API Client Hook
+### TICKET-005: Create React Hook
 **Priority:** P1
 **Estimate:** 1 hour
-**Type:** Frontend
-
-**Description:**
-Create React hook to fetch transaction data from API.
 
 **File:** `lib/hooks/useTransactions.js`
 
 **Tasks:**
-- [ ] Create `useTransactions(address)` custom hook
-  - Use `useEffect` to fetch on mount
-  - Return `{ data, loading, error }` state
-- [ ] Handle loading and error states
-- [ ] Add retry logic (1 retry on failure)
-- [ ] Cache results in component state
+- [ ] Create `useTransactions(address)` hook
+- [ ] Use `useState` for `{ data, loading, error }`
+- [ ] Use `useEffect` to fetch on mount
+- [ ] **No retry, no caching** - simple fetch
 
-**Acceptance Criteria:**
-- Hook fetches data successfully
-- Loading state works
-- Error state displays meaningful message
-- No unnecessary re-fetches
+**Done when:** Hook returns data, loading, error states
 
-**Dependencies:** TICKET-006
+**Code template:**
+```javascript
+"use client";
+import { useState, useEffect } from 'react';
+
+export function useTransactions(address) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!address) return;
+
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/transactions?address=${address}`);
+        if (!response.ok) throw new Error('Failed to fetch transactions');
+        const json = await response.json();
+        setData(json);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [address]);
+
+  return { data, loading, error };
+}
+```
 
 ---
 
-### TICKET-008: Update Trader Profile Page - Stats Cards
+### TICKET-006: Update Profile - Stats Cards
 **Priority:** P1
 **Estimate:** 1 hour
-**Type:** Frontend
-
-**Description:**
-Replace mock data in stat cards with real API data.
 
 **File:** `app/trader/[handle]/page.js`
 
 **Tasks:**
+- [ ] Add `const TEST_WALLET = process.env.NEXT_PUBLIC_TEST_WALLET_ADDRESS;` at top
 - [ ] Import `useTransactions` hook
-- [ ] Hardcode test wallet address (or get from env)
+- [ ] Call hook: `const { data, loading, error } = useTransactions(TEST_WALLET);`
 - [ ] Replace mock data in three stat cards:
-  - Total Verified (use `totalPayoutUSD`)
-  - Last 30 Days (use `last30DaysPayoutUSD`)
-  - Avg Payout (use `avgPayoutUSD`)
-- [ ] Add loading skeleton for stat cards
-- [ ] Handle error state (show error message)
-- [ ] Update payout count display
+  - Total Verified → `data?.totalPayoutUSD`
+  - Last 30 Days → `data?.last30DaysPayoutUSD`
+  - Avg Payout → `data?.avgPayoutUSD`
+- [ ] Show "Loading..." when `loading === true`
+- [ ] Show error message if `error`
 
-**Acceptance Criteria:**
-- Stats display real data from API
-- Numbers are formatted correctly (commas, decimals)
-- Loading state shows skeletons
-- Error state is user-friendly
-
-**Dependencies:** TICKET-007
+**Done when:** Stat cards display real data
 
 ---
 
-### TICKET-009: Update Trader Profile Page - Transaction Table
-**Priority:** P1
-**Estimate:** 2 hours
-**Type:** Frontend
-
-**Description:**
-Replace mock transaction table with real blockchain data.
-
-**File:** `app/trader/[handle]/page.js`
-
-**Tasks:**
-- [ ] Update table body to map over `data.transactions`
-- [ ] Display fields:
-  - Date (formatted as "Jan 15, 2024")
-  - From address (use `fromShort`)
-  - Tx Hash (link to `arbiscanUrl`, show shortened hash)
-  - Amount (USD formatted)
-- [ ] Remove "Firm" column (we don't identify firms in v0)
-- [ ] Add loading skeleton for table rows
-- [ ] Handle empty state (no transactions)
-- [ ] Keep "Load older transactions" button (non-functional for v0)
-
-**Acceptance Criteria:**
-- Table displays real transactions
-- Links to Arbiscan work correctly
-- Addresses and hashes are properly shortened
-- USD amounts are formatted with $ and commas
-- Empty state shows helpful message
-
-**Dependencies:** TICKET-007
-
----
-
-### TICKET-010: Update Trader Profile Page - Monthly Chart
+### TICKET-007: Update Profile - Transaction Table
 **Priority:** P1
 **Estimate:** 1.5 hours
-**Type:** Frontend
-
-**Description:**
-Update monthly payout chart with real transaction data.
 
 **File:** `app/trader/[handle]/page.js`
 
 **Tasks:**
-- [ ] Replace mock `chartData` with `data.monthlyData`
-- [ ] Ensure data format matches Recharts requirements
-- [ ] Update chart to show last 6 months of data
-- [ ] Handle months with zero payouts (show $0 bar)
-- [ ] Add loading skeleton for chart
-- [ ] Verify chart colors and styling match design
+- [ ] Replace mock `payouts` array with `data?.transactions`
+- [ ] Update table columns:
+  - Date: `new Date(tx.timestamp * 1000).toLocaleDateString()`
+  - From: Remove "Firm" column, show `tx.fromShort`
+  - Tx Hash: Show shortened hash with link to `tx.arbiscanUrl`
+  - Amount: `$${tx.amountUSD.toLocaleString()}`
+- [ ] Handle loading state (show skeleton rows)
+- [ ] Handle empty state (no transactions)
 
-**Acceptance Criteria:**
-- Chart displays real monthly data
-- Empty months show as $0
-- Chart is responsive and renders correctly
-- Loading state works
-- Tooltip shows correct USD values
-
-**Dependencies:** TICKET-007
+**Done when:** Table shows real transactions with Arbiscan links
 
 ---
 
-### TICKET-011: Update Sidebar - Verified Firms Section
-**Priority:** P2 (Nice to have)
-**Estimate:** 30 mins
-**Type:** Frontend
-
-**Description:**
-Update or remove the "Verified Firms" sidebar section.
-
-**File:** `app/trader/[handle]/page.js`
-
-**Tasks:**
-- [ ] Option A: Remove this section entirely (since we don't identify firms in v0)
-- [ ] Option B: Show placeholder message like "Firm mapping coming soon"
-- [ ] Option C: Keep mock data as visual placeholder
-
-**Acceptance Criteria:**
-- Section is either removed or has clear messaging
-
-**Dependencies:** None
-
----
-
-## Testing & Quality Assurance
-
-### TICKET-012: Manual Testing - API Endpoints
-**Priority:** P0
-**Estimate:** 1 hour
-**Type:** QA
-
-**Description:**
-Manually test API endpoints with various scenarios.
-
-**Tasks:**
-- [ ] Test with valid wallet address (test address)
-- [ ] Test with invalid wallet address (should return 400)
-- [ ] Test with address that has no transactions
-- [ ] Verify caching works (check logs for cache hits)
-- [ ] Verify USD conversions are accurate (spot check 3-5 transactions)
-- [ ] Test API error scenarios (turn off internet, test timeout)
-- [ ] Check API response time (should be < 3s)
-
-**Acceptance Criteria:**
-- All test cases pass
-- No console errors
-- Response times are acceptable
-- USD values are accurate (within 5% margin)
-
-**Dependencies:** TICKET-006
-
----
-
-### TICKET-013: Manual Testing - UI Integration
-**Priority:** P0
-**Estimate:** 1 hour
-**Type:** QA
-
-**Description:**
-Test trader profile page with real data.
-
-**Tasks:**
-- [ ] Visit `/trader/thefundedlady` (or whatever handle we use)
-- [ ] Verify all stats display correctly
-- [ ] Verify transaction table loads and displays data
-- [ ] Click Arbiscan links (should open correct transaction)
-- [ ] Verify monthly chart renders with real data
-- [ ] Test loading states (throttle network in DevTools)
-- [ ] Test error states (stop dev server, check error handling)
-- [ ] Test responsive design (mobile, tablet, desktop)
-- [ ] Cross-browser testing (Chrome, Firefox, Safari)
-
-**Acceptance Criteria:**
-- All UI elements render correctly
-- No console errors or warnings
-- Responsive design works
-- Links work correctly
-- Loading and error states function properly
-
-**Dependencies:** TICKET-008, TICKET-009, TICKET-010
-
----
-
-### TICKET-014: Code Review & Cleanup
+### TICKET-008: Update Profile - Monthly Chart
 **Priority:** P1
 **Estimate:** 1 hour
-**Type:** QA
 
-**Description:**
-Review all code, clean up console logs, and ensure code quality.
+**File:** `app/trader/[handle]/page.js`
 
 **Tasks:**
-- [ ] Remove unnecessary console.logs (keep only error logs)
-- [ ] Add comments to complex functions
-- [ ] Ensure consistent code formatting
-- [ ] Check for unused imports
-- [ ] Verify all environment variables are documented in `.env.example`
-- [ ] Add basic JSDoc comments to key functions
-- [ ] Run `npm run lint` and fix any issues
-- [ ] Run `npm run build` and verify no warnings
+- [ ] Replace mock `chartData` with `data?.monthlyData`
+- [ ] Verify Recharts renders correctly
+- [ ] Handle loading state for chart
+- [ ] Verify tooltip shows correct USD values
 
-**Acceptance Criteria:**
-- Code is clean and well-commented
-- No lint errors
-- Build succeeds without warnings
-- `.env.example` is up to date
-
-**Dependencies:** All previous tickets
+**Done when:** Chart displays real monthly payout data
 
 ---
 
-## Documentation
+## Day 3: Testing & Cleanup (3 hours)
 
-### TICKET-015: Create v0 Testing Guide
-**Priority:** P2
-**Estimate:** 30 mins
-**Type:** Documentation
-
-**Description:**
-Create simple guide for team to test v0.
-
-**File:** `roadmap/v0_testing_guide.md`
+### TICKET-009: Manual Testing
+**Priority:** P0
+**Estimate:** 2 hours
 
 **Tasks:**
-- [ ] Document how to set up environment variables
-- [ ] List steps to run the app locally
-- [ ] Provide test scenarios (what to check)
-- [ ] Include test wallet address
-- [ ] Add troubleshooting tips (common errors)
-- [ ] Include links to Arbiscan for manual verification
+- [ ] Test API endpoint directly in browser: `/api/transactions?address=0x1C969652D758f8Fc23C443758f8911086F676216`
+- [ ] Verify JSON response structure is correct
+- [ ] Visit trader profile page: `/trader/thefundedlady`
+- [ ] Verify stats cards show real data
+- [ ] Verify transaction table loads
+- [ ] Click Arbiscan links → verify they open correct transaction
+- [ ] Verify monthly chart renders
+- [ ] Compare 3-5 transactions with Arbiscan manually to verify accuracy
+- [ ] Test loading states (throttle network in DevTools)
+- [ ] Test error states (use invalid address)
 
-**Acceptance Criteria:**
-- Non-technical team member can follow guide and test the app
-- All steps are clear and accurate
+**Done when:** All features work, no critical bugs
 
-**Dependencies:** TICKET-014
+---
+
+### TICKET-010: Code Cleanup & Documentation
+**Priority:** P1
+**Estimate:** 1 hour
+
+**Tasks:**
+- [ ] Remove unnecessary console.logs (keep only important ones)
+- [ ] Add comments to key functions
+- [ ] Verify `.env.example` has all required variables
+- [ ] Run `npm run lint` and fix critical issues (ignore warnings)
+- [ ] Run `npm run build` and verify it succeeds
+- [ ] Update `README.md` with setup instructions (optional)
+- [ ] Add TODO comments for Phase 1 improvements:
+  ```javascript
+  // TODO (Phase 1): Replace with historical prices from CoinGecko
+  const PRICES = { ETH: 2500, USDC: 1.00, USDT: 1.00 };
+  ```
+
+**Done when:** Code is clean, builds successfully, ready to demo
 
 ---
 
 ## Summary
 
-### Ticket Count: 15 tickets
-- **P0 (Blocker):** 9 tickets
-- **P1 (High):** 5 tickets
-- **P2 (Nice to have):** 2 tickets
-
-### Total Estimate: ~20 hours (~1 week)
-- **Setup:** 1 hour
-- **Backend/API:** 9 hours
-- **Frontend:** 6 hours
-- **Testing:** 2 hours
-- **Documentation:** 0.5 hours
-- **Buffer:** 1.5 hours
+### Total Effort: 12-16 hours (2-3 days)
+- **Day 1 (API):** 6 hours
+- **Day 2 (Frontend):** 4.5 hours
+- **Day 3 (Testing):** 3 hours
 
 ### Critical Path:
-1. TICKET-001 � TICKET-002 (Setup)
-2. TICKET-003 � TICKET-004 � TICKET-005 � TICKET-006 (API Development)
-3. TICKET-007 � TICKET-008, 009, 010 (Frontend Integration)
-4. TICKET-012, 013, 014 (Testing & QA)
-5. TICKET-015 (Documentation)
+TICKET-001 → TICKET-002 → TICKET-003 → TICKET-004 → TICKET-005 → TICKET-006/007/008 → TICKET-009 → TICKET-010
 
-### Parallel Work Opportunities:
-- TICKET-003 and TICKET-004 can be developed in parallel
-- TICKET-008, 009, 010, 011 can be worked on in parallel once TICKET-007 is done
+### Parallel Work:
+- TICKET-006, 007, 008 can be done in parallel once TICKET-005 is complete
+
+### Definition of Done:
+- ✅ API fetches real transactions from Arbiscan
+- ✅ Trader profile shows real data (stats, table, chart)
+- ✅ Links to Arbiscan work correctly
+- ✅ No critical console errors
+- ✅ `npm run build` succeeds
+- ✅ Team can demo and verify data manually
 
 ---
 
-## Development Workflow
+## Technical Debt Reminders
 
-### Sprint Plan (5 days):
-**Day 1:** TICKET-001, 002, 003, 004
-**Day 2:** TICKET-005, 006
-**Day 3:** TICKET-007, 008, 009, 010
-**Day 4:** TICKET-011, 012, 013
-**Day 5:** TICKET-014, 015 + Buffer
+Add these TODO comments in code:
 
-### Definition of Done:
-- Code is written and tested
-- No console errors or warnings
-- `npm run build` succeeds
-- Manual testing completed
-- Code reviewed and cleaned up
-- Merged to main branch
+```javascript
+// TODO (Phase 1): Implement historical USD prices via CoinGecko API
+// TODO (Phase 1): Add 5-minute caching to reduce Arbiscan API calls
+// TODO (Phase 1): Implement retry logic and better error handling
+// TODO (Phase 1): Handle rate limiting gracefully
+```
