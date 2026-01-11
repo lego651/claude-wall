@@ -13,7 +13,7 @@ function ReportCard({ report }) {
   const totalRBg = report.summary.totalR > 0 ? 'bg-success/10' : 'bg-error/10';
 
   return (
-    <Link href={`/reports/reports/${report.slug}`} className="block group">
+    <Link href={`/reports/${report.slug}`} className="block group">
       <div className="card bg-base-200 hover:bg-base-300 transition-all duration-200 card-border group-hover:shadow-lg">
         <div className="card-body">
           <div className="flex items-start justify-between mb-3">

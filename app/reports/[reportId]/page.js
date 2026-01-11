@@ -17,7 +17,7 @@ export async function generateMetadata({ params }) {
   return getSEOTags({
     title: `Trading Report - ${report.title}`,
     description: `Trading performance report for ${report.period}. Total R: ${report.summary.totalR > 0 ? '+' : ''}${report.summary.totalR}R, Win Rate: ${report.summary.winRate}%`,
-    canonicalUrlRelative: `/reports/reports/${report.slug}`,
+    canonicalUrlRelative: `/reports/${report.slug}`,
   });
 }
 
