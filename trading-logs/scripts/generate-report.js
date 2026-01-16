@@ -295,6 +295,21 @@ function generateRecommendations(weekData) {
 }
 
 /**
+ * Sync report to web app
+ */
+function syncToWebApp(weekJsonPath) {
+  const { execSync } = require('child_process');
+  const syncScript = path.join(__dirname, 'sync-to-webapp.js');
+
+  try {
+    execSync(`node "${syncScript}" "${weekJsonPath}"`, { stdio: 'inherit' });
+  } catch (error) {
+    console.error('⚠️  Warning: Failed to sync to web app');
+    console.error(error.message);
+  }
+}
+
+/**
  * Main execution
  */
 function main() {
@@ -330,6 +345,10 @@ function main() {
   console.log('\nPreview:');
   console.log('─'.repeat(80));
   console.log(report);
+
+  // Auto-sync to web app
+  console.log('\n');
+  syncToWebApp(filepath);
 }
 
 // Run

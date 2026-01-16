@@ -8,16 +8,20 @@ This system tracks R-multiples for multiple trading strategies across weekly tim
 Every week, follow these simple steps:
 
 1. **📸 Take screenshot** of your trading results (Mon-Fri grid)
-2. **💾 Save it** to `screenshots/YYYY-MM-DD.png` (use Friday's date)
+2. **💾 Save it** to `screenshots/w3.png` (or any name)
 3. **💬 Tell Claude**: "Here's my trading log for the week" (attach/mention screenshot)
 4. **✅ Done!** Claude will automatically:
    - Parse the screenshot data
    - Create JSON file: `data/YYYY/week-XX.json`
-   - Generate report: `reports/week-XX-YYYY.md`
+   - Generate markdown report: `reports/week-XX-YYYY.md`
+   - **🌐 Sync to web app** (`app/reports/_assets/`)
+   - **📊 Update reports.js** (makes it live on website)
    - Create aggregated files for frontend
    - Show you a summary
 
-**That's it!** No manual data entry needed.
+5. **🌐 View online**: http://localhost:3000/reports
+
+**That's it!** No manual data entry needed. Everything auto-syncs to the web app!
 
 ---
 

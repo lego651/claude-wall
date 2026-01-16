@@ -63,10 +63,13 @@ Use `scripts/calculate.js` functions:
 - `calculateStrategySummary()` - per strategy for the week
 - `calculateAllSummaries()` - complete summary object
 
-### Step 4: Create Files
-1. **Weekly JSON**: `data/YYYY/week-WW.json` (see schema below)
-2. **Weekly Report**: Run `node scripts/generate-report.js <week-file>`
-3. **Aggregated Files**: Run `node scripts/aggregate-data.js YYYY`
+### Step 4: Create Weekly JSON & Process
+1. **Create Weekly JSON**: `data/YYYY/week-WW.json` (see schema below)
+2. **Run Complete Workflow**: `node scripts/process-weekly-data.js data/YYYY/week-WW.json`
+   - This ONE command does everything:
+     - Generates markdown report
+     - Syncs to web app (copies MD + updates reports.js)
+     - Aggregates all data
 
 ### Step 5: Show User Summary
 Display:
@@ -127,20 +130,31 @@ Screenshot shows → Store as:
 
 ## 🔄 Complete Workflow (Automated)
 
+**ONE COMMAND DOES IT ALL:**
+
 ```bash
-# After creating weekly JSON file
+# After creating weekly JSON file, run this ONE command:
 cd trading-logs/scripts
-
-# Generate report (creates reports/week-XX-YYYY.md)
-node generate-report.js ../data/2026/week-02.json
-
-# Aggregate data for frontend (creates aggregated files)
-node aggregate-data.js 2026
+node process-weekly-data.js ../data/2026/week-03.json
 ```
 
-Or use the wrapper:
+This automatically:
+1. ✅ Generates markdown report (`reports/week-03-2026.md`)
+2. ✅ Copies markdown to web app (`app/reports/_assets/`)
+3. ✅ Updates `app/reports/_assets/reports.js` with metadata
+4. ✅ Aggregates all data for the year
+5. ✅ Makes it live on http://localhost:3000/reports
+
+**Manual steps (if needed):**
 ```bash
-node scripts/process-weekly-screenshot.js data/2026/week-02.json
+# Just generate report + sync to webapp
+node generate-report.js ../data/2026/week-03.json
+
+# Just sync existing week to webapp
+node sync-to-webapp.js ../data/2026/week-03.json
+
+# Just aggregate data
+node aggregate-data.js 2026
 ```
 
 ---
@@ -150,12 +164,18 @@ node scripts/process-weekly-screenshot.js data/2026/week-02.json
 ### For Each Week:
 1. **Weekly JSON**: `data/YYYY/week-WW.json` (detailed trade data)
 2. **Weekly Report**: `reports/week-WW-YYYY.md` (markdown with ASCII charts, insights, recommendations)
+3. **Web App Report**: `app/reports/_assets/week-WW-YYYY.md` (auto-copied)
+4. **Web App Metadata**: `app/reports/_assets/reports.js` (auto-updated)
 
 ### Aggregated (for frontend):
-3. **Daily Index**: `data/YYYY/aggregated/daily-index.json` (all days, flat structure)
-4. **Monthly Files**: `data/YYYY/aggregated/YYYY-MM.json` (month aggregations)
-5. **Yearly Summary**: `data/YYYY/aggregated/yearly-summary.json` (full year stats)
-6. **Navigation Index**: `data/YYYY/aggregated/index.json` (metadata)
+5. **Daily Index**: `data/YYYY/aggregated/daily-index.json` (all days, flat structure)
+6. **Monthly Files**: `data/YYYY/aggregated/YYYY-MM.json` (month aggregations)
+7. **Yearly Summary**: `data/YYYY/aggregated/yearly-summary.json` (full year stats)
+8. **Navigation Index**: `data/YYYY/aggregated/index.json` (metadata)
+
+### Web App URLs:
+- **All Reports**: http://localhost:3000/reports
+- **Single Report**: http://localhost:3000/reports/week-WW-YYYY
 
 ---
 
