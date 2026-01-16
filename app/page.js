@@ -16,7 +16,30 @@ export default function Page() {
           </p>
 
           {/* Navigation Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl">
+            <Link href="/strategies" className="block group">
+              <div className="card bg-gradient-to-br from-primary/20 to-primary/5 hover:from-primary/30 hover:to-primary/10 transition-all duration-200 card-border group-hover:shadow-lg">
+                <div className="card-body">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-4xl">📈</div>
+                    <div className="badge badge-primary badge-sm">Public</div>
+                  </div>
+                  <h2 className="card-title text-2xl mb-2">Trading Strategies</h2>
+                  <p className="text-base-content/70">
+                    Proven strategies with backtested results, risk management frameworks, and real-world performance tracking.
+                  </p>
+                  <div className="card-actions justify-end mt-4">
+                    <span className="text-sm text-primary group-hover:underline inline-flex items-center gap-1 font-semibold">
+                      Explore Strategies
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
             <Link href="/reports" className="block group">
               <div className="card bg-base-200 hover:bg-base-300 transition-all duration-200 card-border group-hover:shadow-lg">
                 <div className="card-body">
