@@ -1,0 +1,190 @@
+//@version=5
+indicator("GC 18:00 Candle Continuation Test (NY) - M30", overlay=true, max_lines_count=500, max_labels_count=500)
+
+//====================================================
+// Inputs
+//====================================================
+thresholdTicks = input.int(150, "Threshold (ticks)", minval=1)
+windowHours    = input.int(12, "Evaluation window (hours after 19:00)", minval=1, maxval=24)
+
+// CONST epoch ms defaults (NY):
+// 2026-01-01 00:00 NY => 1767243600000
+// 2026-01-16 23:59 NY => 1768625940000
+startDate = input.time(defval=1767243600000, title="Start date (NY)")
+endDate   = input.time(defval=1768625940000, title="End date (NY)")
+
+showLines  = input.bool(true, "Draw TP / SL lines")
+showLabels = input.bool(true, "Draw labels")
+showTable  = input.bool(true, "Show results table")
+
+tz = "America/New_York"
+
+//====================================================
+// Helpers
+//====================================================
+tickSize = syminfo.mintick
+thr      = thresholdTicks * tickSize
+
+inRange(t) =>
+    t >= startDate and t <= endDate
+
+pct(num, den) =>
+    den == 0 ? na : 100.0 * num / den
+
+//====================================================
+// Pull 30-minute data (timeframe-independent results)
+//====================================================
+tfEval = "30"
+
+o30 = request.security_lower_tf(syminfo.tickerid, tfEval, open)
+h30 = request.security_lower_tf(syminfo.tickerid, tfEval, high)
+l30 = request.security_lower_tf(syminfo.tickerid, tfEval, low)
+c30 = request.security_lower_tf(syminfo.tickerid, tfEval, close)
+t30 = request.security_lower_tf(syminfo.tickerid, tfEval, time)
+
+//====================================================
+// State
+//====================================================
+var bool  buildingSignal = false
+var float sigOpen  = na
+var float sigClose = na
+
+var bool  tradeActive = false
+var bool  isLong = false
+var float refPrice = na
+var float tp = na
+var float sl = na
+var int   startT = na
+var int   endT   = na
+
+//====================================================
+// Stats
+//====================================================
+var int longW = 0
+var int longL = 0
+var int longN = 0
+var int shortW = 0
+var int shortL = 0
+var int shortN = 0
+
+//====================================================
+// Core Logic (30-minute resolution)
+//====================================================
+int sz = array.size(t30)
+if sz > 0
+    for i = 0 to sz - 1
+        int mt = array.get(t30, i)
+        if not inRange(mt)
+            continue
+
+        float mo = array.get(o30, i)
+        float mh = array.get(h30, i)
+        float ml = array.get(l30, i)
+        float mc = array.get(c30, i)
+
+        int hr = hour(mt, tz)
+        int mi = minute(mt, tz)
+
+        // Build 18:00–19:00 candle (2 x 30m bars: 18:00 and 18:30)
+        if hr == 18 and mi == 0
+            buildingSignal := true
+            sigOpen := mo
+            sigClose := mc
+
+        if buildingSignal and hr == 18
+            // update close as we pass through 18:30 bar
+            sigClose := mc
+
+        // Finalize at 19:00
+        if buildingSignal and hr == 19 and mi == 0
+            buildingSignal := false
+
+            // ignore doji + ensure only one active test at a time
+            if sigClose != sigOpen and not tradeActive
+                isLong := sigClose > sigOpen
+                refPrice := sigClose
+                startT := mt
+                endT := mt + windowHours * 60 * 60 * 1000
+
+                tp := isLong ? refPrice + thr : refPrice - thr
+                sl := isLong ? refPrice - thr : refPrice + thr
+
+                tradeActive := true
+
+                if showLabels
+                    label.new(startT, refPrice, isLong ? "Aim: LONG" : "Aim: SHORT",
+                      xloc=xloc.bar_time,
+                      style=isLong ? label.style_label_up : label.style_label_down,
+                      color=isLong ? color.green : color.red, textcolor=color.white)
+
+                if showLines
+                    line.new(startT, tp, endT, tp, xloc=xloc.bar_time, color=color.green, width=2)
+                    line.new(startT, sl, endT, sl, xloc=xloc.bar_time, color=color.red, width=2)
+
+        // Evaluate outcome
+        if tradeActive
+            if mt > endT
+                // No result
+                if isLong
+                    longN += 1
+                else
+                    shortN += 1
+
+                if showLabels
+                    label.new(endT, refPrice, "NO RESULT",
+                      xloc=xloc.bar_time, style=label.style_label_left,
+                      color=color.gray, textcolor=color.white)
+
+                tradeActive := false
+            else
+                bool hitTP = isLong ? mh >= tp : ml <= tp
+                bool hitSL = isLong ? ml <= sl : mh >= sl
+
+                // Conservative tie-break: both in same bar => FAIL
+                if hitTP or hitSL
+                    bool win = hitTP and not hitSL
+
+                    if win
+                        if isLong
+                            longW += 1
+                        else
+                            shortW += 1
+                    else
+                        if isLong
+                            longL += 1
+                        else
+                            shortL += 1
+
+                    if showLabels
+                        label.new(mt, win ? tp : sl, win ? "WIN" : "FAIL",
+                          xloc=xloc.bar_time, style=label.style_label_left,
+                          color=win ? color.green : color.red, textcolor=color.white)
+
+                    tradeActive := false
+
+//====================================================
+// Results Table
+//====================================================
+var table t = table.new(position.top_right, 2, 6, border_width=1)
+
+if showTable and barstate.islast
+    int totalW = longW + shortW
+    int totalL = longL + shortL
+
+    float totalWR = pct(totalW, totalW + totalL)
+    float longWR  = pct(longW, longW + longL)
+    float shortWR = pct(shortW, shortW + shortL)
+
+    table.clear(t, 0, 0)
+    table.cell(t, 0, 0, "Metric", bgcolor=color.black, text_color=color.white)
+    table.cell(t, 1, 0, "Value",  bgcolor=color.black, text_color=color.white)
+    table.cell(t, 0, 1, "Long (W/L/N)")
+    table.cell(t, 1, 1, str.format("{0}/{1}/{2}", longW, longL, longN))
+    table.cell(t, 0, 2, "Short (W/L/N)")
+    table.cell(t, 1, 2, str.format("{0}/{1}/{2}", shortW, shortL, shortN))
+    table.cell(t, 0, 3, "Win Rate Total (excl N)")
+    table.cell(t, 1, 3, na(totalWR) ? "n/a" : str.format("{0,number,#.##}%", totalWR))
+    table.cell(t, 0, 4, "Win Rate Long (excl N)")
+    table.cell(t, 1, 4, na(longWR) ? "n/a" : str.format("{0,number,#.##}%", longWR))
+    table.cell(t, 0, 5, "Win Rate Short (excl N)")
+    table.cell(t, 1, 5, na(shortWR) ? "n/a" : str.format("{0,number,#.##}%", shortWR))
