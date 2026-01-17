@@ -328,7 +328,10 @@ const ProfilePage = ({ params }) => {
                       Date
                     </th>
                     <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                      Firm
+                      From
+                    </th>
+                    <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                      Token
                     </th>
                     <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                       Tx Hash
@@ -339,32 +342,73 @@ const ProfilePage = ({ params }) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {trader.payouts.map((payout) => (
-                    <tr key={payout.id}>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {new Date(payout.timestamp).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-bold">
-                        {FIRMS.find((f) => f.id === payout.firmId)?.name || "Unknown Firm"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <code className="text-[10px] bg-gray-50 px-2 py-1 rounded border border-gray-100 text-gray-400">
-                          0x4a...f2e9
-                        </code>
-                      </td>
-                      <td className="px-6 py-4 text-right font-black">
-                        ${payout.amount.toLocaleString()}
+                  {loading ? (
+                    // Loading state
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i}>
+                        <td className="px-6 py-4" colSpan={5}>
+                          <div className="h-4 bg-gray-100 rounded animate-pulse"></div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : error ? (
+                    // Error state
+                    <tr>
+                      <td className="px-6 py-8 text-center text-sm text-red-500" colSpan={5}>
+                        Error loading transactions: {error}
                       </td>
                     </tr>
-                  ))}
+                  ) : !data?.transactions || data.transactions.length === 0 ? (
+                    // Empty state
+                    <tr>
+                      <td className="px-6 py-8 text-center text-sm text-gray-400" colSpan={5}>
+                        No transactions found
+                      </td>
+                    </tr>
+                  ) : (
+                    // Data rows
+                    data.transactions.map((tx) => (
+                      <tr key={tx.txHash}>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {new Date(tx.timestamp * 1000).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <code className="text-[10px] bg-gray-50 px-2 py-1 rounded border border-gray-100 text-gray-600 font-medium">
+                            {tx.fromShort}
+                          </code>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-bold">
+                          {tx.token}
+                        </td>
+                        <td className="px-6 py-4">
+                          <a
+                            href={tx.arbiscanUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-100 hover:bg-blue-100 transition-colors inline-flex items-center gap-1"
+                          >
+                            {tx.txHash.slice(0, 6)}...{tx.txHash.slice(-4)}
+                            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </a>
+                        </td>
+                        <td className="px-6 py-4 text-right font-black">
+                          ${tx.amountUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
-            <div className="p-4 bg-gray-50/50 text-center">
-              <button className="text-xs font-bold text-gray-400 hover:text-black transition-colors">
-                Load older transactions
-              </button>
-            </div>
+            {!loading && !error && data?.transactions && data.transactions.length > 0 && (
+              <div className="p-4 bg-gray-50/50 text-center">
+                <p className="text-xs text-gray-400">
+                  Showing {data.transactions.length} most recent transactions
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
