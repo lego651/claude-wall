@@ -70,25 +70,61 @@ export default function PropFirmDetailPage() {
 
   return (
     <PropProofLayout>
-      <div className="container mx-auto p-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">{firm.name}</h1>
-          <p className="text-base-content/60">
-            Tracking {firm.addresses.length} wallet address{firm.addresses.length !== 1 ? 'es' : ''}
-          </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Header - Breadcrumb & Firm Info */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          {/* Back Button */}
+          <button
+            onClick={() => window.history.back()}
+            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Firm Logo & Info */}
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 bg-slate-900 rounded-xl flex items-center justify-center shadow-md">
+              <span className="text-white text-xl font-black">
+                {firm.name.substring(0, 2).toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <h1 className="text-xl font-bold text-slate-900">{firm.name}</h1>
+                <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                  Verified
+                </span>
+              </div>
+              <a
+                href={firm.website || `https://${firm.name.toLowerCase().replace(/\s+/g, '')}.com`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:underline"
+              >
+                {firm.website?.replace(/^https?:\/\//, '') || `${firm.name.toLowerCase().replace(/\s+/g, '')}.com`}
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
+          </div>
         </div>
 
-        {/* Time range selector */}
-        <select
-          className="select select-bordered"
-          value={days}
-          onChange={(e) => setDays(parseInt(e.target.value))}
-        >
-          <option value={7}>Last 7 Days</option>
-          <option value={30}>Last 30 Days</option>
-        </select>
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <button className="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
+            Follow Firm
+          </button>
+          <button className="px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-sm flex items-center gap-1.5">
+            <svg className="w-4 h-4 text-yellow-400 fill-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Trade Now
+          </button>
+        </div>
       </div>
 
       {/* Loading State */}
