@@ -1,9 +1,11 @@
 "use client";
 
+import { use } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import PropProofLayout from "@/components/PropProofLayout";
 import { MOCK_TRADERS, FIRMS } from "@/lib/constants";
+import { useTransactions } from "@/lib/hooks/useTransactions";
 import {
   BarChart,
   Bar,
@@ -15,9 +17,12 @@ import {
   Cell,
 } from "recharts";
 
+const TEST_WALLET = process.env.NEXT_PUBLIC_TEST_WALLET_ADDRESS;
+
 const ProfilePage = ({ params }) => {
-  const { handle } = params;
+  const { handle } = use(params);
   const trader = MOCK_TRADERS.find((t) => t.handle === handle);
+  const { data, loading, error } = useTransactions(TEST_WALLET);
 
   if (!trader) {
     return (
@@ -211,14 +216,28 @@ const ProfilePage = ({ params }) => {
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
                 Total Verified
               </p>
-              <h2 className="text-3xl font-black">${trader.totalVerifiedPayout.toLocaleString()}</h2>
+              <h2 className="text-3xl font-black">
+                {loading ? (
+                  <span className="text-gray-300">Loading...</span>
+                ) : error ? (
+                  <span className="text-red-500 text-sm">Error</span>
+                ) : (
+                  `$${data?.totalPayoutUSD?.toLocaleString() || '0'}`
+                )}
+              </h2>
             </div>
             <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
                 Last 30 Days
               </p>
               <h2 className="text-3xl font-black text-green-600">
-                ${trader.last30DaysPayout.toLocaleString()}
+                {loading ? (
+                  <span className="text-gray-300">Loading...</span>
+                ) : error ? (
+                  <span className="text-red-500 text-sm">Error</span>
+                ) : (
+                  `$${data?.last30DaysPayoutUSD?.toLocaleString() || '0'}`
+                )}
               </h2>
             </div>
             <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm">
@@ -226,10 +245,13 @@ const ProfilePage = ({ params }) => {
                 Avg. Payout
               </p>
               <h2 className="text-3xl font-black text-blue-600">
-                $
-                {(trader.totalVerifiedPayout / trader.payoutCount).toLocaleString(undefined, {
-                  maximumFractionDigits: 0,
-                })}
+                {loading ? (
+                  <span className="text-gray-300">Loading...</span>
+                ) : error ? (
+                  <span className="text-red-500 text-sm">Error</span>
+                ) : (
+                  `$${data?.avgPayoutUSD?.toLocaleString() || '0'}`
+                )}
               </h2>
             </div>
           </div>
