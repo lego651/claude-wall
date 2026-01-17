@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { use } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import PropProofLayout from "@/components/PropProofLayout";
@@ -20,7 +20,7 @@ import {
 const TEST_WALLET = process.env.NEXT_PUBLIC_TEST_WALLET_ADDRESS;
 
 const ProfilePage = ({ params }) => {
-  const { handle } = React.use(params);
+  const { handle } = use(params);
   const trader = MOCK_TRADERS.find((t) => t.handle === handle);
   const { data, loading, error } = useTransactions(TEST_WALLET);
 
