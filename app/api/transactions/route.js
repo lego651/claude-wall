@@ -44,6 +44,9 @@ export async function GET(request) {
 
     console.log(`[API] Fetching transactions for address: ${address}`);
 
+    // TODO (Phase 1): Add 5-minute caching to reduce Arbiscan API calls
+    // TODO (Phase 1): Implement retry logic for failed Arbiscan requests
+
     // Fetch data from Arbiscan
     const [nativeData, tokenData] = await Promise.all([
       fetchNativeTransactions(address, apiKey),
