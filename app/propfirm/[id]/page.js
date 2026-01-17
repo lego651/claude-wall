@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { usePropFirmTransactions } from '@/lib/hooks/usePropFirmTransactions';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import PropProofLayout from '@/components/PropProofLayout';
 
 export default function PropFirmDetailPage() {
   const params = useParams();
@@ -45,26 +46,31 @@ export default function PropFirmDetailPage() {
 
   if (firmLoading) {
     return (
-      <div className="container mx-auto p-8">
-        <div className="flex items-center justify-center h-64">
-          <span className="loading loading-spinner loading-lg"></span>
+      <PropProofLayout>
+        <div className="container mx-auto p-8">
+          <div className="flex items-center justify-center h-64">
+            <span className="loading loading-spinner loading-lg"></span>
+          </div>
         </div>
-      </div>
+      </PropProofLayout>
     );
   }
 
   if (firmError) {
     return (
-      <div className="container mx-auto p-8">
-        <div className="alert alert-error">
-          <span>{firmError}</span>
+      <PropProofLayout>
+        <div className="container mx-auto p-8">
+          <div className="alert alert-error">
+            <span>{firmError}</span>
+          </div>
         </div>
-      </div>
+      </PropProofLayout>
     );
   }
 
   return (
-    <div className="container mx-auto p-8">
+    <PropProofLayout>
+      <div className="container mx-auto p-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -177,9 +183,9 @@ export default function PropFirmDetailPage() {
                     contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151' }}
                   />
                   <Legend />
-                  <Bar dataKey="rise" stackId="a" fill="#4F46E5" name="Rise" />
-                  <Bar dataKey="crypto" stackId="a" fill="#F59E0B" name="Crypto" />
-                  <Bar dataKey="wireTransfer" stackId="a" fill="#10B981" name="Wire Transfer" />
+                  <Bar key="rise" dataKey="rise" stackId="a" fill="#4F46E5" name="Rise" />
+                  <Bar key="crypto" dataKey="crypto" stackId="a" fill="#F59E0B" name="Crypto" />
+                  <Bar key="wireTransfer" dataKey="wireTransfer" stackId="a" fill="#10B981" name="Wire Transfer" />
                 </BarChart>
               </ResponsiveContainer>
               <div className="text-center text-sm text-base-content/60 mt-4">
@@ -309,6 +315,7 @@ export default function PropFirmDetailPage() {
           </div>
         </>
       )}
-    </div>
+      </div>
+    </PropProofLayout>
   );
 }

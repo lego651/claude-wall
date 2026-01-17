@@ -8,6 +8,7 @@ const PropProofLayout = ({ children }) => {
 
   const navItems = [
     { label: "Leaderboard", path: "/leaderboard" },
+    { label: "Prop Firms", path: "/propfirms" },
     { label: "Dashboard", path: "/onboarding" },
     { label: "Search", path: "/search" },
   ];
