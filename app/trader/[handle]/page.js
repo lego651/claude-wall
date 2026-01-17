@@ -38,15 +38,8 @@ const ProfilePage = ({ params }) => {
     );
   }
 
-  // Mock chart data
-  const chartData = [
-    { month: "Jan", amount: 4500 },
-    { month: "Feb", amount: 5200 },
-    { month: "Mar", amount: 0 },
-    { month: "Apr", amount: 12000 },
-    { month: "May", amount: 8400 },
-    { month: "Jun", amount: 15000 },
-  ];
+  // Use real blockchain data for chart
+  const chartData = data?.monthlyData || [];
 
   return (
     <PropProofLayout>
@@ -271,37 +264,59 @@ const ProfilePage = ({ params }) => {
             </div>
 
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis
-                    dataKey="month"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fontWeight: 600, fill: "#9ca3af" }}
-                    dy={10}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fontWeight: 600, fill: "#9ca3af" }}
-                    tickFormatter={(value) => `$${value / 1000}k`}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "#f9fafb" }}
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "none",
-                      boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-                    }}
-                  />
-                  <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.amount > 0 ? "#111827" : "#e5e7eb"} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              {loading ? (
+                // Loading state
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gray-300 border-r-transparent"></div>
+                    <p className="mt-4 text-sm text-gray-400">Loading chart data...</p>
+                  </div>
+                </div>
+              ) : error ? (
+                // Error state
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-sm text-red-500">Error loading chart data</p>
+                </div>
+              ) : chartData.length === 0 ? (
+                // Empty state
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-sm text-gray-400">No chart data available</p>
+                </div>
+              ) : (
+                // Chart with real data
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fontWeight: 600, fill: "#9ca3af" }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fontWeight: 600, fill: "#9ca3af" }}
+                      tickFormatter={(value) => `$${value / 1000}k`}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "#f9fafb" }}
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+                      }}
+                      formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']}
+                    />
+                    <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.amount > 0 ? "#111827" : "#e5e7eb"} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 
