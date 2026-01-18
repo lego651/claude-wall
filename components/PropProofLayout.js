@@ -68,34 +68,34 @@ const PropProofLayout = ({ children }) => {
       <main className="flex-grow">{children}</main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 py-12 bg-gray-50/50 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2 opacity-50">
-              <svg className="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="font-semibold">PropProof</span>
+      <footer className="border-t border-slate-200 mt-12">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="space-y-4">
+              <p className="text-xs text-slate-500 leading-relaxed uppercase font-bold tracking-tight">Technical Disclaimer</p>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                Note: We can only track payouts through Riseworks.io. Firms may also payout via additional methods and use their Rise wallets for other operating expenses, not solely for trader payouts.
+              </p>
             </div>
-            <div className="flex gap-8 text-sm text-gray-500">
-              <a href="#" className="hover:text-black transition-colors">
-                API Docs
-              </a>
-              <a href="#" className="hover:text-black transition-colors">
-                Privacy
-              </a>
-              <a href="#" className="hover:text-black transition-colors">
-                Terms
-              </a>
-              <a href="#" className="hover:text-black transition-colors">
-                Twitter
-              </a>
+            <div className="space-y-4 md:text-right">
+              <p className="text-xs text-slate-500 leading-relaxed uppercase font-bold tracking-tight">Data Integrity</p>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                All displayed information is publicly accessible blockchain data, using data that can be independently verified through any blockchain explorer. Listings on this platform are not endorsements.
+              </p>
             </div>
-            <p className="text-sm text-gray-400">© 2024 PropProof. Verified Payouts Only.</p>
+          </div>
+          <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-slate-100 gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-slate-900 rounded flex items-center justify-center">
+                <span className="text-white text-[10px] font-black">PP</span>
+              </div>
+              <span className="text-xs font-semibold text-slate-400">&copy; 2025 PropPulse. All rights reserved.</span>
+            </div>
+            <div className="flex gap-6">
+              <a href="#" className="text-xs font-semibold text-slate-400 hover:text-slate-900 transition-colors">Privacy Policy</a>
+              <a href="#" className="text-xs font-semibold text-slate-400 hover:text-slate-900 transition-colors">Terms of Service</a>
+              <a href="#" className="text-xs font-semibold text-slate-400 hover:text-slate-900 transition-colors">Security</a>
+            </div>
           </div>
         </div>
       </footer>
