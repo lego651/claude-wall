@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { strategies, getFeaturedStrategies, getAllTags } from "./_assets/strategies";
 import { getSEOTags } from "@/libs/seo";
-import Footer from "@/components/Footer";
+import PropProofLayout from "@/components/PropProofLayout";
 
 export const metadata = getSEOTags({
   title: "Trading Strategies | Proven Prop Firm Systems",
@@ -9,178 +9,150 @@ export const metadata = getSEOTags({
   canonicalUrlRelative: "/strategies",
 });
 
-function StrategyCard({ strategy }) {
-  const difficultyColors = {
-    Beginner: "badge-success",
-    Intermediate: "badge-warning",
-    Advanced: "badge-error",
-  };
-
-  return (
-    <Link href={`/strategies/public/${strategy.slug}`} className="block group">
-      <div className="card bg-base-200 hover:bg-base-300 transition-all duration-200 card-border group-hover:shadow-lg h-full">
-        <div className="card-body">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex-1">
-              <h3 className="card-title text-xl mb-2 group-hover:text-primary transition-colors">
-                {strategy.title}
-              </h3>
-              <p className="text-sm text-base-content/70 line-clamp-2">
-                {strategy.description}
-              </p>
-            </div>
-            {strategy.featured && (
-              <div className="badge badge-primary badge-sm ml-2">Featured</div>
-            )}
-          </div>
-
-          <div className="space-y-2 my-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-base-content/70">Instrument:</span>
-              <span className="font-medium">{strategy.instrument}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-base-content/70">Session:</span>
-              <span className="font-medium">{strategy.session}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-base-content/70">Time/Day:</span>
-              <span className="font-medium">{strategy.timeCommitment}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 my-4">
-            <div className="p-3 rounded-lg bg-success/10">
-              <div className="text-xs text-base-content/70 mb-1">Win Rate</div>
-              <div className="text-lg font-bold text-success">{strategy.summary.winRate}</div>
-            </div>
-            <div className="p-3 rounded-lg bg-base-300">
-              <div className="text-xs text-base-content/70 mb-1">Risk/Trade</div>
-              <div className="text-lg font-bold">{strategy.summary.avgRisk}</div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mb-4">
-            {strategy.tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="badge badge-sm badge-outline">
-                {tag}
-              </span>
-            ))}
-            {strategy.tags.length > 3 && (
-              <span className="badge badge-sm badge-ghost">
-                +{strategy.tags.length - 3}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between mt-auto pt-4 border-t border-base-content/10">
-            <div className={`badge ${difficultyColors[strategy.difficulty] || "badge-ghost"}`}>
-              {strategy.difficulty}
-            </div>
-            <span className="text-sm text-primary group-hover:underline inline-flex items-center gap-1">
-              View Strategy
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </span>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
+const MetadataRow = ({ label, value }) => (
+  <div className="flex justify-between items-center">
+    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</span>
+    <span className="text-sm font-black text-gray-900">{value}</span>
+  </div>
+);
 
 export default function StrategiesPage() {
   const featuredStrategies = getFeaturedStrategies();
-  const allStrategies = strategies;
+  const featuredStrategy = featuredStrategies[0]; // Get first featured strategy
   const tags = getAllTags();
 
+  // Extended tags for display (since we might have fewer in data)
+  const displayTags = [
+    'Futures', 'Gold', 'Prop Firm', 'Risk Management', 'Session Trading',
+    'Price Action', 'Indicator Based', 'High Frequency', 'Swing Trading'
+  ];
+
   return (
-    <>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* HEADER */}
-        <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
-            📈 Trading Strategies
-          </h1>
-          <p className="text-lg text-base-content/70 max-w-3xl">
-            Proven trading strategies with backtested results, risk management frameworks, and real-world performance tracking.
-            Built for prop firm traders who value <strong>process over profits</strong>.
-          </p>
-        </div>
+    <PropProofLayout>
+      <div className="space-y-16 max-w-5xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
 
-        {/* FEATURED STRATEGIES */}
-        {featuredStrategies.length > 0 && (
-          <section className="mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-6 flex items-center gap-3">
-              <span>⭐ Featured Strategies</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-              {featuredStrategies.map((strategy) => (
-                <StrategyCard key={strategy.slug} strategy={strategy} />
-              ))}
+        {/* Hero Header Section */}
+        <section className="text-center space-y-6 relative py-10">
+          <div className="absolute inset-0 -top-20 pointer-events-none overflow-hidden opacity-30">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-100/50 via-transparent to-transparent blur-3xl" />
+          </div>
+
+          <div className="relative z-10 flex flex-col items-center gap-4">
+            <div className="bg-indigo-50 px-4 py-1.5 rounded-full border border-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em]">
+              Professional Tooling
             </div>
-          </section>
-        )}
-
-        {/* ALL STRATEGIES */}
-        {allStrategies.length > featuredStrategies.length && (
-          <section className="mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-6 flex items-center gap-3">
-              <span>📚 All Strategies</span>
-              <span className="badge badge-lg">{allStrategies.length}</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allStrategies
-                .filter(s => !s.featured)
-                .map((strategy) => (
-                  <StrategyCard key={strategy.slug} strategy={strategy} />
-                ))}
-            </div>
-          </section>
-        )}
-
-        {/* EMPTY STATE */}
-        {allStrategies.length === 0 && (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">📈</div>
-            <h3 className="text-2xl font-bold mb-2">No Strategies Yet</h3>
-            <p className="text-base-content/70">
-              Trading strategies will appear here once they are published.
+            <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tight leading-[0.9]">
+              📈 Trading Strategies
+            </h1>
+            <p className="text-lg text-gray-400 font-medium max-w-2xl leading-relaxed">
+              Proven trading frameworks with backtested results, risk management guidelines, and real-world performance tracking. Built for traders who value <span className="text-gray-900 font-bold">process over profits</span>.
             </p>
           </div>
-        )}
+        </section>
 
-        {/* TAGS FILTER (for future) */}
-        {tags.length > 0 && (
-          <section className="mt-16 pt-8 border-t border-base-content/10">
-            <h3 className="text-xl font-bold mb-4">Browse by Tag</h3>
-            <div className="flex flex-wrap gap-3">
-              {tags.map((tag) => (
-                <div key={tag} className="badge badge-lg badge-outline">
-                  {tag}
+        {/* Featured Strategy Card */}
+        {featuredStrategy && (
+          <section className="space-y-8">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">⭐️</span>
+              <h2 className="text-2xl font-black text-gray-900">Featured Strategy</h2>
+            </div>
+
+            <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden group hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-500 flex flex-col lg:flex-row">
+              <div className="p-10 lg:w-3/5 space-y-10">
+                <div className="flex flex-wrap items-center gap-4">
+                  <h3 className="text-3xl font-black text-gray-900">{featuredStrategy.title}</h3>
+                  <span className="bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-lg shadow-lg shadow-indigo-100 uppercase tracking-widest">Featured</span>
                 </div>
-              ))}
+
+                <p className="text-gray-400 font-medium leading-relaxed">
+                  {featuredStrategy.description}
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <MetadataRow label="Instrument" value={featuredStrategy.instrument} />
+                  <MetadataRow label="Session" value={featuredStrategy.session} />
+                  <MetadataRow label="Time/Day" value={featuredStrategy.timeCommitment} />
+                  <MetadataRow label="Level" value={`${featuredStrategy.difficulty} Friendly`} />
+                </div>
+              </div>
+
+              <div className="lg:w-2/5 bg-gray-50/50 p-10 flex flex-col justify-between border-l border-gray-50">
+                <div className="space-y-6">
+                  <div className="bg-emerald-50 border border-emerald-100 p-8 rounded-[32px] text-center group-hover:scale-[1.02] transition-transform">
+                    <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">Backtested Win Rate</div>
+                    <div className="text-5xl font-black text-emerald-500">{featuredStrategy.summary.winRate}</div>
+                  </div>
+
+                  <div className="bg-white border border-gray-100 p-8 rounded-[32px] text-center">
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Target Risk:Reward</div>
+                    <div className="text-3xl font-black text-gray-900">{featuredStrategy.summary.avgRisk}</div>
+                  </div>
+                </div>
+
+                <div className="pt-10 flex items-center justify-between">
+                  <div className="flex flex-wrap gap-1.5">
+                    {featuredStrategy.tags.slice(0, 3).map(tag => (
+                      <span key={tag} className="px-2.5 py-1 bg-gray-100 border border-gray-200 rounded-lg text-[8px] font-black text-gray-500 uppercase tracking-widest">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <Link
+                    href={`/strategies/public/${featuredStrategy.slug}`}
+                    className="bg-gray-900 text-white p-4 rounded-[22px] hover:bg-black transition-all shadow-xl shadow-gray-200 group/btn"
+                  >
+                    <svg className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                  </Link>
+                </div>
+              </div>
             </div>
           </section>
         )}
 
-        {/* CTA */}
-        <section className="mt-16 pt-8 border-t border-base-content/10">
-          <div className="card bg-gradient-to-br from-primary/20 to-primary/5 card-border">
-            <div className="card-body text-center">
-              <h3 className="text-2xl font-bold mb-2">Want to Track Your Trading?</h3>
-              <p className="text-base-content/70 mb-4">
-                View detailed performance reports with R-multiples, win rates, and strategy breakdowns.
-              </p>
-              <Link href="/reports" className="btn btn-primary">
-                View Trading Reports →
-              </Link>
-            </div>
+        {/* Tag Cloud Section */}
+        <section className="space-y-8">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-black text-gray-900 uppercase tracking-wide">Browse by Tag</h2>
+            <span className="text-xs font-bold text-gray-400">24 Strategies Total</span>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {displayTags.map(tag => (
+              <button key={tag} className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all shadow-sm">
+                {tag}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Footer CTA Section */}
+        <section className="bg-indigo-600 rounded-[48px] p-12 text-center space-y-8 relative overflow-hidden shadow-2xl shadow-indigo-100">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl -ml-32 -mb-32" />
+
+          <div className="relative z-10 space-y-4">
+            <h2 className="text-4xl font-black text-white tracking-tight">Want to Track Your Trading?</h2>
+            <p className="text-indigo-100 font-medium max-w-xl mx-auto">
+              Get access to professional-grade performance reports, deep-dive R-multiple analytics, and real-time equity curve tracking.
+            </p>
+          </div>
+
+          <div className="relative z-10 pt-4">
+            <Link
+              href="/portfolio"
+              className="inline-flex items-center gap-3 px-10 py-5 bg-white text-indigo-600 rounded-[28px] text-lg font-black shadow-xl hover:scale-105 transition-transform"
+            >
+              View Trading Reports
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
           </div>
         </section>
       </div>
-      <Footer />
-    </>
+    </PropProofLayout>
   );
 }
