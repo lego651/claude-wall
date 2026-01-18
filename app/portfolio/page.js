@@ -29,38 +29,33 @@ function WeeklyStrategyCard({ strategy, weekData, weekSummary }) {
   const isPositive = strategyR >= 0;
   const strategyStats = weekSummary?.byStrategy?.[strategy.id];
 
-  // Map colors to specific Tailwind classes
-  const colorClasses = {
-    primary: 'bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30',
-    secondary: 'bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/30',
-    accent: 'bg-gradient-to-br from-accent/10 to-accent/5 border-accent/30',
-    info: 'bg-gradient-to-br from-info/10 to-info/5 border-info/30',
-    warning: 'bg-gradient-to-br from-warning/10 to-warning/5 border-warning/30',
-    error: 'bg-gradient-to-br from-error/10 to-error/5 border-error/30',
+  // Map colors to badge classes
+  const badgeColors = {
+    primary: 'bg-slate-900 text-white',
+    secondary: 'bg-slate-900 text-white',
+    accent: 'bg-slate-900 text-white',
+    info: 'bg-slate-900 text-white',
+    warning: 'bg-slate-900 text-white',
+    error: 'bg-slate-900 text-white',
   };
 
   return (
-    <div className={`card ${colorClasses[strategy.color]} card-border p-3`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className={`badge badge-${strategy.color} badge-sm`}>
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className={`${badgeColors[strategy.color]} px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide`}>
           {strategy.name}
         </div>
-        <div className={`text-2xl font-bold ${isPositive ? 'text-success' : 'text-error'}`}>
-          {isPositive ? '+' : ''}{strategyR}R
+        <div className={`text-2xl font-bold leading-none tracking-tight ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
+          {isPositive ? '+' : ''}{strategyR.toFixed(1)}R
         </div>
       </div>
-      <div className="text-xs text-base-content/60 mb-2">{strategy.description}</div>
 
       {strategyStats && (
-        <div className="space-y-1">
-          <div className="text-xs text-base-content/60">
-            {strategyStats.trades} trades • {strategyStats.winning}W / {strategyStats.losing}L
-          </div>
-          <div className="text-xs text-base-content/60">
-            Win Rate: <span className={`font-semibold ${strategyStats.winRate >= 60 ? 'text-success' : 'text-base-content'}`}>
-              {strategyStats.winRate}%
-            </span>
-          </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-slate-400 uppercase font-bold tracking-wider">Win Rate: {strategyStats.winRate}%</span>
+          <span className="text-slate-900 font-medium">
+            {strategyStats.winning}W / {strategyStats.losing}L
+          </span>
         </div>
       )}
     </div>
@@ -71,36 +66,11 @@ function WeeklyStrategyCard({ strategy, weekData, weekSummary }) {
 function CumulativeStrategyCard({ strategy, strategyData, weeklyData }) {
   const isPositive = strategyData?.totalR >= 0;
 
-  // Map colors to specific Tailwind classes
-  const colorClasses = {
-    primary: 'bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20',
-    secondary: 'bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20',
-    accent: 'bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20',
-    info: 'bg-gradient-to-br from-info/10 to-info/5 border-info/20',
-    warning: 'bg-gradient-to-br from-warning/10 to-warning/5 border-warning/20',
-    error: 'bg-gradient-to-br from-error/10 to-error/5 border-error/20',
-  };
-
   // Prepare chart data
   const chartData = weeklyData?.weeks.map(week => ({
     week: `W${week.weekNumber}`,
     value: week[strategy.id] || 0,
   })) || [];
-
-  // Custom tooltip for mini chart
-  const MiniTooltip = ({ active, payload }) => {
-    if (!active || !payload || payload.length === 0) return null;
-    const value = payload[0].value;
-    const isPos = value >= 0;
-
-    return (
-      <div className="bg-base-100 border border-base-300 rounded px-2 py-1 shadow-lg">
-        <p className={`text-sm font-bold ${isPos ? 'text-success' : 'text-error'}`}>
-          {isPos ? '+' : ''}{value.toFixed(1)}R
-        </p>
-      </div>
-    );
-  };
 
   // Calculate avg R per month (extrapolate from available weeks)
   const weeksCount = weeklyData?.weeks.length || 1;
@@ -108,92 +78,116 @@ function CumulativeStrategyCard({ strategy, strategyData, weeklyData }) {
   const avgRPerMonth = strategyData ? (strategyData.totalR / weeksCount) * avgWeeksPerMonth : 0;
 
   return (
-    <div className={`card ${colorClasses[strategy.color]} card-border`}>
-      <div className="card-body p-6">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-xl font-bold">{strategy.name}</h3>
-              <div className={`badge badge-${strategy.color} badge-sm`}>
-                {strategy.name}
-              </div>
-            </div>
-            <p className="text-xs text-base-content/60">{strategy.description}</p>
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 p-6">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="px-3 py-1.5 bg-white border-2 border-slate-900 rounded-lg text-xs font-bold tracking-wide">
+            {strategy.id.replace('_', '')}
           </div>
-        </div>
-
-        {/* Key Metrics Row */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <div>
-            <div className="text-xs text-base-content/60 mb-1">Total R</div>
-            <div className={`text-xl font-bold ${isPositive ? 'text-success' : 'text-error'}`}>
-              {isPositive ? '+' : ''}{strategyData?.totalR || 0}R
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-base-content/60 mb-1">Avg/Month</div>
-            <div className="text-xl font-bold">
-              {avgRPerMonth >= 0 ? '+' : ''}{avgRPerMonth.toFixed(1)}R
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-base-content/60 mb-1">Win Rate</div>
-            <div className={`text-xl font-bold ${strategyData?.winRate >= 60 ? 'text-success' : 'text-base-content'}`}>
-              {strategyData?.winRate || 0}%
-            </div>
-          </div>
-        </div>
-
-        {/* Mini Bar Chart */}
-        <div className="h-32 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--bc) / 0.1)" />
-              <XAxis
-                dataKey="week"
-                tick={{ fill: 'hsl(var(--bc) / 0.6)', fontSize: 10 }}
-                axisLine={false}
-              />
-              <YAxis
-                tick={{ fill: 'hsl(var(--bc) / 0.6)', fontSize: 10 }}
-                axisLine={false}
-                width={30}
-              />
-              <Tooltip content={<MiniTooltip />} cursor={{ fill: 'hsl(var(--bc) / 0.05)' }} />
-              <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={40}>
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.value >= 0 ? '#86efac' : '#fca5a5'}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Footer Stats */}
-        <div className="flex justify-between items-center mt-3 pt-3 border-t border-base-300">
-          <div className="text-xs text-base-content/60">
-            {strategyData?.trades || 0} trades • {strategyData?.winning || 0}W / {strategyData?.losing || 0}L
-          </div>
-          <div className="text-xs">
-            Avg: {strategyData?.averageR || 0}R
-          </div>
-        </div>
-
-        {/* View Details Link */}
-        <Link
-          href={`/strategies/${strategy.id}`}
-          className="btn btn-sm btn-outline btn-primary mt-4 w-full group"
-        >
-          View Strategy Details
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
           </svg>
-        </Link>
+        </div>
       </div>
+
+      <h3 className="text-xl font-bold text-slate-900 mb-6">{strategy.description}</h3>
+
+      {/* Key Metrics Row */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div>
+          <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Total R</div>
+          <div className={`text-xl font-bold leading-none ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
+            {isPositive ? '+' : ''}{strategyData?.totalR.toFixed(1) || '0'}R
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Avg/Mo</div>
+          <div className="text-xl font-bold leading-none text-slate-900">
+            {avgRPerMonth >= 0 ? '+' : ''}{avgRPerMonth.toFixed(1)}R
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Win Rate</div>
+          <div className={`text-xl font-bold leading-none ${strategyData?.winRate >= 60 ? 'text-emerald-600' : 'text-slate-900'}`}>
+            {strategyData?.winRate || 0}%
+          </div>
+        </div>
+      </div>
+
+      {/* Mini Bar Chart */}
+      <div className="h-40 w-full mb-6">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+            <XAxis
+              dataKey="week"
+              tick={{ fill: '#94a3b8', fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fill: '#94a3b8', fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+              width={30}
+            />
+            <Tooltip
+              cursor={{ fill: '#f1f5f9' }}
+              content={({ active, payload }) => {
+                if (!active || !payload || payload.length === 0) return null;
+                const value = payload[0].value;
+                const isPos = value >= 0;
+                return (
+                  <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-lg">
+                    <p className={`text-sm font-bold ${isPos ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {isPos ? '+' : ''}{value.toFixed(1)}R
+                    </p>
+                  </div>
+                );
+              }}
+            />
+            <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={50}>
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.value >= 0 ? '#10b981' : '#ef4444'}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Footer Stats */}
+      <div className="flex justify-between items-center mb-4 pt-4 border-t border-slate-100">
+        <div className="text-xs text-slate-400 uppercase tracking-wider font-bold">
+          Trades Breakdown
+        </div>
+        <div className="text-xs font-semibold text-slate-900">
+          {strategyData?.trades || 0} Trades • {strategyData?.winning || 0}W / {strategyData?.losing || 0}L
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center mb-6">
+        <div className="text-xs text-slate-400 uppercase tracking-wider font-bold">
+          Avg Risk:Reward
+        </div>
+        <div className="text-xs font-semibold text-indigo-600">
+          {strategyData?.averageR?.toFixed(2) || '0.00'}R
+        </div>
+      </div>
+
+      {/* View Details Button */}
+      <Link
+        href={`/strategies/${strategy.id}`}
+        className="flex items-center justify-center gap-2 w-full py-3 bg-slate-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-slate-800 transition-colors group"
+      >
+        View Strategy Details
+        <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      </Link>
     </div>
   );
 }
@@ -274,15 +268,43 @@ export default function PortfolioPage() {
 
   return (
     <>
+    <div className="min-h-screen bg-slate-50">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
-          📊 Portfolio Performance
-        </h1>
-        <p className="text-lg text-base-content/70 max-w-2xl">
-          Track weekly and cumulative performance across all trading strategies
-        </p>
+      <div className="mb-12">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-slate-900 rounded-full">
+              <svg className="w-7 h-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 mb-1">
+                Portfolio Performance
+              </h1>
+              <p className="text-sm text-slate-500">
+                Weekly and cumulative performance analytics for multi-strategy trading portfolios.
+              </p>
+            </div>
+          </div>
+
+          {!loading && lastWeek && (
+            <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-xl border border-slate-200 shadow-sm">
+              <div className="text-center">
+                <div className="text-slate-400 uppercase tracking-wider text-[10px] font-semibold mb-1">
+                  Reporting Period
+                </div>
+                <div className="font-bold text-slate-900 text-sm whitespace-nowrap">
+                  Week {lastWeek.weekNumber} • {new Date(lastWeek.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(lastWeek.endDate).toLocaleDateString('en-US', { day: 'numeric' })}, {new Date(lastWeek.endDate).toLocaleDateString('en-US', { year: 'numeric' })}
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          )}
+        </div>
       </div>
 
       {loading && (
@@ -295,48 +317,55 @@ export default function PortfolioPage() {
         <>
           {/* SECTION 1: LAST WEEK PERFORMANCE */}
           <div className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">
-                Last Week Performance
-              </h2>
-              <div className="text-sm text-base-content/60">
-                Week {lastWeek.weekNumber} • {new Date(lastWeek.startDate).toLocaleDateString()} - {new Date(lastWeek.endDate).toLocaleDateString()}
-              </div>
-            </div>
-
             {/* Last Week Overview Stats - Compact */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="card bg-gradient-to-br from-success/20 to-success/5 card-border p-4">
-                <div className="text-xs text-base-content/70 mb-1">Total R</div>
-                <div className="text-2xl font-bold text-success">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-4">
+                  Total R
+                </div>
+                <div className="text-2xl font-bold text-emerald-600 leading-none tracking-tight">
                   +{lastWeekTotalR.toFixed(1)}R
                 </div>
               </div>
 
-              <div className="card bg-gradient-to-br from-primary/20 to-primary/5 card-border p-4">
-                <div className="text-xs text-base-content/70 mb-1">Avg Win Rate</div>
-                <div className="text-2xl font-bold text-primary">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-4">
+                  Avg Win Rate
+                </div>
+                <div className="text-2xl font-bold text-indigo-600 leading-none tracking-tight">
                   {lastWeekWinRate.toFixed(1)}%
                 </div>
               </div>
 
-              <div className="card bg-gradient-to-br from-info/20 to-info/5 card-border p-4">
-                <div className="text-xs text-base-content/70 mb-1">Total Trades</div>
-                <div className="text-2xl font-bold text-info">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-4">
+                  Total Trades
+                </div>
+                <div className="text-2xl font-bold text-slate-900 leading-none tracking-tight">
                   {lastWeekTrades}
                 </div>
               </div>
 
-              <div className="card bg-gradient-to-br from-warning/20 to-warning/5 card-border p-4">
-                <div className="text-xs text-base-content/70 mb-1">Profitable</div>
-                <div className="text-2xl font-bold text-warning">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-4">
+                  Profitable
+                </div>
+                <div className="text-2xl font-bold text-amber-600 leading-none tracking-tight">
                   {lastWeekProfitable}/{STRATEGIES.length}
                 </div>
               </div>
             </div>
 
+            {/* Section Title */}
+            <div className="flex items-center gap-3 mb-8 mt-2">
+              <div className="w-1 h-6 bg-indigo-600 rounded-full"></div>
+              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
+                Last Week Snapshots
+              </h2>
+            </div>
+
             {/* Last Week Strategy Cards - Compact Grid (Sorted by Performance) */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {sortedWeeklyStrategies.map((strategy) => (
                 <WeeklyStrategyCard
                   key={strategy.id}
@@ -350,13 +379,26 @@ export default function PortfolioPage() {
 
           {/* SECTION 2: CUMULATIVE PERFORMANCE */}
           <div>
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-2">
-                Cumulative Performance
-              </h2>
-              <p className="text-sm text-base-content/60">
-                Year-to-date statistics and weekly breakdown for each strategy
-              </p>
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-1 h-6 bg-slate-900 rounded-sm"></div>
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
+                      Strategy Deep Dive
+                    </h2>
+                    <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mt-0.5">
+                      Year-to-Date Detailed Performance
+                    </p>
+                  </div>
+                </div>
+                <button className="flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                  Full History Archive
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Cumulative Strategy Cards (Sorted by Total Performance) */}
@@ -373,6 +415,7 @@ export default function PortfolioPage() {
           </div>
         </>
       )}
+    </div>
     </div>
     <Footer />
     </>
