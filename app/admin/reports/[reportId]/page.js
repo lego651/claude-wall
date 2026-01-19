@@ -1,0 +1,174 @@
+import Link from "next/link";
+import { reports, getReportBySlug } from "@/app/reports/_assets/reports";
+import MarkdownRenderer from "@/app/reports/_assets/components/MarkdownRenderer";
+import { getSEOTags } from "@/libs/seo";
+import AdminLayout from "@/components/AdminLayout";
+
+export async function generateMetadata({ params }) {
+  const { reportId } = await params;
+  const report = getReportBySlug(reportId);
+
+  if (!report) {
+    return getSEOTags({
+      title: "Report Not Found",
+      description: "The requested trading report could not be found.",
+    });
+  }
+
+  return getSEOTags({
+    title: `Trading Report - ${report.title}`,
+    description: `Trading performance report for ${report.period}. Total R: ${report.summary.totalR > 0 ? '+' : ''}${report.summary.totalR}R, Win Rate: ${report.summary.winRate}%`,
+    canonicalUrlRelative: `/reports/${report.slug}`,
+  });
+}
+
+export async function generateStaticParams() {
+  return reports.map((report) => ({
+    reportId: report.slug,
+  }));
+}
+
+export default async function ReportPage({ params }) {
+  const { reportId } = await params;
+  const report = getReportBySlug(reportId);
+
+  if (!report) {
+    return (
+      <AdminLayout>
+        <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+          <h1 className="text-4xl font-bold mb-4">Report Not Found</h1>
+          <p className="text-gray-600 mb-8">
+            The trading report you're looking for doesn't exist.
+          </p>
+          <Link href="/admin/reports" className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors">
+            Back to Reports
+          </Link>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  const content = report.getContent();
+  const totalRColor = report.summary.totalR > 0 ? 'text-emerald-500' : 'text-rose-500';
+  const totalRBg = report.summary.totalR > 0 ? 'bg-emerald-50/50 border-emerald-100' : 'bg-rose-50/50 border-rose-100';
+
+  return (
+    <AdminLayout>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        {/* BREADCRUMB */}
+        <nav className="mb-8 flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
+          <Link href="/admin/reports" className="hover:text-indigo-600 transition-colors">Reports</Link>
+          <span>/</span>
+          <span className="text-gray-900">{report.title}</span>
+        </nav>
+
+        {/* REPORT HEADER */}
+        <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10 mb-8">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
+                  {report.title}
+                </h1>
+                <span className="bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-lg shadow-lg shadow-indigo-100 uppercase tracking-widest">
+                  {report.type === 'weekly' ? 'Weekly' : 'Monthly'}
+                </span>
+              </div>
+              <p className="text-lg text-gray-400 font-medium leading-relaxed">
+                {report.period}
+              </p>
+            </div>
+            <div className="text-sm font-semibold text-gray-400">
+              Published: {new Date(report.publishedAt).toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </div>
+          </div>
+
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className={`${totalRBg} border p-8 rounded-[24px] relative overflow-hidden group`}>
+              <div className="relative z-10">
+                <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Total R</div>
+                <div className={`text-3xl font-black ${totalRColor}`}>
+                  {report.summary.totalR > 0 ? '+' : ''}{report.summary.totalR}R
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm">
+              <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Win Rate</div>
+              <div className="text-3xl font-black text-indigo-600">{report.summary.winRate}%</div>
+            </div>
+
+            <div className="bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm">
+              <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Total Trades</div>
+              <div className="text-3xl font-black text-gray-900">{report.summary.totalTrades}</div>
+            </div>
+
+            <div className="bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm">
+              <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Best Day</div>
+              <div className="text-lg font-black text-emerald-600">{report.summary.bestDay}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* REPORT CONTENT */}
+        <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10 mb-8">
+          <div className="prose prose-lg max-w-none
+            prose-headings:font-black prose-headings:text-gray-900 prose-headings:tracking-tight
+            prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl
+            prose-p:text-gray-600 prose-p:leading-relaxed
+            prose-a:text-indigo-600 prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
+            prose-strong:text-gray-900 prose-strong:font-black
+            prose-ul:text-gray-600 prose-ol:text-gray-600
+            prose-li:my-1
+            prose-code:text-indigo-600 prose-code:bg-indigo-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-semibold prose-code:before:content-none prose-code:after:content-none
+            prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-2xl prose-pre:border prose-pre:border-gray-800
+            prose-blockquote:border-l-4 prose-blockquote:border-indigo-600 prose-blockquote:bg-indigo-50 prose-blockquote:rounded-r-2xl prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:text-gray-700 prose-blockquote:not-italic
+            prose-table:border-collapse prose-table:w-full
+            prose-th:bg-gray-50 prose-th:border prose-th:border-gray-200 prose-th:p-3 prose-th:text-left prose-th:text-xs prose-th:font-black prose-th:uppercase prose-th:tracking-wider prose-th:text-gray-500
+            prose-td:border prose-td:border-gray-200 prose-td:p-3 prose-td:text-gray-600
+            prose-hr:border-gray-200
+            prose-img:rounded-2xl prose-img:shadow-lg
+          ">
+            <MarkdownRenderer content={content} />
+          </div>
+        </div>
+
+        {/* CTA SECTION */}
+        <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-[40px] p-10 text-center shadow-xl shadow-indigo-100 mb-8">
+          <h3 className="text-3xl font-black text-white mb-3">View All Trading Reports</h3>
+          <p className="text-indigo-100 font-medium mb-8 max-w-xl mx-auto">
+            Explore more weekly and monthly performance reports with detailed strategy breakdowns and analytics.
+          </p>
+          <Link
+            href="/admin/reports"
+            className="inline-flex items-center gap-3 px-8 py-4 bg-white text-indigo-600 rounded-[28px] text-lg font-black shadow-xl hover:scale-105 transition-transform"
+          >
+            Browse All Reports
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
+        </div>
+
+        {/* BACK BUTTON */}
+        <div className="text-center">
+          <Link
+            href="/admin/reports"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-2xl text-sm font-bold hover:bg-gray-50 hover:border-gray-300 transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to All Reports
+          </Link>
+        </div>
+      </div>
+    </AdminLayout>
+  );
+}

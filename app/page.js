@@ -57,27 +57,34 @@ export default function Page() {
             <h2 className="text-3xl font-black text-gray-900">Manage Your Assets</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <MenuCard
+              title="Portfolio Analytics"
+              description="Track weekly and cumulative performance across all strategies with detailed deep-dives."
+              icon="💼"
+              href="/admin/portfolio"
+              color="bg-white"
+            />
             <MenuCard
               title="Trading Strategies"
               description="Proven strategies with backtested results, risk management frameworks, and performance tracking."
               icon="📈"
               badge="Internal"
-              href="/strategies"
+              href="/admin/strategies"
               color="bg-indigo-50"
             />
             <MenuCard
               title="Trading Reports"
               description="View detailed verified payouts, monthly trading history, and blockchain transaction records."
               icon="📊"
-              href="/reports"
+              href="/admin/reports"
               color="bg-white"
             />
             <MenuCard
-              title="Portfolio Analytics"
-              description="Track weekly and cumulative performance across all strategies with detailed deep-dives."
-              icon="💼"
-              href="/portfolio"
+              title="Prop Firms"
+              description="Manage prop firm data, addresses, and verified payout tracking information."
+              icon="🏢"
+              href="/admin/propfirms"
               color="bg-white"
             />
           </div>
