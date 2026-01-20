@@ -118,10 +118,43 @@ export default function PropFirmsListPage() {
           </div>
         </div>
 
-        {/* Loading State */}
+        {/* Loading State - Skeleton */}
         {loading && (
-          <div className="flex items-center justify-center h-64">
-            <span className="loading loading-spinner loading-lg"></span>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="px-6 py-4 text-left"><div className="h-3 w-16 bg-slate-200 rounded animate-pulse"></div></th>
+                    <th className="px-6 py-4 text-right hidden sm:table-cell"><div className="h-3 w-24 bg-slate-200 rounded animate-pulse ml-auto"></div></th>
+                    <th className="px-6 py-4 text-right hidden md:table-cell"><div className="h-3 w-20 bg-slate-200 rounded animate-pulse ml-auto"></div></th>
+                    <th className="px-6 py-4 text-right hidden lg:table-cell"><div className="h-3 w-16 bg-slate-200 rounded animate-pulse ml-auto"></div></th>
+                    <th className="px-6 py-4 text-right hidden lg:table-cell"><div className="h-3 w-20 bg-slate-200 rounded animate-pulse ml-auto"></div></th>
+                    <th className="px-6 py-4 text-right"><div className="h-3 w-16 bg-slate-200 rounded animate-pulse ml-auto"></div></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <tr key={i}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-slate-200 rounded-lg animate-pulse"></div>
+                          <div>
+                            <div className="h-4 w-28 bg-slate-200 rounded animate-pulse mb-2"></div>
+                            <div className="h-3 w-20 bg-slate-100 rounded animate-pulse"></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right hidden sm:table-cell"><div className="h-4 w-20 bg-slate-200 rounded animate-pulse ml-auto"></div></td>
+                      <td className="px-6 py-4 text-right hidden md:table-cell"><div className="h-4 w-12 bg-slate-200 rounded animate-pulse ml-auto"></div></td>
+                      <td className="px-6 py-4 text-right hidden lg:table-cell"><div className="h-4 w-16 bg-slate-200 rounded animate-pulse ml-auto"></div></td>
+                      <td className="px-6 py-4 text-right hidden lg:table-cell"><div className="h-4 w-14 bg-slate-200 rounded animate-pulse ml-auto"></div></td>
+                      <td className="px-6 py-4 text-right"><div className="h-4 w-16 bg-slate-200 rounded animate-pulse ml-auto"></div></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
