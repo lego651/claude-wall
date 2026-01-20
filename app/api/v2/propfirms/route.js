@@ -4,6 +4,7 @@
  * PP2-008: GET /api/v2/propfirms
  * 
  * Returns all prop firms with aggregated metrics for the selected period.
+ * Uses Supabase for real-time data (1d, 7d) and JSON files for historical (30d, 12m).
  * 
  * Query params:
  *   - period: 1d, 7d, 30d, 12m (default: 1d)
@@ -13,6 +14,7 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { loadPeriodData } from '@/lib/services/payoutDataLoader';
 
 // Valid options
 const VALID_PERIODS = ['1d', '7d', '30d', '12m'];
@@ -54,10 +56,6 @@ export async function GET(request) {
 
   try {
     const supabase = createSupabaseClient();
-    
-    // Calculate cutoff time
-    const hoursBack = periodToHours(period);
-    const cutoffDate = new Date(Date.now() - (hoursBack * 60 * 60 * 1000)).toISOString();
 
     // Fetch all firms with their metadata
     const { data: firms, error: firmsError } = await supabase
@@ -68,64 +66,55 @@ export async function GET(request) {
       throw new Error(`Failed to fetch firms: ${firmsError.message}`);
     }
 
-    // Fetch aggregated metrics for each firm from recent_payouts
-    // Note: For 30d/12m, this only has 24h of data until JSON archives are implemented
-    const { data: payouts, error: payoutsError } = await supabase
-      .from('recent_payouts')
-      .select('firm_id, amount, timestamp')
-      .gte('timestamp', cutoffDate);
+    // Build response data
+    const data = [];
 
-    if (payoutsError) {
-      throw new Error(`Failed to fetch payouts: ${payoutsError.message}`);
-    }
+    for (const firm of firms) {
+      let metrics;
 
-    // Aggregate metrics by firm
-    const firmMetrics = {};
-    for (const payout of payouts) {
-      if (!firmMetrics[payout.firm_id]) {
-        firmMetrics[payout.firm_id] = {
-          totalPayouts: 0,
-          payoutCount: 0,
-          largestPayout: 0,
-          payoutAmounts: [],
+      if (period === '1d' || period === '7d') {
+        // Use Supabase for real-time data
+        const hoursBack = periodToHours(period);
+        const cutoffDate = new Date(Date.now() - (hoursBack * 60 * 60 * 1000)).toISOString();
+
+        const { data: payouts } = await supabase
+          .from('recent_payouts')
+          .select('amount')
+          .eq('firm_id', firm.id)
+          .gte('timestamp', cutoffDate);
+
+        const amounts = (payouts || []).map(p => parseFloat(p.amount));
+        const totalPayouts = amounts.reduce((sum, a) => sum + a, 0);
+        const largestPayout = amounts.length > 0 ? Math.max(...amounts) : 0;
+
+        metrics = {
+          totalPayouts: Math.round(totalPayouts),
+          payoutCount: amounts.length,
+          largestPayout: Math.round(largestPayout),
+          avgPayout: amounts.length > 0 ? Math.round(totalPayouts / amounts.length) : 0,
+          latestPayoutAt: firm.last_payout_at,
+        };
+      } else {
+        // Use JSON files for historical data (30d, 12m)
+        const historicalData = loadPeriodData(firm.id, period);
+        
+        metrics = {
+          totalPayouts: Math.round(historicalData.summary?.totalPayouts || 0),
+          payoutCount: historicalData.summary?.payoutCount || 0,
+          largestPayout: Math.round(historicalData.summary?.largestPayout || 0),
+          avgPayout: Math.round(historicalData.summary?.avgPayout || 0),
+          latestPayoutAt: firm.last_payout_at,
         };
       }
-      const metrics = firmMetrics[payout.firm_id];
-      const amount = parseFloat(payout.amount);
-      
-      metrics.totalPayouts += amount;
-      metrics.payoutCount += 1;
-      metrics.largestPayout = Math.max(metrics.largestPayout, amount);
-      metrics.payoutAmounts.push(amount);
-    }
 
-    // Build response data
-    const data = firms.map(firm => {
-      const metrics = firmMetrics[firm.id] || {
-        totalPayouts: 0,
-        payoutCount: 0,
-        largestPayout: 0,
-        payoutAmounts: [],
-      };
-
-      const avgPayout = metrics.payoutCount > 0 
-        ? Math.round(metrics.totalPayouts / metrics.payoutCount) 
-        : 0;
-
-      return {
+      data.push({
         id: firm.id,
         name: firm.name,
         logo: firm.logo,
         website: firm.website,
-        metrics: {
-          totalPayouts: Math.round(metrics.totalPayouts),
-          payoutCount: metrics.payoutCount,
-          largestPayout: Math.round(metrics.largestPayout),
-          avgPayout,
-          latestPayoutAt: firm.last_payout_at,
-        },
-      };
-    });
+        metrics,
+      });
+    }
 
     // Sort the data
     data.sort((a, b) => {
@@ -149,8 +138,6 @@ export async function GET(request) {
         sort,
         order,
         count: data.length,
-        // Note: For periods > 24h, data is limited until JSON archives are implemented
-        dataLimitation: hoursBack > 24 ? 'Data limited to last 24h (JSON archives not yet implemented)' : null,
       },
     });
 

@@ -1,0 +1,540 @@
+{
+  "firmId": "instantfunding",
+  "period": "2025-04",
+  "generatedAt": "2026-01-20T22:49:01.397Z",
+  "summary": {
+    "totalPayouts": 349810,
+    "payoutCount": 42,
+    "largestPayout": 36000,
+    "avgPayout": 8329
+  },
+  "dailyBuckets": [
+    {
+      "date": "2025-04-01",
+      "total": 9032.4,
+      "rise": 32.4,
+      "crypto": 9000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-02",
+      "total": 21112.88,
+      "rise": 1112.88,
+      "crypto": 20000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-03",
+      "total": 15647.04,
+      "rise": 4647.04,
+      "crypto": 11000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-04",
+      "total": 31401.809999999998,
+      "rise": 10401.81,
+      "crypto": 21000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-07",
+      "total": 54893.68,
+      "rise": 17893.68,
+      "crypto": 37000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-08",
+      "total": 16192,
+      "rise": 192,
+      "crypto": 16000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-09",
+      "total": 21049.84,
+      "rise": 7049.84,
+      "crypto": 14000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-10",
+      "total": 4320,
+      "rise": 320,
+      "crypto": 4000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-11",
+      "total": 19077,
+      "rise": 4077,
+      "crypto": 15000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-14",
+      "total": 16809,
+      "rise": 1809,
+      "crypto": 15000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-15",
+      "total": 13830.51,
+      "rise": 830.51,
+      "crypto": 13000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-16",
+      "total": 16096,
+      "rise": 96,
+      "crypto": 16000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-17",
+      "total": 13225,
+      "rise": 225,
+      "crypto": 13000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-18",
+      "total": 14080,
+      "rise": 80,
+      "crypto": 14000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-21",
+      "total": 27611.2,
+      "rise": 8611.2,
+      "crypto": 19000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-22",
+      "total": 27620.8,
+      "rise": 3620.8,
+      "crypto": 24000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-23",
+      "total": 19000.8,
+      "rise": 1000.8,
+      "crypto": 18000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-24",
+      "total": 8044,
+      "rise": 44,
+      "crypto": 8000,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-25",
+      "total": 48,
+      "rise": 48,
+      "crypto": 0,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-28",
+      "total": 685.08,
+      "rise": 685.08,
+      "crypto": 0,
+      "wire": 0
+    },
+    {
+      "date": "2025-04-29",
+      "total": 33.3,
+      "rise": 33.3,
+      "crypto": 0,
+      "wire": 0
+    }
+  ],
+  "transactions": [
+    {
+      "tx_hash": "0x4d72a5885ae3c48e8944def99fd4a2bbb38c50cc45f6f521ce520efcf0d25244",
+      "firm_id": "instantfunding",
+      "amount": 33.3,
+      "payment_method": "rise",
+      "timestamp": "2025-04-29T11:55:57.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x8fe75109d64091c514b1c4892d9e62e2b6449b2b"
+    },
+    {
+      "tx_hash": "0x12779027f4b6060477f14e2b4882f0422001e74aa7bdd9197a1f50229a294aa6",
+      "firm_id": "instantfunding",
+      "amount": 685.08,
+      "payment_method": "rise",
+      "timestamp": "2025-04-28T14:53:34.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x7ef9b493d18fc5f2505651e62eafc77eab66d925"
+    },
+    {
+      "tx_hash": "0x18b5c4e53d5df2895668f0f0ecc4051c0641016c97c69aaa95d86c3e2218f29f",
+      "firm_id": "instantfunding",
+      "amount": 48,
+      "payment_method": "rise",
+      "timestamp": "2025-04-25T09:05:26.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x3452eef1071f9d88e1ecf644fe989dcc6c3d8c05"
+    },
+    {
+      "tx_hash": "0x25d611e2a361ab1ad5f7e6a8510a0dad89dabeb5a6a970e1d8e83d4a82eb2e32",
+      "firm_id": "instantfunding",
+      "amount": 44,
+      "payment_method": "rise",
+      "timestamp": "2025-04-24T11:52:44.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x8b83f0116a647179b43ca29b86a672d504e64f09"
+    },
+    {
+      "tx_hash": "0x369c497e0840a115add1480510a77744e39569ab1e879f939c8d5ff26d4d0ef5",
+      "firm_id": "instantfunding",
+      "amount": 8000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-24T11:50:15.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0xe9e01a42cd592ab57df815998c50c98bf2f3bfff2b8eb88a25fcfdae3f6f5f98",
+      "firm_id": "instantfunding",
+      "amount": 1000.8,
+      "payment_method": "rise",
+      "timestamp": "2025-04-23T10:07:45.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x1ae6cdef88c563bbd1df2e9a53ddc544ac4d11d9"
+    },
+    {
+      "tx_hash": "0x2710e91630cc2dd5a133242d1148e593a192342016dbc0ead18fcb04956188a7",
+      "firm_id": "instantfunding",
+      "amount": 18000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-23T10:05:04.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0xcb053c1f09e238c07d1d538a0c559a8ff7e46eeb136d6e8ebbb6c1cf7626d07f",
+      "firm_id": "instantfunding",
+      "amount": 3620.8,
+      "payment_method": "rise",
+      "timestamp": "2025-04-22T09:04:13.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x96cfe2121b3a77d0b79c5fda42ea8e5068c20f3f"
+    },
+    {
+      "tx_hash": "0xe5fc516b16684935404cb6fa660f1c9b17b85136bad0e8d133d80dd2ccdc6adb",
+      "firm_id": "instantfunding",
+      "amount": 12000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-22T08:44:27.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0xbc16a65700308b1e6bbf28f8aac5ef176802b32c96cdb088a325202571c7aa4a",
+      "firm_id": "instantfunding",
+      "amount": 12000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-22T08:43:43.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0xd3cbce447017261cb7f0975c6a8a1101fdafb2ff681e30e752c7043c4aed1a84",
+      "firm_id": "instantfunding",
+      "amount": 8611.2,
+      "payment_method": "rise",
+      "timestamp": "2025-04-21T12:44:22.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x6378960183e41e19ea03d61390d479ea3abedf92"
+    },
+    {
+      "tx_hash": "0x09f720655ecb01259189182fa30da8df33e7910ff594978cb4c6327d338757a2",
+      "firm_id": "instantfunding",
+      "amount": 19000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-21T12:41:45.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0xf31503f2a277f19ad26e3df150005219d1395e6f79a5e07f0e887d1a5242074b",
+      "firm_id": "instantfunding",
+      "amount": 80,
+      "payment_method": "rise",
+      "timestamp": "2025-04-18T10:47:30.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x51f3c8147a194df9e1b0a3ab5ef3b21d78fade02"
+    },
+    {
+      "tx_hash": "0xd4d04b8fc723ff816acbb698e2b8fadc1d05ba265ed0e1e4c4a7f42c5f846a19",
+      "firm_id": "instantfunding",
+      "amount": 14000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-18T10:45:43.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0x01e4d5a258ecffc5a785273256dbb89b27bd67c151c8d01c0005e8d3f8834cb9",
+      "firm_id": "instantfunding",
+      "amount": 225,
+      "payment_method": "rise",
+      "timestamp": "2025-04-17T11:24:46.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x282f572f5e4ebbe901c2323b75903a5a2460c7cf"
+    },
+    {
+      "tx_hash": "0x087f58d24a341268929b9ceb205fe8a217df9c8b692d5ab3e20954c2bf89358f",
+      "firm_id": "instantfunding",
+      "amount": 13000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-17T11:21:21.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0x89f2134f97f01e410880c7e7e2f352fe75490fd6dbdc5724cd2b76052e720396",
+      "firm_id": "instantfunding",
+      "amount": 96,
+      "payment_method": "rise",
+      "timestamp": "2025-04-16T12:12:26.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x7983f7d6ac4bd7edb9ec0eb03c25997edf10b432"
+    },
+    {
+      "tx_hash": "0x45d8be68c65468673f197cc6d238d98519cabd46f1c51c966ad3e19fd2b25a5f",
+      "firm_id": "instantfunding",
+      "amount": 16000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-16T12:10:02.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0x60ca1275945f5b986dde81f7c0decd9c00787936cc00329e87d10596ff00e306",
+      "firm_id": "instantfunding",
+      "amount": 830.51,
+      "payment_method": "rise",
+      "timestamp": "2025-04-15T14:29:23.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x8f3e1a1e69538b577ce1e16377bd3d049fbe1d6a"
+    },
+    {
+      "tx_hash": "0x47119e783611dcacf3a82979c0279afa443bc594248c58177c1222b9b45315e4",
+      "firm_id": "instantfunding",
+      "amount": 13000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-15T14:25:29.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0x0e365dfc95bd9c37750738be1d3b46b3afec0d344741e4e2810304e4f3098b79",
+      "firm_id": "instantfunding",
+      "amount": 1809,
+      "payment_method": "rise",
+      "timestamp": "2025-04-14T14:50:21.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x8fdb6cf4f7fd694e65b0f6ff01a19e15426dcfa9"
+    },
+    {
+      "tx_hash": "0x231a539c533038a84d24fb13c00b580a57de9bba368eec0c37b20cabd31d94a8",
+      "firm_id": "instantfunding",
+      "amount": 15000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-14T14:45:14.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0x7face26c92f889f3b3ef09e963d1ed5775edaf76bb14a9b26233c3a0eb93c4c3",
+      "firm_id": "instantfunding",
+      "amount": 4077,
+      "payment_method": "rise",
+      "timestamp": "2025-04-11T13:59:20.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x867159023554cca4d4346fce2ad360b5f4e22592"
+    },
+    {
+      "tx_hash": "0x12a4bfc4051c05770f951144284f14f1bae60d1a05a0da7c9b3d9c19bb64caf6",
+      "firm_id": "instantfunding",
+      "amount": 15000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-11T13:53:46.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0x0b5e0ad06a0b0ad99fbeeca43a7b2d374ca09319f8efe22b26e5762f39699593",
+      "firm_id": "instantfunding",
+      "amount": 320,
+      "payment_method": "rise",
+      "timestamp": "2025-04-10T15:43:28.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x6978ee5875430da1be4c09f22ddfdb41f1241ee4"
+    },
+    {
+      "tx_hash": "0xbb56d688bc50df13c4a69749d472f798b199180eecc2f39f15933286beaf9965",
+      "firm_id": "instantfunding",
+      "amount": 4000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-10T15:41:17.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0x5c9b0047ba4951c286adcf638385a1c94aea8eb0c815e8e1a6a1e8c4288c74fe",
+      "firm_id": "instantfunding",
+      "amount": 7049.84,
+      "payment_method": "rise",
+      "timestamp": "2025-04-09T14:14:44.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x3d48183a3c8efc6005875fea08fc6faf440e6bc4"
+    },
+    {
+      "tx_hash": "0x63795b4ec2bc2048bbbad16a0b96de2dc08414dc340337c3889815a21931ee1e",
+      "firm_id": "instantfunding",
+      "amount": 14000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-09T14:12:28.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0x467780f1a090f22337ad4dfd2091dfb787575b2b0707286e0ea2c355742e8522",
+      "firm_id": "instantfunding",
+      "amount": 120,
+      "payment_method": "rise",
+      "timestamp": "2025-04-08T13:26:20.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x78b32f1924e820186175cada199922a06164aa63"
+    },
+    {
+      "tx_hash": "0x35f500f74c17c1f12690f1a9467038847279781ac1cfbaeb4ab5e004ba67d867",
+      "firm_id": "instantfunding",
+      "amount": 16000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-08T13:24:33.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0xed143c81f196ae9651055a6d7f0b079fc267d8f6f501b5263c95779ea471ce5d",
+      "firm_id": "instantfunding",
+      "amount": 72,
+      "payment_method": "rise",
+      "timestamp": "2025-04-08T12:42:43.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x78b32f1924e820186175cada199922a06164aa63"
+    },
+    {
+      "tx_hash": "0xe9900390f9b77e4fcf3fb8974e080c8b9e5a3e0a9c3f4f576dd7933323728700",
+      "firm_id": "instantfunding",
+      "amount": 1000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-07T09:32:31.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0x9505f9f2e7772e32b9a444ba767ea84ac215d907509994c2ade9b4fed0c0228d",
+      "firm_id": "instantfunding",
+      "amount": 17893.68,
+      "payment_method": "rise",
+      "timestamp": "2025-04-07T08:14:39.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x896b8b7fb7dd340b636f8159bd9db3ed98df6f7f"
+    },
+    {
+      "tx_hash": "0xee61d8d734bc231452cbf681243e544d9adbf5f467e7e30b902460222b5f232a",
+      "firm_id": "instantfunding",
+      "amount": 36000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-07T08:10:42.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0xa7937487ff0084bcd925d0d9535dcf42615ea79147af28ec75ed390423fccb5c",
+      "firm_id": "instantfunding",
+      "amount": 10401.81,
+      "payment_method": "rise",
+      "timestamp": "2025-04-04T13:59:58.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x8ca479bf8ce22b8c80d3be196a56876fdbae4207"
+    },
+    {
+      "tx_hash": "0x41ce558ade318dd74bd5a4cb036785170e6ac891485a64d4febbdc3bc1d026e3",
+      "firm_id": "instantfunding",
+      "amount": 21000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-04T13:56:37.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0x3b002c40c7f5661dc8c794fc99d71cc91102c82a2884f31ef3ebcb817df53ea8",
+      "firm_id": "instantfunding",
+      "amount": 4647.04,
+      "payment_method": "rise",
+      "timestamp": "2025-04-03T14:04:44.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0xc36b3e22045180c4af2f298a60076bcd2f31e773"
+    },
+    {
+      "tx_hash": "0x843369dc3ae267d31c46aebd25302b11a65f7a5ac28bc6fe733e4b030e03ccab",
+      "firm_id": "instantfunding",
+      "amount": 11000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-03T14:02:27.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0x1ebd47601193d3471e164ae6b767ef52268fc2c7d51df11621a2c7879899059f",
+      "firm_id": "instantfunding",
+      "amount": 1112.88,
+      "payment_method": "rise",
+      "timestamp": "2025-04-02T15:36:19.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x69750c14fa254eadcc1310bbb3875618e04b6ce9"
+    },
+    {
+      "tx_hash": "0x7d3cf651667db642ac8f0cd32c7e86c5fadb2d273351d9c7ebbba9d541b96770",
+      "firm_id": "instantfunding",
+      "amount": 20000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-02T15:33:00.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
+    {
+      "tx_hash": "0xa20991f19009f941791d0b8d9130365261d774715b1a7f7328d616fd05e85f07",
+      "firm_id": "instantfunding",
+      "amount": 32.4,
+      "payment_method": "rise",
+      "timestamp": "2025-04-01T18:09:48.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x7e9f0744cac3dcfff2f1e80d0a25fdfaef9d0522"
+    },
+    {
+      "tx_hash": "0xbf9cd262258a23d16d266c2e5fd312482829f9c40ac7384be6ead867365e1f91",
+      "firm_id": "instantfunding",
+      "amount": 9000,
+      "payment_method": "crypto",
+      "timestamp": "2025-04-01T18:06:48.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    }
+  ]
+}
