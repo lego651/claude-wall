@@ -3,7 +3,7 @@
  * 
  * PP2-005: Vercel Cron Endpoint
  * 
- * This endpoint is called every hour by Vercel Cron.
+ * This endpoint is called every 2 hours by Vercel Cron.
  * (Hobby plan = hourly precision, Pro plan = per-minute precision)
  * It fetches transactions from Arbiscan and updates Supabase.
  * 
