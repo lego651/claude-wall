@@ -4,6 +4,7 @@
  * PP2-009: GET /api/v2/propfirms/[id]/chart
  * 
  * Returns chart data and summary statistics for a specific firm.
+ * Uses JSON files for historical data (30d, 12m).
  * 
  * Query params:
  *   - period: 30d, 12m (default: 30d)
@@ -11,6 +12,7 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { loadPeriodData } from '@/lib/services/payoutDataLoader';
 
 const VALID_PERIODS = ['30d', '12m'];
 
@@ -32,7 +34,7 @@ export async function GET(request, { params }) {
   try {
     const supabase = createSupabaseClient();
 
-    // Fetch firm metadata
+    // Fetch firm metadata from Supabase
     const { data: firm, error: firmError } = await supabase
       .from('firms')
       .select('id, name, logo, website, last_payout_at')
@@ -46,57 +48,32 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Calculate date range
-    const now = new Date();
-    const daysBack = period === '30d' ? 30 : 365;
-    const cutoffDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000)).toISOString();
+    // Load historical data from JSON files
+    const historicalData = loadPeriodData(firmId, period);
 
-    // Fetch payouts for this firm
-    const { data: payouts, error: payoutsError } = await supabase
-      .from('recent_payouts')
-      .select('amount, payment_method, timestamp')
-      .eq('firm_id', firmId)
-      .gte('timestamp', cutoffDate)
-      .order('timestamp', { ascending: true });
-
-    if (payoutsError) {
-      throw new Error(`Failed to fetch payouts: ${payoutsError.message}`);
-    }
-
-    // Calculate summary stats
-    const summary = {
-      totalPayouts: 0,
-      payoutCount: payouts.length,
-      largestPayout: 0,
-      avgPayout: 0,
-      latestPayoutAt: firm.last_payout_at,
-    };
-
-    for (const payout of payouts) {
-      const amount = parseFloat(payout.amount);
-      summary.totalPayouts += amount;
-      summary.largestPayout = Math.max(summary.largestPayout, amount);
-    }
-
-    summary.totalPayouts = Math.round(summary.totalPayouts);
-    summary.largestPayout = Math.round(summary.largestPayout);
-    summary.avgPayout = summary.payoutCount > 0 
-      ? Math.round(summary.totalPayouts / summary.payoutCount) 
-      : 0;
-
-    // Build chart data
+    // Build response
     let chartData;
     let bucketType;
+    let summary;
 
     if (period === '30d') {
-      // Daily buckets for 30 days
       bucketType = 'daily';
-      chartData = buildDailyBuckets(payouts, 30);
+      chartData = historicalData.dailyBuckets || [];
+      summary = historicalData.summary || {};
+      
+      // Ensure we have 30 days of data (fill gaps with zeros)
+      chartData = fillDailyGaps(chartData, 30);
     } else {
-      // Monthly buckets for 12 months
       bucketType = 'monthly';
-      chartData = buildMonthlyBuckets(payouts, 12);
+      chartData = historicalData.monthlyBuckets || [];
+      summary = historicalData.summary || {};
     }
+
+    // Add latest payout timestamp from Supabase (always fresh)
+    summary.latestPayoutAt = firm.last_payout_at;
+    summary.totalPayouts = Math.round(summary.totalPayouts || 0);
+    summary.largestPayout = Math.round(summary.largestPayout || 0);
+    summary.avgPayout = Math.round(summary.avgPayout || 0);
 
     return NextResponse.json({
       firm: {
@@ -111,8 +88,6 @@ export async function GET(request, { params }) {
         bucketType,
         data: chartData,
       },
-      // Note about data limitations
-      dataLimitation: 'Data limited to last 24h (JSON archives not yet implemented)',
     });
 
   } catch (error) {
@@ -125,104 +100,32 @@ export async function GET(request, { params }) {
 }
 
 /**
- * Build daily buckets for chart
+ * Fill gaps in daily buckets with zero values
  */
-function buildDailyBuckets(payouts, days) {
-  const buckets = [];
+function fillDailyGaps(buckets, days) {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
+  
+  const bucketMap = new Map(buckets.map(b => [b.date, b]));
+  const result = [];
 
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
     const dateStr = date.toISOString().split('T')[0];
 
-    const dayPayouts = payouts.filter(p => {
-      const pDate = new Date(p.timestamp).toISOString().split('T')[0];
-      return pDate === dateStr;
-    });
-
-    const bucket = {
-      date: dateStr,
-      total: 0,
-      rise: 0,
-      crypto: 0,
-      wire: 0,
-    };
-
-    for (const p of dayPayouts) {
-      const amount = parseFloat(p.amount);
-      bucket.total += amount;
-      
-      if (p.payment_method === 'rise') {
-        bucket.rise += amount;
-      } else if (p.payment_method === 'crypto') {
-        bucket.crypto += amount;
-      } else if (p.payment_method === 'wire') {
-        bucket.wire += amount;
-      }
+    if (bucketMap.has(dateStr)) {
+      result.push(bucketMap.get(dateStr));
+    } else {
+      result.push({
+        date: dateStr,
+        total: 0,
+        rise: 0,
+        crypto: 0,
+        wire: 0,
+      });
     }
-
-    // Round values
-    bucket.total = Math.round(bucket.total);
-    bucket.rise = Math.round(bucket.rise);
-    bucket.crypto = Math.round(bucket.crypto);
-    bucket.wire = Math.round(bucket.wire);
-
-    buckets.push(bucket);
   }
 
-  return buckets;
-}
-
-/**
- * Build monthly buckets for chart
- */
-function buildMonthlyBuckets(payouts, months) {
-  const buckets = [];
-  const now = new Date();
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-  for (let i = months - 1; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const monthLabel = `${monthNames[month]} ${year}`;
-
-    const monthPayouts = payouts.filter(p => {
-      const pDate = new Date(p.timestamp);
-      return pDate.getFullYear() === year && pDate.getMonth() === month;
-    });
-
-    const bucket = {
-      month: monthLabel,
-      total: 0,
-      rise: 0,
-      crypto: 0,
-      wire: 0,
-    };
-
-    for (const p of monthPayouts) {
-      const amount = parseFloat(p.amount);
-      bucket.total += amount;
-      
-      if (p.payment_method === 'rise') {
-        bucket.rise += amount;
-      } else if (p.payment_method === 'crypto') {
-        bucket.crypto += amount;
-      } else if (p.payment_method === 'wire') {
-        bucket.wire += amount;
-      }
-    }
-
-    // Round values
-    bucket.total = Math.round(bucket.total);
-    bucket.rise = Math.round(bucket.rise);
-    bucket.crypto = Math.round(bucket.crypto);
-    bucket.wire = Math.round(bucket.wire);
-
-    buckets.push(bucket);
-  }
-
-  return buckets;
+  return result;
 }
