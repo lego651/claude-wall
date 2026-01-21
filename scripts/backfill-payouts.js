@@ -4,6 +4,7 @@
  * Backfill Payouts Script
  * 
  * Fetches all historical payout data from Arbiscan and saves to JSON files.
+ * Daily buckets are grouped by the firm's local timezone for accurate business day reporting.
  * 
  * Usage:
  *   node scripts/backfill-payouts.js
@@ -145,12 +146,48 @@ function processTransactions(native, tokens, addresses, firmId) {
   return unique.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 }
 
-function groupByMonth(payouts) {
+/**
+ * Convert UTC timestamp to local date string in firm's timezone
+ * @param {string} utcTimestamp - ISO timestamp in UTC
+ * @param {string} timezone - IANA timezone (e.g., 'Asia/Dubai')
+ * @returns {string} Date string in YYYY-MM-DD format (local time)
+ */
+function getLocalDate(utcTimestamp, timezone) {
+  const date = new Date(utcTimestamp);
+  // Use Intl.DateTimeFormat to get the date in the firm's timezone
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(date); // Returns YYYY-MM-DD format
+}
+
+/**
+ * Get year-month key in firm's local timezone
+ * @param {string} utcTimestamp - ISO timestamp in UTC
+ * @param {string} timezone - IANA timezone
+ * @returns {string} Year-month in YYYY-MM format (local time)
+ */
+function getLocalYearMonth(utcTimestamp, timezone) {
+  const localDate = getLocalDate(utcTimestamp, timezone);
+  return localDate.slice(0, 7); // YYYY-MM
+}
+
+/**
+ * Group payouts by month using firm's local timezone
+ * @param {Array} payouts - Array of payout objects
+ * @param {string} timezone - IANA timezone for the firm
+ * @returns {Object} Payouts grouped by month
+ */
+function groupByMonth(payouts, timezone = 'UTC') {
   const months = {};
   
   for (const p of payouts) {
-    const date = new Date(p.timestamp);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    // Use firm's local timezone for grouping
+    const key = getLocalYearMonth(p.timestamp, timezone);
+    const dayKey = getLocalDate(p.timestamp, timezone);
     
     if (!months[key]) {
       months[key] = {
@@ -166,8 +203,7 @@ function groupByMonth(payouts) {
     month.summary.largestPayout = Math.max(month.summary.largestPayout, p.amount);
     month.transactions.push(p);
     
-    // Daily bucket
-    const dayKey = p.timestamp.split('T')[0];
+    // Daily bucket (using local date)
     if (!month.dailyBuckets[dayKey]) {
       month.dailyBuckets[dayKey] = { total: 0, rise: 0, crypto: 0, wire: 0 };
     }
@@ -179,7 +215,8 @@ function groupByMonth(payouts) {
 }
 
 async function backfillFirm(firm) {
-  console.log(`\n📊 Backfilling ${firm.name}...`);
+  const timezone = firm.timezone || 'UTC';
+  console.log(`\n📊 Backfilling ${firm.name} (timezone: ${timezone})...`);
   
   let allNative = [];
   let allTokens = [];
@@ -201,8 +238,8 @@ async function backfillFirm(firm) {
     return { firm: firm.id, payouts: 0, months: 0 };
   }
   
-  // Group by month and save
-  const months = groupByMonth(payouts);
+  // Group by month using firm's local timezone
+  const months = groupByMonth(payouts, timezone);
   const firmDir = path.join(process.cwd(), 'data', 'payouts', firm.id);
   
   if (!fs.existsSync(firmDir)) {
@@ -220,6 +257,7 @@ async function backfillFirm(firm) {
     const fileData = {
       firmId: firm.id,
       period: yearMonth,
+      timezone: timezone,
       generatedAt: new Date().toISOString(),
       summary: {
         totalPayouts: Math.round(data.summary.totalPayouts),

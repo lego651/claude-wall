@@ -6,6 +6,8 @@
  * Fetches current month's payout data from Arbiscan and updates
  * the corresponding JSON files. Designed to run daily via GitHub Actions.
  * 
+ * Daily buckets are grouped by the firm's local timezone for accurate business day reporting.
+ * 
  * This script only updates the CURRENT month's file for each firm,
  * making it fast and efficient for daily runs.
  * 
@@ -43,6 +45,50 @@ const firmFilter = args.includes('--firm') ? args[args.indexOf('--firm') + 1] : 
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Convert UTC timestamp to local date string in firm's timezone
+ * @param {string} utcTimestamp - ISO timestamp in UTC
+ * @param {string} timezone - IANA timezone (e.g., 'Asia/Dubai')
+ * @returns {string} Date string in YYYY-MM-DD format (local time)
+ */
+function getLocalDate(utcTimestamp, timezone) {
+  const date = new Date(utcTimestamp);
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(date);
+}
+
+/**
+ * Get year-month key in firm's local timezone
+ * @param {string} utcTimestamp - ISO timestamp in UTC
+ * @param {string} timezone - IANA timezone
+ * @returns {string} Year-month in YYYY-MM format (local time)
+ */
+function getLocalYearMonth(utcTimestamp, timezone) {
+  const localDate = getLocalDate(utcTimestamp, timezone);
+  return localDate.slice(0, 7);
+}
+
+/**
+ * Get current year-month in a specific timezone
+ * @param {string} timezone - IANA timezone
+ * @returns {string} Year-month in YYYY-MM format
+ */
+function getCurrentYearMonthInTimezone(timezone) {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(now).slice(0, 7);
 }
 
 function getCurrentYearMonth() {
@@ -96,12 +142,18 @@ async function fetchAllTransactions(address, apiKey) {
 // Data Processing
 // ============================================================================
 
-function processTransactionsForMonth(native, tokens, addresses, firmId, yearMonth) {
+/**
+ * Process transactions and filter to a specific month in firm's local timezone
+ * @param {Array} native - Native ETH transactions
+ * @param {Array} tokens - Token transactions
+ * @param {Array} addresses - Firm wallet addresses
+ * @param {string} firmId - Firm identifier
+ * @param {string} yearMonth - Target month in YYYY-MM format
+ * @param {string} timezone - IANA timezone for the firm
+ * @returns {Array} Filtered and processed payouts
+ */
+function processTransactionsForMonth(native, tokens, addresses, firmId, yearMonth, timezone = 'UTC') {
   const lowerAddresses = addresses.map(a => a.toLowerCase());
-  const monthStart = getMonthStartTimestamp(yearMonth);
-  const [year, month] = yearMonth.split('-').map(Number);
-  const monthEnd = new Date(year, month, 1, 0, 0, 0, 0).getTime() / 1000; // Start of next month
-  
   const payouts = [];
 
   // Process native ETH (outgoing)
@@ -109,7 +161,11 @@ function processTransactionsForMonth(native, tokens, addresses, firmId, yearMont
     if (!tx.from || !lowerAddresses.includes(tx.from.toLowerCase())) continue;
     
     const timestamp = parseInt(tx.timeStamp);
-    if (timestamp < monthStart || timestamp >= monthEnd) continue; // Only this month
+    const isoTimestamp = new Date(timestamp * 1000).toISOString();
+    
+    // Filter by month in firm's local timezone
+    const txYearMonth = getLocalYearMonth(isoTimestamp, timezone);
+    if (txYearMonth !== yearMonth) continue;
     
     const amount = parseFloat(tx.value) / 1e18;
     const amountUSD = amount * PRICES.ETH;
@@ -120,7 +176,7 @@ function processTransactionsForMonth(native, tokens, addresses, firmId, yearMont
       firm_id: firmId,
       amount: amountUSD,
       payment_method: 'crypto',
-      timestamp: new Date(timestamp * 1000).toISOString(),
+      timestamp: isoTimestamp,
       from_address: tx.from,
       to_address: tx.to,
     });
@@ -131,7 +187,11 @@ function processTransactionsForMonth(native, tokens, addresses, firmId, yearMont
     if (!tx.from || !lowerAddresses.includes(tx.from.toLowerCase())) continue;
     
     const timestamp = parseInt(tx.timeStamp);
-    if (timestamp < monthStart || timestamp >= monthEnd) continue; // Only this month
+    const isoTimestamp = new Date(timestamp * 1000).toISOString();
+    
+    // Filter by month in firm's local timezone
+    const txYearMonth = getLocalYearMonth(isoTimestamp, timezone);
+    if (txYearMonth !== yearMonth) continue;
     
     if (!SUPPORTED_TOKENS.includes(tx.tokenSymbol?.toUpperCase())) continue;
     
@@ -146,7 +206,7 @@ function processTransactionsForMonth(native, tokens, addresses, firmId, yearMont
       firm_id: firmId,
       amount: amountUSD,
       payment_method: TOKEN_TO_METHOD[token] || 'crypto',
-      timestamp: new Date(timestamp * 1000).toISOString(),
+      timestamp: isoTimestamp,
       from_address: tx.from,
       to_address: tx.to,
     });
@@ -157,7 +217,15 @@ function processTransactionsForMonth(native, tokens, addresses, firmId, yearMont
   return unique.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 }
 
-function buildMonthData(firmId, yearMonth, transactions) {
+/**
+ * Build month data with daily buckets in firm's local timezone
+ * @param {string} firmId - Firm identifier
+ * @param {string} yearMonth - Year-month in YYYY-MM format
+ * @param {Array} transactions - Array of transaction objects
+ * @param {string} timezone - IANA timezone for the firm
+ * @returns {Object} Month data object
+ */
+function buildMonthData(firmId, yearMonth, transactions, timezone = 'UTC') {
   // Calculate summary
   const amounts = transactions.map(t => t.amount);
   const summary = {
@@ -167,10 +235,10 @@ function buildMonthData(firmId, yearMonth, transactions) {
     avgPayout: Math.round(amounts.length > 0 ? amounts.reduce((a, b) => a + b, 0) / amounts.length : 0),
   };
 
-  // Build daily buckets
+  // Build daily buckets using firm's local timezone
   const dailyMap = {};
   for (const t of transactions) {
-    const day = t.timestamp.split('T')[0];
+    const day = getLocalDate(t.timestamp, timezone);
     if (!dailyMap[day]) {
       dailyMap[day] = { date: day, total: 0, rise: 0, crypto: 0, wire: 0 };
     }
@@ -192,6 +260,7 @@ function buildMonthData(firmId, yearMonth, transactions) {
   return {
     firmId,
     period: yearMonth,
+    timezone: timezone,
     generatedAt: new Date().toISOString(),
     summary,
     dailyBuckets,
@@ -234,8 +303,12 @@ function saveMonthData(firmId, yearMonth, data) {
 // Main Update Logic
 // ============================================================================
 
-async function updateFirmMonth(firm, yearMonth, apiKey) {
-  console.log(`\n📊 Updating ${firm.name} for ${yearMonth}...`);
+async function updateFirmMonth(firm, apiKey) {
+  const timezone = firm.timezone || 'UTC';
+  // Get current month in firm's local timezone
+  const yearMonth = getCurrentYearMonthInTimezone(timezone);
+  
+  console.log(`\n📊 Updating ${firm.name} for ${yearMonth} (timezone: ${timezone})...`);
   
   // Fetch all transactions
   let allNative = [];
@@ -250,13 +323,14 @@ async function updateFirmMonth(firm, yearMonth, apiKey) {
   
   console.log(`  Found ${allNative.length} native + ${allTokens.length} token transactions`);
   
-  // Process transactions for this month only
+  // Process transactions for this month only (using firm's timezone)
   const transactions = processTransactionsForMonth(
     allNative, 
     allTokens, 
     firm.addresses, 
     firm.id, 
-    yearMonth
+    yearMonth,
+    timezone
   );
   
   console.log(`  Processed ${transactions.length} payouts for ${yearMonth}`);
@@ -270,8 +344,8 @@ async function updateFirmMonth(firm, yearMonth, apiKey) {
   const existing = loadExistingMonthData(firm.id, yearMonth);
   const existingCount = existing?.summary?.payoutCount || 0;
   
-  // Build new month data
-  const monthData = buildMonthData(firm.id, yearMonth, transactions);
+  // Build new month data (using firm's timezone for daily buckets)
+  const monthData = buildMonthData(firm.id, yearMonth, transactions, timezone);
   
   // Check if anything changed
   if (existingCount === monthData.summary.payoutCount) {
@@ -300,15 +374,13 @@ async function updateFirmMonth(firm, yearMonth, apiKey) {
 async function main() {
   console.log('🚀 Update Monthly JSON Files');
   console.log('============================\n');
+  console.log('📝 Daily buckets use each firm\'s local timezone\n');
   
   const apiKey = process.env.ARBISCAN_API_KEY;
   if (!apiKey) {
     console.error('❌ ARBISCAN_API_KEY not found in environment');
     process.exit(1);
   }
-  
-  const yearMonth = getCurrentYearMonth();
-  console.log(`📅 Updating data for: ${yearMonth}\n`);
   
   // Load firms from JSON
   const firmsPath = path.join(process.cwd(), 'data', 'propfirms.json');
@@ -329,7 +401,7 @@ async function main() {
   const results = [];
   for (const firm of firms) {
     try {
-      const result = await updateFirmMonth(firm, yearMonth, apiKey);
+      const result = await updateFirmMonth(firm, apiKey);
       results.push(result);
     } catch (err) {
       console.error(`❌ Error updating ${firm.name}:`, err.message);

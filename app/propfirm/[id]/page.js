@@ -318,6 +318,7 @@ export default function PropFirmDetailPage() {
                 <span className="text-white font-bold text-xs">TP</span>
               </div>
               <h2 className="text-lg font-bold text-slate-900">Total Payouts</h2>
+              <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-md font-medium">UTC</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex bg-slate-100 rounded-lg p-1">
