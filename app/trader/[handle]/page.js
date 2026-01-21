@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import PropProofLayout from "@/components/PropProofLayout";
@@ -24,6 +24,7 @@ const ProfilePage = ({ params }) => {
   const { handle } = use(params);
   const trader = MOCK_TRADERS.find((t) => t.handle === handle);
   const { data, loading, error } = useTransactions(TEST_WALLET);
+  const [chartPeriod, setChartPeriod] = useState('6M');
 
   if (!trader) {
     return (
@@ -39,8 +40,54 @@ const ProfilePage = ({ params }) => {
     );
   }
 
-  // Use real blockchain data for chart
-  const chartData = data?.monthlyData || [];
+  // Filter chart data based on selected period
+  const chartData = useMemo(() => {
+    if (!data?.transactions || data.transactions.length === 0) {
+      return [];
+    }
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    let monthsToShow = 6; // Default 6M
+    if (chartPeriod === '1Y') {
+      monthsToShow = 12;
+    } else if (chartPeriod === 'ALL') {
+      // For ALL, find the earliest transaction and show all months from then
+      const earliestTx = data.transactions[data.transactions.length - 1];
+      if (earliestTx) {
+        const earliestDate = new Date(earliestTx.timestamp * 1000);
+        const mostRecentDate = new Date(data.transactions[0].timestamp * 1000);
+        const diffMonths = (mostRecentDate.getFullYear() - earliestDate.getFullYear()) * 12 + 
+                          (mostRecentDate.getMonth() - earliestDate.getMonth());
+        monthsToShow = Math.max(diffMonths + 1, 6); // At least 6 months
+      }
+    }
+
+    // Use the most recent transaction date as reference point
+    const mostRecentTx = data.transactions[0];
+    const referenceDate = new Date(mostRecentTx.timestamp * 1000);
+
+    const monthlyData = [];
+
+    for (let i = monthsToShow - 1; i >= 0; i--) {
+      const d = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - i, 1);
+      const monthName = months[d.getMonth()];
+      const monthStart = d.getTime() / 1000;
+      const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59).getTime() / 1000;
+
+      const monthTxs = data.transactions.filter(tx => tx.timestamp >= monthStart && tx.timestamp <= monthEnd);
+      const amount = monthTxs.reduce((sum, tx) => sum + tx.amountUSD, 0);
+
+      monthlyData.push({
+        month: monthName,
+        monthFull: chartPeriod === 'ALL' ? `${monthName} ${d.getFullYear()}` : monthName,
+        year: d.getFullYear(),
+        amount: Math.round(amount),
+      });
+    }
+
+    return monthlyData;
+  }, [data?.transactions, chartPeriod]);
 
   // Match transactions to verified firms
   const verifiedFirms = useMemo(() => {
@@ -370,9 +417,36 @@ const ProfilePage = ({ params }) => {
                 <p className="text-sm text-slate-400 mt-1">On-chain verified inflows per month</p>
               </div>
               <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
-                <button className="px-4 py-2 bg-slate-900 text-white shadow-sm rounded-lg text-xs font-bold">6M</button>
-                <button className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700">1Y</button>
-                <button className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700">ALL</button>
+                <button
+                  onClick={() => setChartPeriod('6M')}
+                  className={`px-4 py-2 shadow-sm rounded-lg text-xs font-bold transition-all ${
+                    chartPeriod === '6M'
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  6M
+                </button>
+                <button
+                  onClick={() => setChartPeriod('1Y')}
+                  className={`px-4 py-2 shadow-sm rounded-lg text-xs font-bold transition-all ${
+                    chartPeriod === '1Y'
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  1Y
+                </button>
+                <button
+                  onClick={() => setChartPeriod('ALL')}
+                  className={`px-4 py-2 shadow-sm rounded-lg text-xs font-bold transition-all ${
+                    chartPeriod === 'ALL'
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  ALL
+                </button>
               </div>
             </div>
 
@@ -401,11 +475,14 @@ const ProfilePage = ({ params }) => {
                   <BarChart data={chartData} barCategoryGap="20%">
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis
-                      dataKey="month"
+                      dataKey={chartPeriod === 'ALL' ? 'monthFull' : 'month'}
                       axisLine={false}
                       tickLine={false}
                       tick={{ fontSize: 12, fill: "#94a3b8", fontWeight: 500 }}
                       dy={10}
+                      angle={chartPeriod === 'ALL' ? -45 : 0}
+                      textAnchor={chartPeriod === 'ALL' ? 'end' : 'middle'}
+                      height={chartPeriod === 'ALL' ? 60 : 30}
                     />
                     <YAxis
                       axisLine={false}
@@ -422,6 +499,13 @@ const ProfilePage = ({ params }) => {
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                       }}
                       formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']}
+                      labelFormatter={(label, payload) => {
+                        if (payload && payload.length > 0 && payload[0].payload) {
+                          const data = payload[0].payload;
+                          return chartPeriod === 'ALL' ? `${data.month} ${data.year}` : data.month;
+                        }
+                        return label;
+                      }}
                     />
                     <Bar dataKey="amount" radius={[12, 12, 12, 12]} maxBarSize={60}>
                       {chartData.map((entry, index) => (
