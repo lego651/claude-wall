@@ -3,9 +3,14 @@
  * 
  * PP2-005: Vercel Cron Endpoint
  * 
- * This endpoint is called once per day by Vercel Cron.
- * (Hobby plan = daily only, Pro plan = per-minute precision)
- * It fetches transactions from Arbiscan and updates Supabase.
+ * ⚠️ DEPRECATED: This endpoint is no longer used.
+ * 
+ * We now use GitHub Actions for syncing:
+ * - .github/workflows/sync-realtime.yml (every 15 min → Supabase)
+ * - .github/workflows/sync-historical.yml (daily 3 AM PST → JSON files)
+ * 
+ * This endpoint is kept for backwards compatibility and manual testing.
+ * The Vercel cron job has been disabled in vercel.json.
  * 
  * Security: Protected by CRON_SECRET header verification.
  */

@@ -1,0 +1,42 @@
+# Sync Payouts to Supabase (Real-time)
+#
+# Runs every 15 minutes to fetch latest payouts from Arbiscan
+# and update Supabase `recent_payouts` table.
+#
+# This replaces the Vercel cron job (which only runs daily on Hobby plan).
+
+name: Sync Payouts (Real-time)
+
+on:
+  schedule:
+    # Run every 30 minutes
+    - cron: '*/30 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run sync script
+        env:
+          ARBISCAN_API_KEY: ${{ secrets.ARBISCAN_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/sync-to-supabase.js
+
+      - name: Log result
+        run: echo "Sync completed at $(date -u)"

@@ -1,0 +1,67 @@
+# Sync Historical Payouts (Daily)
+#
+# Runs daily at 3 AM PST (11:00 UTC) to update JSON files
+# with the current month's payout data, then commits and pushes.
+#
+# This keeps the 30d and 12m historical data up-to-date.
+
+name: Sync Payouts (Historical)
+
+on:
+  schedule:
+    # 3 AM PST = 11:00 UTC (PST is UTC-8)
+    # During daylight saving (PDT), 3 AM PDT = 10:00 UTC
+    - cron: '0 11 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync-and-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Grant write permissions to push commits
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for proper git operations
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update current month JSON files
+        env:
+          ARBISCAN_API_KEY: ${{ secrets.ARBISCAN_API_KEY }}
+        run: node scripts/update-monthly-json.js
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --quiet data/payouts/ || echo "changes=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        if: steps.git-check.outputs.changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add data/payouts/
+          git commit -m "chore: update payout data $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: Log result
+        run: |
+          if [ "${{ steps.git-check.outputs.changes }}" == "true" ]; then
+            echo "Changes committed and pushed at $(date -u)"
+          else
+            echo "No changes to commit at $(date -u)"
+          fi
