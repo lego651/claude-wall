@@ -1,0 +1,80 @@
+{
+  "firmId": "fxify",
+  "period": "2025-07",
+  "timezone": "UTC",
+  "generatedAt": "2026-01-21T15:46:08.673Z",
+  "summary": {
+    "totalPayouts": 15586,
+    "payoutCount": 4,
+    "largestPayout": 6169,
+    "avgPayout": 3897
+  },
+  "dailyBuckets": [
+    {
+      "date": "2025-07-07",
+      "total": 2855.13,
+      "rise": 2855.13,
+      "crypto": 0,
+      "wire": 0
+    },
+    {
+      "date": "2025-07-08",
+      "total": 3000,
+      "rise": 3000,
+      "crypto": 0,
+      "wire": 0
+    },
+    {
+      "date": "2025-07-17",
+      "total": 3562,
+      "rise": 3562,
+      "crypto": 0,
+      "wire": 0
+    },
+    {
+      "date": "2025-07-29",
+      "total": 6168.94,
+      "rise": 6168.94,
+      "crypto": 0,
+      "wire": 0
+    }
+  ],
+  "transactions": [
+    {
+      "tx_hash": "0x1d060f52eff72a31d2426589550465997cfeb5144521bd69552ae5ac96af33cc",
+      "firm_id": "fxify",
+      "amount": 6168.94,
+      "payment_method": "rise",
+      "timestamp": "2025-07-29T09:12:35.000Z",
+      "from_address": "0x1c969652d758f8fc23c443758f8911086f676216",
+      "to_address": "0x0000000000000000000000000000000000000000"
+    },
+    {
+      "tx_hash": "0xa1313dfa5a7fc7c3417c3cbac3502a089cc9649a1d6225722d2445229e4f329c",
+      "firm_id": "fxify",
+      "amount": 3562,
+      "payment_method": "rise",
+      "timestamp": "2025-07-17T13:28:52.000Z",
+      "from_address": "0x1c969652d758f8fc23c443758f8911086f676216",
+      "to_address": "0x0000000000000000000000000000000000000000"
+    },
+    {
+      "tx_hash": "0xa6348d0f5813ccbd5f9b4e98667b56cc6e46d78f613838a2355e76bdf87686ac",
+      "firm_id": "fxify",
+      "amount": 3000,
+      "payment_method": "rise",
+      "timestamp": "2025-07-08T23:31:05.000Z",
+      "from_address": "0x1c969652d758f8fc23c443758f8911086f676216",
+      "to_address": "0x0000000000000000000000000000000000000000"
+    },
+    {
+      "tx_hash": "0x44d5be80c68d2c8271a2f3e233eae9d5f418ef79660ea269860f2fe0225b5a60",
+      "firm_id": "fxify",
+      "amount": 2855.13,
+      "payment_method": "rise",
+      "timestamp": "2025-07-07T15:29:38.000Z",
+      "from_address": "0x1c969652d758f8fc23c443758f8911086f676216",
+      "to_address": "0x0000000000000000000000000000000000000000"
+    }
+  ]
+}
