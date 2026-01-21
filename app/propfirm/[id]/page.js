@@ -174,12 +174,17 @@ export default function PropFirmDetailPage() {
   const firm = chartData?.firm;
   const summary = chartData?.summary;
   const chart = chartData?.chart;
+  const rangeOptions = [
+    { label: '30 Days', value: '30d' },
+    { label: '12 Months', value: '12m' },
+  ];
+  const activeRangeIndex = rangeOptions.findIndex((o) => o.value === chartPeriod);
 
   return (
     <PropProofLayout>
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-8">
         {/* Header - Breadcrumb & Firm Info */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
           <div className="flex items-center gap-5">
             {/* Back Button */}
             <button
@@ -238,8 +243,40 @@ export default function PropFirmDetailPage() {
           </div>
         </div>
 
+        {/* Reporting period (applies to all historical sections) */}
+        <div className="flex flex-col items-center gap-3 mb-8">
+          <div className="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">
+            Viewing stats for
+          </div>
+
+          <div className="relative p-1 bg-slate-900 shadow-2xl shadow-indigo-200/50 rounded-[20px] flex w-full max-w-xs mx-auto ring-6 ring-indigo-50 border border-slate-800">
+            {/* Background slider for active state */}
+            <div
+              className="absolute top-1 bottom-1 bg-white rounded-[16px] shadow-lg transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+              style={{
+                width: 'calc(50% - 3px)',
+                left: activeRangeIndex === 0 ? '3px' : 'calc(50%)',
+              }}
+            />
+
+            {rangeOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setChartPeriod(option.value)}
+                className={`relative z-10 flex-1 py-2.5 text-xs font-black transition-all duration-300 rounded-lg tracking-tight ${
+                  chartPeriod === option.value
+                    ? 'text-slate-900'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
           {/* Total Payouts */}
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
@@ -271,6 +308,24 @@ export default function PropFirmDetailPage() {
             </div>
             <h3 className="text-xl font-bold text-slate-900 tracking-tight">
               {summary?.payoutCount?.toLocaleString() || 0}
+            </h3>
+          </div>
+
+          {/* Avg. Per Payout */}
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
+                Avg. Per Payout
+              </span>
+              <div className="p-2 bg-slate-50 rounded-lg">
+                <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l2-2 3 3 7-7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19h14a2 2 0 002-2V7" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+              ${summary?.avgPayout?.toLocaleString() || 0}
             </h3>
           </div>
 
@@ -312,32 +367,32 @@ export default function PropFirmDetailPage() {
         {/* Chart */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
           {/* Chart Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-start justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-slate-900 rounded-lg">
-                <span className="text-white font-bold text-xs">TP</span>
+              <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center">
+                <span className="text-white font-extrabold text-xs">TP</span>
               </div>
-              <h2 className="text-lg font-bold text-slate-900">Total Payouts</h2>
-              <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-md font-medium">UTC</span>
+              <div className="flex flex-col">
+                <h2 className="text-lg font-bold text-slate-900 leading-tight">Total Payouts</h2>
+                <span className="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">
+                  UTC Timezone
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex bg-slate-100 rounded-lg p-1">
-                {[
-                  { label: 'Last 30 Days', value: '30d' },
-                  { label: 'Last 12 Months', value: '12m' },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => setChartPeriod(option.value)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                      chartPeriod === option.value 
-                        ? 'bg-white shadow-sm text-indigo-600' 
-                        : 'text-slate-500 hover:text-slate-700'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+
+            {/* Legend (matches design) */}
+            <div className="flex items-center gap-5 pt-1">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                Crypto
+              </div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                Rise
+              </div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                Wire
               </div>
             </div>
           </div>
@@ -393,15 +448,10 @@ export default function PropFirmDetailPage() {
                   }}
                   cursor={{ fill: '#f1f5f9' }}
                 />
-                <Legend
-                  verticalAlign="top"
-                  align="center"
-                  iconType="circle"
-                  wrapperStyle={{ paddingBottom: '20px', fontSize: '12px', fontWeight: 500 }}
-                />
-                <Bar dataKey="rise" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} name="Rise" />
-                <Bar dataKey="crypto" stackId="a" fill="#f59e0b" radius={[0, 0, 0, 0]} name="Crypto" />
-                <Bar dataKey="wire" stackId="a" fill="#10b981" radius={[4, 4, 0, 0]} name="Wire" />
+                {/* Rounded top corners for nicer bars */}
+                <Bar dataKey="rise" stackId="a" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Rise" />
+                <Bar dataKey="crypto" stackId="a" fill="#f59e0b" radius={[6, 6, 0, 0]} name="Crypto" />
+                <Bar dataKey="wire" stackId="a" fill="#10b981" radius={[6, 6, 0, 0]} name="Wire" />
               </BarChart>
             </ResponsiveContainer>
           )}

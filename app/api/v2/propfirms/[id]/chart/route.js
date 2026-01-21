@@ -73,7 +73,15 @@ export async function GET(request, { params }) {
     summary.latestPayoutAt = firm.last_payout_at;
     summary.totalPayouts = Math.round(summary.totalPayouts || 0);
     summary.largestPayout = Math.round(summary.largestPayout || 0);
-    summary.avgPayout = Math.round(summary.avgPayout || 0);
+    // Ensure avgPayout is always present (API-level computation)
+    const payoutCount = summary.payoutCount || 0;
+    const avgPayout =
+      typeof summary.avgPayout === 'number'
+        ? summary.avgPayout
+        : payoutCount > 0
+          ? summary.totalPayouts / payoutCount
+          : 0;
+    summary.avgPayout = Math.round(avgPayout);
 
     return NextResponse.json({
       firm: {
