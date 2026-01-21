@@ -5,6 +5,8 @@
  * 
  * Returns the top 10 largest single payouts for the selected period.
  * Uses JSON files for historical data.
+ *
+ * Note: We currently only surface Rise payouts in this endpoint/UI.
  * 
  * Query params:
  *   - period: 30d, 12m (default: 30d)
@@ -48,8 +50,10 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Get top payouts from JSON files
-    const payouts = getTopPayoutsFromFiles(firmId, period, 10);
+    // Get top payouts from JSON files (Rise only)
+    const payouts = getTopPayoutsFromFiles(firmId, period, 5000)
+      .filter(p => p.paymentMethod === 'rise')
+      .slice(0, 10);
 
     return NextResponse.json({
       firmId,
