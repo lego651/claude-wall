@@ -180,6 +180,19 @@ export default function PropFirmDetailPage() {
   ];
   const activeRangeIndex = rangeOptions.findIndex((o) => o.value === chartPeriod);
 
+  // Get logo URL - use firm.logo if available, otherwise try local file
+  const getLogoUrl = () => {
+    if (firm?.logo) return firm.logo;
+    // Fallback: try local logo files - we'll let the browser try both formats
+    return `/logos/firms/${firmId}.webp`;
+  };
+
+  // Check if we should show logo - try to show for all firms
+  const shouldShowLogo = () => {
+    // Always try to show logo
+    return true;
+  };
+
   return (
     <PropProofLayout>
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-8">
@@ -198,15 +211,34 @@ export default function PropFirmDetailPage() {
 
             {/* Firm Logo & Info */}
             <div className="flex items-center gap-4">
-              {firm?.logo ? (
-                <img src={firm.logo} alt={firm.name} className="w-16 h-16 rounded-xl shadow-md object-cover" />
-              ) : (
-                <div className="w-16 h-16 bg-slate-900 rounded-xl flex items-center justify-center shadow-md">
+              <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-md bg-white">
+                <img 
+                  src={getLogoUrl()} 
+                  alt={firm?.name || 'Firm logo'} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Try different formats in order: webp -> png -> jpeg -> jpg
+                    const currentSrc = e.target.src;
+                    if (currentSrc.endsWith('.webp')) {
+                      e.target.src = `/logos/firms/${firmId}.png`;
+                    } else if (currentSrc.endsWith('.png')) {
+                      e.target.src = `/logos/firms/${firmId}.jpeg`;
+                    } else if (currentSrc.endsWith('.jpeg')) {
+                      e.target.src = `/logos/firms/${firmId}.jpg`;
+                    } else {
+                      // If all formats fail, hide image and show initials fallback
+                      e.target.style.display = 'none';
+                      const fallback = e.target.nextElementSibling;
+                      if (fallback) fallback.style.display = 'flex';
+                    }
+                  }}
+                />
+                <div className="hidden w-16 h-16 bg-slate-900 rounded-xl items-center justify-center shadow-md">
                   <span className="text-white text-xl font-black">
                     {firm?.name?.substring(0, 2).toUpperCase()}
                   </span>
                 </div>
-              )}
+              </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <h1 className="text-2xl font-bold text-slate-900">{firm?.name}</h1>
@@ -369,8 +401,10 @@ export default function PropFirmDetailPage() {
           {/* Chart Header */}
           <div className="flex items-start justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center">
-                <span className="text-white font-extrabold text-xs">TP</span>
+              <div className="p-2 bg-white rounded-lg shadow-sm">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
               </div>
               <div className="flex flex-col">
                 <h2 className="text-lg font-bold text-slate-900 leading-tight">Total Payouts</h2>

@@ -113,6 +113,20 @@ export default function PropFirmsListPage() {
     return name.substring(0, 2).toUpperCase();
   };
 
+  // Get logo URL - use firm.logo if available, otherwise try local file
+  const getLogoUrl = (firm) => {
+    if (firm.logo) return firm.logo;
+    // Fallback: try local logo files - we'll let the browser try both formats
+    // The onError handler will fallback to initials if image doesn't exist
+    return `/logos/firms/${firm.id}.webp`;
+  };
+
+  // Check if we should show logo - try to show for all firms
+  const shouldShowLogo = (firm) => {
+    // Always try to show logo if firm.logo exists, or if we have local files
+    return true; // Try to show logo for all firms
+  };
+
   // Get color class for firm (consistent based on firm id)
   const getColorClass = (firmId, index) => {
     const hash = firmId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -197,8 +211,33 @@ export default function PropFirmsListPage() {
                   style={{ animationDelay: `${(idx + 1) * 100}ms` }}
                 >
                   <div className="flex justify-between items-start mb-8">
-                    <div className={`relative w-16 h-16 ${colorClass} rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-xl rotate-3 group-hover:rotate-0 transition-all duration-300`}>
-                      {getInitials(firm.name)}
+                    <div className="relative">
+                      <div className="relative w-16 h-16 rounded-2xl overflow-hidden shadow-xl rotate-3 group-hover:rotate-0 transition-all duration-300 bg-white">
+                        <img 
+                          src={getLogoUrl(firm)} 
+                          alt={firm.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Try different formats in order: webp -> png -> jpeg -> jpg
+                            const currentSrc = e.target.src;
+                            if (currentSrc.endsWith('.webp')) {
+                              e.target.src = `/logos/firms/${firm.id}.png`;
+                            } else if (currentSrc.endsWith('.png')) {
+                              e.target.src = `/logos/firms/${firm.id}.jpeg`;
+                            } else if (currentSrc.endsWith('.jpeg')) {
+                              e.target.src = `/logos/firms/${firm.id}.jpg`;
+                            } else {
+                              // If all formats fail, hide image and show initials fallback
+                              e.target.style.display = 'none';
+                              const fallback = e.target.nextElementSibling;
+                              if (fallback) fallback.style.display = 'flex';
+                            }
+                          }}
+                        />
+                        <div className={`hidden w-16 h-16 ${colorClass} rounded-2xl items-center justify-center text-white font-black text-xl shadow-xl`}>
+                          {getInitials(firm.name)}
+                        </div>
+                      </div>
                       <div className="absolute -top-2 -right-2 bg-amber-400 text-[8px] font-black text-white px-2 py-0.5 rounded-full uppercase tracking-tighter shadow-md border border-white">
                         Hot
                       </div>
@@ -321,8 +360,31 @@ export default function PropFirmsListPage() {
                         >
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-4">
-                              <div className={`w-10 h-10 ${colorClass} rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm transition-transform group-hover:scale-110`}>
-                                {getInitials(firm.name)}
+                              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm transition-transform group-hover:scale-110 bg-white relative">
+                                <img 
+                                  src={getLogoUrl(firm)} 
+                                  alt={firm.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    // Try different formats in order: webp -> png -> jpeg -> jpg
+                                    const currentSrc = e.target.src;
+                                    if (currentSrc.endsWith('.webp')) {
+                                      e.target.src = `/logos/firms/${firm.id}.png`;
+                                    } else if (currentSrc.endsWith('.png')) {
+                                      e.target.src = `/logos/firms/${firm.id}.jpeg`;
+                                    } else if (currentSrc.endsWith('.jpeg')) {
+                                      e.target.src = `/logos/firms/${firm.id}.jpg`;
+                                    } else {
+                                      // If all formats fail, hide image and show initials fallback
+                                      e.target.style.display = 'none';
+                                      const fallback = e.target.nextElementSibling;
+                                      if (fallback) fallback.style.display = 'flex';
+                                    }
+                                  }}
+                                />
+                                <div className={`hidden w-10 h-10 ${colorClass} rounded-xl items-center justify-center text-white font-bold text-sm shadow-sm`}>
+                                  {getInitials(firm.name)}
+                                </div>
                               </div>
                               <span className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors underline decoration-indigo-200 underline-offset-4 decoration-2 group-hover:decoration-indigo-600">
                                 {firm.name}
