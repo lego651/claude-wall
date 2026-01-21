@@ -7,9 +7,8 @@ const PropProofLayout = ({ children }) => {
   const pathname = usePathname();
 
   const navItems = [
-    { label: "Payouts", path: "/propfirms" },
-    { label: "Analytics", path: "/analytics" },
-    { label: "Compare", path: "/firms" },
+    { label: "Leaderboard", path: "/leaderboard" },
+    { label: "Prop Firms Payouts", path: "/propfirms" },
   ];
 
   return (
@@ -27,19 +26,26 @@ const PropProofLayout = ({ children }) => {
               <span className="font-bold text-xl tracking-tight text-slate-900">PropPulse</span>
             </Link>
             <nav className="hidden md:flex items-center gap-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                    pathname === item.path
-                      ? "text-indigo-600 bg-indigo-50"
-                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                // Check if current path matches or starts with the nav item path
+                const isActive = pathname === item.path || 
+                  (item.path === "/propfirms" && pathname?.startsWith("/propfirm")) ||
+                  (item.path === "/leaderboard" && pathname?.startsWith("/leaderboard"));
+                
+                return (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                      isActive
+                        ? "text-indigo-600 bg-indigo-50"
+                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
           <div className="flex items-center gap-3">

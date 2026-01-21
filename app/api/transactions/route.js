@@ -47,20 +47,20 @@ export async function GET(request) {
     // TODO (Phase 1): Add 5-minute caching to reduce Arbiscan API calls
     // TODO (Phase 1): Implement retry logic for failed Arbiscan requests
 
-    // Fetch data from Arbiscan
+    // Fetch data from Arbiscan (with error handling - returns empty arrays on failure)
     const [nativeData, tokenData] = await Promise.all([
-      fetchNativeTransactions(address, apiKey),
-      fetchTokenTransactions(address, apiKey),
+      fetchNativeTransactions(address, apiKey).catch(() => []),
+      fetchTokenTransactions(address, apiKey).catch(() => []),
     ]);
 
-    // Process transactions
-    const transactions = processTransactions(nativeData, tokenData, address);
+    // Process transactions (handles empty arrays gracefully)
+    const transactions = processTransactions(nativeData || [], tokenData || [], address);
     const stats = calculateStats(transactions);
     const monthlyData = groupByMonth(transactions);
 
     console.log(`[API] Processed ${transactions.length} transactions for ${address}`);
 
-    // Return response
+    // Return response (always return 200, even if no transactions found)
     return NextResponse.json({
       address,
       ...stats,
@@ -70,9 +70,15 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('[API] Error fetching transactions:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch transactions', details: error.message },
-      { status: 500 }
-    );
+    // Return empty data instead of error to prevent page crash
+    // The frontend can handle empty data gracefully
+    return NextResponse.json({
+      address: searchParams.get('address') || '',
+      totalPayoutUSD: 0,
+      last30DaysPayoutUSD: 0,
+      avgPayoutUSD: 0,
+      transactions: [],
+      monthlyData: [],
+    });
   }
 }
