@@ -266,7 +266,7 @@ export default function PropFirmDetailPage() {
                 className={`relative z-10 flex-1 py-2.5 text-xs font-black transition-all duration-300 rounded-lg tracking-tight ${
                   chartPeriod === option.value
                     ? 'text-slate-900'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 {option.label}
