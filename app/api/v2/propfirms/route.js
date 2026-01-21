@@ -4,7 +4,7 @@
  * PP2-008: GET /api/v2/propfirms
  * 
  * Returns all prop firms with aggregated metrics for the selected period.
- * Uses Supabase for real-time data (1d, 7d) and JSON files for historical (30d, 12m).
+ * Uses Supabase for real-time data (1d) and JSON files for historical (7d, 30d, 12m).
  * 
  * Query params:
  *   - period: 1d, 7d, 30d, 12m (default: 1d)
@@ -72,8 +72,8 @@ export async function GET(request) {
     for (const firm of firms) {
       let metrics;
 
-      if (period === '1d' || period === '7d') {
-        // Use Supabase for real-time data
+      if (period === '1d') {
+        // Use Supabase for real-time data (last 24h only)
         const hoursBack = periodToHours(period);
         const cutoffDate = new Date(Date.now() - (hoursBack * 60 * 60 * 1000)).toISOString();
 
@@ -95,7 +95,7 @@ export async function GET(request) {
           latestPayoutAt: firm.last_payout_at,
         };
       } else {
-        // Use JSON files for historical data (30d, 12m)
+        // Use JSON files for historical data (7d, 30d, 12m)
         const historicalData = loadPeriodData(firm.id, period);
         
         metrics = {
