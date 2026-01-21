@@ -1,24 +1,76 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import PropProofLayout from '@/components/PropProofLayout';
 import { timeSince } from '@/lib/utils/timeSince';
 
 const PERIODS = [
-  { label: '24h', value: '1d' },
-  { label: '7d', value: '7d' },
-  { label: '30d', value: '30d' },
-  { label: '12m', value: '12m' },
+  { label: '24 Hours', value: '1d' },
+  { label: '7 Days', value: '7d' },
+  { label: '30 Days', value: '30d' },
+  { label: '12 Months', value: '12m' },
 ];
 
-const SORT_OPTIONS = [
-  { label: 'Total Payouts', value: 'totalPayouts' },
-  { label: 'No. of Payouts', value: 'payoutCount' },
-  { label: 'Largest Payout', value: 'largestPayout' },
-  { label: 'Avg Payout', value: 'avgPayout' },
-  { label: 'Latest Payout', value: 'latestPayout' },
+// Color classes for firm cards
+const COLOR_CLASSES = [
+  'bg-indigo-600',
+  'bg-emerald-600',
+  'bg-blue-600',
+  'bg-purple-600',
+  'bg-pink-600',
+  'bg-rose-600',
+  'bg-amber-600',
+  'bg-cyan-600',
 ];
+
+// Get random 3 firms from the list
+function getRandomFirms(firms, count = 3) {
+  if (firms.length <= count) return firms;
+  const shuffled = [...firms].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
+
+// Format currency
+const formatCurrency = (val) => 
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val || 0);
+
+// Format time for "Updated X ago"
+function formatUpdatedTime(timestamp) {
+  if (!timestamp) return 'N/A';
+  
+  try {
+    const then = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - then;
+
+    if (diffMs < 0 || isNaN(diffMs)) {
+      return 'N/A';
+    }
+
+    const seconds = Math.floor(diffMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const months = Math.floor(days / 30);
+
+    if (months > 0) {
+      return `${months}M AGO`;
+    }
+    if (days > 0) {
+      return `${days}D AGO`;
+    }
+    if (hours > 0) {
+      return `${hours}H AGO`;
+    }
+    if (minutes > 0) {
+      return `${minutes}M AGO`;
+    }
+    return 'JUST NOW';
+  } catch {
+    return 'N/A';
+  }
+}
 
 export default function PropFirmsListPage() {
   const router = useRouter();
@@ -48,6 +100,25 @@ export default function PropFirmsListPage() {
     loadFirms();
   }, [period, sort, order]);
 
+  // Get random 3 firms for featured cards
+  const featuredFirms = useMemo(() => getRandomFirms(firms, 3), [firms]);
+
+  // Get initials from firm name
+  const getInitials = (name) => {
+    if (!name) return '??';
+    const words = name.split(' ');
+    if (words.length >= 2) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Get color class for firm (consistent based on firm id)
+  const getColorClass = (firmId, index) => {
+    const hash = firmId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return COLOR_CLASSES[(hash + index) % COLOR_CLASSES.length];
+  };
+
   // Toggle sort order when clicking same column
   const handleSort = (field) => {
     if (sort === field) {
@@ -72,226 +143,229 @@ export default function PropFirmsListPage() {
     );
   };
 
+  // Get max payout count for progress bar calculation
+  const maxPayoutCount = useMemo(() => {
+    if (firms.length === 0) return 600;
+    return Math.max(...firms.map(f => f.metrics?.payoutCount || 0), 600);
+  }, [firms]);
+
   return (
     <PropProofLayout>
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Prop Firms</h1>
-          <p className="text-slate-600">
-            Track verified payout data for leading proprietary trading firms
+      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
+        {/* Header Section */}
+        <div className="flex flex-col items-center text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 mb-6">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest leading-none mt-0.5">Live On-Chain Tracking</span>
+          </div>
+          <h1 className="text-4xl sm:text-6xl font-extrabold text-gray-900 tracking-tight mb-4">
+            Prop Firm <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Leaderboard</span>
+          </h1>
+          <p className="text-lg text-gray-500 font-medium max-w-2xl">
+            Real-time verification of proprietary firm payout distributions using public blockchain data.
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          {/* Period Tabs */}
-          <div className="flex bg-slate-100 rounded-lg p-1">
-            {PERIODS.map((p) => (
-              <button
-                key={p.value}
-                onClick={() => setPeriod(p.value)}
-                className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
-                  period === p.value
-                    ? 'bg-white shadow-sm text-indigo-600'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Mobile Sort Dropdown */}
-          <div className="sm:hidden">
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium"
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  Sort by: {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Loading State - Skeleton */}
-        {loading && (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="px-6 py-4 text-left"><div className="h-3 w-16 bg-slate-200 rounded animate-pulse"></div></th>
-                    <th className="px-6 py-4 text-right hidden sm:table-cell"><div className="h-3 w-24 bg-slate-200 rounded animate-pulse ml-auto"></div></th>
-                    <th className="px-6 py-4 text-right hidden md:table-cell"><div className="h-3 w-20 bg-slate-200 rounded animate-pulse ml-auto"></div></th>
-                    <th className="px-6 py-4 text-right hidden lg:table-cell"><div className="h-3 w-16 bg-slate-200 rounded animate-pulse ml-auto"></div></th>
-                    <th className="px-6 py-4 text-right hidden lg:table-cell"><div className="h-3 w-20 bg-slate-200 rounded animate-pulse ml-auto"></div></th>
-                    <th className="px-6 py-4 text-right"><div className="h-3 w-16 bg-slate-200 rounded animate-pulse ml-auto"></div></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <tr key={i}>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-slate-200 rounded-lg animate-pulse"></div>
-                          <div>
-                            <div className="h-4 w-28 bg-slate-200 rounded animate-pulse mb-2"></div>
-                            <div className="h-3 w-20 bg-slate-100 rounded animate-pulse"></div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right hidden sm:table-cell"><div className="h-4 w-20 bg-slate-200 rounded animate-pulse ml-auto"></div></td>
-                      <td className="px-6 py-4 text-right hidden md:table-cell"><div className="h-4 w-12 bg-slate-200 rounded animate-pulse ml-auto"></div></td>
-                      <td className="px-6 py-4 text-right hidden lg:table-cell"><div className="h-4 w-16 bg-slate-200 rounded animate-pulse ml-auto"></div></td>
-                      <td className="px-6 py-4 text-right hidden lg:table-cell"><div className="h-4 w-14 bg-slate-200 rounded animate-pulse ml-auto"></div></td>
-                      <td className="px-6 py-4 text-right"><div className="h-4 w-16 bg-slate-200 rounded animate-pulse ml-auto"></div></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* Featured / Trending Section */}
+        {!loading && !error && featuredFirms.length > 0 && (
+          <div className="mb-16">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 bg-amber-100 text-amber-600 rounded-lg">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                </span>
+                <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Trending Now</h2>
+              </div>
+              <div className="h-[1px] flex-grow bg-gradient-to-r from-gray-200 to-transparent"></div>
             </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {featuredFirms.map((firm, idx) => {
+              const colorClass = getColorClass(firm.id, idx);
+              const payoutCount = firm.metrics?.payoutCount || 0;
+              const progressPercent = Math.min((payoutCount / maxPayoutCount) * 100, 100);
+              
+              return (
+                <div 
+                  key={firm.id}
+                  className="glass-card p-8 rounded-[2.5rem] transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-100/50 group"
+                  style={{ animationDelay: `${(idx + 1) * 100}ms` }}
+                >
+                  <div className="flex justify-between items-start mb-8">
+                    <div className={`relative w-16 h-16 ${colorClass} rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-xl rotate-3 group-hover:rotate-0 transition-all duration-300`}>
+                      {getInitials(firm.name)}
+                      <div className="absolute -top-2 -right-2 bg-amber-400 text-[8px] font-black text-white px-2 py-0.5 rounded-full uppercase tracking-tighter shadow-md border border-white">
+                        Hot
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Payouts</p>
+                      <p className="text-3xl font-black text-gray-900 tabular-nums tracking-tight">{formatCurrency(firm.metrics?.totalPayouts)}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500 font-bold">Payout Volume</span>
+                      <span className="text-gray-900 font-black">{payoutCount} Trans.</span>
+                    </div>
+                    <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden p-0.5 border border-gray-50">
+                      <div 
+                        className={`h-full ${colorClass} rounded-full transition-all duration-1000 delay-500`} 
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                    <div className="pt-2 flex items-center justify-between">
+                      <button 
+                        onClick={() => router.push(`/propfirm/${firm.id}`)}
+                        className="text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 active:scale-95"
+                      >
+                        View Insights
+                      </button>
+                      <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wide">Updated {formatUpdatedTime(firm.metrics?.latestPayoutAt)}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="alert alert-error mb-6">
-            <span>Error loading firms: {error}</span>
+          <div className="text-center py-16">
+            <p className="text-red-600">Error loading firms: {error}</p>
           </div>
         )}
 
-        {/* Table */}
+        {/* Leaderboard Section */}
         {!loading && !error && firms.length > 0 && (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Firm
-                    </th>
-                    <th 
-                      className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-700 hidden sm:table-cell"
-                      onClick={() => handleSort('totalPayouts')}
-                    >
-                      Total Payouts <SortIcon field="totalPayouts" />
-                    </th>
-                    <th 
-                      className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-700 hidden md:table-cell"
-                      onClick={() => handleSort('payoutCount')}
-                    >
-                      No. of Payouts <SortIcon field="payoutCount" />
-                    </th>
-                    <th 
-                      className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-700 hidden lg:table-cell"
-                      onClick={() => handleSort('largestPayout')}
-                    >
-                      Largest <SortIcon field="largestPayout" />
-                    </th>
-                    <th 
-                      className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-700 hidden lg:table-cell"
-                      onClick={() => handleSort('avgPayout')}
-                    >
-                      Avg Payout <SortIcon field="avgPayout" />
-                    </th>
-                    <th 
-                      className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-700"
-                      onClick={() => handleSort('latestPayout')}
-                    >
-                      Latest <SortIcon field="latestPayout" />
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {firms.map((firm) => (
-                      <tr 
-                        key={firm.id}
-                        onClick={() => router.push(`/propfirm/${firm.id}`)}
-                        className="hover:bg-slate-50 cursor-pointer transition-colors"
+          <div>
+            {/* Date Range Selector - Centered */}
+            <div className="flex flex-col items-center mb-10">
+              <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-[0.2em] mb-4">Viewing Stats For</span>
+              <div className="inline-flex bg-[#0f172a] p-1.5 rounded-[20px] shadow-2xl shadow-gray-900/20 border border-white/5">
+                {PERIODS.map((p) => (
+                  <button
+                    key={p.value}
+                    onClick={() => setPeriod(p.value)}
+                    className={`px-8 py-2.5 text-xs font-bold rounded-[16px] transition-all duration-300 ${
+                      period === p.value 
+                        ? 'bg-white text-[#0f172a] shadow-xl transform scale-[1.02]' 
+                        : 'text-white/80 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 mb-8">
+              <h2 className="text-2xl font-black text-gray-900 whitespace-nowrap">Verified Leaderboard</h2>
+              <div className="h-[1px] flex-grow bg-gradient-to-r from-gray-200 to-transparent"></div>
+            </div>
+            
+            <div className="glass-card rounded-[2rem] overflow-hidden border border-gray-100 shadow-2xl shadow-gray-200/40">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-gray-50/50 border-b border-gray-100">
+                      <th className="px-8 py-6 text-[11px] font-bold uppercase tracking-widest text-gray-400">Trading Entity</th>
+                      <th 
+                        className="px-6 py-6 text-right text-[11px] font-bold uppercase tracking-widest text-gray-400 cursor-pointer hover:text-gray-600"
+                        onClick={() => handleSort('totalPayouts')}
                       >
-                        {/* Firm */}
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            {firm.logo ? (
-                              <img 
-                                src={firm.logo} 
-                                alt={firm.name} 
-                                className="w-10 h-10 rounded-lg object-cover"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
-                                <span className="text-white text-sm font-bold">
-                                  {firm.name?.substring(0, 2).toUpperCase()}
-                                </span>
+                        Aggregate Payouts <SortIcon field="totalPayouts" />
+                      </th>
+                      <th 
+                        className="px-6 py-6 text-right text-[11px] font-bold uppercase tracking-widest text-gray-400 cursor-pointer hover:text-gray-600"
+                        onClick={() => handleSort('avgPayout')}
+                      >
+                        Mean Exit <SortIcon field="avgPayout" />
+                      </th>
+                      <th 
+                        className="px-6 py-6 text-right text-[11px] font-bold uppercase tracking-widest text-gray-400 cursor-pointer hover:text-gray-600"
+                        onClick={() => handleSort('largestPayout')}
+                      >
+                        Peak Payout <SortIcon field="largestPayout" />
+                      </th>
+                      <th 
+                        className="px-8 py-6 text-right text-[11px] font-bold uppercase tracking-widest text-gray-400 cursor-pointer hover:text-gray-600"
+                        onClick={() => handleSort('latestPayout')}
+                      >
+                        Activity Status <SortIcon field="latestPayout" />
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100/50">
+                    {firms.map((firm, idx) => {
+                      const colorClass = getColorClass(firm.id, idx);
+                      return (
+                        <tr 
+                          key={firm.id} 
+                          className="group hover:bg-indigo-50/40 transition-all duration-200 cursor-pointer"
+                          onClick={() => router.push(`/propfirm/${firm.id}`)}
+                        >
+                          <td className="px-8 py-6">
+                            <div className="flex items-center gap-4">
+                              <div className={`w-10 h-10 ${colorClass} rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm transition-transform group-hover:scale-110`}>
+                                {getInitials(firm.name)}
                               </div>
-                            )}
-                            <div>
-                              <div className="font-semibold text-slate-900">{firm.name}</div>
-                              {firm.website && (
-                                <div className="text-xs text-slate-400">
-                                  {firm.website.replace(/^https?:\/\//, '')}
-                                </div>
-                              )}
+                              <span className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors underline decoration-indigo-200 underline-offset-4 decoration-2 group-hover:decoration-indigo-600">
+                                {firm.name}
+                              </span>
                             </div>
-                          </div>
-                        </td>
-
-                        {/* Total Payouts */}
-                        <td className="px-6 py-4 text-right hidden sm:table-cell">
-                          <span className="font-semibold text-slate-900">
-                            ${firm.metrics?.totalPayouts?.toLocaleString() || 0}
-                          </span>
-                        </td>
-
-                        {/* Payout Count */}
-                        <td className="px-6 py-4 text-right hidden md:table-cell">
-                          <span className="text-slate-600">
-                            {firm.metrics?.payoutCount?.toLocaleString() || 0}
-                          </span>
-                        </td>
-
-                        {/* Largest */}
-                        <td className="px-6 py-4 text-right hidden lg:table-cell">
-                          <span className="text-slate-600">
-                            ${firm.metrics?.largestPayout?.toLocaleString() || 0}
-                          </span>
-                        </td>
-
-                        {/* Avg Payout */}
-                        <td className="px-6 py-4 text-right hidden lg:table-cell">
-                          <span className="text-slate-600">
-                            ${firm.metrics?.avgPayout?.toLocaleString() || 0}
-                          </span>
-                        </td>
-
-                        {/* Latest */}
-                        <td className="px-6 py-4 text-right">
-                          <span className="text-slate-600 text-sm">
-                            {timeSince(firm.metrics?.latestPayoutAt)}
-                          </span>
-                        </td>
-                      </tr>
-                  ))}
-                </tbody>
-              </table>
+                          </td>
+                          <td className="px-6 py-6 text-right font-black text-gray-900 tabular-nums">
+                            {formatCurrency(firm.metrics?.totalPayouts)}
+                          </td>
+                          <td className="px-6 py-6 text-right font-semibold text-gray-500 tabular-nums">
+                            {formatCurrency(firm.metrics?.avgPayout)}
+                          </td>
+                          <td className="px-6 py-6 text-right font-bold text-gray-900 tabular-nums">
+                            {formatCurrency(firm.metrics?.largestPayout)}
+                          </td>
+                          <td className="px-8 py-6 text-right">
+                            <div className="flex flex-col items-end gap-1.5">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-wider border border-indigo-100">
+                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                On-Chain
+                              </span>
+                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{formatUpdatedTime(firm.metrics?.latestPayoutAt)}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
 
         {/* Empty State */}
         {!loading && !error && firms.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
+          <div className="text-center py-16">
             <div className="text-6xl mb-4">🏢</div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">No firms found</h3>
-            <p className="text-slate-600">Check back later for prop firm data</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">No firms found</h3>
+            <p className="text-gray-600">Check back later for prop firm data</p>
           </div>
         )}
-      </div>
+      </main>
     </PropProofLayout>
   );
 }
