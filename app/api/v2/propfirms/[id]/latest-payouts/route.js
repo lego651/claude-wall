@@ -3,8 +3,8 @@
  * 
  * PP2-011: GET /api/v2/propfirms/[id]/latest-payouts
  * 
- * Returns the 20 most recent payouts in real-time.
- * No period filter - always returns from Supabase (last 24h).
+ * Returns all payouts in the last 24 hours (real-time).
+ * Always returns from Supabase (rolling window).
  */
 
 import { NextResponse } from 'next/server';
@@ -37,13 +37,15 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Fetch latest 20 payouts
+    // Fetch all payouts from the last 24 hours
+    const cutoffDate = new Date(Date.now() - (24 * 60 * 60 * 1000)).toISOString();
     const { data: payouts, error: payoutsError } = await supabase
       .from('recent_payouts')
       .select('tx_hash, amount, payment_method, timestamp')
       .eq('firm_id', firmId)
+      .gte('timestamp', cutoffDate)
       .order('timestamp', { ascending: false })
-      .limit(20);
+      ;
 
     if (payoutsError) {
       throw new Error(`Failed to fetch payouts: ${payoutsError.message}`);

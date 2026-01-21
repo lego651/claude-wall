@@ -489,13 +489,13 @@ export default function PropFirmDetailPage() {
               </span>
             </div>
 
-            <div className="divide-y divide-slate-100 flex-grow">
+            <div className="divide-y divide-slate-100 max-h-[420px] overflow-y-auto">
               {latestPayoutsLoading ? (
                 <div className="px-6 py-8 text-center">
                   <span className="loading loading-spinner loading-sm"></span>
                 </div>
               ) : latestPayouts.length > 0 ? (
-                latestPayouts.slice(0, 7).map((tx) => (
+                latestPayouts.map((tx) => (
                   <a
                     key={tx.txHash}
                     href={tx.arbiscanUrl}
@@ -544,7 +544,7 @@ export default function PropFirmDetailPage() {
             {latestPayouts.length > 0 && (
               <div className="px-6 py-4 bg-slate-50/30 border-t border-slate-100 flex items-center justify-between">
                 <span className="text-xs text-slate-500">
-                  Showing {Math.min(7, latestPayouts.length)} of {latestPayouts.length}
+                  Showing {latestPayouts.length} of {latestPayouts.length}
                 </span>
               </div>
             )}
