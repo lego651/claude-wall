@@ -2,12 +2,12 @@
   "firmId": "blueguardian",
   "period": "2026-01",
   "timezone": "UTC",
-  "generatedAt": "2026-01-21T15:18:13.332Z",
+  "generatedAt": "2026-01-22T11:22:26.281Z",
   "summary": {
-    "totalPayouts": 301366,
-    "payoutCount": 152,
+    "totalPayouts": 302916,
+    "payoutCount": 153,
     "largestPayout": 12000,
-    "avgPayout": 1983
+    "avgPayout": 1980
   },
   "dailyBuckets": [
     {
@@ -26,8 +26,8 @@
     },
     {
       "date": "2026-01-03",
-      "total": 2967.5699999999997,
-      "rise": 2967.5699999999997,
+      "total": 2968,
+      "rise": 2968,
       "crypto": 0,
       "wire": 0
     },
@@ -40,15 +40,15 @@
     },
     {
       "date": "2026-01-06",
-      "total": 37672.18,
-      "rise": 37672.18,
+      "total": 37672,
+      "rise": 37672,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-07",
-      "total": 26153.98,
-      "rise": 26153.98,
+      "total": 26154,
+      "rise": 26154,
       "crypto": 0,
       "wire": 0
     },
@@ -61,22 +61,22 @@
     },
     {
       "date": "2026-01-09",
-      "total": 20223.95,
-      "rise": 20223.95,
+      "total": 20224,
+      "rise": 20224,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-10",
-      "total": 2553.75,
-      "rise": 2553.75,
+      "total": 2554,
+      "rise": 2554,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-11",
-      "total": 6303.73,
-      "rise": 6303.73,
+      "total": 6304,
+      "rise": 6304,
       "crypto": 0,
       "wire": 0
     },
@@ -89,15 +89,15 @@
     },
     {
       "date": "2026-01-14",
-      "total": 49101.079999999994,
-      "rise": 49101.079999999994,
+      "total": 49101,
+      "rise": 49101,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-15",
-      "total": 7381.58,
-      "rise": 7381.58,
+      "total": 7382,
+      "rise": 7382,
       "crypto": 0,
       "wire": 0
     },
@@ -124,20 +124,36 @@
     },
     {
       "date": "2026-01-19",
-      "total": 20983.739999999998,
-      "rise": 20983.739999999998,
+      "total": 20984,
+      "rise": 20984,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-20",
-      "total": 41698.490000000005,
-      "rise": 41698.490000000005,
+      "total": 41698,
+      "rise": 41698,
+      "crypto": 0,
+      "wire": 0
+    },
+    {
+      "date": "2026-01-22",
+      "total": 1550,
+      "rise": 1550,
       "crypto": 0,
       "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0x82a1c3b5147ae522d955c9df2ebba0c2e25b2fbc4c80604f3641c2f61930339f",
+      "firm_id": "blueguardian",
+      "amount": 1550,
+      "payment_method": "rise",
+      "timestamp": "2026-01-22T07:09:21.000Z",
+      "from_address": "0x68035843020b6c0cd94dd29c273fff13c8e9a914",
+      "to_address": "0x8a585e2a4b0eb511b685b0b861aa12de25566a7a"
+    },
     {
       "tx_hash": "0x179dd8dd0871e8657226789c04c895e0ad942a21eb074e01f78a1a3798a32398",
       "firm_id": "blueguardian",

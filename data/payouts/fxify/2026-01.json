@@ -2,12 +2,12 @@
   "firmId": "fxify",
   "period": "2026-01",
   "timezone": "UTC",
-  "generatedAt": "2026-01-21T16:37:35.012Z",
+  "generatedAt": "2026-01-22T11:22:44.443Z",
   "summary": {
-    "totalPayouts": 150880,
-    "payoutCount": 37,
+    "totalPayouts": 150907,
+    "payoutCount": 38,
     "largestPayout": 31166,
-    "avgPayout": 4078
+    "avgPayout": 3971
   },
   "dailyBuckets": [
     {
@@ -26,29 +26,29 @@
     },
     {
       "date": "2026-01-06",
-      "total": 2727.88,
-      "rise": 2727.88,
+      "total": 2728,
+      "rise": 2728,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-07",
-      "total": 31166.2,
-      "rise": 31166.2,
+      "total": 31166,
+      "rise": 31166,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-08",
-      "total": 15789.76,
-      "rise": 15789.76,
+      "total": 15790,
+      "rise": 15790,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-09",
-      "total": 17169.91,
-      "rise": 17169.91,
+      "total": 17170,
+      "rise": 17170,
       "crypto": 0,
       "wire": 0
     },
@@ -68,48 +68,64 @@
     },
     {
       "date": "2026-01-14",
-      "total": 48801.56,
-      "rise": 48801.56,
+      "total": 48802,
+      "rise": 48802,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-15",
-      "total": 970.9000000000001,
-      "rise": 970.9000000000001,
+      "total": 971,
+      "rise": 971,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-16",
-      "total": 3982.0299999999997,
-      "rise": 3982.0299999999997,
+      "total": 3982,
+      "rise": 3982,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-19",
-      "total": 9564.02,
-      "rise": 9564.02,
+      "total": 9564,
+      "rise": 9564,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-20",
-      "total": 4496.85,
-      "rise": 4496.85,
+      "total": 4497,
+      "rise": 4497,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-01-21",
-      "total": 6592.79,
-      "rise": 6592.79,
+      "total": 6593,
+      "rise": 6593,
+      "crypto": 0,
+      "wire": 0
+    },
+    {
+      "date": "2026-01-22",
+      "total": 27,
+      "rise": 27,
       "crypto": 0,
       "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0x87f27f96007bf7145698e3b8b4a5534aa9b8a84d9f025f31a19ea8c8c98b411f",
+      "firm_id": "fxify",
+      "amount": 27.17,
+      "payment_method": "rise",
+      "timestamp": "2026-01-22T09:36:16.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xe2c2156c3a7d3fd53d1acc02bf3908f4a0e5d249"
+    },
     {
       "tx_hash": "0x1e26863ca1fd1b25c840982dd825338910c9b53ae41aa7169ed14a8123faf014",
       "firm_id": "fxify",
