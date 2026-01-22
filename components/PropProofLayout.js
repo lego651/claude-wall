@@ -7,8 +7,9 @@ const PropProofLayout = ({ children }) => {
   const pathname = usePathname();
 
   const navItems = [
-    { label: "Leaderboard", path: "/leaderboard" },
-    { label: "Prop Firms Payouts", path: "/propfirms" },
+    { label: "Payouts", path: "/propfirms" },
+    { label: "Traders", path: "/leaderboard" },
+    { label: "Trading Study", path: "/study" },
   ];
 
   return (
@@ -29,8 +30,9 @@ const PropProofLayout = ({ children }) => {
               {navItems.map((item) => {
                 // Check if current path matches or starts with the nav item path
                 const isActive = pathname === item.path || 
-                  (item.path === "/propfirms" && pathname?.startsWith("/propfirm")) ||
-                  (item.path === "/leaderboard" && pathname?.startsWith("/leaderboard"));
+                  (item.path === "/propfirms" && (pathname?.startsWith("/propfirm") || pathname?.startsWith("/propfirms"))) ||
+                  (item.path === "/leaderboard" && (pathname?.startsWith("/leaderboard") || pathname?.startsWith("/trader"))) ||
+                  (item.path === "/study" && pathname?.startsWith("/study"));
                 
                 return (
                   <Link

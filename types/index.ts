@@ -130,3 +130,21 @@ export interface SEOParams {
   canonicalUrlRelative?: string;
   extraTags?: Record<string, string>;
 }
+
+// Study/Timeline Types
+export interface TimelineEvent {
+  id: string;
+  date: string;
+  title: string;
+  summary: string;
+  type: "weekly" | "governance" | "milestone";
+  details?: {
+    pl?: number;
+    trades?: number;
+    metrics?: Array<{
+      label: string;
+      value: string;
+    }>;
+    notes?: string;
+  } | null;
+}
