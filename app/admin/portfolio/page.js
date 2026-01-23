@@ -23,40 +23,57 @@ const STRATEGIES = [
   { id: 'GOLD_2', name: 'GOLD 2', description: 'Gold Trading Strategy 2', color: 'error' },
 ];
 
-// Compact weekly performance card
-function WeeklyStrategyCard({ strategy, weekData, weekSummary }) {
+// Compact weekly performance card with bar chart
+function WeeklyStrategyCard({ strategy, weekData, weekSummary, maxR }) {
   const strategyR = weekData?.[strategy.id] || 0;
   const isPositive = strategyR >= 0;
   const strategyStats = weekSummary?.byStrategy?.[strategy.id];
-
-  // Map colors to badge classes
-  const badgeColors = {
-    primary: 'bg-slate-900 text-white',
-    secondary: 'bg-slate-900 text-white',
-    accent: 'bg-slate-900 text-white',
-    info: 'bg-slate-900 text-white',
-    warning: 'bg-slate-900 text-white',
-    error: 'bg-slate-900 text-white',
-  };
+  
+  // Calculate bar height as percentage of max R (minimum height for visibility)
+  const maxHeight = 160; // Maximum bar height in pixels
+  const minHeight = 12; // Minimum bar height for very small values
+  const barHeight = maxR > 0 
+    ? Math.max(minHeight, (Math.abs(strategyR) / maxR) * maxHeight)
+    : minHeight;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className={`${badgeColors[strategy.color]} px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide`}>
-          {strategy.name}
-        </div>
-        <div className={`text-2xl font-bold leading-none tracking-tight ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
-          {isPositive ? '+' : ''}{strategyR.toFixed(1)}R
-        </div>
+    <div className="flex flex-col items-center flex-1 min-w-0">
+      {/* Vertical bar chart container */}
+      <div className="w-full my-6 flex items-end justify-center px-8" style={{ height: `${maxHeight}px` }}>
+        <div 
+          className="rounded-t-lg"
+          style={{ 
+            width: '45%',
+            height: `${barHeight}px`,
+            backgroundColor: '#94a3b8',
+            backgroundImage: 'radial-gradient(circle, rgba(255, 255, 255, 0.3) 1px, transparent 1px)',
+            backgroundSize: '4px 4px',
+            minHeight: `${minHeight}px`
+          }}
+        />
       </div>
-
+      
+      {/* R value - green for positive, red for negative */}
+      <div className={`text-sm font-bold mb-2 text-center ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
+        {isPositive ? '+' : ''}{strategyR.toFixed(1)}R
+      </div>
+      
+      {/* Strategy name badge */}
+      <div className="bg-slate-600 text-white px-3 py-1.5 rounded-full text-xs font-semibold uppercase mb-2">
+        {strategy.name}
+      </div>
+      
       {strategyStats && (
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-400 uppercase font-bold tracking-wider">Win Rate: {strategyStats.winRate}%</span>
-          <span className="text-slate-900 font-medium">
+        <>
+          {/* W/L record - bold, slate-700 */}
+          <div className="text-xs font-bold text-slate-700 mb-1 text-center">
             {strategyStats.winning}W / {strategyStats.losing}L
-          </span>
-        </div>
+          </div>
+          {/* Win rate - bold, theme color */}
+          <div className="text-xs font-bold text-center" style={{ color: '#635BFF' }}>
+            {strategyStats.winRate}% WR
+          </div>
+        </>
       )}
     </div>
   );
@@ -78,7 +95,23 @@ function CumulativeStrategyCard({ strategy, strategyData, weeklyData }) {
   const avgRPerMonth = strategyData ? (strategyData.totalR / weeksCount) * avgWeeksPerMonth : 0;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 p-6">
+    <Link 
+      href={`/strategies/${strategy.id}`}
+      className="block bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 p-6 relative cursor-pointer"
+    >
+      {/* Clickable icon in top right */}
+      <div className="absolute top-6 right-6 z-10 pointer-events-none">
+        <svg 
+          className="w-5 h-5 transition-colors" 
+          style={{ color: '#635BFF' }}
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      </div>
+
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -109,7 +142,7 @@ function CumulativeStrategyCard({ strategy, strategyData, weeklyData }) {
         </div>
         <div>
           <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Win Rate</div>
-          <div className={`text-xl font-bold leading-none ${strategyData?.winRate >= 60 ? 'text-emerald-600' : 'text-slate-900'}`}>
+          <div className="text-xl font-bold leading-none" style={{ color: '#635BFF' }}>
             {strategyData?.winRate || 0}%
           </div>
         </div>
@@ -169,7 +202,7 @@ function CumulativeStrategyCard({ strategy, strategyData, weeklyData }) {
         </div>
       </div>
 
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center">
         <div className="text-xs text-slate-400 uppercase tracking-wider font-bold">
           Avg Risk:Reward
         </div>
@@ -177,18 +210,7 @@ function CumulativeStrategyCard({ strategy, strategyData, weeklyData }) {
           {strategyData?.averageR?.toFixed(2) || '0.00'}R
         </div>
       </div>
-
-      {/* View Details Button */}
-      <Link
-        href={`/strategies/${strategy.id}`}
-        className="flex items-center justify-center gap-2 w-full py-3 bg-slate-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-slate-800 transition-colors group"
-      >
-        View Strategy Details
-        <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-      </Link>
-    </div>
+    </Link>
   );
 }
 
@@ -266,11 +288,9 @@ export default function PortfolioPage() {
     return bTotal - aTotal; // Descending order
   });
 
-  // Calculate last week trades (we'll need to approximate or fetch from week data)
-  const lastWeekTrades = Object.values(yearlyStats).reduce((sum, s) => sum + (s.trades || 0), 0);
-  const lastWeekWinRate = Object.values(yearlyStats).length > 0
-    ? Object.values(yearlyStats).reduce((sum, s) => sum + (s.winRate || 0), 0) / Object.values(yearlyStats).length
-    : 0;
+  // Calculate last week trades and win rate from week detail data
+  const lastWeekTrades = lastWeekDetail?.summary?.weekly?.totalTrades || 0;
+  const lastWeekWinRate = lastWeekDetail?.summary?.weekly?.winRate || 0;
 
   return (
     <AdminLayout>
@@ -322,63 +342,113 @@ export default function PortfolioPage() {
         <>
           {/* SECTION 1: LAST WEEK PERFORMANCE */}
           <div className="mb-12">
-            {/* Last Week Overview Stats - Compact */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-4">
-                  Total R
-                </div>
-                <div className="text-2xl font-bold text-emerald-600 leading-none tracking-tight">
-                  +{lastWeekTotalR.toFixed(1)}R
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-4">
-                  Avg Win Rate
-                </div>
-                <div className="text-2xl font-bold leading-none tracking-tight" style={{ color: '#635BFF' }}>
-                  {lastWeekWinRate.toFixed(1)}%
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-4">
-                  Total Trades
-                </div>
-                <div className="text-2xl font-bold text-slate-900 leading-none tracking-tight">
-                  {lastWeekTrades}
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-4">
-                  Profitable
-                </div>
-                <div className="text-2xl font-bold text-amber-600 leading-none tracking-tight">
-                  {lastWeekProfitable}/{STRATEGIES.length}
-                </div>
-              </div>
-            </div>
-
             {/* Section Title */}
-            <div className="flex items-center gap-3 mb-8 mt-2">
+            <div className="flex items-center gap-3 mb-8">
               <div className="w-1 h-6 rounded-full" style={{ backgroundColor: '#635BFF' }}></div>
               <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
-                Last Week Snapshots
+                LAST WEEK SNAPSHOTS
               </h2>
             </div>
 
-            {/* Last Week Strategy Cards - Compact Grid (Sorted by Performance) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {sortedWeeklyStrategies.map((strategy) => (
-                <WeeklyStrategyCard
-                  key={strategy.id}
-                  strategy={strategy}
-                  weekData={lastWeek}
-                  weekSummary={lastWeekDetail?.summary}
-                />
-              ))}
+            {/* Last Week Strategy Cards - Horizontal Row with Bar Charts */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 p-8">
+              {/* Header Section */}
+              <div className="flex items-start justify-between mb-8 mt-6 px-8">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h1 className="text-4xl font-bold text-slate-900">
+                      Week {lastWeek?.weekNumber}, {lastWeek?.year}
+                    </h1>
+                    <span className="text-white text-[9px] font-black px-2 py-0.5 rounded-md tracking-widest uppercase" style={{ backgroundColor: '#635BFF' }}>
+                      WEEKLY
+                    </span>
+                  </div>
+                  <p className="text-base text-slate-500 font-normal">
+                    {lastWeek?.startDate && lastWeek?.endDate && `${lastWeek.startDate} to ${lastWeek.endDate}`}
+                  </p>
+                </div>
+                
+                {/* Top Performer Badge */}
+                {sortedWeeklyStrategies.length > 0 && lastWeek && (() => {
+                  const topStrategy = sortedWeeklyStrategies[0];
+                  const topStrategyR = lastWeek[topStrategy.id] || 0;
+                  return (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 flex items-center gap-3">
+                      <span className="text-xl">🥇</span>
+                      <div>
+                        <div className="text-[9px] font-black text-emerald-700 uppercase tracking-widest block">TOP PERFORMER</div>
+                        <div className="text-sm font-bold text-slate-900">
+                          {topStrategy.name} <span className="text-emerald-600 ml-1">+{topStrategyR.toFixed(2)}R</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Summary Metrics - Above Bar Charts */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 px-8">
+                <div className="bg-slate-50 rounded-xl p-5">
+                  <div className="text-[10px] font-bold tracking-wider text-slate-500 uppercase mb-2">
+                    TOTAL R
+                  </div>
+                  <div className="text-2xl font-bold text-emerald-600 leading-none tracking-tight">
+                    +{lastWeekTotalR.toFixed(1)}R
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-xl p-5">
+                  <div className="text-[10px] font-bold tracking-wider text-slate-500 uppercase mb-2">
+                    WIN RATE
+                  </div>
+                  <div className="text-2xl font-bold leading-none tracking-tight" style={{ color: '#635BFF' }}>
+                    {lastWeekWinRate.toFixed(1)}%
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-xl p-5">
+                  <div className="text-[10px] font-bold tracking-wider text-slate-500 uppercase mb-2">
+                    TOTAL TRADES
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900 leading-none tracking-tight">
+                    {lastWeekTrades}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-xl p-5">
+                  <div className="text-[10px] font-bold tracking-wider text-slate-500 uppercase mb-2">
+                    BEST DAY
+                  </div>
+                  {lastWeekDetail?.summary?.weekly?.bestDay && (
+                    <>
+                      <div className="text-2xl font-bold text-slate-900 leading-none tracking-tight">
+                        {new Date(lastWeekDetail.summary.weekly.bestDay.date).toLocaleDateString('en-US', { weekday: 'long' })}
+                      </div>
+                      <div className="text-sm font-normal text-slate-500 mt-0.5">
+                        ({lastWeekDetail.summary.weekly.bestDay.totalR > 0 ? '+' : ''}{lastWeekDetail.summary.weekly.bestDay.totalR.toFixed(2)}R)
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Bar Charts */}
+              <div className="flex items-end justify-between gap-2 px-8">
+                {sortedWeeklyStrategies.map((strategy) => {
+                  // Calculate max R value for scaling bars (use absolute values)
+                  const maxR = Math.max(...sortedWeeklyStrategies.map(s => Math.abs(lastWeek?.[s.id] || 0)), 1);
+                  
+                  return (
+                    <WeeklyStrategyCard
+                      key={strategy.id}
+                      strategy={strategy}
+                      weekData={lastWeek}
+                      weekSummary={lastWeekDetail?.summary}
+                      maxR={maxR}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </div>
 
