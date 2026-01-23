@@ -192,7 +192,7 @@ export default async function PublicStrategyPage({ params }) {
             Use our professional-grade performance tracking system to monitor your implementation of this strategy in real-time.
           </p>
           <Link
-            href="/portfolio"
+            href="/admin/portfolio"
             className="inline-flex items-center gap-3 px-8 py-4 bg-white rounded-[28px] text-lg font-black shadow-xl hover:scale-105 transition-transform"
             style={{ color: '#635BFF' }}
           >

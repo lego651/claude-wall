@@ -94,7 +94,7 @@ export default function StrategyDetailPage({ params }) {
           <p className="text-gray-600 mb-8">
             The trading strategy you're looking for doesn't exist.
           </p>
-          <Link href="/portfolio" className="btn btn-primary">
+          <Link href="/admin/portfolio" className="btn btn-primary">
             Back to Portfolio
           </Link>
         </div>
@@ -119,7 +119,7 @@ export default function StrategyDetailPage({ params }) {
           {/* Refined Premium Header */}
           <div className="flex flex-col gap-6">
             <nav className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
-              <Link href="/portfolio" className="transition-colors hover:text-[#635BFF]">Portfolio</Link>
+              <Link href="/admin/portfolio" className="transition-colors hover:text-[#635BFF]">Portfolio</Link>
               <span>/</span>
               <span className="text-gray-900">{strategy.name} Strategy</span>
             </nav>
