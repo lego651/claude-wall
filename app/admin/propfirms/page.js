@@ -1,118 +1,316 @@
+"use client";
+
+import { useState, useEffect } from 'react';
 import AdminLayout from "@/components/AdminLayout";
-import Link from "next/link";
 
 export default function AdminPropFirmsPage() {
+  const [firms, setFirms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState(null);
+  const [newFirmName, setNewFirmName] = useState('');
+  const [newFirmAddresses, setNewFirmAddresses] = useState(['']);
+  const [editName, setEditName] = useState('');
+  const [editAddresses, setEditAddresses] = useState([]);
+
+  useEffect(() => {
+    fetchFirms();
+  }, []);
+
+  const fetchFirms = async () => {
+    try {
+      const res = await fetch('/api/propfirms');
+      const data = await res.json();
+      setFirms(data.firms || []);
+    } catch (error) {
+      console.error('Error fetching firms:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddFirm = async (e) => {
+    e.preventDefault();
+    if (!newFirmName.trim()) return;
+
+    try {
+      const addresses = newFirmAddresses.filter(a => a.trim());
+      const res = await fetch('/api/propfirms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newFirmName, addresses }),
+      });
+
+      if (res.ok) {
+        setNewFirmName('');
+        setNewFirmAddresses(['']);
+        fetchFirms();
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to add firm');
+      }
+    } catch (error) {
+      alert('Error adding firm');
+    }
+  };
+
+  const handleEdit = (firm) => {
+    setEditingId(firm.id);
+    setEditName(firm.name);
+    setEditAddresses([...firm.addresses, '']);
+  };
+
+  const handleSaveEdit = async (id) => {
+    try {
+      const addresses = editAddresses.filter(a => a.trim());
+      const res = await fetch('/api/propfirms', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, name: editName, addresses }),
+      });
+
+      if (res.ok) {
+        setEditingId(null);
+        fetchFirms();
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to update firm');
+      }
+    } catch (error) {
+      alert('Error updating firm');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this firm?')) return;
+
+    try {
+      const res = await fetch(`/api/propfirms?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        fetchFirms();
+      } else {
+        alert('Failed to delete firm');
+      }
+    } catch (error) {
+      alert('Error deleting firm');
+    }
+  };
+
+  const addAddressField = (isEdit = false) => {
+    if (isEdit) {
+      setEditAddresses([...editAddresses, '']);
+    } else {
+      setNewFirmAddresses([...newFirmAddresses, '']);
+    }
+  };
+
+  const updateAddress = (index, value, isEdit = false) => {
+    if (isEdit) {
+      const updated = [...editAddresses];
+      updated[index] = value;
+      setEditAddresses(updated);
+    } else {
+      const updated = [...newFirmAddresses];
+      updated[index] = value;
+      setNewFirmAddresses(updated);
+    }
+  };
+
+  const removeAddress = (index, isEdit = false) => {
+    if (isEdit) {
+      setEditAddresses(editAddresses.filter((_, i) => i !== index));
+    } else {
+      setNewFirmAddresses(newFirmAddresses.filter((_, i) => i !== index));
+    }
+  };
+
   return (
     <AdminLayout>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl text-white shadow-lg" style={{ backgroundColor: '#635BFF', boxShadow: '0 10px 15px -3px rgba(99, 91, 255, 0.1)' }}>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">Prop Firms Management</h1>
-          </div>
-          <p className="text-lg text-gray-400 font-medium max-w-2xl leading-relaxed">
-            Manage prop firm data, wallet addresses, and verified payout tracking information.
-          </p>
+        <div className="mb-8">
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-2">Prop Firms</h1>
+          <p className="text-sm text-gray-400">Manage prop firm names and wallet addresses</p>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm">
-            <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Total Firms</div>
-            <div className="text-4xl font-black text-gray-900">12</div>
-          </div>
-          <div className="bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm">
-            <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Tracked Addresses</div>
-            <div className="text-4xl font-black" style={{ color: '#635BFF' }}>48</div>
-          </div>
-          <div className="bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm">
-            <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Total Payouts</div>
-            <div className="text-4xl font-black text-emerald-500">$2.4M</div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10">
-          <h2 className="text-2xl font-black text-gray-900 mb-6">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Link
-              href="/admin/propfirms/manage"
-              className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-[#635BFF] hover:bg-opacity-10 hover:border-[#635BFF] hover:border-opacity-30 transition-all group"
-            >
-              <div>
-                <h3 className="text-lg font-black text-gray-900 mb-1">Manage Firms</h3>
-                <p className="text-sm text-gray-500">Add, edit, or remove prop firms</p>
-              </div>
-              <svg className="w-6 h-6 text-gray-400 group-hover:text-[#635BFF] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-
-            <Link
-              href="/admin/propfirms/addresses"
-              className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-[#635BFF] hover:bg-opacity-10 hover:border-[#635BFF] hover:border-opacity-30 transition-all group"
-            >
-              <div>
-                <h3 className="text-lg font-black text-gray-900 mb-1">Wallet Addresses</h3>
-                <p className="text-sm text-gray-500">Manage tracked wallet addresses</p>
-              </div>
-              <svg className="w-6 h-6 text-gray-400 group-hover:text-[#635BFF] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-
-            <Link
-              href="/propfirms"
-              className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-emerald-50 hover:border-emerald-200 transition-all group"
-            >
-              <div>
-                <h3 className="text-lg font-black text-gray-900 mb-1">View Public Page</h3>
-                <p className="text-sm text-gray-500">See how users view prop firms</p>
-              </div>
-              <svg className="w-6 h-6 text-gray-400 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </Link>
-
-            <Link
-              href="/admin/propfirms/analytics"
-              className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-[#635BFF] hover:bg-opacity-10 hover:border-[#635BFF] hover:border-opacity-30 transition-all group"
-            >
-              <div>
-                <h3 className="text-lg font-black text-gray-900 mb-1">Analytics</h3>
-                <p className="text-sm text-gray-500">View payout trends and statistics</p>
-              </div>
-              <svg className="w-6 h-6 text-gray-400 group-hover:text-[#635BFF] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </Link>
-          </div>
-        </div>
-
-        {/* Info Section */}
-        <div className="mt-8 rounded-[40px] p-8" style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)', borderColor: 'rgba(99, 91, 255, 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
-          <div className="flex items-start gap-4">
-            <div className="p-2 rounded-xl text-white flex-shrink-0" style={{ backgroundColor: '#635BFF' }}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+        {/* Add New Firm Form */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Add New Firm</h2>
+          <form onSubmit={handleAddFirm} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Firm Name</label>
+              <input
+                type="text"
+                value={newFirmName}
+                onChange={(e) => setNewFirmName(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#635BFF] focus:border-transparent"
+                placeholder="e.g., FundingPips"
+                required
+              />
             </div>
             <div>
-              <h3 className="text-lg font-black text-gray-900 mb-2">About Prop Firms Management</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                This section allows you to manage prop firm data including company information, wallet addresses for payout tracking,
-                and analytics. All changes here will be reflected on the public-facing prop firms directory.
-              </p>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Wallet Addresses</label>
+              {newFirmAddresses.map((address, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => updateAddress(index, e.target.value)}
+                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#635BFF] focus:border-transparent"
+                    placeholder="0x..."
+                  />
+                  {newFirmAddresses.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeAddress(index)}
+                      className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => addAddressField(false)}
+                className="mt-2 text-sm text-[#635BFF] hover:underline"
+              >
+                + Add another address
+              </button>
             </div>
-          </div>
+            <button
+              type="submit"
+              className="px-6 py-2 bg-[#635BFF] text-white rounded-lg font-semibold hover:bg-[#5548E6] transition-colors"
+            >
+              Add Firm
+            </button>
+          </form>
         </div>
+
+        {/* Firms Table */}
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <span className="loading loading-spinner loading-lg"></span>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Firm Name</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Addresses</th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {firms.length === 0 ? (
+                  <tr>
+                    <td colSpan="3" className="px-6 py-12 text-center text-gray-400">
+                      No firms added yet. Add your first firm above.
+                    </td>
+                  </tr>
+                ) : (
+                  firms.map((firm) => (
+                    <tr key={firm.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        {editingId === firm.id ? (
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="w-full px-3 py-1 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#635BFF] focus:border-transparent"
+                          />
+                        ) : (
+                          <span className="font-semibold text-gray-900">{firm.name}</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {editingId === firm.id ? (
+                          <div className="space-y-2">
+                            {editAddresses.map((address, index) => (
+                              <div key={index} className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={address}
+                                  onChange={(e) => updateAddress(index, e.target.value, true)}
+                                  className="flex-1 px-3 py-1 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#635BFF] focus:border-transparent"
+                                  placeholder="0x..."
+                                />
+                                {editAddresses.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeAddress(index, true)}
+                                    className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-sm"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => addAddressField(true)}
+                              className="text-xs text-[#635BFF] hover:underline"
+                            >
+                              + Add address
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {firm.addresses && firm.addresses.length > 0 ? (
+                              firm.addresses.map((address, index) => (
+                                <div key={index} className="text-sm text-gray-600 font-mono">
+                                  {address}
+                                </div>
+                              ))
+                            ) : (
+                              <span className="text-sm text-gray-400 italic">No addresses</span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {editingId === firm.id ? (
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              onClick={() => handleSaveEdit(firm.id)}
+                              className="px-4 py-1 text-sm bg-[#635BFF] text-white rounded-lg hover:bg-[#5548E6] transition-colors"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              className="px-4 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              onClick={() => handleEdit(firm)}
+                              className="px-4 py-1 text-sm text-[#635BFF] hover:bg-[#635BFF] hover:bg-opacity-10 rounded-lg transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(firm.id)}
+                              className="px-4 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );
