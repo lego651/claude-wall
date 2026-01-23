@@ -118,11 +118,6 @@ export default async function ReportPage({ params }) {
 
         {/* REPORT CONTENT */}
         <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10 mb-8">
-          <style jsx>{`
-            .prose a { color: #635BFF; }
-            .prose code { color: #635BFF; background-color: rgba(99, 91, 255, 0.1); }
-            .prose blockquote { border-left-color: #635BFF; background-color: rgba(99, 91, 255, 0.1); }
-          `}</style>
           <div className="prose prose-lg max-w-none
             prose-headings:font-black prose-headings:text-gray-900 prose-headings:tracking-tight
             prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl
