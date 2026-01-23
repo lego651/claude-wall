@@ -27,7 +27,9 @@ export default function ReportContent({
       <div className="pt-12 mb-8 flex items-center justify-between">
         <Link 
           href="/admin/reports"
-          className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors group"
+          className="flex items-center gap-2 text-sm font-bold text-slate-400 transition-colors group"
+          onMouseEnter={(e) => e.currentTarget.style.color = '#635BFF'}
+          onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
         >
           <svg className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
@@ -49,51 +51,70 @@ export default function ReportContent({
           <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8 md:p-10 relative overflow-hidden flex-1">
             <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50/50 rounded-full -mr-24 -mt-24 blur-3xl pointer-events-none" />
             
-            <div className="relative z-10">
-              <div className="flex flex-wrap items-center gap-4 mb-3">
-                <h1 className="text-4xl font-black text-slate-900 tracking-tight">{report.title}</h1>
-                <span className="bg-indigo-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md tracking-widest uppercase">
-                  {report.type === 'weekly' ? 'WEEKLY' : 'MONTHLY'}
-                </span>
-              </div>
-              <p className="text-slate-400 font-bold text-lg mb-8">{report.period}</p>
+            <div className="relative z-10 flex flex-col h-full">
+              <div>
+                <div className="flex flex-wrap items-center gap-4 mb-3">
+                  <h1 className="text-4xl font-black text-slate-900 tracking-tight">{report.title}</h1>
+                  <span className="text-white text-[9px] font-black px-2 py-0.5 rounded-md tracking-widest uppercase" style={{ backgroundColor: '#635BFF' }}>
+                    {report.type === 'weekly' ? 'WEEKLY' : 'MONTHLY'}
+                  </span>
+                </div>
+                <p className="text-slate-400 font-bold text-lg mb-8">{report.period}</p>
 
-              {/* Top Strategy Highlight */}
-              {topStrategy && (
-                <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl px-5 py-3 flex items-center gap-3 mb-8 w-fit">
-                  <span className="text-xl">🥇</span>
-                  <div>
-                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest block">TOP STRATEGY</span>
-                    <div className="text-sm font-black text-slate-900">
-                      {topStrategy.name} <span className="text-emerald-500 ml-1">+{topStrategy.totalR.toFixed(2)}R</span>
+                {/* Top Strategy Highlight */}
+                {topStrategy && (
+                  <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl px-5 py-3 flex items-center gap-3 mb-8 w-fit">
+                    <span className="text-xl">🥇</span>
+                    <div>
+                      <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest block">TOP STRATEGY</span>
+                      <div className="text-sm font-black text-slate-900">
+                        {topStrategy.name} <span className="text-emerald-500 ml-1">+{topStrategy.totalR.toFixed(2)}R</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                {[
-                  { label: 'TOTAL R', value: `${report.summary.totalR > 0 ? '+' : ''}${report.summary.totalR}R`, color: 'text-emerald-500', bg: 'bg-emerald-50/30' },
-                  { label: 'WIN RATE', value: `${report.summary.winRate}%`, color: 'text-indigo-600', bg: 'bg-white' },
-                  { label: 'TOTAL TRADES', value: report.summary.totalTrades, color: 'text-slate-900', bg: 'bg-white' },
-                  { label: 'BEST DAY', value: bestDayLabel, sub: `(${bestDayValue ? (bestDayValue > 0 ? '+' : '') + bestDayValue + 'R' : ''})`, color: 'text-emerald-500', bg: 'bg-white' }
-                ].map((stat, i) => (
-                  <div key={i} className={`${stat.bg} border border-slate-50 rounded-2xl p-5`}>
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">{stat.label}</span>
-                    <div className={`text-2xl font-black ${stat.color}`}>{stat.value}</div>
-                    {stat.sub && <div className={`text-[10px] font-bold ${stat.color} opacity-80 mt-0.5`}>{stat.sub}</div>}
-                  </div>
-                ))}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  {[
+                    { label: 'TOTAL R', value: `${report.summary.totalR > 0 ? '+' : ''}${report.summary.totalR}R`, color: 'text-emerald-500', bg: 'bg-emerald-50/30' },
+                    { label: 'WIN RATE', value: `${report.summary.winRate}%`, color: '', bg: 'bg-white', style: { color: '#635BFF' } },
+                    { label: 'TOTAL TRADES', value: report.summary.totalTrades, color: 'text-slate-900', bg: 'bg-white' },
+                    { label: 'BEST DAY', value: bestDayLabel, sub: `(${bestDayValue ? (bestDayValue > 0 ? '+' : '') + bestDayValue + 'R' : ''})`, color: 'text-emerald-500', bg: 'bg-white' }
+                  ].map((stat, i) => (
+                    <div key={i} className={`${stat.bg} border border-slate-50 rounded-2xl p-5`}>
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">{stat.label}</span>
+                      <div className={`text-2xl font-black ${stat.color}`} style={stat.style}>{stat.value}</div>
+                      {stat.sub && <div className={`text-[10px] font-bold ${stat.color} opacity-80 mt-0.5`} style={stat.style}>{stat.sub}</div>}
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Expandable Overview Table */}
-              <div className="border-t border-slate-50 pt-6">
+              {/* Expandable Overview Table - Moved to bottom */}
+              <div className="mt-auto border-t border-slate-50 pt-6">
                 <button 
                   onClick={() => setIsOverviewExpanded(!isOverviewExpanded)}
-                  className="w-full flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition-colors"
+                  className="w-full flex items-center justify-between text-[11px] font-black uppercase tracking-widest transition-colors"
+                  style={{ color: '#635BFF' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#5548E6';
+                    const svg = e.currentTarget.querySelector('svg');
+                    if (svg) svg.style.color = '#5548E6';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#635BFF';
+                    const svg = e.currentTarget.querySelector('svg');
+                    if (svg) svg.style.color = '#635BFF';
+                  }}
                 >
                   <span>{isOverviewExpanded ? 'HIDE' : 'VIEW'} DETAILED METRICS</span>
-                  <svg className={`w-4 h-4 transition-transform ${isOverviewExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg 
+                    className={`w-4 h-4 transition-transform ${isOverviewExpanded ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                    style={{ color: '#635BFF' }}
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -137,10 +158,21 @@ export default function ReportContent({
             
             <div className="space-y-6">
               {strategyData.map((strat, i) => (
-                <div key={i} className="group">
+                <div 
+                  key={i} 
+                  className="group"
+                  onMouseEnter={(e) => {
+                    const h3 = e.currentTarget.querySelector('h3');
+                    if (h3) h3.style.color = '#635BFF';
+                  }}
+                  onMouseLeave={(e) => {
+                    const h3 = e.currentTarget.querySelector('h3');
+                    if (h3) h3.style.color = '#0f172a';
+                  }}
+                >
                   <div className="flex justify-between items-end mb-2">
                     <div>
-                      <h3 className="text-sm font-black text-slate-900 group-hover:text-indigo-600 transition-colors uppercase tracking-wider">{strat.name.toUpperCase()}</h3>
+                      <h3 className="text-sm font-black text-slate-900 transition-colors uppercase tracking-wider">{strat.name.toUpperCase()}</h3>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{strat.trades} TRADES</span>
                     </div>
                     <span className="text-sm font-black text-emerald-500">+{strat.totalR.toFixed(2)}R</span>

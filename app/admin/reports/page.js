@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from "next/link";
 import { reports, reportTypes } from "@/data/reports/reports-data";
 import AdminLayout from "@/components/AdminLayout";
 
 const WeeklyReportItem = ({ report, isLast }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const totalR = report.summary.totalR > 0 ? `+${report.summary.totalR}R` : `${report.summary.totalR}R`;
   const totalRColor = report.summary.totalR > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
 
@@ -51,13 +50,28 @@ const WeeklyReportItem = ({ report, isLast }) => {
       <div className="flex flex-col">
         <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter mb-1">{formatDateRange(report.period)}</span>
         
-        <div 
-          onClick={() => setIsOpen(!isOpen)}
-          className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md"
+        <Link 
+          href={`/admin/reports/${report.slug}`}
+          className="relative bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md block"
           onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.4)'}
           onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
         >
-          <div className="flex justify-between items-start">
+          {/* Clickable icon in top right */}
+          <div className="absolute top-4 right-4 z-10">
+            <svg 
+              className="w-5 h-5 transition-colors" 
+              style={{ color: '#635BFF' }}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+              onMouseEnter={(e) => e.currentTarget.style.color = '#5548E6'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#635BFF'}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </div>
+
+          <div className="flex justify-between items-start pr-8">
             <div className="flex-grow">
               <div className="flex items-center gap-3 mb-1">
                 <h3 className="text-xl font-bold text-slate-900">
@@ -90,36 +104,8 @@ const WeeklyReportItem = ({ report, isLast }) => {
                 )}
               </div>
             </div>
-            <div className="ml-4 pt-1">
-              {isOpen ? (
-                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              )}
-            </div>
           </div>
-
-          {isOpen && (
-            <div className="mt-6 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300">
-              <Link 
-                href={`/admin/reports/${report.slug}`}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)', color: '#635BFF' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.2)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'}
-              >
-                View Full Report
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </Link>
-            </div>
-          )}
-        </div>
+        </Link>
       </div>
     </div>
   );
