@@ -66,9 +66,7 @@ export default function AdminPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto pt-4">
             <Link
               href="/admin/strategies"
-              className="flex items-center justify-center gap-3 bg-white border border-gray-200 px-8 py-4 rounded-2xl font-bold text-gray-900 shadow-sm hover:shadow-md transition-all group"
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = THEME.border.medium}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+              className="flex items-center justify-center gap-3 bg-white border border-gray-200 px-8 py-4 rounded-2xl font-bold text-gray-900 shadow-sm hover:shadow-md transition-all group hover:border-[#635BFF] hover:border-opacity-40"
             >
               <span className="text-2xl">📈</span>
               <div className="text-left">
@@ -81,9 +79,7 @@ export default function AdminPage() {
             </Link>
             <Link
               href="/admin/propfirms"
-              className="flex items-center justify-center gap-3 bg-white border border-gray-200 px-8 py-4 rounded-2xl font-bold text-gray-900 shadow-sm hover:shadow-md transition-all group"
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = THEME.border.medium}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+              className="flex items-center justify-center gap-3 bg-white border border-gray-200 px-8 py-4 rounded-2xl font-bold text-gray-900 shadow-sm hover:shadow-md transition-all group hover:border-[#635BFF] hover:border-opacity-40"
             >
               <span className="text-2xl">🏢</span>
               <div className="text-left">

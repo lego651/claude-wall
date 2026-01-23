@@ -43,30 +43,26 @@ export default function AdminPropFirmsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link
               href="/admin/propfirms/manage"
-              className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-100 transition-all group"
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'; e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.3)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#f9fafb'; e.currentTarget.style.borderColor = '#f3f4f6'; }}
+              className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-[#635BFF] hover:bg-opacity-10 hover:border-[#635BFF] hover:border-opacity-30 transition-all group"
             >
               <div>
                 <h3 className="text-lg font-black text-gray-900 mb-1">Manage Firms</h3>
                 <p className="text-sm text-gray-500">Add, edit, or remove prop firms</p>
               </div>
-              <svg className="w-6 h-6 text-gray-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" onMouseEnter={(e) => e.currentTarget.style.color = '#635BFF'} onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}>
+              <svg className="w-6 h-6 text-gray-400 group-hover:text-[#635BFF] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
               </svg>
             </Link>
 
             <Link
               href="/admin/propfirms/addresses"
-              className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-100 transition-all group"
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'; e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.3)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#f9fafb'; e.currentTarget.style.borderColor = '#f3f4f6'; }}
+              className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-[#635BFF] hover:bg-opacity-10 hover:border-[#635BFF] hover:border-opacity-30 transition-all group"
             >
               <div>
                 <h3 className="text-lg font-black text-gray-900 mb-1">Wallet Addresses</h3>
                 <p className="text-sm text-gray-500">Manage tracked wallet addresses</p>
               </div>
-              <svg className="w-6 h-6 text-gray-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" onMouseEnter={(e) => e.currentTarget.style.color = '#635BFF'} onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}>
+              <svg className="w-6 h-6 text-gray-400 group-hover:text-[#635BFF] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
               </svg>
             </Link>
@@ -87,15 +83,13 @@ export default function AdminPropFirmsPage() {
 
             <Link
               href="/admin/propfirms/analytics"
-              className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-100 transition-all group"
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'; e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.3)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#f9fafb'; e.currentTarget.style.borderColor = '#f3f4f6'; }}
+              className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-[#635BFF] hover:bg-opacity-10 hover:border-[#635BFF] hover:border-opacity-30 transition-all group"
             >
               <div>
                 <h3 className="text-lg font-black text-gray-900 mb-1">Analytics</h3>
                 <p className="text-sm text-gray-500">View payout trends and statistics</p>
               </div>
-              <svg className="w-6 h-6 text-gray-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" onMouseEnter={(e) => e.currentTarget.style.color = '#635BFF'} onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}>
+              <svg className="w-6 h-6 text-gray-400 group-hover:text-[#635BFF] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </Link>

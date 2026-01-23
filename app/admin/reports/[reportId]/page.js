@@ -40,7 +40,7 @@ export default async function ReportPage({ params }) {
           <p className="text-gray-600 mb-8">
             The trading report you're looking for doesn't exist.
           </p>
-          <Link href="/admin/reports" className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-2xl font-bold transition-colors" style={{ backgroundColor: '#635BFF' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5548E6'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#635BFF'}>
+          <Link href="/admin/reports" className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-2xl font-bold transition-colors hover:bg-[#5548E6]" style={{ backgroundColor: '#635BFF' }}>
             Back to Reports
           </Link>
         </div>

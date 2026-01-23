@@ -40,12 +40,12 @@ const ReportCard = ({ report }) => {
             <MiniStat label="Trades" value={report.summary.totalTrades} />
           </div>
 
-          <div className="bg-gray-50/50 rounded-2xl p-5 border border-gray-100 flex items-center justify-between group-hover:bg-white transition-colors" onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.2)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = '#f3f4f6'}>
+          <div className="bg-gray-50/50 rounded-2xl p-5 border border-gray-100 flex items-center justify-between group-hover:bg-white group-hover:border-[#635BFF] group-hover:border-opacity-20 transition-colors">
             <div className="space-y-1">
               <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Performance Highlight</div>
               <div className="text-sm font-bold text-gray-700">Best Day: <span className="text-emerald-500">{report.summary.bestDay}</span></div>
             </div>
-            <button className="bg-white p-3 rounded-xl border border-gray-200 text-gray-400 transition-all shadow-sm" onMouseEnter={(e) => { e.currentTarget.style.color = '#635BFF'; e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.6)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9ca3af'; e.currentTarget.style.borderColor = '#e5e7eb'; }}>
+            <button className="bg-white p-3 rounded-xl border border-gray-200 text-gray-400 hover:text-[#635BFF] hover:border-[#635BFF] hover:border-opacity-60 transition-all shadow-sm">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
               </svg>
@@ -53,7 +53,7 @@ const ReportCard = ({ report }) => {
           </div>
         </div>
 
-        <div className="px-10 py-5 bg-gray-50/30 border-t border-gray-50 flex justify-between items-center text-[9px] font-black text-gray-400 uppercase tracking-widest transition-colors" onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.05)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(249, 250, 251, 0.3)'}>
+        <div className="px-10 py-5 bg-gray-50/30 border-t border-gray-50 flex justify-between items-center text-[9px] font-black text-gray-400 uppercase tracking-widest transition-colors group-hover:bg-[#635BFF] group-hover:bg-opacity-5">
           <span>Verified Performance</span>
           <span className="hover:underline" style={{ color: '#635BFF' }}>View Full Report</span>
         </div>
