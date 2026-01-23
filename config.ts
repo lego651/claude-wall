@@ -83,7 +83,7 @@ const config: AppConfig = {
     theme: "light",
     // REQUIRED — This color will be reflected on the whole app outside of the document (loading bar, Chrome tabs, etc..).
     // For DaisyUI v5, we use a standard primary color
-    main: "#570df8",
+    main: "#635BFF", // Stripe brand color
   },
   auth: {
     // REQUIRED — the path to log in users. It's use to protect private routes (like /dashboard). It's used in apiClient (/libs/api.js) upon 401 errors from our API

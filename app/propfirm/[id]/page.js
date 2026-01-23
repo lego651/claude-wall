@@ -250,7 +250,8 @@ export default function PropFirmDetailPage() {
                   href={firm?.website || `https://${firm?.name?.toLowerCase().replace(/\s+/g, '')}.com`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:underline"
+                  className="flex items-center gap-1.5 text-sm font-medium hover:underline"
+                  style={{ color: '#635BFF' }}
                 >
                   {firm?.website?.replace(/^https?:\/\//, '') || `${firm?.name?.toLowerCase().replace(/\s+/g, '')}.com`}
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -281,7 +282,7 @@ export default function PropFirmDetailPage() {
             Viewing stats for
           </div>
 
-          <div className="relative p-1 bg-slate-900 shadow-2xl shadow-indigo-200/50 rounded-[20px] flex w-full max-w-xs mx-auto ring-6 ring-indigo-50 border border-slate-800">
+          <div className="relative p-1 bg-slate-900 shadow-2xl rounded-[20px] flex w-full max-w-xs mx-auto ring-6 border border-slate-800" style={{ boxShadow: '0 25px 50px -12px rgba(99, 91, 255, 0.15)', ringColor: 'rgba(99, 91, 255, 0.1)' }}>
             {/* Background slider for active state */}
             <div
               className="absolute top-1 bottom-1 bg-white rounded-[16px] shadow-lg transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
@@ -316,7 +317,7 @@ export default function PropFirmDetailPage() {
                 Total Payouts
               </span>
               <div className="p-2 bg-slate-50 rounded-lg">
-                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#635BFF' }}>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -333,7 +334,7 @@ export default function PropFirmDetailPage() {
                 No. of Payouts
               </span>
               <div className="p-2 bg-slate-50 rounded-lg">
-                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#635BFF' }}>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
                 </svg>
               </div>
@@ -385,7 +386,7 @@ export default function PropFirmDetailPage() {
                 Time Since Last Payout
               </span>
               <div className="p-2 bg-slate-50 rounded-lg">
-                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#635BFF' }}>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -562,7 +563,7 @@ export default function PropFirmDetailPage() {
             <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white rounded-lg shadow-sm">
-                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#635BFF' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>

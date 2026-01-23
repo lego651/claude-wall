@@ -56,7 +56,7 @@ export default async function PublicStrategyPage({ params }) {
           <p className="text-gray-600 mb-6">
             The strategy file could not be loaded.
           </p>
-          <Link href="/strategies" className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors">
+          <Link href="/strategies" className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-2xl font-bold transition-colors" style={{ backgroundColor: '#635BFF' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5548E6'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#635BFF'}>
             Back to Strategies
           </Link>
         </div>
@@ -76,7 +76,7 @@ export default async function PublicStrategyPage({ params }) {
 
         {/* BREADCRUMB */}
         <nav className="mb-8 flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
-          <Link href="/strategies" className="hover:text-indigo-600 transition-colors">Strategies</Link>
+          <Link href="/strategies" className="transition-colors hover:text-[#635BFF]">Strategies</Link>
           <span>/</span>
           <span className="text-gray-900">{strategy.title}</span>
         </nav>
@@ -90,7 +90,7 @@ export default async function PublicStrategyPage({ params }) {
                   {strategy.title}
                 </h1>
                 {strategy.featured && (
-                  <span className="bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-lg shadow-lg shadow-indigo-100 uppercase tracking-widest">
+                  <span className="text-white text-[10px] font-black px-3 py-1 rounded-lg shadow-lg uppercase tracking-widest" style={{ backgroundColor: '#635BFF', boxShadow: '0 10px 15px -3px rgba(99, 91, 255, 0.1)' }}>
                     Featured
                   </span>
                 )}
@@ -159,7 +159,7 @@ export default async function PublicStrategyPage({ params }) {
           </div>
           <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm p-6">
             <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Expectancy</div>
-            <div className="text-3xl font-black text-indigo-600">{strategy.summary.expectedReturn}</div>
+            <div className="text-3xl font-black" style={{ color: '#635BFF' }}>{strategy.summary.expectedReturn}</div>
           </div>
         </div>
 
@@ -169,13 +169,13 @@ export default async function PublicStrategyPage({ params }) {
             prose-headings:font-black prose-headings:text-gray-900 prose-headings:tracking-tight
             prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl
             prose-p:text-gray-600 prose-p:leading-relaxed
-            prose-a:text-indigo-600 prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
+            prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
             prose-strong:text-gray-900 prose-strong:font-black
             prose-ul:text-gray-600 prose-ol:text-gray-600
             prose-li:my-1
-            prose-code:text-indigo-600 prose-code:bg-indigo-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-semibold prose-code:before:content-none prose-code:after:content-none
+            prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-semibold prose-code:before:content-none prose-code:after:content-none
             prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-2xl prose-pre:border prose-pre:border-gray-800
-            prose-blockquote:border-l-4 prose-blockquote:border-indigo-600 prose-blockquote:bg-indigo-50 prose-blockquote:rounded-r-2xl prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:text-gray-700 prose-blockquote:not-italic
+            prose-blockquote:rounded-r-2xl prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:text-gray-700 prose-blockquote:not-italic
             prose-table:border-collapse prose-table:w-full
             prose-th:bg-gray-50 prose-th:border prose-th:border-gray-200 prose-th:p-3 prose-th:text-left prose-th:text-xs prose-th:font-black prose-th:uppercase prose-th:tracking-wider prose-th:text-gray-500
             prose-td:border prose-td:border-gray-200 prose-td:p-3 prose-td:text-gray-600
@@ -186,14 +186,15 @@ export default async function PublicStrategyPage({ params }) {
         </div>
 
         {/* CTA SECTION */}
-        <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-[40px] p-10 text-center shadow-xl shadow-indigo-100 mb-8">
+        <div className="rounded-[40px] p-10 text-center shadow-xl mb-8" style={{ background: 'linear-gradient(to bottom right, #635BFF, #5548E6)', boxShadow: '0 20px 25px -5px rgba(99, 91, 255, 0.1)' }}>
           <h3 className="text-3xl font-black text-white mb-3">Ready to Track This Strategy?</h3>
-          <p className="text-indigo-100 font-medium mb-8 max-w-xl mx-auto">
+          <p className="font-medium mb-8 max-w-xl mx-auto" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
             Use our professional-grade performance tracking system to monitor your implementation of this strategy in real-time.
           </p>
           <Link
             href="/portfolio"
-            className="inline-flex items-center gap-3 px-8 py-4 bg-white text-indigo-600 rounded-[28px] text-lg font-black shadow-xl hover:scale-105 transition-transform"
+            className="inline-flex items-center gap-3 px-8 py-4 bg-white rounded-[28px] text-lg font-black shadow-xl hover:scale-105 transition-transform"
+            style={{ color: '#635BFF' }}
           >
             Start Tracking
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

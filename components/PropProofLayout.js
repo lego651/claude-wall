@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { THEME, themeStyles } from "@/lib/theme";
 
 const PropProofLayout = ({ children }) => {
   const pathname = usePathname();
@@ -19,7 +20,7 @@ const PropProofLayout = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link href="/propfirms" className="flex items-center gap-2 group">
-              <div className="bg-indigo-600 p-1.5 rounded-lg group-hover:bg-indigo-700 transition-colors">
+              <div className="p-1.5 rounded-lg transition-colors" style={{ backgroundColor: THEME.primary }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = THEME.primaryHover} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = THEME.primary}>
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
@@ -40,9 +41,10 @@ const PropProofLayout = ({ children }) => {
                     href={item.path}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                       isActive
-                        ? "text-indigo-600 bg-indigo-50"
+                        ? ""
                         : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                     }`}
+                    style={isActive ? { ...themeStyles.textPrimary, ...themeStyles.bgLight } : {}}
                   >
                     {item.label}
                   </Link>
@@ -59,7 +61,7 @@ const PropProofLayout = ({ children }) => {
             >
               X Community
             </a>
-            <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm">
+            <button className="text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm" style={themeStyles.button} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = THEME.primaryHover} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = THEME.primary}>
               Connect Wallet
             </button>
           </div>

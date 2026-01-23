@@ -35,9 +35,11 @@ const WeeklyReportItem = ({ event, isLast }) => {
       
       {/* Timeline Node */}
       <div className={`absolute left-0 top-1.5 w-6 h-6 rounded-full border-4 border-white shadow-sm flex items-center justify-center z-10 ${
-        event.type === 'milestone' ? 'bg-indigo-600' : 
+        event.type === 'milestone' ? '' : 
         event.type === 'governance' ? 'bg-amber-500' : 'bg-slate-400'
-      }`}>
+      }`}
+      style={event.type === 'milestone' ? { backgroundColor: '#635BFF' } : {}}
+      >
         {event.type === 'milestone' ? (
           <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
@@ -59,8 +61,10 @@ const WeeklyReportItem = ({ event, isLast }) => {
         <div 
           onClick={() => event.details && setIsOpen(!isOpen)}
           className={`bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-200 ${
-            event.details ? 'cursor-pointer hover:border-indigo-300 hover:shadow-md' : ''
+            event.details ? 'cursor-pointer hover:shadow-md' : ''
           }`}
+          onMouseEnter={(e) => event.details && (e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.4)')}
+          onMouseLeave={(e) => event.details && (e.currentTarget.style.borderColor = '#e2e8f0')}
         >
           <div className="flex justify-between items-start">
             <div className="flex-grow">
@@ -113,7 +117,9 @@ const WeeklyReportItem = ({ event, isLast }) => {
                       e.stopPropagation();
                       setIsImageModalOpen(true);
                     }}
-                    className="relative w-full rounded-xl overflow-hidden border border-slate-200 shadow-sm cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all duration-200 group"
+                    className="relative w-full rounded-xl overflow-hidden border border-slate-200 shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 group"
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.4)'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
                   >
                     <Image
                       src={event.details.screenshot}
@@ -136,7 +142,7 @@ const WeeklyReportItem = ({ event, isLast }) => {
               )}
               <div className="space-y-2">
                 <h4 className="text-xs font-bold text-slate-400 uppercase">Analysis & Notes</h4>
-                <p className="text-sm text-slate-600 italic bg-indigo-50/30 p-4 rounded-lg border-l-2 border-indigo-200">
+                <p className="text-sm text-slate-600 italic p-4 rounded-lg border-l-2" style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)', borderLeftColor: '#635BFF' }}>
                   "{event.details.notes}"
                 </p>
               </div>
@@ -218,7 +224,7 @@ export default function StudyPage() {
                 </svg>
                 <span className="text-[10px] font-bold uppercase tracking-widest">Return</span>
               </div>
-              <span className="text-lg font-black text-indigo-600">+{STUDY_SUMMARY.totalReturn}%</span>
+              <span className="text-lg font-black" style={{ color: '#635BFF' }}>+{STUDY_SUMMARY.totalReturn}%</span>
             </div>
             <div className="py-4">
               <div className="flex items-center justify-center space-x-1 text-slate-400 mb-1">
@@ -239,7 +245,7 @@ export default function StudyPage() {
               </svg>
               Verified Results
             </button>
-            <button className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full flex items-center hover:bg-indigo-100 transition-colors">
+            <button className="text-xs font-bold px-3 py-1.5 rounded-full flex items-center transition-colors" style={{ color: '#635BFF', backgroundColor: 'rgba(99, 91, 255, 0.1)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.2)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'}>
               Strategy Rules
               <svg className="w-3 h-3 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

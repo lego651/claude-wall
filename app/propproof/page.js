@@ -47,7 +47,7 @@ const PropProofLanding = () => {
       {/* Background Gradients */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] pointer-events-none overflow-hidden -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-50 blur-[120px] rounded-full opacity-60"></div>
-        <div className="absolute bottom-0 right-[-10%] w-[40%] h-[40%] bg-indigo-50 blur-[120px] rounded-full opacity-60"></div>
+        <div className="absolute bottom-0 right-[-10%] w-[40%] h-[40%] blur-[120px] rounded-full opacity-60" style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)' }}></div>
       </div>
 
       {/* Hero Section */}
@@ -168,7 +168,7 @@ const PropProofLanding = () => {
               <p className="text-gray-600 leading-relaxed">Paste your wallet address or link your Rise identifier. We don&apos;t need keys, just public IDs.</p>
             </div>
             <div className="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-xl transition-shadow">
-              <div className="bg-indigo-50 w-12 h-12 rounded-xl flex items-center justify-center text-indigo-600 mb-6">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)', color: '#635BFF' }}>
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>

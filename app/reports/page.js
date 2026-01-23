@@ -29,7 +29,7 @@ const ReportCard = ({ report }) => {
               <h3 className="text-2xl font-black text-gray-900">{report.title}</h3>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{report.period}</p>
             </div>
-            <span className="bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest shadow-lg shadow-indigo-100">
+            <span className="text-white text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest shadow-lg" style={{ backgroundColor: '#635BFF', boxShadow: '0 10px 15px -3px rgba(99, 91, 255, 0.1)' }}>
               {report.type === reportTypes.weekly ? 'Weekly' : 'Monthly'}
             </span>
           </div>
@@ -40,12 +40,12 @@ const ReportCard = ({ report }) => {
             <MiniStat label="Trades" value={report.summary.totalTrades} />
           </div>
 
-          <div className="bg-gray-50/50 rounded-2xl p-5 border border-gray-100 flex items-center justify-between group-hover:bg-white group-hover:border-indigo-100 transition-colors">
+          <div className="bg-gray-50/50 rounded-2xl p-5 border border-gray-100 flex items-center justify-between group-hover:bg-white transition-colors" onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.2)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = '#f3f4f6'}>
             <div className="space-y-1">
               <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Performance Highlight</div>
               <div className="text-sm font-bold text-gray-700">Best Day: <span className="text-emerald-500">{report.summary.bestDay}</span></div>
             </div>
-            <button className="bg-white p-3 rounded-xl border border-gray-200 text-gray-400 hover:text-indigo-600 hover:border-indigo-400 transition-all shadow-sm">
+            <button className="bg-white p-3 rounded-xl border border-gray-200 text-gray-400 transition-all shadow-sm" onMouseEnter={(e) => { e.currentTarget.style.color = '#635BFF'; e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.6)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9ca3af'; e.currentTarget.style.borderColor = '#e5e7eb'; }}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
               </svg>
@@ -53,9 +53,9 @@ const ReportCard = ({ report }) => {
           </div>
         </div>
 
-        <div className="px-10 py-5 bg-gray-50/30 border-t border-gray-50 flex justify-between items-center text-[9px] font-black text-gray-400 uppercase tracking-widest group-hover:bg-indigo-50/20 transition-colors">
+        <div className="px-10 py-5 bg-gray-50/30 border-t border-gray-50 flex justify-between items-center text-[9px] font-black text-gray-400 uppercase tracking-widest transition-colors" onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.05)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(249, 250, 251, 0.3)'}>
           <span>Verified Performance</span>
-          <span className="text-indigo-600 hover:underline">View Full Report</span>
+          <span className="hover:underline" style={{ color: '#635BFF' }}>View Full Report</span>
         </div>
       </div>
     </Link>
@@ -80,7 +80,7 @@ export default function TradingLogsPage() {
         <section className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-gray-100 pb-12">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-100">
+              <div className="p-2 rounded-xl text-white shadow-lg" style={{ backgroundColor: '#635BFF', boxShadow: '0 10px 15px -3px rgba(99, 91, 255, 0.1)' }}>
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
@@ -109,11 +109,11 @@ export default function TradingLogsPage() {
             </div>
           </div>
 
-          <div className="bg-indigo-50/50 border border-indigo-100 p-10 rounded-[40px] group">
-            <div className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-4">Average Win Rate</div>
-            <div className="text-5xl font-black text-indigo-600 tracking-tighter">{avgWinRate.toFixed(1)}%</div>
-            <div className="mt-8 w-full bg-white h-1.5 rounded-full overflow-hidden border border-indigo-100/50">
-              <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${avgWinRate.toFixed(1)}%` }} />
+          <div className="border p-10 rounded-[40px] group" style={{ backgroundColor: 'rgba(99, 91, 255, 0.05)', borderColor: 'rgba(99, 91, 255, 0.2)' }}>
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] mb-4" style={{ color: '#635BFF' }}>Average Win Rate</div>
+            <div className="text-5xl font-black tracking-tighter" style={{ color: '#635BFF' }}>{avgWinRate.toFixed(1)}%</div>
+            <div className="mt-8 w-full bg-white h-1.5 rounded-full overflow-hidden border" style={{ borderColor: 'rgba(99, 91, 255, 0.2)' }}>
+              <div className="h-full rounded-full" style={{ width: `${avgWinRate.toFixed(1)}%`, backgroundColor: '#635BFF' }} />
             </div>
           </div>
 

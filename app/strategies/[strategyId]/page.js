@@ -119,7 +119,7 @@ export default function StrategyDetailPage({ params }) {
           {/* Refined Premium Header */}
           <div className="flex flex-col gap-6">
             <nav className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
-              <Link href="/portfolio" className="hover:text-indigo-600 transition-colors">Portfolio</Link>
+              <Link href="/portfolio" className="transition-colors hover:text-[#635BFF]">Portfolio</Link>
               <span>/</span>
               <span className="text-gray-900">{strategy.name} Strategy</span>
             </nav>
@@ -132,7 +132,7 @@ export default function StrategyDetailPage({ params }) {
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight">{strategy.description}</h1>
-                    <span className="bg-indigo-50 text-indigo-600 text-[10px] font-black px-2.5 py-1 rounded-full border border-indigo-100">
+                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full border" style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)', color: '#635BFF', borderColor: 'rgba(99, 91, 255, 0.2)' }}>
                       INTERNAL_ID: {strategy.internalId}
                     </span>
                   </div>
@@ -193,9 +193,9 @@ export default function StrategyDetailPage({ params }) {
                 {/* Hero KPI: Win Rate */}
                 <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm group">
                   <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Efficiency</div>
-                  <div className="text-4xl font-black text-indigo-600">{stats.winRate}%</div>
+                  <div className="text-4xl font-black" style={{ color: '#635BFF' }}>{stats.winRate}%</div>
                   <div className="mt-5 w-full bg-gray-50 h-1.5 rounded-full overflow-hidden border border-gray-100">
-                    <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${stats.winRate}%` }} />
+                    <div className="h-full rounded-full" style={{ width: `${stats.winRate}%`, backgroundColor: '#635BFF' }} />
                   </div>
                   <div className="mt-2 text-[10px] font-bold text-gray-400 uppercase">Win Rate</div>
                 </div>
@@ -223,9 +223,10 @@ export default function StrategyDetailPage({ params }) {
                         onClick={() => setTimeRange(t)}
                         className={`px-5 py-2 rounded-xl text-[10px] font-black transition-all ${
                           timeRange === t
-                            ? 'bg-white shadow-sm text-indigo-600'
+                            ? 'bg-white shadow-sm'
                             : 'text-gray-400 hover:text-gray-900'
                         }`}
+                        style={timeRange === t ? { color: '#635BFF' } : {}}
                       >
                         {t}
                       </button>

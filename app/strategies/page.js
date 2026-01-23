@@ -34,11 +34,11 @@ export default function StrategiesPage() {
         {/* Hero Header Section */}
         <section className="text-center space-y-6 relative py-10">
           <div className="absolute inset-0 -top-20 pointer-events-none overflow-hidden opacity-30">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-100/50 via-transparent to-transparent blur-3xl" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] blur-3xl" style={{ background: 'radial-gradient(circle at center, rgba(99, 91, 255, 0.1) 0%, transparent 70%)' }} />
           </div>
 
           <div className="relative z-10 flex flex-col items-center gap-4">
-            <div className="bg-indigo-50 px-4 py-1.5 rounded-full border border-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em]">
+            <div className="px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-[0.2em]" style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)', borderColor: 'rgba(99, 91, 255, 0.2)', color: '#635BFF' }}>
               Professional Tooling
             </div>
             <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tight leading-[0.9]">
@@ -62,7 +62,7 @@ export default function StrategiesPage() {
               <div className="p-10 lg:w-3/5 space-y-10">
                 <div className="flex flex-wrap items-center gap-4">
                   <h3 className="text-3xl font-black text-gray-900">{featuredStrategy.title}</h3>
-                  <span className="bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-lg shadow-lg shadow-indigo-100 uppercase tracking-widest">Featured</span>
+                  <span className="text-white text-[10px] font-black px-3 py-1 rounded-lg shadow-lg uppercase tracking-widest" style={{ backgroundColor: '#635BFF', boxShadow: '0 10px 15px -3px rgba(99, 91, 255, 0.1)' }}>Featured</span>
                 </div>
 
                 <p className="text-gray-400 font-medium leading-relaxed">
@@ -121,7 +121,7 @@ export default function StrategiesPage() {
 
           <div className="flex flex-wrap gap-3">
             {displayTags.map(tag => (
-              <button key={tag} className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all shadow-sm">
+              <button key={tag} className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-600 transition-all shadow-sm" onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.6)'; e.currentTarget.style.color = '#635BFF'; e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#f3f4f6'; e.currentTarget.style.color = '#4b5563'; e.currentTarget.style.backgroundColor = 'white'; }}>
                 {tag}
               </button>
             ))}
@@ -129,13 +129,13 @@ export default function StrategiesPage() {
         </section>
 
         {/* Footer CTA Section */}
-        <section className="bg-indigo-600 rounded-[48px] p-12 text-center space-y-8 relative overflow-hidden shadow-2xl shadow-indigo-100">
+        <section className="rounded-[48px] p-12 text-center space-y-8 relative overflow-hidden shadow-2xl" style={{ backgroundColor: '#635BFF', boxShadow: '0 25px 50px -12px rgba(99, 91, 255, 0.25)' }}>
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl -ml-32 -mb-32" />
 
           <div className="relative z-10 space-y-4">
             <h2 className="text-4xl font-black text-white tracking-tight">Want to Track Your Trading?</h2>
-            <p className="text-indigo-100 font-medium max-w-xl mx-auto">
+            <p className="font-medium max-w-xl mx-auto" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
               Get access to professional-grade performance reports, deep-dive R-multiple analytics, and real-time equity curve tracking.
             </p>
           </div>
@@ -143,7 +143,8 @@ export default function StrategiesPage() {
           <div className="relative z-10 pt-4">
             <Link
               href="/portfolio"
-              className="inline-flex items-center gap-3 px-10 py-5 bg-white text-indigo-600 rounded-[28px] text-lg font-black shadow-xl hover:scale-105 transition-transform"
+              className="inline-flex items-center gap-3 px-10 py-5 bg-white rounded-[28px] text-lg font-black shadow-xl hover:scale-105 transition-transform"
+              style={{ color: '#635BFF' }}
             >
               View Trading Reports
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

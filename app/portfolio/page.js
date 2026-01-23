@@ -173,7 +173,7 @@ function CumulativeStrategyCard({ strategy, strategyData, weeklyData }) {
         <div className="text-xs text-slate-400 uppercase tracking-wider font-bold">
           Avg Risk:Reward
         </div>
-        <div className="text-xs font-semibold text-indigo-600">
+        <div className="text-xs font-semibold" style={{ color: '#635BFF' }}>
           {strategyData?.averageR?.toFixed(2) || '0.00'}R
         </div>
       </div>
@@ -298,7 +298,7 @@ export default function PortfolioPage() {
                   Week {lastWeek.weekNumber} • {new Date(lastWeek.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(lastWeek.endDate).toLocaleDateString('en-US', { day: 'numeric' })}, {new Date(lastWeek.endDate).toLocaleDateString('en-US', { year: 'numeric' })}
                 </div>
               </div>
-              <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#635BFF' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
@@ -331,7 +331,7 @@ export default function PortfolioPage() {
                 <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-4">
                   Avg Win Rate
                 </div>
-                <div className="text-2xl font-bold text-indigo-600 leading-none tracking-tight">
+                <div className="text-2xl font-bold leading-none tracking-tight" style={{ color: '#635BFF' }}>
                   {lastWeekWinRate.toFixed(1)}%
                 </div>
               </div>
@@ -357,7 +357,7 @@ export default function PortfolioPage() {
 
             {/* Section Title */}
             <div className="flex items-center gap-3 mb-8 mt-2">
-              <div className="w-1 h-6 bg-indigo-600 rounded-full"></div>
+              <div className="w-1 h-6 rounded-full" style={{ backgroundColor: '#635BFF' }}></div>
               <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
                 Last Week Snapshots
               </h2>

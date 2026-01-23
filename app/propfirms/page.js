@@ -14,7 +14,7 @@ const PERIODS = [
 
 // Color classes for firm cards
 const COLOR_CLASSES = [
-  'bg-indigo-600',
+  '', // Stripe color will be applied via style
   'bg-emerald-600',
   'bg-blue-600',
   'bg-purple-600',
@@ -176,7 +176,7 @@ export default function PropFirmsListPage() {
             <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest leading-none mt-0.5">Live On-Chain Tracking</span>
           </div>
           <h1 className="text-4xl sm:text-6xl font-extrabold text-gray-900 tracking-tight mb-4">
-            Prop Firm <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Leaderboard</span>
+            Prop Firm <span className="text-transparent bg-clip-text bg-gradient-to-r" style={{ backgroundImage: 'linear-gradient(to right, #635BFF, #8b5cf6)' }}>Leaderboard</span>
           </h1>
           <p className="text-lg text-gray-500 font-medium max-w-2xl">
             Real-time verification of proprietary firm payout distributions using public blockchain data.
@@ -207,7 +207,9 @@ export default function PropFirmsListPage() {
               return (
                 <div 
                   key={firm.id}
-                  className="glass-card p-8 rounded-[2.5rem] transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-100/50 group"
+                  className="glass-card p-8 rounded-[2.5rem] transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl group"
+                  onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 25px 50px -12px rgba(99, 91, 255, 0.15)'}
+                  onMouseLeave={(e) => e.currentTarget.style.boxShadow = ''}
                   style={{ animationDelay: `${(idx + 1) * 100}ms` }}
                 >
                   <div className="flex justify-between items-start mb-8">
@@ -234,7 +236,7 @@ export default function PropFirmsListPage() {
                             }
                           }}
                         />
-                        <div className={`hidden w-16 h-16 ${colorClass} rounded-2xl items-center justify-center text-white font-black text-xl shadow-xl`}>
+                        <div className={`hidden w-16 h-16 ${colorClass} rounded-2xl items-center justify-center text-white font-black text-xl shadow-xl`} style={!colorClass ? { backgroundColor: '#635BFF' } : {}}>
                           {getInitials(firm.name)}
                         </div>
                       </div>
@@ -255,13 +257,16 @@ export default function PropFirmsListPage() {
                     <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden p-0.5 border border-gray-50">
                       <div 
                         className={`h-full ${colorClass} rounded-full transition-all duration-1000 delay-500`} 
-                        style={{ width: `${progressPercent}%` }}
+                        style={{ width: `${progressPercent}%`, ...(!colorClass ? { backgroundColor: '#635BFF' } : {}) }}
                       />
                     </div>
                     <div className="pt-2 flex items-center justify-between">
                       <button 
                         onClick={() => router.push(`/propfirm/${firm.id}`)}
-                        className="text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 active:scale-95"
+                        className="text-xs font-bold px-4 py-2 rounded-xl transition-all duration-300 active:scale-95"
+                        style={{ color: '#635BFF', backgroundColor: 'rgba(99, 91, 255, 0.1)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#635BFF'; e.currentTarget.style.color = 'white'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'; e.currentTarget.style.color = '#635BFF'; }}
                       >
                         View Insights
                       </button>
@@ -278,7 +283,7 @@ export default function PropFirmsListPage() {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-16">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#635BFF' }}></div>
           </div>
         )}
 
@@ -355,7 +360,9 @@ export default function PropFirmsListPage() {
                       return (
                         <tr 
                           key={firm.id} 
-                          className="group hover:bg-indigo-50/40 transition-all duration-200 cursor-pointer"
+                          className="group transition-all duration-200 cursor-pointer"
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                           onClick={() => router.push(`/propfirm/${firm.id}`)}
                         >
                           <td className="px-8 py-6">
@@ -382,11 +389,11 @@ export default function PropFirmsListPage() {
                                     }
                                   }}
                                 />
-                                <div className={`hidden w-10 h-10 ${colorClass} rounded-xl items-center justify-center text-white font-bold text-sm shadow-sm`}>
+                                <div className={`hidden w-10 h-10 ${colorClass} rounded-xl items-center justify-center text-white font-bold text-sm shadow-sm`} style={!colorClass ? { backgroundColor: '#635BFF' } : {}}>
                                   {getInitials(firm.name)}
                                 </div>
                               </div>
-                              <span className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors underline decoration-indigo-200 underline-offset-4 decoration-2 group-hover:decoration-indigo-600">
+                              <span className="font-bold transition-colors underline underline-offset-4 decoration-2" style={{ color: '#635BFF', textDecorationColor: 'rgba(99, 91, 255, 0.3)' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#5548E6'; e.currentTarget.style.textDecorationColor = '#635BFF'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#635BFF'; e.currentTarget.style.textDecorationColor = 'rgba(99, 91, 255, 0.3)'; }}>
                                 {firm.name}
                               </span>
                             </div>
@@ -402,8 +409,8 @@ export default function PropFirmsListPage() {
                           </td>
                           <td className="px-8 py-6 text-right">
                             <div className="flex flex-col items-end gap-1.5">
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-wider border border-indigo-100">
-                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border" style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)', color: '#635BFF', borderColor: 'rgba(99, 91, 255, 0.2)' }}>
+                                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: '#635BFF' }}></span>
                                 On-Chain
                               </span>
                               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{formatUpdatedTime(firm.metrics?.latestPayoutAt)}</span>

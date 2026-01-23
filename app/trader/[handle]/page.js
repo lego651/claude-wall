@@ -170,7 +170,7 @@ const ProfilePage = ({ params }) => {
               </div>
 
               <h1 className="text-2xl font-bold text-slate-900 mb-1">{trader.displayName}</h1>
-              <p className="text-indigo-600 font-semibold text-sm mb-6">@{trader.handle}</p>
+              <p className="font-semibold text-sm mb-6" style={{ color: '#635BFF' }}>@{trader.handle}</p>
 
               {trader.bio && (
                 <p className="text-sm text-slate-600 mb-8 leading-relaxed">{trader.bio}</p>
@@ -526,7 +526,7 @@ const ProfilePage = ({ params }) => {
                   <h3 className="font-bold text-slate-900 text-lg">Verified Transactions</h3>
                   <p className="text-xs text-slate-400 uppercase tracking-wide mt-1">Historical Blockchain Records</p>
                 </div>
-                <div className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide flex items-center gap-1.5">
+                <div className="px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide flex items-center gap-1.5" style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)', color: '#635BFF' }}>
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
@@ -596,7 +596,7 @@ const ProfilePage = ({ params }) => {
                           </code>
                         </td>
                         <td className="px-6 py-4 text-sm font-bold text-slate-900 flex items-center gap-2">
-                          <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#635BFF' }}>
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
                           {tx.token}
@@ -606,7 +606,10 @@ const ProfilePage = ({ params }) => {
                             href={tx.arbiscanUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[10px] bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-md border border-indigo-100 hover:bg-indigo-100 transition-colors inline-flex items-center gap-1 font-semibold"
+                            className="text-[10px] px-2.5 py-1 rounded-md border transition-colors inline-flex items-center gap-1 font-semibold"
+                            style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)', color: '#635BFF', borderColor: 'rgba(99, 91, 255, 0.2)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.2)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'}
                           >
                             {tx.txHash.slice(0, 6)}...{tx.txHash.slice(-4)}
                             <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
