@@ -150,7 +150,7 @@ const PropProofLanding = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-gray-50/50">
+      <section className="py-24 bg-slate-200/60">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl font-bold mb-4">How PropProof Works</h2>

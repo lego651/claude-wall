@@ -28,7 +28,7 @@ const ProfilePage = ({ params }) => {
 
   if (!trader) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 text-center">
+      <div className="min-h-screen bg-slate-200/60 flex items-center justify-center p-4 text-center">
         <div>
           <h1 className="text-4xl font-bold mb-4">Trader Not Found</h1>
           <p className="text-gray-500 mb-8">This handle does not exist on PropProof.</p>
