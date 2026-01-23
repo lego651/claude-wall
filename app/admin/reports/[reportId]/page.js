@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { reports, getReportBySlug } from "@/data/reports/reports";
-import MarkdownRenderer from "@/components/MarkdownRenderer";
 import { getSEOTags } from "@/libs/seo";
 import AdminLayout from "@/components/AdminLayout";
+import ReportContent from "./ReportContent";
 
 export async function generateMetadata({ params }) {
   const { reportId } = await params;
@@ -48,128 +48,233 @@ export default async function ReportPage({ params }) {
     );
   }
 
-  const content = report.getContent();
-  const totalRColor = report.summary.totalR > 0 ? 'text-emerald-500' : 'text-rose-500';
-  const totalRBg = report.summary.totalR > 0 ? 'bg-emerald-50/50 border-emerald-100' : 'bg-rose-50/50 border-rose-100';
+  const fullContent = report.getContent();
+  
+  // Parse markdown to extract Weekly Overview data
+  const parseWeeklyOverview = (content) => {
+    const overviewMatch = content.match(/\| \*\*Total R\*\* \| (🟢|🔴) ([+-]?\d+\.?\d*)R \|/);
+    const avgRMatch = content.match(/\| \*\*Average R\/Trade\*\* \| (🟢|🔴) ([+-]?\d+\.?\d*)R \|/);
+    const tradesMatch = content.match(/\| \*\*Total Trades\*\* \| (\d+) \|/);
+    const winningMatch = content.match(/\| \*\*Winning Trades\*\* \| (\d+) (🟢|🔴) \|/);
+    const losingMatch = content.match(/\| \*\*Losing Trades\*\* \| (\d+) (🟢|🔴) \|/);
+    const winRateMatch = content.match(/\| \*\*Win Rate\*\* \| ([\d.]+)% \|/);
+    const bestDayMatch = content.match(/\| \*\*Best Day\*\* \| ([\d-]+) \((🟢|🔴) ([+-]?\d+\.?\d*)R\) \|/);
+    const worstDayMatch = content.match(/\| \*\*Worst Day\*\* \| ([\d-]+) \((🟢|🔴) ([+-]?\d+\.?\d*)R\) \|/);
+    
+    return {
+      totalR: overviewMatch ? parseFloat(overviewMatch[2]) : report.summary.totalR,
+      avgRPerTrade: avgRMatch ? parseFloat(avgRMatch[2]) : (report.summary.totalR / report.summary.totalTrades).toFixed(2),
+      totalTrades: tradesMatch ? parseInt(tradesMatch[1]) : report.summary.totalTrades,
+      winningTrades: winningMatch ? parseInt(winningMatch[1]) : null,
+      losingTrades: losingMatch ? parseInt(losingMatch[1]) : null,
+      winRate: winRateMatch ? parseFloat(winRateMatch[1]) : report.summary.winRate,
+      bestDay: bestDayMatch ? { date: bestDayMatch[1], value: parseFloat(bestDayMatch[3]) } : null,
+      worstDay: worstDayMatch ? { date: worstDayMatch[1], value: parseFloat(worstDayMatch[3]) } : null,
+    };
+  };
+
+  const overview = parseWeeklyOverview(fullContent);
+  
+  // Parse best day from summary string
+  const bestDayMatch = report.summary.bestDay?.match(/\(([+-]?\d+\.?\d*)R\)/);
+  const bestDayValue = bestDayMatch ? bestDayMatch[1] : '';
+  const bestDayLabel = report.summary.bestDay?.split(' (')[0] || '';
+  
+  // Calculate winning/losing trades if not in markdown
+  const winningTrades = overview.winningTrades ?? Math.round((report.summary.winRate / 100) * report.summary.totalTrades);
+  const losingTrades = overview.losingTrades ?? (report.summary.totalTrades - winningTrades);
+  const avgRPerTrade = parseFloat(overview.avgRPerTrade) || (report.summary.totalR / report.summary.totalTrades).toFixed(2);
+  
+  // Parse daily performance data
+  const parseDailyPerformance = (content) => {
+    const lines = content.split('\n');
+    const dailyData = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.match(/^\| (Mon|Tue|Wed|Thu|Fri) \|/)) {
+        const match = line.match(/^\| (Mon|Tue|Wed|Thu|Fri) \| ([\d-]+) \| ([+-]?[\d.]+)R \| ([+-]?[\d.]+)R \| (\d+) \| ([\d.]+)% \|/);
+        if (match) {
+          const avgRStr = match[4].replace(/^\+-/, '-'); // Fix "+-0.27R" to "-0.27R"
+          dailyData.push({
+            day: match[1],
+            date: match[2],
+            totalR: parseFloat(match[3]),
+            avgR: parseFloat(avgRStr),
+            trades: parseInt(match[5]),
+            winRate: parseFloat(match[6])
+          });
+        }
+      }
+    }
+    
+    return dailyData;
+  };
+
+  const dailyData = parseDailyPerformance(fullContent);
+  
+  // Parse strategy performance data
+  const parseStrategyPerformance = (content) => {
+    const lines = content.split('\n');
+    const strategyData = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.match(/^\| (AS \d+|NQI|EU|GOLD \d+) \|/)) {
+        const match = line.match(/^\| (AS \d+|NQI|EU|GOLD \d+) \| ([+-]?[\d.]+)R \| ([+-]?[\d.]+)R \| (\d+) \| (\d+) \| (\d+) \| ([\d.]+)% \|/);
+        if (match) {
+          strategyData.push({
+            name: match[1],
+            totalR: parseFloat(match[2]),
+            avgR: parseFloat(match[3]),
+            trades: parseInt(match[4]),
+            win: parseInt(match[5]),
+            loss: parseInt(match[6]),
+            winRate: parseFloat(match[7])
+          });
+        }
+      }
+    }
+    
+    return strategyData;
+  };
+
+  const strategyData = parseStrategyPerformance(fullContent);
+  
+  // Parse Highlights data
+  const parseHighlights = (content) => {
+    const lines = content.split('\n');
+    const topPerformers = [];
+    let improvement = null;
+    let inHighlights = false;
+    let inTopPerformers = false;
+    let inImprovement = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.includes('## 🏆 Highlights')) {
+        inHighlights = true;
+        continue;
+      }
+      if (inHighlights && line.includes('### Top Performers')) {
+        inTopPerformers = true;
+        continue;
+      }
+      if (inHighlights && line.includes('### Areas for Improvement')) {
+        inTopPerformers = false;
+        inImprovement = true;
+        continue;
+      }
+      if (inHighlights && line.includes('---')) {
+        break;
+      }
+      if (inTopPerformers) {
+        const match = line.match(/🥇|🥈|🥉/);
+        if (match) {
+          const perfMatch = line.match(/(🥇|🥈|🥉) \*\*(.+?)\*\* - ([\d.]+)R \(([\d.]+)% win rate, (\d+) trades\)/);
+          if (perfMatch) {
+            topPerformers.push({
+              name: perfMatch[2],
+              totalR: parseFloat(perfMatch[3]),
+              winRate: parseFloat(perfMatch[4]),
+              trades: parseInt(perfMatch[5])
+            });
+          }
+        }
+      }
+      if (inImprovement) {
+        const match = line.match(/^_(.+?)_$/);
+        if (match) {
+          improvement = match[1];
+        }
+      }
+    }
+    
+    return { topPerformers, improvement };
+  };
+
+  // Parse Key Insights
+  const parseKeyInsights = (content) => {
+    const lines = content.split('\n');
+    const insights = [];
+    let inInsights = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.includes('## 📝 Key Insights')) {
+        inInsights = true;
+        continue;
+      }
+      if (inInsights && line.includes('---')) {
+        break;
+      }
+      if (inInsights && line.match(/^- /)) {
+        const text = line.replace(/^- /, '').replace(/✅|📊|📈|🌟/g, '').trim();
+        if (text) {
+          insights.push(text);
+        }
+      }
+    }
+    
+    return insights;
+  };
+
+  // Parse Recommendations
+  const parseRecommendations = (content) => {
+    const lines = content.split('\n');
+    const recs = [];
+    let inRecs = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.includes('## 💡 Recommendations')) {
+        inRecs = true;
+        continue;
+      }
+      if (inRecs && (line.includes('---') || line.includes('*Report'))) {
+        break;
+      }
+      if (inRecs && line.match(/^- 💎/)) {
+        const match = line.match(/- 💎 \*\*(.+?)\*\*: (.+?)$/);
+        if (match) {
+          recs.push({ title: match[1], description: match[2] });
+        }
+      }
+    }
+    
+    return recs;
+  };
+
+  const highlights = parseHighlights(fullContent);
+  const keyInsights = parseKeyInsights(fullContent);
+  const recommendations = parseRecommendations(fullContent);
+
+  // Extract only serializable data from report (no functions)
+  const reportData = {
+    slug: report.slug,
+    type: report.type,
+    title: report.title,
+    period: report.period,
+    weekNumber: report.weekNumber,
+    year: report.year,
+    publishedAt: report.publishedAt,
+    summary: report.summary,
+  };
 
   return (
     <AdminLayout>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-        {/* BREADCRUMB */}
-        <nav className="mb-8 flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
-          <Link href="/admin/reports" className="transition-colors hover:text-[#635BFF]">Reports</Link>
-          <span>/</span>
-          <span className="text-gray-900">{report.title}</span>
-        </nav>
-
-        {/* REPORT HEADER */}
-        <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10 mb-8">
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
-                  {report.title}
-                </h1>
-                <span className="text-white text-[10px] font-black px-3 py-1 rounded-lg shadow-lg uppercase tracking-widest" style={{ backgroundColor: '#635BFF', boxShadow: '0 10px 15px -3px rgba(99, 91, 255, 0.1)' }}>
-                  {report.type === 'weekly' ? 'Weekly' : 'Monthly'}
-                </span>
-              </div>
-              <p className="text-lg text-gray-400 font-medium leading-relaxed">
-                {report.period}
-              </p>
-            </div>
-            <div className="text-sm font-semibold text-gray-400">
-              Published: {new Date(report.publishedAt).toLocaleDateString("en-US", {
-                month: "long",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </div>
-          </div>
-
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className={`${totalRBg} border p-8 rounded-[24px] relative overflow-hidden group`}>
-              <div className="relative z-10">
-                <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Total R</div>
-                <div className={`text-3xl font-black ${totalRColor}`}>
-                  {report.summary.totalR > 0 ? '+' : ''}{report.summary.totalR}R
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm">
-              <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Win Rate</div>
-              <div className="text-3xl font-black" style={{ color: '#635BFF' }}>{report.summary.winRate}%</div>
-            </div>
-
-            <div className="bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm">
-              <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Total Trades</div>
-              <div className="text-3xl font-black text-gray-900">{report.summary.totalTrades}</div>
-            </div>
-
-            <div className="bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm">
-              <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Best Day</div>
-              <div className="text-lg font-black text-emerald-600">{report.summary.bestDay}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* REPORT CONTENT */}
-        <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10 mb-8">
-          <div className="prose prose-lg max-w-none
-            prose-headings:font-black prose-headings:text-gray-900 prose-headings:tracking-tight
-            prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl
-            prose-p:text-gray-600 prose-p:leading-relaxed
-            prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
-            prose-strong:text-gray-900 prose-strong:font-black
-            prose-ul:text-gray-600 prose-ol:text-gray-600
-            prose-li:my-1
-            prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-semibold prose-code:before:content-none prose-code:after:content-none
-            prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-2xl prose-pre:border prose-pre:border-gray-800
-            prose-blockquote:rounded-r-2xl prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:text-gray-700 prose-blockquote:not-italic
-            prose-table:border-collapse prose-table:w-full
-            prose-th:bg-gray-50 prose-th:border prose-th:border-gray-200 prose-th:p-3 prose-th:text-left prose-th:text-xs prose-th:font-black prose-th:uppercase prose-th:tracking-wider prose-th:text-gray-500
-            prose-td:border prose-td:border-gray-200 prose-td:p-3 prose-td:text-gray-600
-            prose-hr:border-gray-200
-            prose-img:rounded-2xl prose-img:shadow-lg
-          ">
-            <MarkdownRenderer content={content} />
-          </div>
-        </div>
-
-        {/* CTA SECTION */}
-        <div className="rounded-[40px] p-10 text-center shadow-xl mb-8" style={{ background: 'linear-gradient(to bottom right, #635BFF, #5548E6)', boxShadow: '0 20px 25px -5px rgba(99, 91, 255, 0.1)' }}>
-          <h3 className="text-3xl font-black text-white mb-3">View All Trading Reports</h3>
-          <p className="font-medium mb-8 max-w-xl mx-auto" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-            Explore more weekly and monthly performance reports with detailed strategy breakdowns and analytics.
-          </p>
-          <Link
-            href="/admin/reports"
-            className="inline-flex items-center gap-3 px-8 py-4 bg-white rounded-[28px] text-lg font-black shadow-xl hover:scale-105 transition-transform"
-            style={{ color: '#635BFF' }}
-          >
-            Browse All Reports
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </Link>
-        </div>
-
-        {/* BACK BUTTON */}
-        <div className="text-center">
-          <Link
-            href="/admin/reports"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-2xl text-sm font-bold hover:bg-gray-50 hover:border-gray-300 transition-all"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to All Reports
-          </Link>
-        </div>
-      </div>
+      <ReportContent
+        report={reportData}
+        overview={overview}
+        dailyData={dailyData}
+        strategyData={strategyData}
+        recommendations={recommendations}
+        bestDayLabel={bestDayLabel}
+        bestDayValue={bestDayValue}
+        avgRPerTrade={avgRPerTrade}
+        winningTrades={winningTrades}
+        losingTrades={losingTrades}
+      />
     </AdminLayout>
   );
 }

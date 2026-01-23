@@ -69,7 +69,7 @@ const AdminLayout = ({ children }) => {
       <main className="flex-grow">{children}</main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 mt-12 bg-white">
+      <footer className="border-t border-slate-200 mt-12">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div className="space-y-4">
