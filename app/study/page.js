@@ -1,11 +1,32 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import PropProofLayout from '@/components/PropProofLayout';
 import { TIMELINE_DATA, STUDY_SUMMARY } from '@/lib/studyConstants';
 
 const WeeklyReportItem = ({ event, isLast }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isImageModalOpen) {
+        setIsImageModalOpen(false);
+      }
+    };
+
+    if (isImageModalOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isImageModalOpen]);
 
   return (
     <div className={`relative pl-8 pb-10 ${isLast ? 'group-last' : 'group'}`}>
@@ -84,6 +105,35 @@ const WeeklyReportItem = ({ event, isLast }) => {
                   </div>
                 ))}
               </div>
+              {event.details.screenshot && (
+                <div className="mb-6">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase mb-3">Performance Proof</h4>
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsImageModalOpen(true);
+                    }}
+                    className="relative w-full rounded-xl overflow-hidden border border-slate-200 shadow-sm cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all duration-200 group"
+                  >
+                    <Image
+                      src={event.details.screenshot}
+                      alt={`${event.title} performance screenshot`}
+                      width={800}
+                      height={600}
+                      className="w-full h-auto"
+                      unoptimized
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-200 flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-2 shadow-lg">
+                        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2 text-center">Click image to expand</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <h4 className="text-xs font-bold text-slate-400 uppercase">Analysis & Notes</h4>
                 <p className="text-sm text-slate-600 italic bg-indigo-50/30 p-4 rounded-lg border-l-2 border-indigo-200">
@@ -94,6 +144,47 @@ const WeeklyReportItem = ({ event, isLast }) => {
           )}
         </div>
       </div>
+
+      {/* Image Modal/Lightbox */}
+      {isImageModalOpen && event.details?.screenshot && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setIsImageModalOpen(false)}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setIsImageModalOpen(false)}
+            className="absolute top-4 right-4 text-white hover:text-slate-300 transition-colors z-10 bg-black/50 rounded-full p-2 hover:bg-black/70"
+            aria-label="Close image"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Image Container */}
+          <div 
+            className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Image
+                src={event.details.screenshot}
+                alt={`${event.title} performance screenshot - expanded view`}
+                width={1200}
+                height={900}
+                className="max-w-full max-h-[90vh] w-auto h-auto object-contain rounded-lg shadow-2xl"
+                unoptimized
+              />
+            </div>
+          </div>
+
+          {/* ESC hint */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/70 text-xs font-medium bg-black/50 px-4 py-2 rounded-full">
+            Press ESC or click outside to close
+          </div>
+        </div>
+      )}
     </div>
   );
 };
