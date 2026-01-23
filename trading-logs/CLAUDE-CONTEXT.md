@@ -19,7 +19,9 @@ This is a **trading log system** that tracks R-multiples for 6 trading strategie
 
 ## 📸 Screenshot Format
 
-User provides screenshots that look like this:
+User provides screenshots named like `w1.png`, `w2.png`, `w3.png`, `w4.png` etc.
+
+Screenshot content looks like this:
 
 | Day  | AS 1 | AS 2 | EU   | NQI  | GOLD 1 | GOLD 2 |
 |------|------|------|------|------|--------|--------|
@@ -30,6 +32,7 @@ User provides screenshots that look like this:
 | Fri  |      |      |      |      |        |        |
 
 **Key points:**
+- **IMPORTANT: Use the filename (w4.png → week 4) for week number, NOT ISO week calculation!**
 - Green numbers = winning trades (positive R)
 - Red numbers = losing trades (negative R)
 - Empty cells = no trade taken (store as null)
@@ -39,8 +42,13 @@ User provides screenshots that look like this:
 
 ## 🎯 What to Do When User Provides Screenshot
 
-### Step 1: Determine Week Dates
+### Step 1: Extract Week Number from Filename
 ```javascript
+// User provides: "w4.png"
+// Extract week number: 4
+// Use filename week number, NOT ISO week calculation!
+
+// Determine week dates:
 // If user says "here's this week's log" on Jan 9 (Thursday)
 // Most recent complete week = Jan 5-9 (Mon-Fri)
 // If today is Friday, use this week
@@ -182,6 +190,7 @@ node aggregate-data.js 2026
 ## 💡 Important Rules
 
 ### ✅ DO:
+- **Extract week number from screenshot filename (w4.png → week 4)**
 - Parse screenshot visually (color doesn't matter, just values)
 - Calculate week dates based on when screenshot is provided
 - Store empty cells as `null` (not 0)
@@ -190,18 +199,26 @@ node aggregate-data.js 2026
 - Show user a nice summary with key metrics
 
 ### ❌ DON'T:
+- **DON'T use ISO week calculation - use filename instead!**
 - Ask user to manually enter data (parse the screenshot!)
 - Use 0 for empty cells (use null)
 - Forget to run aggregation (frontend needs it!)
 - Skip the weekly report generation
-- Forget to calculate ISO week number
 
 ---
 
 ## 🎯 Common User Requests
 
-### "Here's my trading log for the week" (with screenshot)
-→ Parse screenshot, create all files, show summary
+### "Here's my trading log for the week" (with screenshot w4.png)
+**IMPORTANT WORKFLOW:**
+1. **Extract week number from filename:** `w4.png` → Week 4
+2. Calculate dates for the week (most recent complete Mon-Fri)
+3. Parse screenshot data
+4. Create `data/2026/week-04.json` (use extracted week number!)
+5. Run `node scripts/process-weekly-data.js data/2026/week-04.json`
+6. Show summary
+
+→ **ALWAYS use filename week number, NOT ISO calculation!**
 
 ### "Generate report for week 2"
 → Run: `node scripts/generate-report.js data/2026/week-02.json`

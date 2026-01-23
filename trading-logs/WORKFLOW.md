@@ -5,13 +5,16 @@
 ### Every Week:
 
 1. **📸 Take screenshot** of your trading results (Mon-Fri)
-2. **💾 Save it** to `screenshots/YYYY-MM-DD.png` (Friday's date)
+2. **💾 Save it** to `screenshots/w1.png`, `w2.png`, `w3.png`, etc. (sequential week number)
 3. **💬 Tell Claude**: "Here's my trading log for the week" (with screenshot)
 4. **✅ Done!** Claude will:
+   - Extract week number from filename (w4.png → Week 4)
    - Parse the screenshot data
-   - Create JSON file (`data/2026/week-XX.json`)
-   - Generate beautiful report with charts (`reports/week-XX-2026.md`)
+   - Create JSON file (`data/2026/week-04.json`)
+   - Generate beautiful report with charts (`reports/week-04-2026.md`)
    - Show you the summary
+
+**🔑 KEY: Week number comes from your filename (w4.png), not from date calculation!**
 
 ---
 
@@ -139,11 +142,13 @@ See [FRONTEND-GUIDE.md](FRONTEND-GUIDE.md) for detailed examples!
 
 ## 💡 Pro Tips
 
-1. **Consistent naming**: Save screenshots as `YYYY-MM-DD.png` (Friday's date)
+1. **Consistent naming**: Save screenshots as `w1.png`, `w2.png`, `w3.png`, etc. (sequential)
 2. **Weekly routine**: Log data every Friday after market close
 3. **Review reports**: Read your weekly report to identify patterns
 4. **Track progress**: Compare week-over-week in reports folder
 5. **Use insights**: Act on the automated recommendations
+
+**⚠️ Important:** Week number is determined by your filename (w4.png = Week 4), NOT by calendar date!
 
 ---
 
