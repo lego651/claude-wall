@@ -56,7 +56,7 @@ export default async function PublicStrategyPage({ params }) {
           <p className="text-gray-600 mb-6">
             The strategy file could not be loaded.
           </p>
-          <Link href="/strategies" className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-2xl font-bold transition-colors" style={{ backgroundColor: '#635BFF' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5548E6'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#635BFF'}>
+          <Link href="/strategies" className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-2xl font-bold transition-colors hover:bg-[#5548E6]" style={{ backgroundColor: '#635BFF' }}>
             Back to Strategies
           </Link>
         </div>

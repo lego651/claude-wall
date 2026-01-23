@@ -121,7 +121,7 @@ export default function StrategiesPage() {
 
           <div className="flex flex-wrap gap-3">
             {displayTags.map(tag => (
-              <button key={tag} className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-600 transition-all shadow-sm" onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.6)'; e.currentTarget.style.color = '#635BFF'; e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#f3f4f6'; e.currentTarget.style.color = '#4b5563'; e.currentTarget.style.backgroundColor = 'white'; }}>
+              <button key={tag} className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:border-[#635BFF] hover:border-opacity-60 hover:text-[#635BFF] hover:bg-[#635BFF] hover:bg-opacity-10 transition-all shadow-sm">
                 {tag}
               </button>
             ))}
