@@ -96,7 +96,7 @@ function CumulativeStrategyCard({ strategy, strategyData, weeklyData }) {
 
   return (
     <Link 
-      href={`/strategies/${strategy.id}`}
+      href={`/admin/strategies/${strategy.id}`}
       className="block bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 p-6 relative cursor-pointer"
     >
       {/* Clickable icon in top right */}

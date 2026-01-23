@@ -134,7 +134,7 @@ function publishReport(jsonPath) {
   console.log('   1. Run: npm run build');
   console.log('   2. Test locally: npm run dev');
   console.log(`   3. View report: http://localhost:3000/trading-logs/reports/${reportSlug}`);
-  console.log(`   4. View strategies: http://localhost:3000/strategies`);
+  console.log(`   4. View strategies: http://localhost:3000/admin/strategies`);
   console.log('   5. Commit and push to deploy to Vercel');
 }
 

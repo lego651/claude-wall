@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getStrategyBySlug } from "../../_assets/strategies";
+import { getStrategyBySlug } from "@/data/strategies/strategies";
 import { getSEOTags } from "@/libs/seo";
 import { promises as fs } from "fs";
 import path from "path";
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }) {
   return getSEOTags({
     title: `${strategy.title} | Trading Strategy`,
     description: strategy.description,
-    canonicalUrlRelative: `/strategies/public/${resolvedParams.slug}`,
+    canonicalUrlRelative: `/admin/strategies/public/${resolvedParams.slug}`,
   });
 }
 
@@ -38,9 +38,8 @@ export default async function PublicStrategyPage({ params }) {
   // Read markdown content
   const markdownPath = path.join(
     process.cwd(),
-    "app",
+    "data",
     "strategies",
-    "_assets",
     `${strategy.slug}.md`
   );
 
@@ -56,7 +55,7 @@ export default async function PublicStrategyPage({ params }) {
           <p className="text-gray-600 mb-6">
             The strategy file could not be loaded.
           </p>
-          <Link href="/strategies" className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-2xl font-bold transition-colors hover:bg-[#5548E6]" style={{ backgroundColor: '#635BFF' }}>
+          <Link href="/admin/strategies" className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-2xl font-bold transition-colors hover:bg-[#5548E6]" style={{ backgroundColor: '#635BFF' }}>
             Back to Strategies
           </Link>
         </div>
@@ -76,7 +75,7 @@ export default async function PublicStrategyPage({ params }) {
 
         {/* BREADCRUMB */}
         <nav className="mb-8 flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
-          <Link href="/strategies" className="transition-colors hover:text-[#635BFF]">Strategies</Link>
+          <Link href="/admin/strategies" className="transition-colors hover:text-[#635BFF]">Strategies</Link>
           <span>/</span>
           <span className="text-gray-900">{strategy.title}</span>
         </nav>
@@ -206,7 +205,7 @@ export default async function PublicStrategyPage({ params }) {
         {/* BACK BUTTON */}
         <div className="text-center">
           <Link
-            href="/strategies"
+            href="/admin/strategies"
             className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-2xl text-sm font-bold hover:bg-gray-50 hover:border-gray-300 transition-all"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -2,7 +2,7 @@
  * Public Trading Strategies Index
  *
  * This file contains metadata for all public-facing trading strategies.
- * Used by the /strategies page to list and display strategy reports.
+ * Used by the /admin/strategies page to list and display strategy reports.
  */
 
 export const strategies = [

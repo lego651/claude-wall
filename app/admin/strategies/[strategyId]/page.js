@@ -13,101 +13,6 @@ import {
 } from 'recharts';
 import AdminLayout from "@/components/AdminLayout";
 
-// Chart Theme Options - Choose one:
-// 1. SLATE: Professional, serious (Bloomberg/TradingView style) - #475569
-// 2. NAVY: Trust, stability (Financial institutions) - #1e40af
-// 3. TEAL: Modern fintech, tech-forward - #0f766e
-// 4. AMBER: Energy, action (Trading platforms) - #d97706
-// 5. DEEP_PURPLE: Premium, sophisticated - #6b21a8
-// 6. ROYAL_BLUE: Between Navy and Violet - #3b82f6 (blue-500)
-// 7. INDIGO: Blue-purple blend - #4f46e5 (indigo-600)
-// 8. VIOLET: Vibrant blue-purple - #6366f1 (indigo-500)
-// 9. MEDIUM_VIOLET: Between Indigo and Screenshot - #5b21b6 (violet-800)
-// 10. SCREENSHOT_PURPLE: Vibrant blue-purple from screenshot - #6A3FFB
-
-const CHART_THEME = {
-  // Option 1: Slate/Charcoal - Professional & Serious
-  SLATE: {
-    primary: '#475569',      // slate-600
-    gradientStart: '#475569', // slate-600
-    gradientEnd: '#475569',   // slate-600
-    dotStroke: '#475569',     // slate-600
-  },
-  // Option 2: Navy Blue - Trust & Stability
-  NAVY: {
-    primary: '#1e40af',      // blue-800
-    gradientStart: '#1e40af', // blue-800
-    gradientEnd: '#1e40af',   // blue-800
-    dotStroke: '#1e40af',     // blue-800
-  },
-  // Option 3: Teal - Modern Fintech
-  TEAL: {
-    primary: '#0f766e',      // teal-700
-    gradientStart: '#0f766e', // teal-700
-    gradientEnd: '#0f766e',   // teal-700
-    dotStroke: '#0f766e',     // teal-700
-  },
-  // Option 4: Amber - Energy & Action
-  AMBER: {
-    primary: '#d97706',      // amber-600
-    gradientStart: '#d97706', // amber-600
-    gradientEnd: '#d97706',   // amber-600
-    dotStroke: '#d97706',     // amber-600
-  },
-  // Option 5: Deep Purple - Premium & Sophisticated
-  DEEP_PURPLE: {
-    primary: '#6b21a8',      // purple-800
-    gradientStart: '#6b21a8', // purple-800
-    gradientEnd: '#6b21a8',   // purple-800
-    dotStroke: '#6b21a8',     // purple-800
-  },
-  // Option 6: Royal Blue - Between Navy and Violet (Professional Blue)
-  ROYAL_BLUE: {
-    primary: '#3b82f6',      // blue-500
-    gradientStart: '#3b82f6', // blue-500
-    gradientEnd: '#3b82f6',   // blue-500
-    dotStroke: '#3b82f6',     // blue-500
-  },
-  // Option 7: Indigo - Blue-Purple Blend (Balanced)
-  INDIGO: {
-    primary: '#4f46e5',      // indigo-600
-    gradientStart: '#4f46e5', // indigo-600
-    gradientEnd: '#4f46e5',   // indigo-600
-    dotStroke: '#4f46e5',     // indigo-600
-  },
-  // Option 8: Violet - Vibrant Blue-Purple (Modern)
-  VIOLET: {
-    primary: '#6366f1',      // indigo-500
-    gradientStart: '#6366f1', // indigo-500
-    gradientEnd: '#6366f1',   // indigo-500
-    dotStroke: '#6366f1',     // indigo-500
-  },
-  // Option 9: Medium Violet - Between Indigo and Screenshot
-  MEDIUM_VIOLET: {
-    primary: '#5b21b6',      // violet-800
-    gradientStart: '#5b21b6', // violet-800
-    gradientEnd: '#5b21b6',   // violet-800
-    dotStroke: '#5b21b6',     // violet-800
-  },
-  // Option 10: Screenshot Purple - Vibrant Blue-Purple from Screenshot
-  SCREENSHOT_PURPLE: {
-    primary: '#6A3FFB',      // vibrant blue-purple from screenshot
-    gradientStart: '#6A3FFB', // vibrant blue-purple
-    gradientEnd: '#6A3FFB',   // vibrant blue-purple
-    dotStroke: '#6A3FFB',     // vibrant blue-purple
-  },
-  // Option 11: Stripe Theme - Stripe's Official Brand Color
-  STRIPE: {
-    primary: '#635BFF',      // Stripe's official brand color
-    gradientStart: '#635BFF', // Stripe blue-purple
-    gradientEnd: '#635BFF',   // Stripe blue-purple
-    dotStroke: '#635BFF',     // Stripe blue-purple
-  },
-};
-
-// CURRENT THEME - Change this to switch themes
-const CURRENT_THEME = CHART_THEME.STRIPE; // Stripe's official brand color (#635BFF)
-
 const STRATEGIES = {
   AS_1: { id: 'AS_1', name: 'AS 1', shortName: 'AS', description: 'Asian Session Strategy 1', internalId: 'AS_01', created: 'Dec 2023' },
   AS_2: { id: 'AS_2', name: 'AS 2', shortName: 'AS', description: 'Asian Session Strategy 2', internalId: 'AS_02', created: 'Dec 2023' },
@@ -214,7 +119,7 @@ export default function StrategyDetailPage({ params }) {
           {/* Refined Premium Header */}
           <div className="flex flex-col gap-6">
             <nav className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
-              <Link href="/admin/portfolio" className="hover:text-[#635BFF] transition-colors">Portfolio</Link>
+              <Link href="/admin/portfolio" className="transition-colors hover:text-[#635BFF]">Portfolio</Link>
               <span>/</span>
               <span className="text-gray-900">{strategy.name} Strategy</span>
             </nav>
@@ -334,8 +239,8 @@ export default function StrategyDetailPage({ params }) {
                     <AreaChart data={dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={CURRENT_THEME.gradientStart} stopOpacity={0.08}/>
-                          <stop offset="95%" stopColor={CURRENT_THEME.gradientEnd} stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.08}/>
+                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
@@ -364,10 +269,10 @@ export default function StrategyDetailPage({ params }) {
                       <Area
                         type="monotone"
                         dataKey="r"
-                        stroke={CURRENT_THEME.primary}
+                        stroke="#6366f1"
                         strokeWidth={4}
                         fill="url(#chartGradient)"
-                        dot={{ r: 4, fill: '#fff', stroke: CURRENT_THEME.dotStroke, strokeWidth: 3 }}
+                        dot={{ r: 4, fill: '#fff', stroke: '#6366f1', strokeWidth: 3 }}
                         activeDot={{ r: 6, strokeWidth: 0, fill: '#1e293b' }}
                       />
                     </AreaChart>
