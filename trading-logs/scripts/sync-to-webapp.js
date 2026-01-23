@@ -3,7 +3,7 @@
 /**
  * Sync trading reports to Next.js web app
  * This script automatically:
- * 1. Copies markdown reports to app/reports/_assets/
+ * 1. Copies markdown reports to data/reports/
  * 2. Updates the reports.js file with metadata
  *
  * Usage: node sync-to-webapp.js <week-json-path>
@@ -46,8 +46,8 @@ function extractMetadata(weekData) {
 /**
  * Update reports.js file with new report metadata
  */
-function updateReportsFile(metadata, appReportsPath) {
-  const reportsFilePath = path.join(appReportsPath, '_assets', 'reports.js');
+function updateReportsFile(metadata, dataReportsPath) {
+  const reportsFilePath = path.join(dataReportsPath, 'reports.js');
 
   if (!fs.existsSync(reportsFilePath)) {
     console.error(`❌ Error: reports.js not found at ${reportsFilePath}`);
@@ -101,21 +101,20 @@ function updateReportsFile(metadata, appReportsPath) {
 /**
  * Copy markdown report to web app assets
  */
-function copyMarkdownReport(weekData, tradingLogsPath, appReportsPath) {
+function copyMarkdownReport(weekData, tradingLogsPath, dataReportsPath) {
   const { weekNumber, year } = weekData;
   const mdFilename = `week-${weekNumber.toString().padStart(2, '0')}-${year}.md`;
 
   const sourcePath = path.join(tradingLogsPath, 'reports', mdFilename);
-  const destPath = path.join(appReportsPath, '_assets', mdFilename);
+  const destPath = path.join(dataReportsPath, mdFilename);
 
   if (!fs.existsSync(sourcePath)) {
     console.error(`❌ Error: Source markdown not found: ${sourcePath}`);
     process.exit(1);
   }
 
-  // Create assets directory if it doesn't exist
-  const assetsDir = path.join(appReportsPath, '_assets');
-  fs.mkdirSync(assetsDir, { recursive: true });
+  // Create data/reports directory if it doesn't exist
+  fs.mkdirSync(dataReportsPath, { recursive: true });
 
   // Copy file
   fs.copyFileSync(sourcePath, destPath);
@@ -147,7 +146,7 @@ function main() {
 
   // Determine paths
   const tradingLogsPath = path.join(__dirname, '..');
-  const appReportsPath = path.join(__dirname, '..', '..', 'app', 'reports');
+  const dataReportsPath = path.join(__dirname, '..', '..', 'data', 'reports');
 
   console.log(`\n🔄 Syncing Week ${weekData.weekNumber}, ${weekData.year} to web app...\n`);
 
@@ -155,13 +154,13 @@ function main() {
   const metadata = extractMetadata(weekData);
 
   // Step 1: Copy markdown report
-  const { sourcePath, destPath } = copyMarkdownReport(weekData, tradingLogsPath, appReportsPath);
+  const { sourcePath, destPath } = copyMarkdownReport(weekData, tradingLogsPath, dataReportsPath);
   console.log(`✅ Copied markdown report`);
   console.log(`   From: ${sourcePath}`);
   console.log(`   To:   ${destPath}`);
 
   // Step 2: Update reports.js
-  const updated = updateReportsFile(metadata, appReportsPath);
+  const updated = updateReportsFile(metadata, dataReportsPath);
   if (updated) {
     console.log(`✅ Updated reports.js with new metadata`);
   }

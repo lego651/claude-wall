@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { reports, getReportBySlug } from "@/app/reports/_assets/reports";
-import MarkdownRenderer from "@/app/reports/_assets/components/MarkdownRenderer";
+import { reports, getReportBySlug } from "@/data/reports/reports";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
 import { getSEOTags } from "@/libs/seo";
 import AdminLayout from "@/components/AdminLayout";
 

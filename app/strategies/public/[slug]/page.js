@@ -3,7 +3,7 @@ import { getStrategyBySlug } from "../../_assets/strategies";
 import { getSEOTags } from "@/libs/seo";
 import { promises as fs } from "fs";
 import path from "path";
-import MarkdownRenderer from "@/app/reports/_assets/components/MarkdownRenderer";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
 import Link from "next/link";
 import PropProofLayout from "@/components/PropProofLayout";
 

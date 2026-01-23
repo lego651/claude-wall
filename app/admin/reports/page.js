@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from "next/link";
-import { reports, reportTypes } from "@/app/reports/_assets/reports-data";
+import { reports, reportTypes } from "@/data/reports/reports-data";
 import AdminLayout from "@/components/AdminLayout";
 
 const WeeklyReportItem = ({ report, isLast }) => {
