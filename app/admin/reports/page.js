@@ -1,176 +1,225 @@
+"use client";
+
+import React, { useState } from 'react';
 import Link from "next/link";
-import { reports, getAllYears, getReportsByYear, reportTypes } from "@/app/reports/_assets/reports";
-import { getSEOTags } from "@/libs/seo";
+import { reports, reportTypes } from "@/app/reports/_assets/reports-data";
 import AdminLayout from "@/components/AdminLayout";
 
-export const metadata = getSEOTags({
-  title: "Trading Logs | Performance Reports",
-  description: "View detailed trading performance reports with R-multiples, win rates, and strategy breakdowns.",
-  canonicalUrlRelative: "/reports",
-});
-
-const MiniStat = ({ label, value, color = "text-gray-900" }) => (
-  <div className="space-y-1.5">
-    <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{label}</div>
-    <div className={`text-xl font-black ${color}`}>{value}</div>
-  </div>
-);
-
-const ReportCard = ({ report }) => {
-  const totalRColor = report.summary.totalR > 0 ? 'text-emerald-500' : 'text-rose-500';
+const WeeklyReportItem = ({ report, isLast }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const totalR = report.summary.totalR > 0 ? `+${report.summary.totalR}R` : `${report.summary.totalR}R`;
+  const totalRColor = report.summary.totalR > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+
+  // Format date range from period string
+  const formatDateRange = (period) => {
+    // period is like "2026-01-12 to 2026-01-16"
+    const [start, end] = period.split(' to ');
+    if (!start || !end) return period;
+    
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    
+    const startMonth = startDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+    const startDay = startDate.getDate();
+    const endMonth = endDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+    const endDay = endDate.getDate();
+    const year = startDate.getFullYear();
+    
+    if (startMonth === endMonth) {
+      return `${startMonth} ${startDay} - ${endDay}, ${year}`;
+    }
+    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+  };
+
+  // Extract best day info
+  const bestDayMatch = report.summary.bestDay?.match(/(\w+)\s*\(([^)]+)\)/);
+  const bestDayName = bestDayMatch ? bestDayMatch[1] : '';
+  const bestDayR = bestDayMatch ? bestDayMatch[2] : '';
 
   return (
-    <Link href={`/admin/reports/${report.slug}`}>
-      <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-1 transition-all duration-300 group overflow-hidden">
-        <div className="p-10 space-y-10">
+    <div className={`relative pl-8 pb-10 ${isLast ? '' : ''}`}>
+      {/* Vertical Line Segment */}
+      <div className={`absolute left-[11px] top-2 bottom-0 w-0.5 bg-slate-200 ${isLast ? 'bg-transparent' : ''}`}></div>
+      
+      {/* Timeline Node */}
+      <div className="absolute left-0 top-1.5 w-6 h-6 rounded-full border-4 border-white shadow-sm flex items-center justify-center z-10 bg-slate-400">
+        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+
+      <div className="flex flex-col">
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter mb-1">{formatDateRange(report.period)}</span>
+        
+        <div 
+          onClick={() => setIsOpen(!isOpen)}
+          className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md"
+          onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(99, 91, 255, 0.4)'}
+          onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
+        >
           <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <h3 className="text-2xl font-black text-gray-900">{report.title}</h3>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{report.period}</p>
+            <div className="flex-grow">
+              <div className="flex items-center gap-3 mb-1">
+                <h3 className="text-xl font-bold text-slate-900">
+                  {report.title}
+                </h3>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${totalRColor}`}>
+                  {totalR}
+                </span>
+              </div>
+              <p className="text-sm text-slate-500 leading-relaxed mb-4">
+                Maintained strong execution consistency across the week with focused strategy application and disciplined risk management.
+              </p>
+              <div className="flex items-center gap-6 text-sm">
+                <div>
+                  <span className="font-bold text-slate-900">WIN RATE: </span>
+                  <span className="text-slate-600">{report.summary.winRate}%</span>
+                </div>
+                <div>
+                  <span className="font-bold text-slate-900">TRADES: </span>
+                  <span className="text-slate-600">{report.summary.totalTrades}</span>
+                </div>
+                {bestDayName && (
+                  <div>
+                    <span className="font-bold text-slate-900">BEST: </span>
+                    <span className="text-slate-600">{bestDayName} </span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${totalRColor}`}>
+                      ({bestDayR})
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-            <span className="text-white text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest shadow-lg" style={{ backgroundColor: '#635BFF', boxShadow: '0 10px 15px -3px rgba(99, 91, 255, 0.1)' }}>
-              {report.type === reportTypes.weekly ? 'Weekly' : 'Monthly'}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <MiniStat label="Total R" value={totalR} color={totalRColor} />
-            <MiniStat label="Win Rate" value={`${report.summary.winRate}%`} />
-            <MiniStat label="Trades" value={report.summary.totalTrades} />
-          </div>
-
-          <div className="bg-gray-50/50 rounded-2xl p-5 border border-gray-100 flex items-center justify-between group-hover:bg-white group-hover:border-[#635BFF] group-hover:border-opacity-20 transition-colors">
-            <div className="space-y-1">
-              <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Performance Highlight</div>
-              <div className="text-sm font-bold text-gray-700">Best Day: <span className="text-emerald-500">{report.summary.bestDay}</span></div>
+            <div className="ml-4 pt-1">
+              {isOpen ? (
+                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              )}
             </div>
-            <button className="bg-white p-3 rounded-xl border border-gray-200 text-gray-400 hover:text-[#635BFF] hover:border-[#635BFF] hover:border-opacity-60 transition-all shadow-sm">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-              </svg>
-            </button>
           </div>
-        </div>
 
-        <div className="px-10 py-5 bg-gray-50/30 border-t border-gray-50 flex justify-between items-center text-[9px] font-black text-gray-400 uppercase tracking-widest transition-colors group-hover:bg-[#635BFF] group-hover:bg-opacity-5">
-          <span>Verified Performance</span>
-          <span className="hover:underline" style={{ color: '#635BFF' }}>View Full Report</span>
+          {isOpen && (
+            <div className="mt-6 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300">
+              <Link 
+                href={`/admin/reports/${report.slug}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)', color: '#635BFF' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.2)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'}
+              >
+                View Full Report
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 
 export default function TradingLogsPage() {
-  const years = getAllYears();
   const weeklyReports = reports.filter(r => r.type === reportTypes.weekly);
-  const monthlyReports = reports.filter(r => r.type === reportTypes.monthly);
 
   // Calculate aggregate stats
   const totalR = reports.reduce((sum, r) => sum + r.summary.totalR, 0);
-  const avgWinRate = reports.reduce((sum, r) => sum + r.summary.winRate, 0) / reports.length;
+  const avgWinRate = reports.length > 0 ? reports.reduce((sum, r) => sum + r.summary.winRate, 0) / reports.length : 0;
   const totalTrades = reports.reduce((sum, r) => sum + r.summary.totalTrades, 0);
 
   return (
     <AdminLayout>
-      <div className="space-y-16 max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-
-        {/* Premium Header */}
-        <section className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-gray-100 pb-12">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl text-white shadow-lg" style={{ backgroundColor: '#635BFF', boxShadow: '0 10px 15px -3px rgba(99, 91, 255, 0.1)' }}>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">Trading Performance Reports</h1>
-            </div>
-            <p className="text-lg text-gray-400 font-medium max-w-2xl leading-relaxed">
-              Detailed weekly and monthly trading reports tracking R-multiples across <span className="text-gray-900 font-bold">6 verified strategies</span>. View comprehensive breakdowns and key performance insights.
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+        {/* Header Section */}
+        <section className="text-center space-y-6 pt-4">
+          <div>
+            <h1 className="text-5xl font-bold text-gray-900 tracking-tight mb-4">Trading Performance Reports</h1>
+            <p className="text-lg text-gray-500">
+              Continuous tracking of a rules-based prop firm strategy across multiple verified execution methods.
             </p>
           </div>
-        </section>
 
-        {/* Hero KPI Stats */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-emerald-50/50 border border-emerald-100 p-10 rounded-[40px] relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
-            <div className="relative z-10">
-              <div className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-4">Total R (All Time)</div>
-              <div className="text-5xl font-black text-emerald-500 tracking-tighter">+{totalR.toFixed(2)}R</div>
-              <div className="mt-6 flex items-center gap-2 text-xs font-bold text-emerald-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          {/* KPI Cards */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="py-4 border-r border-slate-100">
+              <div className="flex items-center justify-center space-x-1 text-slate-400 mb-1">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                 </svg>
-                Top 5% of Portfolio
+                <span className="text-[10px] font-bold uppercase tracking-widest">TOTAL R (ALL TIME)</span>
               </div>
+              <span className="text-4xl font-bold" style={{ color: '#10b981' }}>+{totalR.toFixed(2)}R</span>
+            </div>
+            <div className="py-4 border-r border-slate-100">
+              <div className="flex items-center justify-center space-x-1 text-slate-400 mb-1">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span className="text-[10px] font-bold uppercase tracking-widest">AVG. WIN RATE</span>
+              </div>
+              <span className="text-4xl font-bold" style={{ color: '#635BFF' }}>{avgWinRate.toFixed(1)}%</span>
+            </div>
+            <div className="py-4">
+              <div className="flex items-center justify-center space-x-1 text-slate-400 mb-1">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <span className="text-[10px] font-bold uppercase tracking-widest">TOTAL TRADES</span>
+              </div>
+              <span className="text-4xl font-bold text-gray-900">{totalTrades}</span>
             </div>
           </div>
 
-          <div className="border p-10 rounded-[40px] group" style={{ backgroundColor: 'rgba(99, 91, 255, 0.05)', borderColor: 'rgba(99, 91, 255, 0.2)' }}>
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] mb-4" style={{ color: '#635BFF' }}>Average Win Rate</div>
-            <div className="text-5xl font-black tracking-tighter" style={{ color: '#635BFF' }}>{avgWinRate.toFixed(1)}%</div>
-            <div className="mt-8 w-full bg-white h-1.5 rounded-full overflow-hidden border" style={{ borderColor: 'rgba(99, 91, 255, 0.2)' }}>
-              <div className="h-full rounded-full" style={{ width: `${avgWinRate.toFixed(1)}%`, backgroundColor: '#635BFF' }} />
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-100 p-10 rounded-[40px] shadow-sm">
-            <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Total Trades</div>
-            <div className="text-5xl font-black text-gray-900 tracking-tighter">{totalTrades}</div>
-            <div className="mt-6 text-xs font-bold text-gray-400 flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-gray-200" /> Across {reports.length} Weeks
-            </div>
+          {/* Action Buttons */}
+          <div className="flex justify-center space-x-3">
+            <button className="text-xs font-bold text-white px-3 py-1.5 rounded-full flex items-center transition-colors shadow-sm" style={{ backgroundColor: '#635BFF' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5548E6'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#635BFF'}>
+              <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Verified Results
+            </button>
+            <button className="text-xs font-bold px-3 py-1.5 rounded-full flex items-center transition-colors border" style={{ color: '#635BFF', backgroundColor: 'white', borderColor: '#635BFF' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}>
+              Strategy Rules
+              <svg className="w-3 h-3 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </button>
           </div>
         </section>
 
-        {/* Weekly Reports Section */}
-        {weeklyReports.length > 0 && (
-          <section className="space-y-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-2xl">📅</span>
-                <h2 className="text-2xl font-black text-gray-900">Weekly Reports</h2>
-                <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-lg text-xs font-black">{weeklyReports.length}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors">Sort by Date</button>
-                <button className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors">Filters</button>
-              </div>
-            </div>
+        {/* Study History Section */}
+        <section className="relative">
+          <div className="flex items-center space-x-3 mb-10 px-1">
+            <h2 className="text-3xl font-bold text-gray-900">Study History</h2>
+            <div className="h-px flex-grow bg-slate-200"></div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {weeklyReports
-                .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
-                .map((report) => (
-                  <ReportCard key={report.slug} report={report} />
-                ))}
+          <div className="space-y-2">
+            {weeklyReports
+              .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
+              .map((report, index) => (
+                <WeeklyReportItem 
+                  key={report.slug} 
+                  report={report} 
+                  isLast={index === weeklyReports.length - 1}
+                />
+              ))}
+          </div>
+          
+          {/* End of Timeline Marker */}
+          {weeklyReports.length > 0 && (
+            <div className="flex flex-col items-center pt-8">
+              <div className="w-2 h-2 rounded-full bg-slate-200 mb-4"></div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">End of Available Records</p>
             </div>
-          </section>
-        )}
-
-        {/* Monthly Reports Section */}
-        {monthlyReports.length > 0 && (
-          <section className="space-y-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-2xl">📆</span>
-                <h2 className="text-2xl font-black text-gray-900">Monthly Reports</h2>
-                <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-lg text-xs font-black">{monthlyReports.length}</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {monthlyReports
-                .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
-                .map((report) => (
-                  <ReportCard key={report.slug} report={report} />
-                ))}
-            </div>
-          </section>
-        )}
+          )}
+        </section>
 
         {/* EMPTY STATE */}
         {reports.length === 0 && (
