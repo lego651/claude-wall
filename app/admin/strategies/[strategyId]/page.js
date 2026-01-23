@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import AdminLayout from "@/components/AdminLayout";
+import { THEME, themeStyles } from "@/lib/theme";
 
 const STRATEGIES = {
   AS_1: { id: 'AS_1', name: 'AS 1', shortName: 'AS', description: 'Asian Session Strategy 1', internalId: 'AS_01', created: 'Dec 2023' },
@@ -21,13 +22,6 @@ const STRATEGIES = {
   GOLD_1: { id: 'GOLD_1', name: 'GOLD 1', shortName: 'G1', description: 'Gold Trading Strategy 1', internalId: 'GOLD_01', created: 'Jan 2024' },
   GOLD_2: { id: 'GOLD_2', name: 'GOLD 2', shortName: 'G2', description: 'Gold Trading Strategy 2', internalId: 'GOLD_02', created: 'Feb 2024' },
 };
-
-const CompactStat = ({ label, value, color = 'text-gray-900' }) => (
-  <div className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm">
-    <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">{label}</div>
-    <div className={`text-xl font-black ${color}`}>{value}</div>
-  </div>
-);
 
 export default function StrategyDetailPage({ params }) {
   const [strategyId, setStrategyId] = useState(null);
@@ -118,8 +112,8 @@ export default function StrategyDetailPage({ params }) {
 
           {/* Refined Premium Header */}
           <div className="flex flex-col gap-6">
-            <nav className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
-              <Link href="/admin/portfolio" className="transition-colors hover:text-[#635BFF]">Portfolio</Link>
+            <nav className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style={themeStyles.dashboard.labelColor}>
+              <Link href="/admin/portfolio" className="transition-colors" style={{ ...themeStyles.dashboard.labelColor, ...themeStyles.textPrimary }} onMouseEnter={(e) => e.currentTarget.style.color = THEME.primary} onMouseLeave={(e) => e.currentTarget.style.color = THEME.dashboard.labelColor}>Portfolio</Link>
               <span>/</span>
               <span className="text-gray-900">{strategy.name} Strategy</span>
             </nav>
@@ -132,11 +126,11 @@ export default function StrategyDetailPage({ params }) {
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight">{strategy.description}</h1>
-                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full border" style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)', color: '#635BFF', borderColor: 'rgba(99, 91, 255, 0.2)' }}>
+                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full border" style={{ ...themeStyles.badge }}>
                       INTERNAL_ID: {strategy.internalId}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-sm font-medium text-gray-400">
+                  <div className="flex items-center gap-4 text-sm font-medium" style={themeStyles.dashboard.labelColor}>
                     <span className="flex items-center gap-1.5">
                       <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" /> Live Strategy
                     </span>
@@ -171,41 +165,68 @@ export default function StrategyDetailPage({ params }) {
           {!loading && stats && (
             <>
               {/* Hierarchical KPI Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                 {/* Hero KPI: Total R */}
-                <div className="md:col-span-2 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
-                  <div className="relative z-10">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Cumulative Performance</div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-5xl font-black text-gray-900">{isPositive ? '+' : ''}{stats.totalR.toFixed(1)}</span>
-                      <span className="text-2xl font-black text-emerald-500">R</span>
+                <div className="md:col-span-12 lg:col-span-5 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-10 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br to-transparent pointer-events-none" style={{ background: `linear-gradient(to bottom right, ${THEME.dashboard.stripColor}, transparent)` }} />
+                  <div className="relative z-10 flex flex-col h-full justify-between">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.25em] block mb-6" style={themeStyles.dashboard.labelColor}>Cumulative Performance</span>
+                      <div className="flex items-end gap-2 mb-4">
+                        <span className="text-7xl font-black text-slate-900 tracking-tighter">{isPositive ? '+' : ''}{stats.totalR.toFixed(1)}</span>
+                        <span className="text-4xl font-black text-emerald-500 pb-2">R</span>
+                      </div>
                     </div>
-                    <div className="mt-4 text-xs font-bold text-emerald-600 flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    <div className="flex items-center gap-2 text-emerald-500 font-black text-sm">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
                       </svg>
                       {monthGrowth}% this month
                     </div>
                   </div>
-                </div>
-
-                {/* Hero KPI: Win Rate */}
-                <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm group">
-                  <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Efficiency</div>
-                  <div className="text-4xl font-black" style={{ color: '#635BFF' }}>{stats.winRate}%</div>
-                  <div className="mt-5 w-full bg-gray-50 h-1.5 rounded-full overflow-hidden border border-gray-100">
-                    <div className="h-full rounded-full" style={{ width: `${stats.winRate}%`, backgroundColor: '#635BFF' }} />
+                  {/* Subtle Background Sparkline */}
+                  <div className="absolute bottom-0 right-0 w-1/2 h-32 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg viewBox="0 0 200 100" className="w-full h-full preserve-3d">
+                      <path d="M0,80 Q40,90 80,40 T160,20 T200,10" fill="none" stroke={THEME.dashboard.lineColor} strokeWidth="8" />
+                    </svg>
                   </div>
-                  <div className="mt-2 text-[10px] font-bold text-gray-400 uppercase">Win Rate</div>
                 </div>
 
-                {/* Secondary KPIs Grouped */}
-                <div className="lg:col-span-2 grid grid-cols-2 gap-4">
-                  <CompactStat label="Total Trades" value={stats.trades} />
-                  <CompactStat label="Avg R" value={`${stats.averageR.toFixed(2)}R`} />
-                  <CompactStat label="Winning" value={stats.winning} color="text-emerald-500" />
-                  <CompactStat label="Losing" value={stats.losing} color="text-rose-500" />
+                {/* Efficiency Card */}
+                <div className="md:col-span-12 lg:col-span-3 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-10 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.25em] block mb-6" style={themeStyles.dashboard.labelColor}>Efficiency</span>
+                    <div className="text-6xl font-black tracking-tighter mb-4" style={themeStyles.dashboard.winRateColor}>{stats.winRate}%</div>
+                  </div>
+                  <div>
+                    <div className="w-full h-2 bg-slate-50 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${stats.winRate}%`, ...themeStyles.dashboard.winRateBg }} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest mt-4 block" style={themeStyles.dashboard.labelColor}>WIN RATE</span>
+                  </div>
+                </div>
+
+                {/* Combined Metrics Card - Refactored to match combined style */}
+                <div className="md:col-span-12 lg:col-span-4 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-10 flex flex-col justify-between relative overflow-hidden">
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em] block mb-6" style={themeStyles.dashboard.labelColor}>Performance Breakdown</span>
+                  
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-10">
+                    {[
+                      { label: 'Total Trades', val: stats.trades.toString() },
+                      { label: 'Avg R', val: `${stats.averageR.toFixed(2)}R` },
+                      { label: 'Winning', val: stats.winning.toString(), color: 'text-emerald-500' },
+                      { label: 'Losing', val: stats.losing.toString(), color: 'text-rose-500' },
+                    ].map((m, i) => (
+                      <div key={i} className="flex flex-col">
+                        <span className="text-[9px] font-black uppercase tracking-widest mb-1.5" style={themeStyles.dashboard.labelColorLight}>{m.label}</span>
+                        <div className={`text-3xl font-black ${m.color || 'text-slate-900'} tracking-tight`}>{m.val}</div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="absolute top-0 right-0 p-4 opacity-5">
+                     <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24" style={themeStyles.dashboard.lineColor}><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                  </div>
                 </div>
               </div>
 
@@ -214,7 +235,7 @@ export default function StrategyDetailPage({ params }) {
                 <div className="flex justify-between items-center mb-10 px-2">
                   <div>
                     <h3 className="text-xl font-black text-gray-900 mb-1">Growth Curve</h3>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">R-Multiple accumulation over {dailyRecords.length} days</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest" style={themeStyles.dashboard.labelColor}>R-Multiple accumulation over {dailyRecords.length} days</p>
                   </div>
                   <div className="flex gap-1 bg-gray-50 p-1 rounded-2xl border border-gray-100">
                     {['1W', '1M', 'ALL'].map(t => (
@@ -224,9 +245,15 @@ export default function StrategyDetailPage({ params }) {
                         className={`px-5 py-2 rounded-xl text-[10px] font-black transition-all ${
                           timeRange === t
                             ? 'bg-white shadow-sm'
-                            : 'text-gray-400 hover:text-gray-900'
+                            : ''
                         }`}
-                        style={timeRange === t ? { color: '#635BFF' } : {}}
+                        style={timeRange === t ? themeStyles.textPrimary : themeStyles.dashboard.labelColor}
+                        onMouseEnter={(e) => {
+                          if (timeRange !== t) e.currentTarget.style.color = '#1e293b';
+                        }}
+                        onMouseLeave={(e) => {
+                          if (timeRange !== t) e.currentTarget.style.color = THEME.dashboard.labelColor;
+                        }}
                       >
                         {t}
                       </button>
@@ -239,8 +266,8 @@ export default function StrategyDetailPage({ params }) {
                     <AreaChart data={dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.08}/>
-                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                          <stop offset="5%" stopColor={THEME.dashboard.lineColor} stopOpacity={0.08}/>
+                          <stop offset="95%" stopColor={THEME.dashboard.lineColor} stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
@@ -248,13 +275,13 @@ export default function StrategyDetailPage({ params }) {
                         dataKey="name"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 700 }}
+                        tick={{ fontSize: 10, fill: THEME.dashboard.labelColor, fontWeight: 700 }}
                         dy={10}
                       />
                       <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 700 }}
+                        tick={{ fontSize: 10, fill: THEME.dashboard.labelColor, fontWeight: 700 }}
                         tickFormatter={(v) => `${v}R`}
                       />
                       <Tooltip
@@ -269,10 +296,10 @@ export default function StrategyDetailPage({ params }) {
                       <Area
                         type="monotone"
                         dataKey="r"
-                        stroke="#6366f1"
+                        stroke={THEME.dashboard.lineColor}
                         strokeWidth={4}
                         fill="url(#chartGradient)"
-                        dot={{ r: 4, fill: '#fff', stroke: '#6366f1', strokeWidth: 3 }}
+                        dot={{ r: 4, fill: '#fff', stroke: THEME.dashboard.lineColor, strokeWidth: 3 }}
                         activeDot={{ r: 6, strokeWidth: 0, fill: '#1e293b' }}
                       />
                     </AreaChart>
@@ -284,7 +311,7 @@ export default function StrategyDetailPage({ params }) {
               <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
                 <div className="p-8 border-b border-gray-50 flex justify-between items-center">
                   <h3 className="text-xl font-black text-gray-900">Daily Trade Logs</h3>
-                  <div className="flex items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest" style={themeStyles.dashboard.labelColor}>
                     <span className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-emerald-400" /> Profitable
                     </span>
@@ -297,9 +324,9 @@ export default function StrategyDetailPage({ params }) {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="bg-gray-50/50">
-                        <th className="px-10 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
-                        <th className="px-10 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Performance</th>
-                        <th className="px-10 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Accrued</th>
+                        <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest" style={themeStyles.dashboard.labelColor}>Date</th>
+                        <th className="px-10 py-5 text-center text-[10px] font-black uppercase tracking-widest" style={themeStyles.dashboard.labelColor}>Performance</th>
+                        <th className="px-10 py-5 text-right text-[10px] font-black uppercase tracking-widest" style={themeStyles.dashboard.labelColor}>Total Accrued</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
