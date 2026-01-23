@@ -210,6 +210,11 @@ export default function PortfolioPage() {
         const weeklyJson = await weeklyRes.json();
 
         setYearlyStats(yearlyJson.summary.byStrategy);
+        
+        // Sort weeks by weekNumber to ensure correct ordering
+        if (weeklyJson.weeks && weeklyJson.weeks.length > 0) {
+          weeklyJson.weeks.sort((a, b) => a.weekNumber - b.weekNumber);
+        }
         setWeeklyData(weeklyJson);
 
         // Fetch the last week's detailed data
@@ -235,8 +240,9 @@ export default function PortfolioPage() {
     fetchData();
   }, []);
 
-  // Get last week's data
-  const lastWeek = weeklyData?.weeks[weeklyData.weeks.length - 1];
+  // Get last week's data (weeks should already be sorted, but ensure it)
+  const sortedWeeks = weeklyData?.weeks ? [...weeklyData.weeks].sort((a, b) => a.weekNumber - b.weekNumber) : [];
+  const lastWeek = sortedWeeks.length > 0 ? sortedWeeks[sortedWeeks.length - 1] : null;
 
   // Calculate last week overview stats
   const lastWeekTotalR = lastWeek?.totalR || 0;

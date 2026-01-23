@@ -197,6 +197,7 @@ node aggregate-data.js 2026
 - Round to 2 decimal places for R values
 - Auto-run aggregation after creating weekly file
 - Show user a nice summary with key metrics
+- **Always verify all week files exist before aggregating** - the aggregation script reads ALL week-*.json files, so make sure previous weeks aren't accidentally deleted
 
 ### ❌ DON'T:
 - **DON'T use ISO week calculation - use filename instead!**

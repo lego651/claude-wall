@@ -23,13 +23,32 @@ function readWeeklyData(year) {
   }
 
   const files = fs.readdirSync(dataDir)
-    .filter(f => f.startsWith('week-') && f.endsWith('.json'))
-    .sort();
+    .filter(f => f.startsWith('week-') && f.endsWith('.json'));
 
-  return files.map(file => {
-    const filepath = path.join(dataDir, file);
-    return JSON.parse(fs.readFileSync(filepath, 'utf8'));
-  });
+  // Read and parse all week files
+  const weeklyData = [];
+  for (const file of files) {
+    try {
+      const filepath = path.join(dataDir, file);
+      const weekData = JSON.parse(fs.readFileSync(filepath, 'utf8'));
+      
+      // Validate week data structure
+      if (!weekData.weekNumber || !weekData.year || !weekData.trades) {
+        console.warn(`⚠️  Skipping invalid week file: ${file}`);
+        continue;
+      }
+      
+      weeklyData.push(weekData);
+    } catch (error) {
+      console.error(`❌ Error reading ${file}:`, error.message);
+      continue;
+    }
+  }
+
+  // Sort by week number to ensure correct ordering
+  weeklyData.sort((a, b) => a.weekNumber - b.weekNumber);
+
+  return weeklyData;
 }
 
 /**
@@ -244,6 +263,7 @@ function main() {
   }
 
   console.log(`📁 Found ${weeklyData.length} weeks of data`);
+  console.log(`   Weeks: ${weeklyData.map(w => `Week ${w.weekNumber}`).join(', ')}`);
 
   // Create aggregations
   const dailyIndex = createDailyIndex(weeklyData);
