@@ -1,11 +1,13 @@
-# Sync Payouts to Supabase (Real-time)
+# Sync Payouts and Traders to Supabase (Real-time)
 #
-# Runs every 15 minutes to fetch latest payouts from Arbiscan
-# and update Supabase `recent_payouts` table.
+# Runs every 30 minutes to fetch latest data from Arbiscan
+# and update Supabase tables:
+# - `recent_payouts` (prop firm payouts)
+# - `trader_records` (trader transaction stats)
 #
 # This replaces the Vercel cron job (which only runs daily on Hobby plan).
 
-name: Sync Payouts (Real-time)
+name: Sync Data (Real-time)
 
 on:
   schedule:
@@ -16,7 +18,7 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -31,12 +33,19 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Run sync script
+      - name: Sync prop firm payouts
         env:
           ARBISCAN_API_KEY: ${{ secrets.ARBISCAN_API_KEY }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/sync-to-supabase.js
+
+      - name: Sync trader records
+        env:
+          ARBISCAN_API_KEY: ${{ secrets.ARBISCAN_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/sync-traders-to-supabase.js
 
       - name: Log result
         run: echo "Sync completed at $(date -u)"

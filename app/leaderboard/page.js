@@ -1,58 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import PropProofLayout from "@/components/PropProofLayout";
-
-// Mock data for demonstration
-const MOCK_TRADERS = [
-  {
-    id: 1,
-    displayName: "The Funded Lady",
-    handle: "thefundedlady",
-    avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=128&h=128&fit=crop",
-    totalVerifiedPayout: 215000,
-    last30DaysPayout: 22000,
-  },
-  {
-    id: 2,
-    displayName: "Andrew Trader",
-    handle: "andrewfx",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=128&h=128&fit=crop",
-    totalVerifiedPayout: 145200,
-    last30DaysPayout: 12500,
-  },
-  {
-    id: 3,
-    displayName: "Skalp Master",
-    handle: "skalp_master",
-    avatarUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=128&h=128&fit=crop",
-    totalVerifiedPayout: 89000,
-    last30DaysPayout: 4500,
-  },
-  {
-    id: 4,
-    displayName: "Pip Crusher",
-    handle: "pipcrusher",
-    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=128&h=128&fit=crop",
-    totalVerifiedPayout: 67500,
-    last30DaysPayout: 8200,
-  },
-  {
-    id: 5,
-    displayName: "Prop Hunter",
-    handle: "prophunter",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=128&h=128&fit=crop",
-    totalVerifiedPayout: 42000,
-    last30DaysPayout: 0,
-  },
-];
 
 const LeaderboardPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [traders, setTraders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredTraders = MOCK_TRADERS
+  // Fetch traders from API (now includes cached stats)
+  useEffect(() => {
+    const fetchTraders = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/leaderboard");
+        
+        if (!response.ok) {
+          console.error("Failed to fetch leaderboard");
+          setTraders([]);
+          return;
+        }
+
+        const data = await response.json();
+        
+        // API now returns traders with cached stats already included
+        // Add avatar URLs
+        const tradersWithAvatars = (data.traders || []).map((trader) => ({
+          ...trader,
+          avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(trader.displayName)}&background=635BFF&color=fff&size=128&bold=true`,
+        }));
+        
+        setTraders(tradersWithAvatars);
+      } catch (error) {
+        console.error("Error fetching leaderboard:", error);
+        setTraders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTraders();
+  }, []);
+
+  // Calculate aggregate stats for sidebar
+  const aggregateStats = useMemo(() => {
+    const totalVerified = traders.reduce(
+      (sum, t) => sum + (t.totalVerifiedPayout || 0),
+      0
+    );
+    const verifiedTraders = traders.filter(t => (t.totalVerifiedPayout || 0) > 0).length;
+    
+    return {
+      totalVerifiedValue: totalVerified,
+      verifiedTraders,
+    };
+  }, [traders]);
+
+  const filteredTraders = traders
     .filter(
       (t) =>
         t.handle.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -133,7 +138,23 @@ const LeaderboardPage = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredTraders.map((trader, idx) => (
+                  {loading ? (
+                    // Loading state
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i}>
+                        <td className="px-6 py-6" colSpan={5}>
+                          <div className="h-4 bg-gray-100 rounded animate-pulse"></div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : filteredTraders.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-20 text-center text-gray-400">
+                        {searchTerm ? "No traders found matching your search." : "No traders found. Be the first to join the leaderboard!"}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredTraders.map((trader, idx) => (
                     <tr key={trader.id} className="hover:bg-gray-50/80 transition-colors group">
                       <td className="px-6 py-6">
                         <span
@@ -146,13 +167,22 @@ const LeaderboardPage = () => {
                       </td>
                       <td className="px-6 py-6">
                         <div className="flex items-center gap-3">
-                          <Image
+                          <img
                             src={trader.avatarUrl}
                             alt={trader.displayName}
-                            width={40}
-                            height={40}
                             className="w-10 h-10 rounded-xl bg-gray-100 object-cover"
+                            onError={(e) => {
+                              // Fallback to initials if image fails
+                              e.target.style.display = 'none';
+                              const fallback = e.target.nextElementSibling;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
                           />
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center hidden">
+                            <span className="text-sm font-bold text-white">
+                              {trader.displayName.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
                           <div>
                             <div className="font-bold flex items-center gap-1 text-sm">
                               {trader.displayName}
@@ -176,10 +206,10 @@ const LeaderboardPage = () => {
                       <td className="px-6 py-6 text-right">
                         <div
                           className={`text-sm font-semibold flex items-center justify-end gap-1 ${
-                            trader.last30DaysPayout > 0 ? "text-green-600" : "text-gray-400"
+                            (trader.last30DaysPayout || 0) > 0 ? "text-green-600" : "text-gray-400"
                           }`}
                         >
-                          {trader.last30DaysPayout > 0 && (
+                          {(trader.last30DaysPayout || 0) > 0 && (
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path
                                 strokeLinecap="round"
@@ -189,11 +219,11 @@ const LeaderboardPage = () => {
                               />
                             </svg>
                           )}
-                          ${trader.last30DaysPayout.toLocaleString()}
+                          ${(trader.last30DaysPayout || 0).toLocaleString()}
                         </div>
                       </td>
                       <td className="px-6 py-6 text-right font-bold text-base">
-                        ${trader.totalVerifiedPayout.toLocaleString()}
+                        ${(trader.totalVerifiedPayout || 0).toLocaleString()}
                       </td>
                       <td className="px-6 py-6">
                         <div className="flex justify-center">
@@ -214,13 +244,7 @@ const LeaderboardPage = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
-                  {filteredTraders.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-20 text-center text-gray-400">
-                        No traders found matching your search.
-                      </td>
-                    </tr>
+                    ))
                   )}
                 </tbody>
               </table>
@@ -247,7 +271,9 @@ const LeaderboardPage = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center text-xs border-b border-white/10 pb-2">
                 <span className="text-gray-400">Total Verified Value</span>
-                <span className="font-bold">$12.4M</span>
+                <span className="font-bold">
+                  {loading ? "..." : `$${(aggregateStats.totalVerifiedValue / 1000000).toFixed(1)}M`}
+                </span>
               </div>
               <div className="flex justify-between items-center text-xs border-b border-white/10 pb-2">
                 <span className="text-gray-400">Active Prop Firms</span>
@@ -255,7 +281,9 @@ const LeaderboardPage = () => {
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-gray-400">Verified Traders</span>
-                <span className="font-bold">1,842</span>
+                <span className="font-bold">
+                  {loading ? "..." : aggregateStats.verifiedTraders.toLocaleString()}
+                </span>
               </div>
             </div>
           </div>
@@ -263,15 +291,45 @@ const LeaderboardPage = () => {
           <div className="p-6 border border-gray-100 rounded-2xl bg-gray-50/50">
             <h4 className="font-bold mb-3 text-sm">Recently Verified</h4>
             <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-200"></div>
-                  <div>
-                    <div className="text-xs font-bold">Trader {i}</div>
-                    <div className="text-[10px] text-gray-400">Just verified $2.4k payout</div>
-                  </div>
+              {loading ? (
+                <div className="text-center py-4">
+                  <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-gray-300 border-r-transparent"></div>
                 </div>
-              ))}
+              ) : traders.length === 0 ? (
+                <div className="text-xs text-gray-400 text-center py-4">
+                  No verified traders yet
+                </div>
+              ) : (
+                traders
+                  .filter(t => (t.totalVerifiedPayout || 0) > 0)
+                  .slice(0, 3)
+                  .map((trader) => (
+                    <div key={trader.id} className="flex items-center gap-3">
+                      <img
+                        src={trader.avatarUrl}
+                        alt={trader.displayName}
+                        className="w-8 h-8 rounded-full object-cover"
+                        onError={(e) => {
+                          // Fallback to initials if image fails
+                          e.target.style.display = 'none';
+                          const fallback = e.target.nextElementSibling;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center hidden">
+                        <span className="text-xs font-bold text-white">
+                          {trader.displayName.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">{trader.displayName}</div>
+                        <div className="text-[10px] text-gray-400">
+                          ${((trader.totalVerifiedPayout || 0) / 1000).toFixed(1)}k verified
+                        </div>
+                      </div>
+                    </div>
+                  ))
+              )}
             </div>
           </div>
         </div>
