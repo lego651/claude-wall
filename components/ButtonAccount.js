@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { Popover, Transition } from "@headlessui/react";
+import Link from "next/link";
 import { createClient } from "@/libs/supabase/client";
 import apiClient from "@/libs/api";
 
@@ -105,6 +106,24 @@ const ButtonAccount = () => {
 						<Popover.Panel className="absolute left-0 z-10 mt-3 w-screen max-w-[16rem] transform">
 							<div className="overflow-hidden rounded-xl shadow-xl ring-1 ring-base-content/10 bg-base-100 p-1">
 								<div className="space-y-0.5 text-sm">
+									<Link
+										href="/settings"
+										className="flex items-center gap-2 hover:bg-base-300 duration-200 py-1.5 px-4 w-full rounded-lg font-medium"
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											viewBox="0 0 20 20"
+											fill="currentColor"
+											className="w-5 h-5"
+										>
+											<path
+												fillRule="evenodd"
+												d="M9.504 1.132a1 1 0 01.992 0l1.75 1a1 1 0 11-.992 1.736L10 3.152l-1.254.716a1 1 0 11-.992-1.736l1.75-1zM5.618 4.504a1 1 0 01-.372 1.364L5.016 6l.23.132a1 1 0 11-.992 1.736L3 7.723V8a1 1 0 01-2 0V6a.996.996 0 01.52-.878l1.734-.99a1 1 0 011.364.372zm8.764 0a1 1 0 011.364-.372l1.734.99A.996.996 0 0119 6v2a1 1 0 11-2 0v-.277l-1.254.145a1 1 0 11-.992-1.736L14.984 6l-.23-.132a1 1 0 01-.372-1.364zm-7 4a1 1 0 011.364-.372L10 8.848l1.254-.716a1 1 0 11.992 1.736L11 10.723V12a1 1 0 11-2 0v-1.277l-1.246-.855a1 1 0 01-.372-1.364zm8.764 0a1 1 0 011.364-.372l1.734.99a.996.996 0 01.52.878v2a1 1 0 11-2 0v-.723l-1.254.145a1 1 0 11-.992-1.736l1.23-.132-.23-.132a1 1 0 01-.372-1.364zm-3.528 3.504a1 1 0 01.992 0l1.75 1a1 1 0 11-.992 1.736l-1.75-1a1 1 0 01-.992-1.736zm-2.256 0a1 1 0 00-.992 1.736l1.75 1a1 1 0 11.992-1.736l-1.75-1zm8.764 0a1 1 0 01.992 0l1.75 1a1 1 0 11-.992 1.736l-1.75-1a1 1 0 01-.992-1.736zm-5.264 0a1 1 0 00-.992 1.736l.75.43a1 1 0 11-.992 1.736l-.75-.43a1 1 0 01-.992-1.736z"
+												clipRule="evenodd"
+											/>
+										</svg>
+										Settings
+									</Link>
 									<button
 										className="flex items-center gap-2 hover:bg-base-300 duration-200 py-1.5 px-4 w-full rounded-lg font-medium"
 										onClick={handleBilling}

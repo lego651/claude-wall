@@ -48,6 +48,10 @@ export interface AppConfig {
 export interface Profile {
   id: string;
   email: string;
+  twitter?: string;
+  instagram?: string;
+  youtube?: string;
+  wallet_address?: string;
   customer_id?: string;
   price_id?: string;
   has_access?: boolean;
