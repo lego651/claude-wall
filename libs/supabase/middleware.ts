@@ -42,5 +42,8 @@ export async function updateSession(request: NextRequest) {
   // refreshing the auth token
   await supabase.auth.getUser();
 
+  // Add pathname to headers for use in layouts (e.g., admin layout protection)
+  supabaseResponse.headers.set("x-pathname", pathname);
+
   return supabaseResponse;
 }

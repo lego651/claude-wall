@@ -34,10 +34,29 @@ const PropProofLayout = ({ children }) => {
     loadUser();
   }, []);
 
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Logout error:", error);
+      }
+      
+      // Clear local state
+      setUser(null);
+      setProfile(null);
+      
+      // Force a full page reload to clear all state and cookies
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Still redirect even if there's an error
+      window.location.href = "/";
+    }
   };
 
   // Always use common nav items
