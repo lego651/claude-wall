@@ -28,10 +28,13 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // Ensure we're using the current origin (localhost in dev, production in prod)
+      // IMPORTANT: Always use window.location.origin to detect current environment
+      // This ensures localhost uses localhost and production uses production URL
+      // Supabase Site URL should be set to PRODUCTION, but we always explicitly pass redirectTo
       const currentOrigin = window.location.origin;
       
-      // Include pending wallet address in redirect URL if it exists
+      // Build redirect URL - must match one of the whitelisted URLs in Supabase
+      // Both http://localhost:3000/api/auth/callback and production URL must be whitelisted
       let redirectURL = `${currentOrigin}/api/auth/callback`;
       
       // Store wallet in sessionStorage as backup (OAuth providers may strip query params)
