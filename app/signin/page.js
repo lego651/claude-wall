@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/libs/supabase/client";
 import config from "@/config";
 
@@ -10,6 +10,17 @@ import config from "@/config";
 export default function Login() {
   const supabase = createClient();
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingWallet, setPendingWallet] = useState(null);
+
+  useEffect(() => {
+    // Check if there's a pending wallet address from the connect-wallet flow
+    if (typeof window !== "undefined") {
+      const storedWallet = sessionStorage.getItem("pending_wallet_address");
+      if (storedWallet) {
+        setPendingWallet(storedWallet);
+      }
+    }
+  }, []);
 
   const handleGoogleSignIn = async (e) => {
     e?.preventDefault();
@@ -17,16 +28,52 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const redirectURL = window.location.origin + "/api/auth/callback";
+      // Ensure we're using the current origin (localhost in dev, production in prod)
+      const currentOrigin = window.location.origin;
+      
+      // Include pending wallet address in redirect URL if it exists
+      let redirectURL = `${currentOrigin}/api/auth/callback`;
+      
+      // Store wallet in sessionStorage as backup (OAuth providers may strip query params)
+      if (pendingWallet) {
+        // Store in sessionStorage as backup
+        sessionStorage.setItem("pending_wallet_address", pendingWallet);
+        redirectURL += `?wallet=${encodeURIComponent(pendingWallet)}`;
+      }
 
-      await supabase.auth.signInWithOAuth({
+      // Log for debugging (always log in development, check origin for localhost)
+      const isLocalhost = currentOrigin.includes("localhost") || currentOrigin.includes("127.0.0.1");
+      if (isLocalhost) {
+        console.log("🔐 OAuth redirect URL:", redirectURL);
+        console.log("📍 Current origin:", currentOrigin);
+        console.log("💼 Pending wallet:", pendingWallet || "none");
+        console.log("💡 If you're redirected to production, check Supabase Dashboard → Authentication → URL Configuration");
+        console.log("📖 See OAUTH_SETUP.md for setup instructions");
+      }
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: redirectURL,
+          // Pass wallet in queryParams which Supabase preserves
+          queryParams: pendingWallet ? {
+            wallet: pendingWallet,
+          } : {},
         },
       });
+
+      if (error) {
+        console.error("❌ OAuth error:", error);
+        const errorMessage = isLocalhost
+          ? `OAuth error: ${error.message}\n\nMake sure ${currentOrigin}/api/auth/callback is whitelisted in your Supabase project settings.\n\nSee OAUTH_SETUP.md for details.`
+          : `OAuth error: ${error.message}`;
+        alert(errorMessage);
+      } else if (isLocalhost) {
+        console.log("✅ OAuth initiated:", data);
+      }
     } catch (error) {
       console.error("Error signing in with Google:", error);
+      alert(`Sign-in error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -73,6 +120,38 @@ export default function Login() {
           Verify your email to sync your trading history.
         </p>
 
+        {/* Show pending wallet address if exists */}
+        {pendingWallet && (
+          <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+            <div className="flex items-start gap-3">
+              <svg
+                className="w-5 h-5 text-purple-600 mt-0.5 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-purple-900 mb-1">
+                  Wallet address ready to link
+                </p>
+                <p className="text-xs text-purple-700 font-mono break-all">
+                  {pendingWallet}
+                </p>
+                <p className="text-xs text-purple-600 mt-2">
+                  This wallet will be linked to your account after sign-in.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Google Sign In Button */}
         <button
           className="btn btn-block btn-outline border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 h-auto"
@@ -113,7 +192,7 @@ export default function Login() {
         {/* Change onboarding path link */}
         <div className="mt-6 text-center">
           <Link
-            href="/"
+            href={pendingWallet ? "/connect-wallet" : "/connect-wallet"}
             className="text-sm text-gray-500 hover:text-gray-700 inline-flex items-center gap-1"
           >
             <svg

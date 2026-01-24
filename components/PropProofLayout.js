@@ -61,9 +61,15 @@ const PropProofLayout = ({ children }) => {
             >
               X Community
             </a>
-            <button className="text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm" style={themeStyles.button} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = THEME.primaryHover} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = THEME.primary}>
+            <Link 
+              href="/connect-wallet"
+              className="text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm" 
+              style={themeStyles.button} 
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = THEME.primaryHover} 
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = THEME.primary}
+            >
               Connect Wallet
-            </button>
+            </Link>
           </div>
         </div>
       </nav>
