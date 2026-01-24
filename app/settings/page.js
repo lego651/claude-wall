@@ -22,6 +22,10 @@ export default function SettingsPage() {
   
   // Wallet
   const [walletAddress, setWalletAddress] = useState("");
+  const [newWalletAddress, setNewWalletAddress] = useState("");
+  const [isValidatingWallet, setIsValidatingWallet] = useState(false);
+  const [walletError, setWalletError] = useState("");
+  const [isDeletingWallet, setIsDeletingWallet] = useState(false);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -70,6 +74,7 @@ export default function SettingsPage() {
           setInstagram(profile.instagram || "");
           setYoutube(profile.youtube || "");
           setWalletAddress(profile.wallet_address || "");
+          setNewWalletAddress(""); // Reset new wallet input
         }
       } catch (error) {
         console.error("Error loading user data:", error);
@@ -92,7 +97,7 @@ export default function SettingsPage() {
         twitter,
         instagram,
         youtube,
-        wallet_address: walletAddress,
+        // Don't update wallet_address here - use separate handlers
       });
 
       if (error) {
@@ -105,6 +110,98 @@ export default function SettingsPage() {
       toast.error("Failed to save profile");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleLinkNewWallet = async () => {
+    if (!user || !newWalletAddress.trim()) return;
+
+    setIsValidatingWallet(true);
+    setWalletError("");
+
+    try {
+      // Validate wallet first
+      const validateResponse = await fetch("/api/wallet/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          wallet_address: newWalletAddress.trim(),
+          current_user_id: user.id 
+        }),
+      });
+
+      const validateData = await validateResponse.json();
+
+      if (!validateResponse.ok || !validateData.valid) {
+        if (validateData.reason === "prop_firm") {
+          setWalletError("This wallet address belongs to a prop firm and cannot be linked.");
+        } else if (validateData.reason === "already_used") {
+          setWalletError("This wallet address is already linked to another account.");
+        } else {
+          setWalletError(validateData.error || "This wallet address cannot be used.");
+        }
+        setIsValidatingWallet(false);
+        return;
+      }
+
+      // Link the wallet
+      const linkResponse = await fetch("/api/user/link-wallet", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ wallet_address: newWalletAddress.trim() }),
+      });
+
+      const linkData = await linkResponse.json();
+
+      if (!linkResponse.ok) {
+        throw new Error(linkData.error || "Failed to link wallet");
+      }
+
+      // Update local state
+      setWalletAddress(newWalletAddress.trim());
+      setNewWalletAddress("");
+      toast.success("Wallet linked successfully!");
+    } catch (error) {
+      console.error("Error linking wallet:", error);
+      setWalletError(error.message || "Failed to link wallet. Please try again.");
+    } finally {
+      setIsValidatingWallet(false);
+    }
+  };
+
+  const handleDeleteWallet = async () => {
+    if (!user || !walletAddress) return;
+
+    if (!confirm("Are you sure you want to remove your wallet address? This will disconnect your wallet from your account.")) {
+      return;
+    }
+
+    setIsDeletingWallet(true);
+    setWalletError("");
+
+    try {
+      const { error } = await apiClient.post("/user/profile", {
+        twitter,
+        instagram,
+        youtube,
+        wallet_address: null, // Set to null to delete
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setWalletAddress("");
+      toast.success("Wallet address removed successfully!");
+    } catch (error) {
+      console.error("Error deleting wallet:", error);
+      toast.error("Failed to remove wallet address");
+    } finally {
+      setIsDeletingWallet(false);
     }
   };
 
@@ -288,38 +385,72 @@ export default function SettingsPage() {
             <h2 className="text-xl font-bold">Wallet Connection</h2>
           </div>
 
-          <p className="text-gray-600 mb-4">
-            Connect your wallet address to sync your trading history and verify payouts.
+          <p className="text-gray-600 mb-6">
+            Connect your wallet address to sync your trading history and verify payouts. Each account can only have one wallet address.
           </p>
 
+          {/* Current Wallet */}
+          {walletAddress && (
+            <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700 mb-1">Current Wallet</p>
+                  <p className="text-sm font-mono text-gray-900 break-all">{walletAddress}</p>
+                </div>
+                <button
+                  onClick={handleDeleteWallet}
+                  disabled={isDeletingWallet}
+                  className="btn btn-sm btn-outline btn-error ml-4 shrink-0"
+                >
+                  {isDeletingWallet ? (
+                    <span className="loading loading-spinner loading-xs"></span>
+                  ) : (
+                    "Remove"
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Link New Wallet */}
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Wallet Address
+                {walletAddress ? "Link New Wallet Address" : "Wallet Address"}
               </label>
               <input
                 type="text"
-                placeholder="0x..."
-                value={walletAddress}
-                onChange={(e) => setWalletAddress(e.target.value)}
+                placeholder="0x... or solana address"
+                value={newWalletAddress}
+                onChange={(e) => {
+                  setNewWalletAddress(e.target.value);
+                  setWalletError("");
+                }}
                 className="input input-bordered w-full font-mono"
+                disabled={isValidatingWallet}
               />
+              {walletError && (
+                <p className="mt-2 text-sm text-red-600">{walletError}</p>
+              )}
               <p className="text-xs text-gray-500 mt-2">
-                We support Ethereum, Arbitrum, and Polygon wallets.
+                We support Ethereum, Arbitrum, Polygon, and Solana wallets. Prop firm addresses cannot be linked.
               </p>
             </div>
           </div>
 
           <div className="flex gap-4 mt-6">
             <button
-              onClick={handleSaveProfile}
-              disabled={isSaving}
+              onClick={handleLinkNewWallet}
+              disabled={isValidatingWallet || !newWalletAddress.trim()}
               className="btn btn-primary"
             >
-              {isSaving ? (
-                <span className="loading loading-spinner loading-sm"></span>
+              {isValidatingWallet ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  Validating...
+                </>
               ) : (
-                "Save Wallet"
+                walletAddress ? "Link New Wallet" : "Link Wallet"
               )}
             </button>
           </div>

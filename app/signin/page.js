@@ -14,12 +14,40 @@ export default function Login() {
 
   useEffect(() => {
     // Check if there's a pending wallet address from the connect-wallet flow
-    if (typeof window !== "undefined") {
+    // If found, validate it before allowing sign-in
+    const validateAndSetWallet = async () => {
+      if (typeof window === "undefined") return;
+
       const storedWallet = sessionStorage.getItem("pending_wallet_address");
       if (storedWallet) {
-        setPendingWallet(storedWallet);
+        // Validate the wallet before showing it on the page
+        try {
+          const response = await fetch("/api/wallet/validate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ wallet_address: storedWallet }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.valid) {
+            setPendingWallet(storedWallet);
+          } else {
+            // Wallet is invalid, remove it from sessionStorage
+            sessionStorage.removeItem("pending_wallet_address");
+            console.warn("Invalid wallet address removed from session:", data.error);
+          }
+        } catch (error) {
+          console.error("Error validating wallet:", error);
+          // On error, still show it but it will be validated again on sign-in
+          setPendingWallet(storedWallet);
+        }
       }
-    }
+    };
+
+    validateAndSetWallet();
   }, []);
 
   const handleGoogleSignIn = async (e) => {
@@ -28,41 +56,87 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      // Validate wallet address if one is pending (double-check before sign-in)
+      if (pendingWallet) {
+        const validateResponse = await fetch("/api/wallet/validate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ wallet_address: pendingWallet }),
+        });
+
+        const validateData = await validateResponse.json();
+
+        if (!validateResponse.ok || !validateData.valid) {
+          // Wallet is invalid, remove it and show error
+          sessionStorage.removeItem("pending_wallet_address");
+          setPendingWallet(null);
+          
+          let errorMsg = "This wallet address cannot be used. ";
+          if (validateData.reason === "prop_firm") {
+            errorMsg = "This wallet address belongs to a prop firm and cannot be linked.";
+          } else if (validateData.reason === "already_used") {
+            errorMsg = "This wallet address is already linked to another account.";
+          } else if (validateData.reason === "format") {
+            errorMsg = "Invalid wallet address format.";
+          }
+          
+          alert(errorMsg + " Please go back and use a different address.");
+          setIsLoading(false);
+          return;
+        }
+      }
+
       // IMPORTANT: Always use window.location.origin to detect current environment
       // This ensures localhost uses localhost and production uses production URL
-      // Supabase Site URL should be set to PRODUCTION, but we always explicitly pass redirectTo
+      // DO NOT add query parameters to redirectURL - it must match the exact whitelisted URL
       const currentOrigin = window.location.origin;
       
-      // Build redirect URL - must match one of the whitelisted URLs in Supabase
-      // Both http://localhost:3000/api/auth/callback and production URL must be whitelisted
-      let redirectURL = `${currentOrigin}/api/auth/callback`;
+      // Build redirect URL - must match EXACTLY one of the whitelisted URLs in Supabase
+      // Query parameters in redirectURL can cause it to not match the whitelist
+      const redirectURL = `${currentOrigin}/api/auth/callback`;
       
-      // Store wallet in sessionStorage as backup (OAuth providers may strip query params)
+      // Store wallet in sessionStorage (OAuth providers may strip query params anyway)
       if (pendingWallet) {
-        // Store in sessionStorage as backup
         sessionStorage.setItem("pending_wallet_address", pendingWallet);
-        redirectURL += `?wallet=${encodeURIComponent(pendingWallet)}`;
       }
 
       // Log for debugging (always log in development, check origin for localhost)
       const isLocalhost = currentOrigin.includes("localhost") || currentOrigin.includes("127.0.0.1");
+      
+      // Always log redirect URL for debugging
+      console.log("🔐 OAuth Configuration:", {
+        redirectURL,
+        currentOrigin,
+        pendingWallet: pendingWallet || "none",
+        isLocalhost,
+      });
+      
       if (isLocalhost) {
-        console.log("🔐 OAuth redirect URL:", redirectURL);
-        console.log("📍 Current origin:", currentOrigin);
-        console.log("💼 Pending wallet:", pendingWallet || "none");
-        console.log("💡 If you're redirected to production, check Supabase Dashboard → Authentication → URL Configuration");
+        console.log("💡 If you're redirected to production, check:");
+        console.log("   1. Supabase Dashboard → Authentication → URL Configuration");
+        console.log("   2. Ensure 'http://localhost:3000/api/auth/callback' is in Redirect URLs");
+        console.log("   3. Site URL should be set to production: https://claude-wall.vercel.app");
         console.log("📖 See OAUTH_SETUP.md for setup instructions");
+      }
+
+      // Build OAuth options
+      const oauthOptions = {
+        redirectTo: redirectURL,
+      };
+
+      // Only add queryParams if there's a pending wallet
+      // Empty queryParams object might cause issues with redirect validation
+      if (pendingWallet) {
+        oauthOptions.queryParams = {
+          wallet: pendingWallet,
+        };
       }
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: {
-          redirectTo: redirectURL,
-          // Pass wallet in queryParams which Supabase preserves
-          queryParams: pendingWallet ? {
-            wallet: pendingWallet,
-          } : {},
-        },
+        options: oauthOptions,
       });
 
       if (error) {

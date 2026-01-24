@@ -1,18 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/libs/supabase/client";
 import PropProofLayout from "@/components/PropProofLayout";
 import config from "@/config";
 
 // Connect Wallet page - First step in the two-route sign-in flow
 // Users enter their wallet address, then proceed to email sign-in
+// ONLY available to users who are NOT signed in
 export default function ConnectWalletPage() {
   const [walletAddress, setWalletAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const supabase = createClient();
+
+  // Check if user is already signed in - redirect if they are
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        // User is signed in, redirect to settings page
+        router.push("/settings");
+      }
+    };
+
+    checkAuth();
+  }, [router, supabase]);
 
   const validateWalletAddress = (address) => {
     // Support Ethereum, Arbitrum, Polygon (0x... format) and Solana addresses
@@ -33,23 +53,63 @@ export default function ConnectWalletPage() {
 
     const trimmedAddress = walletAddress.trim();
 
+    // Basic format validation
     if (!validateWalletAddress(trimmedAddress)) {
       setError("Invalid wallet address format. Please enter a valid Ethereum (0x...) or Solana address.");
       return;
     }
 
-    setIsLoading(true);
+    setIsValidating(true);
+    setError("");
 
     try {
-      // Store wallet address in sessionStorage for the sign-in flow
+      // Validate wallet address (check if used, check if prop firm address)
+      const response = await fetch("/api/wallet/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ wallet_address: trimmedAddress }),
+      });
+
+      const data = await response.json();
+
+      console.log("Wallet validation response:", {
+        ok: response.ok,
+        status: response.status,
+        data,
+      });
+
+      if (!response.ok || !data.valid) {
+        // Handle specific error reasons
+        if (data.reason === "prop_firm") {
+          setError("This wallet address belongs to a prop firm and cannot be linked to a user account.");
+        } else if (data.reason === "already_used") {
+          setError("This wallet address is already being used by another account. Please enter a different wallet address.");
+        } else if (data.reason === "format") {
+          setError("Invalid wallet address format. Please enter a valid Ethereum (0x...) or Solana address.");
+        } else {
+          // Check if the error message indicates the wallet is already used
+          const errorMsg = data.error || "";
+          if (errorMsg.toLowerCase().includes("already") || errorMsg.toLowerCase().includes("linked")) {
+            setError("This wallet address is already being used by another account. Please enter a different wallet address.");
+          } else {
+            setError(data.error || "This wallet address cannot be used. Please try a different address.");
+          }
+        }
+        setIsValidating(false);
+        return;
+      }
+
+      // Wallet is valid, store in sessionStorage for the sign-in flow
       sessionStorage.setItem("pending_wallet_address", trimmedAddress);
       
       // Redirect to sign-in page
       router.push(config.auth.loginUrl);
     } catch (err) {
-      console.error("Error storing wallet address:", err);
-      setError("Failed to save wallet address. Please try again.");
-      setIsLoading(false);
+      console.error("Error validating wallet address:", err);
+      setError("Unable to validate wallet address. Please check your connection and try again.");
+      setIsValidating(false);
     }
   };
 
@@ -114,10 +174,13 @@ export default function ConnectWalletPage() {
           <button
             className="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleLinkWallet}
-            disabled={isLoading || !walletAddress.trim()}
+            disabled={isLoading || isValidating || !walletAddress.trim()}
           >
-            {isLoading ? (
-              <span className="loading loading-spinner loading-sm"></span>
+            {isLoading || isValidating ? (
+              <>
+                <span className="loading loading-spinner loading-sm"></span>
+                {isValidating ? "Validating..." : "Processing..."}
+              </>
             ) : (
               <>
                 Link Wallet

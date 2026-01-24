@@ -22,22 +22,63 @@ export async function POST(req) {
       );
     }
 
-    // Validate wallet address format (Ethereum or Solana)
+    const trimmedAddress = wallet_address.trim().toLowerCase();
+
+    // Validate wallet address using the validation endpoint logic
+    // 1. Check format
     const ethereumPattern = /^0x[a-fA-F0-9]{40}$/;
     const solanaPattern = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
     
-    if (!ethereumPattern.test(wallet_address) && !solanaPattern.test(wallet_address)) {
+    if (!ethereumPattern.test(trimmedAddress) && !solanaPattern.test(trimmedAddress)) {
       return NextResponse.json(
         { error: "Invalid wallet address format" },
         { status: 400 }
       );
     }
 
-    // Update profile with wallet address
+    // 2. Check if it's a prop firm address
+    const fs = require("fs");
+    const path = require("path");
+    const propFirmsPath = path.join(process.cwd(), "data", "propfirms.json");
+    const propFirmsData = JSON.parse(fs.readFileSync(propFirmsPath, "utf8"));
+    const allPropFirmAddresses = propFirmsData.firms.flatMap(firm => 
+      firm.addresses.map(addr => addr.toLowerCase())
+    );
+
+    if (allPropFirmAddresses.includes(trimmedAddress)) {
+      return NextResponse.json(
+        { error: "This wallet address belongs to a prop firm and cannot be linked" },
+        { status: 400 }
+      );
+    }
+
+    // 3. Check if it's already used by another user
+    const { data: existingProfile, error: checkError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("wallet_address", trimmedAddress)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Error checking wallet address:", checkError);
+      return NextResponse.json(
+        { error: "Failed to validate wallet address" },
+        { status: 500 }
+      );
+    }
+
+    if (existingProfile && existingProfile.id !== user.id) {
+      return NextResponse.json(
+        { error: "This wallet address is already linked to another account" },
+        { status: 400 }
+      );
+    }
+
+    // Update profile with wallet address (use trimmed lowercase version)
     const { data, error } = await supabase
       .from("profiles")
       .update({
-        wallet_address: wallet_address,
+        wallet_address: trimmedAddress,
         updated_at: new Date().toISOString(),
       })
       .eq("id", user.id)
@@ -54,7 +95,7 @@ export async function POST(req) {
           .insert({
             id: user.id,
             email: user.email,
-            wallet_address: wallet_address,
+            wallet_address: trimmedAddress,
           })
           .select()
           .single();
