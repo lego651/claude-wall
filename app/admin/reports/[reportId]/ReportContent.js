@@ -21,6 +21,19 @@ export default function ReportContent({
   const strategyMaxR = Math.max(...strategyData.map(s => Math.abs(s.totalR)), 1);
   const topStrategy = strategyData.reduce((prev, current) => (prev.totalR > current.totalR) ? prev : current);
 
+  // Helper function to convert strategy name to ID
+  const getStrategyId = (name) => {
+    const nameMap = {
+      'AS 1': 'AS_1',
+      'AS 2': 'AS_2',
+      'NQI': 'NQI',
+      'EU': 'EU',
+      'GOLD 1': 'GOLD_1',
+      'GOLD 2': 'GOLD_2',
+    };
+    return nameMap[name] || name.replace(/\s+/g, '_').toUpperCase();
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-6 pb-24">
       {/* Breadcrumb & Navigation */}
@@ -63,15 +76,17 @@ export default function ReportContent({
 
                 {/* Top Strategy Highlight */}
                 {topStrategy && (
-                  <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl px-5 py-3 flex items-center gap-3 mb-8 w-fit">
-                    <span className="text-xl">🥇</span>
-                    <div>
-                      <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest block">TOP STRATEGY</span>
-                      <div className="text-sm font-black text-slate-900">
-                        {topStrategy.name} <span className="text-emerald-500 ml-1">+{topStrategy.totalR.toFixed(2)}R</span>
+                  <Link href={`/admin/strategies/${getStrategyId(topStrategy.name)}`}>
+                    <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl px-5 py-3 flex items-center gap-3 mb-8 w-fit hover:bg-emerald-100 hover:border-emerald-200 transition-colors cursor-pointer">
+                      <span className="text-xl">🥇</span>
+                      <div>
+                        <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest block">TOP STRATEGY</span>
+                        <div className="text-sm font-black text-slate-900">
+                          {topStrategy.name} <span className="text-emerald-500 ml-1">+{topStrategy.totalR.toFixed(2)}R</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 )}
 
                 <div className="grid grid-cols-2 gap-4 mb-8">
@@ -158,9 +173,10 @@ export default function ReportContent({
             
             <div className="space-y-6">
               {strategyData.map((strat, i) => (
-                <div 
+                <Link 
                   key={i} 
-                  className="group"
+                  href={`/admin/strategies/${getStrategyId(strat.name)}`}
+                  className="block group"
                   onMouseEnter={(e) => {
                     const h3 = e.currentTarget.querySelector('h3');
                     if (h3) h3.style.color = '#635BFF';
@@ -177,7 +193,7 @@ export default function ReportContent({
                     </div>
                     <span className="text-sm font-black text-emerald-500">+{strat.totalR.toFixed(2)}R</span>
                   </div>
-                  <div className="h-4 bg-slate-50 rounded-lg overflow-hidden relative group-hover:bg-slate-100 transition-colors">
+                  <div className="h-4 bg-slate-50 rounded-lg overflow-hidden relative group-hover:bg-slate-100 transition-colors cursor-pointer">
                     <div 
                       className="h-full bg-slate-600 transition-all duration-1000 group-hover:bg-slate-500 rounded-r-md relative"
                       style={{ width: `${(strat.totalR / strategyMaxR) * 100}%` }}
@@ -185,7 +201,7 @@ export default function ReportContent({
                        <div className="w-full h-full opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:4px_4px]" />
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </section>

@@ -59,9 +59,11 @@ function WeeklyStrategyCard({ strategy, weekData, weekSummary, maxR }) {
       </div>
       
       {/* Strategy name badge */}
-      <div className="bg-slate-600 text-white px-3 py-1.5 rounded-full text-xs font-semibold uppercase mb-2">
-        {strategy.name}
-      </div>
+      <Link href={`/admin/strategies/${strategy.id}`}>
+        <div className="bg-slate-600 text-white px-3 py-1.5 rounded-full text-xs font-semibold uppercase mb-2 hover:bg-slate-700 transition-colors cursor-pointer">
+          {strategy.name}
+        </div>
+      </Link>
       
       {strategyStats && (
         <>
@@ -315,19 +317,21 @@ export default function PortfolioPage() {
           </div>
 
           {!loading && lastWeek && (
-            <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-xl border border-slate-200 shadow-sm">
-              <div className="text-center">
-                <div className="text-slate-400 uppercase tracking-wider text-[10px] font-semibold mb-1">
-                  Reporting Period
+            <Link href={`/admin/reports/week-${String(lastWeek.weekNumber).padStart(2, '0')}-${lastWeek.year}`}>
+              <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer">
+                <div className="text-center">
+                  <div className="text-slate-400 uppercase tracking-wider text-[10px] font-semibold mb-1">
+                    Reporting Period
+                  </div>
+                  <div className="font-bold text-slate-900 text-sm whitespace-nowrap">
+                    Week {lastWeek.weekNumber} • {new Date(lastWeek.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(lastWeek.endDate).toLocaleDateString('en-US', { day: 'numeric' })}, {new Date(lastWeek.endDate).toLocaleDateString('en-US', { year: 'numeric' })}
+                  </div>
                 </div>
-                <div className="font-bold text-slate-900 text-sm whitespace-nowrap">
-                  Week {lastWeek.weekNumber} • {new Date(lastWeek.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(lastWeek.endDate).toLocaleDateString('en-US', { day: 'numeric' })}, {new Date(lastWeek.endDate).toLocaleDateString('en-US', { year: 'numeric' })}
-                </div>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#635BFF' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
               </div>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#635BFF' }}>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
+            </Link>
           )}
         </div>
       </div>
@@ -373,15 +377,17 @@ export default function PortfolioPage() {
                   const topStrategy = sortedWeeklyStrategies[0];
                   const topStrategyR = lastWeek[topStrategy.id] || 0;
                   return (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 flex items-center gap-3">
-                      <span className="text-xl">🥇</span>
-                      <div>
-                        <div className="text-[9px] font-black text-emerald-700 uppercase tracking-widest block">TOP PERFORMER</div>
-                        <div className="text-sm font-bold text-slate-900">
-                          {topStrategy.name} <span className="text-emerald-600 ml-1">+{topStrategyR.toFixed(2)}R</span>
+                    <Link href={`/admin/strategies/${topStrategy.id}`}>
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-emerald-100 hover:border-emerald-300 transition-colors cursor-pointer">
+                        <span className="text-xl">🥇</span>
+                        <div>
+                          <div className="text-[9px] font-black text-emerald-700 uppercase tracking-widest block">TOP PERFORMER</div>
+                          <div className="text-sm font-bold text-slate-900">
+                            {topStrategy.name} <span className="text-emerald-600 ml-1">+{topStrategyR.toFixed(2)}R</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })()}
               </div>
