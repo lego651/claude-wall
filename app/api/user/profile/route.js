@@ -13,7 +13,19 @@ export async function POST(req) {
     }
 
     const body = await req.json();
-    const { twitter, instagram, youtube, wallet_address } = body;
+    const { display_name, bio, handle, twitter, instagram, youtube, wallet_address } = body;
+
+    // Validate and normalize handle if provided
+    let normalizedHandle = null;
+    if (handle && handle.trim() !== "") {
+      normalizedHandle = handle.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+      if (normalizedHandle.length < 3) {
+        return NextResponse.json(
+          { error: "Handle must be at least 3 characters long" },
+          { status: 400 }
+        );
+      }
+    }
 
     // Validate wallet address format if provided (allow null for deletion)
     if (wallet_address !== null && wallet_address !== undefined && wallet_address !== "") {
@@ -33,6 +45,9 @@ export async function POST(req) {
     const profileData = {
       id: user.id,
       email: user.email,
+      display_name: display_name || null,
+      bio: bio || null,
+      handle: normalizedHandle,
       twitter: twitter || null,
       instagram: instagram || null,
       youtube: youtube || null,

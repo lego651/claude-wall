@@ -1,17 +1,54 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/libs/supabase/client";
 import { THEME, themeStyles } from "@/lib/theme";
+import config from "@/config";
 
 const PropProofLayout = ({ children }) => {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const loadUser = async () => {
+      const supabase = createClient();
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      setUser(currentUser);
+
+      if (currentUser) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", currentUser.id)
+          .single();
+        setProfile(profileData);
+      }
+      setLoading(false);
+    };
+
+    loadUser();
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+  };
+
+  // Always use common nav items
   const navItems = [
     { label: "Payouts", path: "/propfirms" },
     { label: "Traders", path: "/leaderboard" },
     { label: "Trading Study", path: "/study" },
   ];
+
+  const displayName = profile?.display_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
+  const accountType = profile?.has_access ? "Premium Account" : "Standard Account";
 
   return (
     <div className="min-h-screen bg-slate-200/60 text-gray-900 flex flex-col">
@@ -53,23 +90,56 @@ const PropProofLayout = ({ children }) => {
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            <a 
-              href="https://x.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              X Community
-            </a>
-            <Link 
-              href="/connect-wallet"
-              className="text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm" 
-              style={themeStyles.button} 
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = THEME.primaryHover} 
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = THEME.primary}
-            >
-              Connect Wallet
-            </Link>
+            {!loading && (
+              <>
+                {user ? (
+                  <>
+                    <Link 
+                      href="/dashboard" 
+                      className="hidden md:flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+                    >
+                      {user?.user_metadata?.avatar_url ? (
+                        <img
+                          src={user.user_metadata.avatar_url}
+                          alt={displayName}
+                          className="w-8 h-8 rounded-full"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                          <span className="text-sm font-bold text-white">
+                            {displayName.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-slate-900">{displayName}</div>
+                        <div className="text-xs text-slate-500">{accountType}</div>
+                      </div>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="text-sm text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <Link 
+                    href={config.auth.loginUrl}
+                    className="text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm" 
+                    style={themeStyles.button} 
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = THEME.primaryHover} 
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = THEME.primary}
+                  >
+                    Sign In
+                  </Link>
+                )}
+              </>
+            )}
           </div>
         </div>
       </nav>
