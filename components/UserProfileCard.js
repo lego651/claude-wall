@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 
 /**
@@ -17,29 +18,26 @@ export default function UserProfileCard({
   memberSince,
   trustScore = 98
 }) {
-  // Generate avatar fallback if no URL provided
-  const getAvatarFallback = () => {
-    if (avatarUrl) return avatarUrl;
-    const initials = displayName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
-    return `data:image/svg+xml,${encodeURIComponent(`<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg"><rect width="128" height="128" fill="#635BFF"/><text x="50%" y="50%" font-family="Arial" font-size="48" fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text></svg>`)}`;
-  };
+  const [imageError, setImageError] = useState(false);
+  const initials = displayName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
       <div className="flex flex-col items-center text-center">
         <div className="relative mb-6">
-          {avatarUrl ? (
+          {avatarUrl && !imageError ? (
             <Image
               src={avatarUrl}
               alt={displayName || "User"}
               width={128}
               height={128}
               className="w-28 h-28 rounded-3xl object-cover bg-slate-100 shadow-lg"
+              onError={() => setImageError(true)}
             />
           ) : (
             <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg">
               <span className="text-4xl font-bold text-white">
-                {displayName?.charAt(0)?.toUpperCase() || 'U'}
+                {initials}
               </span>
             </div>
           )}

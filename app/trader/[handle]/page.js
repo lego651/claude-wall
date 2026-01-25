@@ -1,9 +1,8 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import PropProofLayout from "@/components/PropProofLayout";
-import { MOCK_TRADERS } from "@/lib/constants";
 import { useTransactions } from "@/lib/hooks/useTransactions";
 import propfirmsData from "@/data/propfirms.json";
 import UserProfileCard from "@/components/UserProfileCard";
@@ -11,29 +10,53 @@ import ActiveLinksCard from "@/components/ActiveLinksCard";
 import MetricsCards from "@/components/MetricsCards";
 import MonthlyPayoutChart from "@/components/MonthlyPayoutChart";
 
-const TEST_WALLET = process.env.NEXT_PUBLIC_TEST_WALLET_ADDRESS;
-
 const ProfilePage = ({ params }) => {
   const { handle } = use(params);
-  const trader = MOCK_TRADERS.find((t) => t.handle === handle);
-  const { data, loading, error } = useTransactions(TEST_WALLET);
+  const [trader, setTrader] = useState(null);
+  const [traderLoading, setTraderLoading] = useState(true);
+  const [traderError, setTraderError] = useState(null);
+  
+  // Fetch trader data from API
+  useEffect(() => {
+    const fetchTrader = async () => {
+      try {
+        setTraderLoading(true);
+        setTraderError(null);
+        const response = await fetch(`/api/trader/${handle}`);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            setTraderError("not_found");
+          } else {
+            setTraderError("Failed to fetch trader");
+          }
+          setTrader(null);
+          return;
+        }
 
-  if (!trader) {
-    return (
-      <div className="min-h-screen bg-slate-200/60 flex items-center justify-center p-4 text-center">
-        <div>
-          <h1 className="text-4xl font-bold mb-4">Trader Not Found</h1>
-          <p className="text-gray-500 mb-8">This handle does not exist on PropProof.</p>
-          <Link href="/leaderboard" className="bg-black text-white px-6 py-3 rounded-xl font-bold">
-            Back to Leaderboard
-          </Link>
-        </div>
-      </div>
-    );
-  }
+        const data = await response.json();
+        setTrader(data.trader);
+      } catch (error) {
+        console.error("Error fetching trader:", error);
+        setTraderError("Failed to fetch trader");
+        setTrader(null);
+      } finally {
+        setTraderLoading(false);
+      }
+    };
 
+    if (handle) {
+      fetchTrader();
+    }
+  }, [handle]);
+
+  // Use trader's wallet address for transactions
+  // Must call hooks before any conditional returns
+  const walletAddress = trader?.walletAddress || null;
+  const { data, loading, error } = useTransactions(walletAddress);
 
   // Match transactions to verified firms
+  // Must call useMemo before conditional returns to follow Rules of Hooks
   const verifiedFirms = useMemo(() => {
     if (!data?.transactions || data.transactions.length === 0) {
       return [];
@@ -71,6 +94,33 @@ const ProfilePage = ({ params }) => {
     });
   }, [data?.transactions]);
 
+  // Loading state
+  if (traderLoading) {
+    return (
+      <div className="min-h-screen bg-slate-200/60 flex items-center justify-center p-4 text-center">
+        <div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading trader profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error or not found state
+  if (traderError || !trader) {
+    return (
+      <div className="min-h-screen bg-slate-200/60 flex items-center justify-center p-4 text-center">
+        <div>
+          <h1 className="text-4xl font-bold mb-4">Trader Not Found</h1>
+          <p className="text-gray-500 mb-8">This handle does not exist on PropProof.</p>
+          <Link href="/leaderboard" className="bg-black text-white px-6 py-3 rounded-xl font-bold">
+            Back to Leaderboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <PropProofLayout>
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-8">
@@ -95,11 +145,11 @@ const ProfilePage = ({ params }) => {
           <UserProfileCard
             displayName={trader.displayName}
             handle={trader.handle}
-            avatarUrl={trader.avatarUrl}
+            avatarUrl={`https://ui-avatars.com/api/?name=${encodeURIComponent(trader.displayName)}&background=635BFF&color=fff&size=128&bold=true`}
             bio={trader.bio}
             socialLinks={trader.socialLinks}
             payoutCount={trader.payoutCount}
-            memberSince="Dec 2023"
+            memberSince={trader.createdAt ? new Date(trader.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : "N/A"}
             trustScore={98}
           />
 
