@@ -2,12 +2,12 @@
   "firmId": "the5ers",
   "period": "2026-01",
   "timezone": "UTC",
-  "generatedAt": "2026-01-25T11:17:23.965Z",
+  "generatedAt": "2026-01-26T11:20:44.838Z",
   "summary": {
-    "totalPayouts": 3067504,
-    "payoutCount": 1371,
+    "totalPayouts": 3211075,
+    "payoutCount": 1427,
     "largestPayout": 35757,
-    "avgPayout": 2237
+    "avgPayout": 2250
   },
   "dailyBuckets": [
     {
@@ -152,13 +152,517 @@
     },
     {
       "date": "2026-01-25",
-      "total": 22600,
-      "rise": 22600,
+      "total": 166171,
+      "rise": 166171,
       "crypto": 0,
       "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0xd3af7449d8d820337045fea69229cba9f780c6dce7e18744cfcea788f3a39228",
+      "firm_id": "the5ers",
+      "amount": 1752.73,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:29:01.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xe3721bf43271bcd231f7740c9bcb7d115bdb7801"
+    },
+    {
+      "tx_hash": "0xb419765dc759040686c0ea7167d0bf0b2f421820a95bd5a0ca169a771bacceea",
+      "firm_id": "the5ers",
+      "amount": 4413.55,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:28:32.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xfb0a53e5d3b6142bac748171bdfed1b8e6df6bdf"
+    },
+    {
+      "tx_hash": "0x8ebc07597792160b16b024192fb100f75b04ac2583feb78a5eda7d9658fbfc28",
+      "firm_id": "the5ers",
+      "amount": 1248.79,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:28:14.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x8f6f50494cac3ea8ff41851f3dae64e318a50197"
+    },
+    {
+      "tx_hash": "0x4b422f1c7d6e872a9e529c94d1d60d635e4f0b7f0e4d9aaa3a3a3f72d4ee8ffc",
+      "firm_id": "the5ers",
+      "amount": 2677.64,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:27:27.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x617ce7ddf6b2af3dbc66eb717a3651661ee575d5"
+    },
+    {
+      "tx_hash": "0x37728b2f8a5e0c445c5233d22e8f5d5d2c7e83252067b9f81d72c83a225f917f",
+      "firm_id": "the5ers",
+      "amount": 7772.03,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:27:05.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x780482a2a3639e0778c69e0ab28bb97d23e98466"
+    },
+    {
+      "tx_hash": "0x647383ba51f33628e59987e141675db1acdc11029f8cdb44f9b0da4f1983b397",
+      "firm_id": "the5ers",
+      "amount": 1070.15,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:26:50.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x354352695c89df5ab98f5e0712fdcf4874a7178c"
+    },
+    {
+      "tx_hash": "0xfc792f6fe2dceb5ebf2f69a96b883e8936eda3497bcc49c32753be52716ec2bd",
+      "firm_id": "the5ers",
+      "amount": 2747.56,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:26:33.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xb3d4eb454de1ef296b475c6d6f81512c5116fa06"
+    },
+    {
+      "tx_hash": "0x7e9726cbc6095e4ceaf54411852e3981344e4db6c741672bee451823b5c26dea",
+      "firm_id": "the5ers",
+      "amount": 1928.11,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:25:59.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x20fb8ac8074892880e6b40cabe7e51b2a965c77b"
+    },
+    {
+      "tx_hash": "0xda0eaefa67ab094d710c6d6102f7af50f7d370b5a2b637ada4dde3ebc87adf64",
+      "firm_id": "the5ers",
+      "amount": 1148.27,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:25:40.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x82ccf623c443fcad641803cf44508afd4b55be38"
+    },
+    {
+      "tx_hash": "0x39346648a8a499ccf0d006eb62910b2155d07af4a8e186b0c1070e9109bb5d27",
+      "firm_id": "the5ers",
+      "amount": 2938.52,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:25:21.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x85df4fbd9cd71dcbc52ae954f126aeb3b5141450"
+    },
+    {
+      "tx_hash": "0x28cb10c0db4464dce83c19faa85cc3043e51d3347b82cc7e96c48261807dd885",
+      "firm_id": "the5ers",
+      "amount": 2215.5,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:25:02.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xa90518bbcceb9bec3b033635f90531f71482069a"
+    },
+    {
+      "tx_hash": "0xa2adf992fd0a189678154f7cf1f78ca7bbbf510b5088fc1d96287b700b99d116",
+      "firm_id": "the5ers",
+      "amount": 2385.84,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:24:41.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xbb2b1ec829bfe1a632ff3d8b4c5bff87ccdd5ed2"
+    },
+    {
+      "tx_hash": "0x97b1699daad9eeefd21a4dea71362cd2ee17977a4c6f5073cdbded36d6bc905f",
+      "firm_id": "the5ers",
+      "amount": 2833.97,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:24:22.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x352db75a3b99b129198fdb0cc9ef7673be1d5bca"
+    },
+    {
+      "tx_hash": "0xcaf9c2d04f598d64de13f230997c577a7b539d0f5c42d560aafefd3955f56d94",
+      "firm_id": "the5ers",
+      "amount": 5964.66,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:24:01.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x1d1ade15060d37e93df7ec338e4fcbaa914fbd49"
+    },
+    {
+      "tx_hash": "0xd25457ebbe6875af4424a406e6efb7f4c1c0c98f57987530e3ed831f94a40318",
+      "firm_id": "the5ers",
+      "amount": 4903.27,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:23:39.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x0fd94128d30b03cd168b57e9c30a959965e79414"
+    },
+    {
+      "tx_hash": "0xdd678b6376aa2a298ad89525bd524204b9c9583ec33a05f3a821a3c7f99b62f8",
+      "firm_id": "the5ers",
+      "amount": 4193.81,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:23:12.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x6bfee6ea662770e601992e3a6e9bd3ddd361e231"
+    },
+    {
+      "tx_hash": "0x180430e109a70470073a3408fe0098e1088f3d0a0682fb4b3f88b043d7733d8b",
+      "firm_id": "the5ers",
+      "amount": 4343.85,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:16:09.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x125bf07c876d66f320c052d23c9beba5085ffbe1"
+    },
+    {
+      "tx_hash": "0xf800bcdf6b703bb2386238a31b585c7cda14ef8d17eb62cdab88aa95d8f6e38a",
+      "firm_id": "the5ers",
+      "amount": 7142.53,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:13:34.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xfe93ce79802121ffa6ccaee264b9e10047131dbd"
+    },
+    {
+      "tx_hash": "0x85bd43a69b2c6e987da029cbacba545b6bec3c2384ca4f2080a61b3d36e45d06",
+      "firm_id": "the5ers",
+      "amount": 2277.28,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T15:12:44.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x7afe4ce149d5fd21dbad33097d5d05f99c1ccb84"
+    },
+    {
+      "tx_hash": "0xecc27f2ba5ce939d1ad616ca25988cb95bdd745cfd04a3c2372affb46e676492",
+      "firm_id": "the5ers",
+      "amount": 1089.89,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T13:01:32.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x7337bfddeffe291240f37d28fb08be197af2d063"
+    },
+    {
+      "tx_hash": "0xaa4ac2ad843105faec76bea81df3b9c96b2e70e71a63665566f9cbd6365a2a8c",
+      "firm_id": "the5ers",
+      "amount": 2336.5,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T13:00:51.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x3bb8e131890bc6d884285815c4119bc66ef5a1ee"
+    },
+    {
+      "tx_hash": "0x9a89653cf06e1cc26bdeaabdc5693ff6274a86e3e5af7597118f2615dc02664c",
+      "firm_id": "the5ers",
+      "amount": 1688.59,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T13:00:19.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xa4ba894d7c6e21b602b9080777a422c3014ec962"
+    },
+    {
+      "tx_hash": "0x559f66c7911a40ccad3a7ee28e2e809258dd91904f638b54b6a9023f949f1bfa",
+      "firm_id": "the5ers",
+      "amount": 1942.3,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:43:48.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xe8f62a0ff9e680e7e553208f951529536569a78d"
+    },
+    {
+      "tx_hash": "0xdd84da66e43e93d5f7a23290c0d30be71d095062784205378020954ad260aeee",
+      "firm_id": "the5ers",
+      "amount": 2366.85,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:42:49.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x9220e8da6175cf1bb39133ad19d56134833d2263"
+    },
+    {
+      "tx_hash": "0x18b3f75e24951ca3ec7037b97842eae0d21317a7fe47e035921cc89d42823496",
+      "firm_id": "the5ers",
+      "amount": 3045.07,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:41:49.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xc26b250d9487b9abba81b25814e8ea66100caba9"
+    },
+    {
+      "tx_hash": "0x525c51b8a3eeacee07806fedc31043f7a1e55b90dd40f09507f51cada5ccd3c0",
+      "firm_id": "the5ers",
+      "amount": 1679.02,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:40:09.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x3b48bd0ae2ae5d92a09f5fc9f155bf0f403d01d3"
+    },
+    {
+      "tx_hash": "0x53726a90e6e5afaf1451841600ef56c6e01e45489ab26f9bf39ff2189fac7497",
+      "firm_id": "the5ers",
+      "amount": 1099.65,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:39:32.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x1ee9fd309670e934da9707b368f3d9527df6b3bb"
+    },
+    {
+      "tx_hash": "0x244eb63eaafc0ccbf4fee9fac0bc7e01c237ed8a3f63202664220250a682fcd4",
+      "firm_id": "the5ers",
+      "amount": 1349.03,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:38:31.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xb604723d52bdcf5b74da0399d81e4b3570643c35"
+    },
+    {
+      "tx_hash": "0x49c140f1fbafa4198a0abce2c8ade302fed03ec966d38df86aa7748ce876d73f",
+      "firm_id": "the5ers",
+      "amount": 1322.55,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:37:43.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xc4c2dae9a98e309640d65a14b6890cde328a6f10"
+    },
+    {
+      "tx_hash": "0xa1246ba2c9b8a7d7886096c584e57dab25df7416ecff687e00b04ee97e44da0b",
+      "firm_id": "the5ers",
+      "amount": 579.81,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:33:59.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x82fbf3ea18f9fa0da5949b6efe8372bf0219704b"
+    },
+    {
+      "tx_hash": "0xb782c9ac5fbb38f661531044ad15fe44ca7aa52f90ef411eec21c8faf226caf9",
+      "firm_id": "the5ers",
+      "amount": 3113.19,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:33:17.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xd3e25a37343037bc79ea7255e292bbd4d909c1c9"
+    },
+    {
+      "tx_hash": "0x65172d5f2b51a0a26201c1e45cb471c57e068c0e49fa5820dc4694e185ea41cd",
+      "firm_id": "the5ers",
+      "amount": 1769.44,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:32:25.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x66e59d26c34d647864da241e8bd9b3f1d3cb5c20"
+    },
+    {
+      "tx_hash": "0xcdedd18fa5ab1b6984d88bd83339fd9f6174bf8d1e2d6aa396a4763a0d133d3c",
+      "firm_id": "the5ers",
+      "amount": 1170.51,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:24:04.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x93fa04347ca8650c1422ac49c41b1787c6a5d865"
+    },
+    {
+      "tx_hash": "0x697d83db3bd33a8b3bf73407058769305cee2bc3a88f0de199cd0d94cb7f6e99",
+      "firm_id": "the5ers",
+      "amount": 1535.13,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:22:39.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x35ae036f87708e257c51ed33f912b969684b9aad"
+    },
+    {
+      "tx_hash": "0x503caec73fbd43d1bd0b4eb1d42e1cc027bb2aca69e6be017bec5243fa4264bd",
+      "firm_id": "the5ers",
+      "amount": 2459.8,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:20:54.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xc7a0304d1cd70c3856b4e3b800cc5ec66617cf4a"
+    },
+    {
+      "tx_hash": "0xb8062d6f684d4670a378a62d93fe1b913266481e3d3e4473096c07853f100084",
+      "firm_id": "the5ers",
+      "amount": 1151.88,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:13:58.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x5dd67264ab6d4c83f6cc965cb98fed252d71716b"
+    },
+    {
+      "tx_hash": "0xf537b333dc5f83cf264cab58872142f23a66872b3b9568133f51656cb883cd2b",
+      "firm_id": "the5ers",
+      "amount": 2356.58,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:11:45.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xafe6ffc3de443540ed73853a846f3b09614643fb"
+    },
+    {
+      "tx_hash": "0x7cdbe108aa67a67051d5a1d782316a3c5524b97e4f52f5c175f2e8d61daebb38",
+      "firm_id": "the5ers",
+      "amount": 2469.1,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:10:16.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xdf4f4856060301dd5c71cfdd97427cd53daa06e6"
+    },
+    {
+      "tx_hash": "0x08ba57832c85e6b8086656b3cc07f6adc9a00988ecae865117f27f65750dedf0",
+      "firm_id": "the5ers",
+      "amount": 1415.12,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:08:43.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xf4221ba69b89abeb910efa5d399a50b8b01248fe"
+    },
+    {
+      "tx_hash": "0x1a0237465bf72843af61332eb02bc222e7fa65dfa6ce53768c595c94c267ccfd",
+      "firm_id": "the5ers",
+      "amount": 2026,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:07:26.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x2808730afd377a07f1cfadf93854769a4db4dae7"
+    },
+    {
+      "tx_hash": "0xfac362c24122a7a11e95baeeef9b0befbda42455029b19f022c724564838cc1b",
+      "firm_id": "the5ers",
+      "amount": 2174.13,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:05:26.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x071353dd3ed47d8cfc115d5f9e7e9b47959ce6d4"
+    },
+    {
+      "tx_hash": "0xcdaaee27cbebf6069d92fa332b9247a690c625d7999373e8ebdd74970f68341f",
+      "firm_id": "the5ers",
+      "amount": 557.86,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T12:02:34.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x378d1e3ae9e9e0e1d7ea46aa43d69857307fe31b"
+    },
+    {
+      "tx_hash": "0xafa83aceda9ce900913143ecdc6560f57f78e52913629eb21c8b5976bfc964ea",
+      "firm_id": "the5ers",
+      "amount": 1146.21,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:57:10.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x26e99101f59382cbaafa9755f8836bfe28f98af8"
+    },
+    {
+      "tx_hash": "0xefbc5b27146047276816af2640fbbd4de928e5814d3386c8d864f32504d817ec",
+      "firm_id": "the5ers",
+      "amount": 1325.63,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:53:05.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xb46cf5654841f55d2658036ab131c5797fa8d5c2"
+    },
+    {
+      "tx_hash": "0x83bfd9e818c48d523ee2d4dfff1b58930ba6cc2df500218197171a103ac70b81",
+      "firm_id": "the5ers",
+      "amount": 3851.87,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:51:58.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xf69d0504a535c5035c0bb2a44bcf71d21ae7d6ca"
+    },
+    {
+      "tx_hash": "0xb1e8151215ea63693ab7c9886afc6ed87aeea012999b69df989aa59140799a89",
+      "firm_id": "the5ers",
+      "amount": 2104.29,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:51:17.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xa4efb5fbed5458fc19ad3b07fb2402e8736b2bdf"
+    },
+    {
+      "tx_hash": "0x3c445031d3af475f40d67535004825dee5c45ed95b7f602768f524a803dd842a",
+      "firm_id": "the5ers",
+      "amount": 2869.67,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:50:53.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x020ee75f80acaab073467183b06de182fd0d7723"
+    },
+    {
+      "tx_hash": "0xf20f5624b9a7ae07a5e337c5cfc4e31d7270a0cd0484b1cf1628cf342fdab437",
+      "firm_id": "the5ers",
+      "amount": 4954.35,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:50:13.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xeaf50006aed28122ce497ccb843f8b12c90cf3ec"
+    },
+    {
+      "tx_hash": "0x1d2b7bdc904deda808e07dae9a83826077de6c67a4472c1b1f23c3a6f8de55d9",
+      "firm_id": "the5ers",
+      "amount": 2554.4,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:48:55.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xc38333f2f536c88796fac2f69eb9b8edae14f552"
+    },
+    {
+      "tx_hash": "0x94d80183f5c49682c5e4b7fba1b013ec408dab5cf75d5ba41ae578f18ba56041",
+      "firm_id": "the5ers",
+      "amount": 3077.29,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:47:26.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xb62f7affb8fc29824386a23c413e052196289950"
+    },
+    {
+      "tx_hash": "0xe049e93dccf7a0b488c7c0fe98b8fbde1244febdd034a5884c3a5443b19dd309",
+      "firm_id": "the5ers",
+      "amount": 154.52,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:46:52.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xfe83fe0f7d0ac4aa0e0daed44b6253603a37a892"
+    },
+    {
+      "tx_hash": "0xfe7c79b53af92b9772083df789d2cfb737fb35932787958d108f8a02f7fe9c96",
+      "firm_id": "the5ers",
+      "amount": 2478.22,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:46:05.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xef074055300ab34b90252452af8f2152d58e860f"
+    },
+    {
+      "tx_hash": "0x561a78fe5a14d792c05a87da271e99cb058c67f8b93f8bac26dffcea0b04975a",
+      "firm_id": "the5ers",
+      "amount": 164.6,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:44:52.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xfe83fe0f7d0ac4aa0e0daed44b6253603a37a892"
+    },
+    {
+      "tx_hash": "0x3a6e2620d486da2d8f9824d5eafc9a2b8e4b848106200a0614c8adbd5b539020",
+      "firm_id": "the5ers",
+      "amount": 636.22,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:43:36.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x730ce32fa054b109a7e1e5577f49712b40c04bc1"
+    },
+    {
+      "tx_hash": "0x92834f05e9f49de2b4cfd70173bf195fcd3f6bad0a3ce06123ca0d1e0dc82a3c",
+      "firm_id": "the5ers",
+      "amount": 7911.98,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:42:52.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x1fc9e43423ff06ce3defcef3bbd60bc70504e39d"
+    },
+    {
+      "tx_hash": "0xa24430faed453bb2386a227fdf3724c6cb527d6270c9362403456fd6ee4fb5a3",
+      "firm_id": "the5ers",
+      "amount": 5685.89,
+      "payment_method": "rise",
+      "timestamp": "2026-01-25T11:41:27.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0x8f11edd2eaa9b106daf43e752953e5804d034e77"
+    },
     {
       "tx_hash": "0x8806df96b4f95d03e06d0fcc106c6e89644cba8af9319bca7caedd41956c6893",
       "firm_id": "the5ers",
