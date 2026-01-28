@@ -8,8 +8,8 @@ export const syncPropFirmPayouts = inngest.createFunction(
     name: "Sync Prop Firm Payouts",
   },
   {
-    // Match the existing GitHub Action cadence (every 30 minutes)
-    cron: "*/30 * * * *",
+    // Run every 5 minutes for more frequent updates
+    cron: "*/5 * * * *",
   },
   async ({ step }) => {
     const result = await step.run("sync-all-firms", async () => {
