@@ -72,6 +72,10 @@ export default function AccountSettingsModal({ isOpen, onClose, onUpdate }) {
     e.preventDefault();
     setLoading(true);
 
+    // Check if wallet address is being added/changed
+    const isWalletChanging = formData.wallet_address &&
+      formData.wallet_address !== originalData?.wallet_address;
+
     try {
       const response = await fetch("/api/user/profile", {
         method: "POST",
@@ -93,14 +97,14 @@ export default function AccountSettingsModal({ isOpen, onClose, onUpdate }) {
         throw new Error(error.error || "Failed to update profile");
       }
 
-      const { data } = await response.json();
-      
+      const result = await response.json();
+
       // Update original data
       setOriginalData(formData);
-      
-      // Call onUpdate callback if provided
+
+      // Call onUpdate callback with backfill info
       if (onUpdate) {
-        onUpdate(data);
+        onUpdate(result.data, result.backfill_triggered);
       }
 
       onClose();

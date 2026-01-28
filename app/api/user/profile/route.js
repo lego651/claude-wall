@@ -27,17 +27,32 @@ export async function POST(req) {
       }
     }
 
+    // Get existing profile to check if wallet is being added for first time
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("wallet_address, backfilled_at")
+      .eq("id", user.id)
+      .single();
+
     // Validate wallet address format if provided (allow null for deletion)
+    let isNewWallet = false;
     if (wallet_address !== null && wallet_address !== undefined && wallet_address !== "") {
       const trimmedAddress = wallet_address.trim().toLowerCase();
       const ethereumPattern = /^0x[a-fA-F0-9]{40}$/;
       const solanaPattern = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-      
+
       if (!ethereumPattern.test(trimmedAddress) && !solanaPattern.test(trimmedAddress)) {
         return NextResponse.json(
           { error: "Invalid wallet address format" },
           { status: 400 }
         );
+      }
+
+      // Check if this is a new wallet (different from existing or no existing wallet)
+      if (!existingProfile?.wallet_address ||
+          existingProfile.wallet_address.toLowerCase() !== trimmedAddress) {
+        isNewWallet = true;
+        console.log(`[Profile API] New wallet detected for user ${user.id}: ${trimmedAddress}`);
       }
     }
 
@@ -78,7 +93,47 @@ export async function POST(req) {
       );
     }
 
-    return NextResponse.json({ data, success: true });
+    // Trigger backfill if new wallet was added
+    let backfillTriggered = false;
+    if (isNewWallet && profileData.wallet_address) {
+      console.log(`[Profile API] Triggering backfill for new wallet: ${profileData.wallet_address}`);
+
+      // Option 1: Call backfill API endpoint (non-blocking, user experience)
+      // This allows the profile save to complete immediately
+      // The backfill runs asynchronously
+      try {
+        // Use internal fetch to trigger backfill
+        // Note: In production, consider using a job queue (Inngest, BullMQ)
+        const backfillUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/backfill-trader`;
+
+        // Fire and forget - don't wait for response
+        fetch(backfillUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // Pass through auth token for verification
+            'Cookie': req.headers.get('cookie') || '',
+          },
+          body: JSON.stringify({ wallet_address: profileData.wallet_address }),
+        }).catch(err => {
+          console.error('[Profile API] Backfill trigger failed:', err.message);
+        });
+
+        backfillTriggered = true;
+        console.log('[Profile API] ✅ Backfill job triggered');
+      } catch (err) {
+        console.error('[Profile API] Failed to trigger backfill:', err.message);
+      }
+    }
+
+    return NextResponse.json({
+      data,
+      success: true,
+      backfill_triggered: backfillTriggered,
+      message: backfillTriggered
+        ? "Profile saved! Your transaction history is being synced. This may take a few minutes."
+        : undefined
+    });
   } catch (error) {
     console.error("Error in profile API:", error);
     return NextResponse.json(

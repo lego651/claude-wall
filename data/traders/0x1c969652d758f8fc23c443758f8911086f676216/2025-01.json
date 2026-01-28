@@ -1,0 +1,40 @@
+{
+  "wallet_address": "0x1c969652d758f8fc23c443758f8911086f676216",
+  "year_month": "2025-01",
+  "summary": {
+    "totalPayouts": 8771,
+    "payoutCount": 2,
+    "largestPayout": 5843,
+    "avgPayout": 4386
+  },
+  "dailyBuckets": [
+    {
+      "date": "2025-01-20",
+      "total": 2928
+    },
+    {
+      "date": "2025-01-24",
+      "total": 5843
+    }
+  ],
+  "transactions": [
+    {
+      "tx_hash": "0x4bebde8f88ddecd9f2e9334d1e873f93d6e0d997a2f84d174c4e6776a91d6354",
+      "timestamp": "2025-01-24T06:46:52.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x1c969652d758f8fc23c443758f8911086f676216",
+      "token": "RISEPAY",
+      "amount": 5843,
+      "block_number": 298698472
+    },
+    {
+      "tx_hash": "0x801a1f386eddcde91045a294b72e2580df0636770986b292aba9b9c386a1bdcb",
+      "timestamp": "2025-01-20T17:29:18.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x1c969652d758f8fc23c443758f8911086f676216",
+      "token": "RISEPAY",
+      "amount": 2928.15,
+      "block_number": 297471368
+    }
+  ]
+}

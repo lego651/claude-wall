@@ -16,6 +16,7 @@ export default function Dashboard() {
   const [profile, setProfile] = useState(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [backfillStatus, setBackfillStatus] = useState(null);
 
   // Get wallet address from profile
   const walletAddress = profile?.wallet_address;
@@ -46,6 +47,11 @@ export default function Dashboard() {
         }
 
         setProfile(profileData || null);
+
+        // Check backfill status if wallet exists
+        if (profileData?.wallet_address) {
+          checkBackfillStatus();
+        }
       } catch (error) {
         console.error("Error loading user data:", error);
       } finally {
@@ -55,6 +61,41 @@ export default function Dashboard() {
 
     loadUserData();
   }, []);
+
+  // Check if backfill is in progress
+  const checkBackfillStatus = async () => {
+    try {
+      const response = await fetch('/api/backfill-trader');
+      if (response.ok) {
+        const data = await response.json();
+        setBackfillStatus(data);
+
+        // If not backfilled yet and has wallet, poll for updates
+        if (!data.backfilled && data.has_wallet) {
+          // Poll every 10 seconds for status updates
+          const pollInterval = setInterval(async () => {
+            const statusResponse = await fetch('/api/backfill-trader');
+            if (statusResponse.ok) {
+              const statusData = await statusResponse.json();
+              setBackfillStatus(statusData);
+
+              // Stop polling once backfilled
+              if (statusData.backfilled) {
+                clearInterval(pollInterval);
+                // Reload transaction data
+                window.location.reload();
+              }
+            }
+          }, 10000); // Poll every 10 seconds
+
+          // Cleanup on unmount
+          return () => clearInterval(pollInterval);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking backfill status:', error);
+    }
+  };
 
   // Calculate verified firms from transactions
   const verifiedFirms = useMemo(() => {
@@ -114,10 +155,23 @@ export default function Dashboard() {
   // Calculate trust rating (simplified)
   const trustRating = Math.min(100, Math.max(70, 70 + (payoutCount * 2)));
 
-  const handleProfileUpdate = (updatedProfile) => {
+  const handleProfileUpdate = (updatedProfile, backfillTriggered) => {
     setProfile(updatedProfile);
-    // Reload page to refresh data
-    window.location.reload();
+
+    // If backfill was triggered, update status to show syncing banner
+    if (backfillTriggered) {
+      setBackfillStatus({
+        backfilled: false,
+        has_wallet: true,
+        backfilled_at: null
+      });
+
+      // Start polling for completion
+      checkBackfillStatus();
+    } else {
+      // Just reload to refresh data
+      window.location.reload();
+    }
   };
 
   const handleRequestPayout = () => {
@@ -182,6 +236,28 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-8">
+
+        {/* Syncing Banner */}
+        {backfillStatus && backfillStatus.has_wallet && !backfillStatus.backfilled && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-blue-900 mb-1">
+                  Syncing Your Transaction History
+                </h3>
+                <p className="text-xs text-blue-700">
+                  We're loading your complete payout history from the blockchain. This usually takes 1-5 minutes depending on your transaction volume. Your dashboard will automatically update once complete.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
