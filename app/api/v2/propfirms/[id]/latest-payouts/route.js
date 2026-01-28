@@ -9,6 +9,7 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
 
 function createSupabaseClient() {
   return createClient(
@@ -19,6 +20,32 @@ function createSupabaseClient() {
 
 export async function GET(request, { params }) {
   const { id: firmId } = await params;
+
+  const { ok, headers } = validateOrigin(request);
+  if (!ok) {
+    return NextResponse.json(
+      { error: 'Forbidden origin' },
+      { status: 403, headers }
+    );
+  }
+
+  const { limited, retryAfterMs } = isRateLimited(request, {
+    limit: 60,
+    windowMs: 60_000,
+  });
+
+  if (limited) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      {
+        status: 429,
+        headers: {
+          ...headers,
+          'Retry-After': String(Math.ceil(retryAfterMs / 1000)),
+        },
+      }
+    );
+  }
 
   try {
     const supabase = createSupabaseClient();
@@ -33,7 +60,7 @@ export async function GET(request, { params }) {
     if (firmError || !firm) {
       return NextResponse.json(
         { error: 'Firm not found' },
-        { status: 404 }
+        { status: 404, headers }
       );
     }
 
@@ -61,17 +88,20 @@ export async function GET(request, { params }) {
       arbiscanUrl: `https://arbiscan.io/tx/${p.tx_hash}`,
     }));
 
-    return NextResponse.json({
-      firmId,
-      payouts: formattedPayouts,
-      count: formattedPayouts.length,
-    });
+    return NextResponse.json(
+      {
+        firmId,
+        payouts: formattedPayouts,
+        count: formattedPayouts.length,
+      },
+      { headers }
+    );
 
   } catch (error) {
     console.error('[API] Error:', error);
     return NextResponse.json(
       { error: error.message },
-      { status: 500 }
+      { status: 500, headers }
     );
   }
 }

@@ -13,6 +13,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { loadPeriodData } from '@/lib/services/payoutDataLoader';
+import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
 
 const VALID_PERIODS = ['30d', '12m'];
 
@@ -31,6 +32,32 @@ export async function GET(request, { params }) {
     ? searchParams.get('period') 
     : '30d';
 
+  const { ok, headers } = validateOrigin(request);
+  if (!ok) {
+    return NextResponse.json(
+      { error: 'Forbidden origin' },
+      { status: 403, headers }
+    );
+  }
+
+  const { limited, retryAfterMs } = isRateLimited(request, {
+    limit: 60,
+    windowMs: 60_000,
+  });
+
+  if (limited) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      {
+        status: 429,
+        headers: {
+          ...headers,
+          'Retry-After': String(Math.ceil(retryAfterMs / 1000)),
+        },
+      }
+    );
+  }
+
   try {
     const supabase = createSupabaseClient();
 
@@ -44,7 +71,7 @@ export async function GET(request, { params }) {
     if (firmError || !firm) {
       return NextResponse.json(
         { error: 'Firm not found' },
-        { status: 404 }
+        { status: 404, headers }
       );
     }
 
@@ -83,26 +110,29 @@ export async function GET(request, { params }) {
           : 0;
     summary.avgPayout = Math.round(avgPayout);
 
-    return NextResponse.json({
-      firm: {
-        id: firm.id,
-        name: firm.name,
-        logo: firm.logo,
-        website: firm.website,
+    return NextResponse.json(
+      {
+        firm: {
+          id: firm.id,
+          name: firm.name,
+          logo: firm.logo,
+          website: firm.website,
+        },
+        summary,
+        chart: {
+          period,
+          bucketType,
+          data: chartData,
+        },
       },
-      summary,
-      chart: {
-        period,
-        bucketType,
-        data: chartData,
-      },
-    });
+      { headers }
+    );
 
   } catch (error) {
     console.error('[API] Error:', error);
     return NextResponse.json(
       { error: error.message },
-      { status: 500 }
+      { status: 500, headers }
     );
   }
 }

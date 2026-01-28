@@ -15,6 +15,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { loadPeriodData } from '@/lib/services/payoutDataLoader';
+import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
 
 // Valid options
 const VALID_PERIODS = ['1d', '7d', '30d', '12m'];
@@ -54,6 +55,32 @@ export async function GET(request) {
     ? searchParams.get('order') 
     : 'desc';
 
+  const { ok, headers } = validateOrigin(request);
+  if (!ok) {
+    return NextResponse.json(
+      { error: 'Forbidden origin' },
+      { status: 403, headers }
+    );
+  }
+
+  const { limited, retryAfterMs } = isRateLimited(request, {
+    limit: 60, // ~60 requests per minute per IP
+    windowMs: 60_000,
+  });
+
+  if (limited) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      {
+        status: 429,
+        headers: {
+          ...headers,
+          'Retry-After': String(Math.ceil(retryAfterMs / 1000)),
+        },
+      }
+    );
+  }
+
   try {
     const supabase = createSupabaseClient();
 
@@ -67,15 +94,18 @@ export async function GET(request) {
     }
 
     if (!firms || firms.length === 0) {
-      return NextResponse.json({
-        data: [],
-        meta: {
-          period,
-          sort,
-          order,
-          count: 0,
+      return NextResponse.json(
+        {
+          data: [],
+          meta: {
+            period,
+            sort,
+            order,
+            count: 0,
+          },
         },
-      });
+        { headers }
+      );
     }
 
     // For real-time metrics, batch-load payouts for all firms (avoid N+1 queries)
@@ -164,21 +194,24 @@ export async function GET(request) {
       return order === 'desc' ? bVal - aVal : aVal - bVal;
     });
 
-    return NextResponse.json({
-      data,
-      meta: {
-        period,
-        sort,
-        order,
-        count: data.length,
+    return NextResponse.json(
+      {
+        data,
+        meta: {
+          period,
+          sort,
+          order,
+          count: data.length,
+        },
       },
-    });
+      { headers }
+    );
 
   } catch (error) {
     console.error('[API] Error:', error);
     return NextResponse.json(
       { error: error.message },
-      { status: 500 }
+      { status: 500, headers }
     );
   }
 }
