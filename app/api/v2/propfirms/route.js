@@ -66,6 +66,48 @@ export async function GET(request) {
       throw new Error(`Failed to fetch firms: ${firmsError.message}`);
     }
 
+    if (!firms || firms.length === 0) {
+      return NextResponse.json({
+        data: [],
+        meta: {
+          period,
+          sort,
+          order,
+          count: 0,
+        },
+      });
+    }
+
+    // For real-time metrics, batch-load payouts for all firms (avoid N+1 queries)
+    let payoutsByFirmId = null;
+    if (period === '1d') {
+      const hoursBack = periodToHours(period);
+      const cutoffDate = new Date(Date.now() - (hoursBack * 60 * 60 * 1000)).toISOString();
+      const firmIds = firms.map(f => f.id);
+
+      const { data: payoutsRows, error: payoutsError } = await supabase
+        .from('recent_payouts')
+        .select('firm_id, amount')
+        .in('firm_id', firmIds)
+        .gte('timestamp', cutoffDate);
+
+      if (payoutsError) {
+        throw new Error(`Failed to fetch payouts: ${payoutsError.message}`);
+      }
+
+      payoutsByFirmId = new Map();
+      for (const row of payoutsRows || []) {
+        const firmId = row.firm_id;
+        const amount = Number(row.amount);
+        if (!firmId || !Number.isFinite(amount)) continue;
+
+        if (!payoutsByFirmId.has(firmId)) {
+          payoutsByFirmId.set(firmId, []);
+        }
+        payoutsByFirmId.get(firmId).push(amount);
+      }
+    }
+
     // Build response data
     const data = [];
 
@@ -74,16 +116,7 @@ export async function GET(request) {
 
       if (period === '1d') {
         // Use Supabase for real-time data (last 24h only)
-        const hoursBack = periodToHours(period);
-        const cutoffDate = new Date(Date.now() - (hoursBack * 60 * 60 * 1000)).toISOString();
-
-        const { data: payouts } = await supabase
-          .from('recent_payouts')
-          .select('amount')
-          .eq('firm_id', firm.id)
-          .gte('timestamp', cutoffDate);
-
-        const amounts = (payouts || []).map(p => parseFloat(p.amount));
+        const amounts = payoutsByFirmId?.get(firm.id) || [];
         const totalPayouts = amounts.reduce((sum, a) => sum + a, 0);
         const largestPayout = amounts.length > 0 ? Math.max(...amounts) : 0;
 
