@@ -5,9 +5,9 @@
  * 
  * ⚠️ DEPRECATED: This endpoint is no longer used.
  * 
- * We now use GitHub Actions for syncing:
- * - .github/workflows/sync-realtime.yml (every 15 min → Supabase)
- * - .github/workflows/sync-historical.yml (daily 3 AM PST → JSON files)
+ * We now use:
+ * - Inngest (every 5 min → Supabase) via `/api/inngest`
+ * - GitHub Actions (daily 3 AM PST → JSON files)
  * 
  * This endpoint is kept for backwards compatibility and manual testing.
  * The Vercel cron job has been disabled in vercel.json.

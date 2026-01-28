@@ -19,7 +19,7 @@ The system uses a **hybrid architecture** combining real-time data (Supabase) an
 ```
 Arbiscan API (Blockchain)
     ↓
-GitHub Actions (Every 30 min & Daily)
+Inngest (Every 5 min) + GitHub Actions (Daily)
     ↓
     ├─→ Supabase (recent_payouts table) ← Real-time (24h rolling window)
     └─→ JSON Files (data/payouts/) ← Historical (7d, 30d, 12m)
@@ -33,13 +33,15 @@ GitHub Actions (Every 30 min & Daily)
 
 ## ⚙️ Data Sync Mechanisms
 
-### A. Real-time Sync (Every 30 minutes)
+### A. Real-time Sync (Every 5 minutes)
 
-**Workflow:** `.github/workflows/sync-realtime.yml`
-**Script:** `scripts/sync-to-supabase.js`
+**Scheduler:** Inngest (cron)
+**Endpoint:** `app/api/inngest/route.ts`
+**Function:** `libs/inngest-payouts.ts`
+**Logic:** `lib/services/payoutSyncService.js` (`syncAllFirms`)
 
 ```javascript
-// Runs: Every 30 minutes
+// Runs: Every 5 minutes
 // Updates: Supabase `recent_payouts` table
 // Window: Last 24 hours only
 ```
@@ -58,7 +60,7 @@ GitHub Actions (Every 30 min & Daily)
 
 ### B. Historical Sync (Daily at 3 AM PST)
 
-**Workflow:** `.github/workflows/sync-historical.yml`
+**Workflow:** `.github/workflows/sync-firm-payouts-historical.yml`
 **Script:** `scripts/update-monthly-json.js`
 
 ```javascript

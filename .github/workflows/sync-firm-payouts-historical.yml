@@ -1,17 +1,17 @@
-# Sync Historical Payouts (Daily)
+# Sync Historical Firm Payouts (Daily)
 #
 # Runs daily at 3 AM PST (11:00 UTC) to update JSON files
 # with the current month's payout data, then commits and pushes.
 #
-# This keeps the 30d and 12m historical data up-to-date.
+# This keeps the 30d and 12m historical firm payout data up-to-date.
 
-name: Sync Payouts (Historical)
+name: Sync Firm Payouts (Historical)
 
 on:
   schedule:
     # 3 AM PST = 11:00 UTC (PST is UTC-8)
     # During daylight saving (PDT), 3 AM PDT = 10:00 UTC
-    - cron: '0 11 * * *'
+    - cron: "0 11 * * *"
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -33,8 +33,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'yarn'
+          node-version: "20"
+          cache: "yarn"
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -44,25 +44,18 @@ jobs:
           ARBISCAN_API_KEY: ${{ secrets.ARBISCAN_API_KEY }}
         run: node scripts/update-monthly-json.js
 
-      - name: Update trader monthly JSON files
-        env:
-          ARBISCAN_API_KEY: ${{ secrets.ARBISCAN_API_KEY }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/update-trader-monthly-json.js
-
       - name: Check for changes
         id: git-check
         run: |
-          git diff --quiet data/payouts/ data/traders/ || echo "changes=true" >> $GITHUB_OUTPUT
+          git diff --quiet data/payouts/ || echo "changes=true" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
         if: steps.git-check.outputs.changes == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add data/payouts/ data/traders/
-          git commit -m "chore: update payout and trader data $(date -u +%Y-%m-%d)"
+          git add data/payouts/
+          git commit -m "chore: update firm payout data $(date -u +%Y-%m-%d)"
           git push
 
       - name: Log result
@@ -72,3 +65,4 @@ jobs:
           else
             echo "No changes to commit at $(date -u)"
           fi
+
