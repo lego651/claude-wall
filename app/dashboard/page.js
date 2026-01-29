@@ -100,36 +100,38 @@ export default function Dashboard() {
     }
   };
 
-  // Calculate verified firms from transactions
+  // Calculate verified firms with aggregated payouts (sorted high to low)
   const verifiedFirms = useMemo(() => {
     if (!transactionData?.transactions || transactionData.transactions.length === 0) {
       return [];
     }
 
-    const senderAddresses = new Set(
-      transactionData.transactions.map(tx => tx.from.toLowerCase())
-    );
-
-    const matchedFirms = propfirmsData.firms.filter(firm => {
-      return firm.addresses.some(addr => 
-        senderAddresses.has(addr.toLowerCase())
-      );
-    });
-
     const logoExtensions = {
-      'fundednext': 'jpeg',
-      'fundingpips': 'webp',
-      'the5ers': 'webp',
+      fundednext: "jpeg",
+      fundingpips: "webp",
+      the5ers: "webp",
     };
 
-    return matchedFirms.map(firm => {
-      const extension = logoExtensions[firm.id] || 'png';
+    const firmsWithPayouts = propfirmsData.firms.map((firm) => {
+      const firmAddressesLower = new Set(
+        firm.addresses.map((addr) => addr.toLowerCase())
+      );
+      const firmTxs = transactionData.transactions.filter((tx) =>
+        firmAddressesLower.has((tx.from || "").toLowerCase())
+      );
+      const totalPayout = firmTxs.reduce((sum, tx) => sum + (tx.amountUSD || 0), 0);
+      const extension = logoExtensions[firm.id] || "png";
       const logoPath = `/logos/firms/${firm.id}.${extension}`;
       return {
         ...firm,
         logoPath,
+        totalPayout,
       };
     });
+
+    return firmsWithPayouts
+      .filter((f) => f.totalPayout > 0)
+      .sort((a, b) => b.totalPayout - a.totalPayout);
   }, [transactionData?.transactions]);
 
   // Calculate success rate (simplified - based on payout count)
