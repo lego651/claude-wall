@@ -177,11 +177,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleRequestPayout = () => {
-    // TODO: Implement payout request functionality
-    alert("Payout request functionality coming soon!");
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-200/60 flex items-center justify-center">
@@ -236,16 +231,16 @@ export default function Dashboard() {
                 </button>
               ) : (
                 <button
-                  onClick={handleRequestPayout}
+                  onClick={() => setIsConnectWalletModalOpen(true)}
                   className="px-6 py-2 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
                   style={{ backgroundColor: '#635BFF' }}
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#5a52e6'}
                   onMouseLeave={(e) => e.target.style.backgroundColor = '#635BFF'}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a2.25 2.25 0 00-2.25-2.25H15a2.25 2.25 0 01-2.25-2.25V6a2.25 2.25 0 012.25-2.25h2.25A2.25 2.25 0 0121 6v2.25a2.25 2.25 0 01-2.25 2.25H21m0-2.25v2.25m0-9V15m2.25 2.25 0 001.5 0V15m2.25-2.25h-9m-9 0H3m2.25 2.25H3m9 0h9M3 15v2.25M21 15V15" />
                   </svg>
-                  Request Payout
+                  Edit Wallet
                 </button>
               )}
             </div>

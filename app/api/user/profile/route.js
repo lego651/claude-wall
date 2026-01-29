@@ -25,6 +25,19 @@ export async function POST(req) {
           { status: 400 }
         );
       }
+      // Handle must be unique (excluding current user)
+      const { data: existingHandleProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("handle", normalizedHandle)
+        .neq("id", user.id)
+        .maybeSingle();
+      if (existingHandleProfile) {
+        return NextResponse.json(
+          { error: "This handle is already taken. Please choose another." },
+          { status: 400 }
+        );
+      }
     }
 
     // Get existing profile to check if wallet is being added for first time
@@ -52,6 +65,32 @@ export async function POST(req) {
       if (!existingProfile?.wallet_address ||
           existingProfile.wallet_address.toLowerCase() !== trimmedAddress) {
         isNewWallet = true;
+        // New wallet: ensure it's not a prop firm address and not already used by another user
+        const path = require("path");
+        const fs = require("fs");
+        const propFirmsPath = path.join(process.cwd(), "data", "propfirms.json");
+        const propFirmsData = JSON.parse(fs.readFileSync(propFirmsPath, "utf8"));
+        const allPropFirmAddresses = propFirmsData.firms.flatMap((firm) =>
+          firm.addresses.map((addr) => addr.toLowerCase())
+        );
+        if (allPropFirmAddresses.includes(trimmedAddress)) {
+          return NextResponse.json(
+            { error: "This wallet address belongs to a prop firm and cannot be linked." },
+            { status: 400 }
+          );
+        }
+        const { data: otherProfileWithWallet } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("wallet_address", trimmedAddress)
+          .neq("id", user.id)
+          .maybeSingle();
+        if (otherProfileWithWallet) {
+          return NextResponse.json(
+            { error: "This wallet address is already linked to another account." },
+            { status: 400 }
+          );
+        }
         console.log(`[Profile API] New wallet detected for user ${user.id}: ${trimmedAddress}`);
       }
     }

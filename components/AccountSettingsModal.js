@@ -213,24 +213,6 @@ export default function AccountSettingsModal({ isOpen, onClose, onUpdate }) {
                     />
                   </div>
 
-                  {/* Wallet Address */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">
-                      DEFAULT WALLET ADDRESS (EVM)
-                    </label>
-                    <input
-                      type="text"
-                      name="wallet_address"
-                      value={formData.wallet_address}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm"
-                      placeholder="0x..."
-                    />
-                    <p className="text-xs text-slate-400 mt-2">
-                      This address is used for automated verification of on-chain payouts.
-                    </p>
-                  </div>
-
                   {/* Social Links */}
                   <div className="space-y-4">
                     <div>
