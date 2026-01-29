@@ -102,9 +102,9 @@ export async function GET(request, { params }) {
       trader.payoutCount = record.payout_count || 0;
       trader.lastSyncedAt = record.last_synced_at || null;
     } else {
-      // Otherwise, try to load from JSON files
+      // Otherwise, try to load from Supabase (trader_payout_history) or JSON files
       try {
-        const jsonTransactions = getAllTraderTransactions(walletAddress);
+        const jsonTransactions = await getAllTraderTransactions(walletAddress, null, supabase);
         
         if (jsonTransactions.length > 0) {
           // Convert JSON transactions to expected format

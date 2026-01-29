@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetchNativeTransactions, fetchTokenTransactions } from '@/lib/arbiscan';
 import { processTransactions, calculateStats, groupByMonth } from '@/lib/transactionProcessor';
-import { getAllTraderTransactions, loadTraderPeriodData } from '@/lib/services/traderDataLoader';
+import { getAllTraderTransactions } from '@/lib/services/traderDataLoader';
 
 // Create Supabase client (read-only, uses anon key)
 function createSupabaseClient() {
@@ -49,11 +49,11 @@ export async function GET(request) {
     const addressLower = address.toLowerCase();
     const supabase = createSupabaseClient();
 
-    // Step 1: Try to load from JSON files (historical data)
+    // Step 1: Try to load from Supabase (trader_payout_history) or JSON files (historical data)
     let jsonTransactions = [];
     try {
-      jsonTransactions = getAllTraderTransactions(addressLower);
-      console.log(`[API] Loaded ${jsonTransactions.length} transactions from JSON files for ${address}`);
+      jsonTransactions = await getAllTraderTransactions(addressLower, null, supabase);
+      console.log(`[API] Loaded ${jsonTransactions.length} transactions for ${address}`);
     } catch (err) {
       console.warn(`[API] Error loading JSON files for ${address}:`, err.message);
     }

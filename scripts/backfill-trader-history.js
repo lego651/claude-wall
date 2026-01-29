@@ -4,20 +4,18 @@
  * Backfill Trader History Script
  *
  * Fetches ALL historical transactions for a trader wallet from Arbiscan
- * and generates JSON files for ALL months (not just current month).
- *
- * This script is designed to run once when a user first adds their wallet
- * to populate their complete transaction history.
+ * and upserts into Supabase trader_payout_history (one row per month).
+ * User sees history immediately; no git push needed.
  *
  * Usage:
  *   node scripts/backfill-trader-history.js <wallet_address>
- *   node scripts/backfill-trader-history.js 0x1234...abcd
  *
  * Required environment variables:
  *   - ARBISCAN_API_KEY
+ *   - NEXT_PUBLIC_SUPABASE_URL
+ *   - SUPABASE_SERVICE_ROLE_KEY
  */
 
-const fs = require('fs');
 const path = require('path');
 
 // ============================================================================
@@ -26,7 +24,7 @@ const path = require('path');
 
 const ARBISCAN_API_BASE = 'https://api.etherscan.io/v2/api';
 const ARBITRUM_CHAIN_ID = '42161';
-const TRADERS_DIR = path.join(process.cwd(), 'data', 'traders');
+const HISTORY_TABLE = 'trader_payout_history';
 
 // Token config
 const SUPPORTED_TOKENS = ['USDC', 'USDT', 'RISEPAY'];
@@ -230,15 +228,22 @@ async function main() {
 
   console.log(`Wallet: ${walletAddress}\n`);
 
-  // Validate environment
   const apiKey = process.env.ARBISCAN_API_KEY;
   if (!apiKey) {
     console.error('❌ ARBISCAN_API_KEY not found');
     process.exit(1);
   }
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('❌ NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required');
+    process.exit(1);
+  }
+
+  const { createClient } = await import('@supabase/supabase-js');
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
   const walletLower = walletAddress.toLowerCase();
-  const walletDir = path.join(TRADERS_DIR, walletLower);
 
   try {
     // Step 1: Fetch ALL transactions from Arbiscan
@@ -271,36 +276,31 @@ async function main() {
     }
     console.log('');
 
-    // Step 4: Ensure wallet directory exists
-    if (!fs.existsSync(walletDir)) {
-      fs.mkdirSync(walletDir, { recursive: true });
-      console.log(`  ✅ Created directory: ${walletDir}\n`);
-    }
-
-    // Step 5: Generate JSON files for each month
-    console.log('💾 Step 4: Generating JSON files...\n');
-    let filesCreated = 0;
-    let filesUpdated = 0;
+    // Step 4: Upsert each month to Supabase
+    console.log('💾 Step 4: Upserting to Supabase (trader_payout_history)...\n');
+    let upserted = 0;
 
     for (const yearMonth of months) {
       const transactions = monthlyGroups[yearMonth];
       const monthData = buildMonthData(walletLower, yearMonth, transactions);
 
-      const filePath = path.join(walletDir, `${yearMonth}.json`);
-      const fileExists = fs.existsSync(filePath);
+      const { error } = await supabase
+        .from(HISTORY_TABLE)
+        .upsert(
+          {
+            wallet_address: walletLower,
+            year_month: yearMonth,
+            data: monthData,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'wallet_address,year_month' }
+        );
 
-      fs.writeFileSync(filePath, JSON.stringify(monthData, null, 2));
-
-      if (fileExists) {
-        console.log(`  🔄 Updated: ${yearMonth}.json (${transactions.length} txs, $${monthData.summary.totalPayouts.toLocaleString()})`);
-        filesUpdated++;
-      } else {
-        console.log(`  ✅ Created: ${yearMonth}.json (${transactions.length} txs, $${monthData.summary.totalPayouts.toLocaleString()})`);
-        filesCreated++;
-      }
+      if (error) throw new Error(`Supabase upsert ${yearMonth}: ${error.message}`);
+      console.log(`  ✅ ${yearMonth}.json (${transactions.length} txs, $${monthData.summary.totalPayouts.toLocaleString()})`);
+      upserted++;
     }
 
-    // Step 6: Summary
     const totalAmount = allTransactions.reduce((sum, tx) => sum + tx.amount, 0);
     const duration = Date.now() - startTime;
 
@@ -310,14 +310,9 @@ async function main() {
     console.log(`  Total transactions: ${allTransactions.length.toLocaleString()}`);
     console.log(`  Total amount: $${Math.round(totalAmount).toLocaleString()}`);
     console.log(`  Months covered: ${months[0]} to ${months[months.length - 1]}`);
-    console.log(`  Files created: ${filesCreated}`);
-    console.log(`  Files updated: ${filesUpdated}`);
+    console.log(`  Months upserted: ${upserted}`);
     console.log(`  Duration: ${(duration / 1000).toFixed(1)}s`);
-    console.log('\n✅ Backfill complete!');
-    console.log('\nNext steps:');
-    console.log('  1. Commit changes: git add data/traders/');
-    console.log('  2. Push to repo: git commit -m "Backfill history for wallet" && git push');
-    console.log('  3. Vercel will auto-deploy and user will see full history');
+    console.log('\n✅ Backfill complete! User will see full history immediately.');
 
   } catch (error) {
     console.error('\n❌ Fatal error:', error.message);

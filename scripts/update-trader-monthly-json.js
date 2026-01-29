@@ -1,24 +1,21 @@
 #!/usr/bin/env node
 
 /**
- * Update Trader Monthly JSON Files
- * 
+ * Update Trader Monthly Payout History (Supabase)
+ *
  * Fetches current month's transaction data from Arbiscan for all trader wallets
- * and updates the corresponding JSON files. Designed to run daily via GitHub Actions.
- * 
- * This script only updates the CURRENT month's file for each trader wallet,
- * making it fast and efficient for daily runs.
- * 
+ * and upserts into Supabase trader_payout_history. Designed to run daily via GitHub Actions.
+ * New users see data immediately (no git push delay).
+ *
  * Usage:
  *   node scripts/update-trader-monthly-json.js
- * 
+ *
  * Required environment variables:
  *   - ARBISCAN_API_KEY
  *   - NEXT_PUBLIC_SUPABASE_URL
  *   - SUPABASE_SERVICE_ROLE_KEY
  */
 
-const fs = require('fs');
 const path = require('path');
 
 // ============================================================================
@@ -27,7 +24,7 @@ const path = require('path');
 
 const ARBISCAN_API_BASE = 'https://api.etherscan.io/v2/api';
 const ARBITRUM_CHAIN_ID = '42161';
-const TRADERS_DIR = path.join(process.cwd(), 'data', 'traders');
+const HISTORY_TABLE = 'trader_payout_history';
 
 // Token config
 const SUPPORTED_TOKENS = ['USDC', 'USDT', 'RISEPAY'];
@@ -262,49 +259,41 @@ async function main() {
 
   console.log(`Found ${profiles.length} trader wallet(s) to update\n`);
 
-  // Ensure traders directory exists
-  if (!fs.existsSync(TRADERS_DIR)) {
-    fs.mkdirSync(TRADERS_DIR, { recursive: true });
-  }
-
   let successCount = 0;
   let errorCount = 0;
 
-  // Process each wallet
   for (const profile of profiles) {
     const walletAddress = profile.wallet_address;
-    const walletDir = path.join(TRADERS_DIR, walletAddress.toLowerCase());
-    
+    const walletLower = walletAddress.toLowerCase();
+
     try {
       console.log(`\n📊 Processing ${walletAddress.slice(0, 10)}...`);
 
-      // Fetch transactions from Arbiscan
       const { native, tokens } = await fetchAllTransactions(walletAddress, apiKey);
-      
-      // Process transactions for current month
       const transactions = processTransactionsForMonth(native, tokens, walletAddress, currentMonth);
       console.log(`  Found ${transactions.length} transaction(s) for ${currentMonth}`);
 
-      // Build month data
       const monthData = buildMonthData(walletAddress, currentMonth, transactions);
 
-      // Ensure wallet directory exists
-      if (!fs.existsSync(walletDir)) {
-        fs.mkdirSync(walletDir, { recursive: true });
-      }
+      const { error } = await supabase
+        .from(HISTORY_TABLE)
+        .upsert(
+          {
+            wallet_address: walletLower,
+            year_month: currentMonth,
+            data: monthData,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'wallet_address,year_month' }
+        );
 
-      // Write JSON file
-      const filePath = path.join(walletDir, `${currentMonth}.json`);
-      fs.writeFileSync(filePath, JSON.stringify(monthData, null, 2));
-      console.log(`  ✅ Updated ${filePath}`);
-
+      if (error) throw new Error(error.message);
+      console.log(`  ✅ Upserted ${walletLower}/${currentMonth} to Supabase`);
       successCount++;
 
-      // Rate limit: wait between wallets
       if (profiles.length > 1) {
         await sleep(500);
       }
-
     } catch (error) {
       console.error(`  ❌ Error processing ${walletAddress}:`, error.message);
       errorCount++;
