@@ -10,16 +10,19 @@ import ActiveLinksCard from "@/components/ActiveLinksCard";
 import MetricsCards from "@/components/MetricsCards";
 import MonthlyPayoutChart from "@/components/MonthlyPayoutChart";
 import AccountSettingsModal from "@/components/AccountSettingsModal";
+import ConnectWalletModal from "@/components/ConnectWalletModal";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isConnectWalletModalOpen, setIsConnectWalletModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [backfillStatus, setBackfillStatus] = useState(null);
 
   // Get wallet address from profile
   const walletAddress = profile?.wallet_address;
+  const hasNoWallet = profile !== null && !profile?.wallet_address?.trim();
   const { data: transactionData, loading: transactionsLoading } = useTransactions(walletAddress);
 
   useEffect(() => {
@@ -218,18 +221,33 @@ export default function Dashboard() {
                 </svg>
                 Edit Settings
               </button>
-              <button
-                onClick={handleRequestPayout}
-                className="px-6 py-2 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
-                style={{ backgroundColor: '#635BFF' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#5a52e6'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#635BFF'}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Request Payout
-              </button>
+              {hasNoWallet ? (
+                <button
+                  onClick={() => setIsConnectWalletModalOpen(true)}
+                  className="px-6 py-2 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                  style={{ backgroundColor: '#635BFF' }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#5a52e6'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#635BFF'}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a2.25 2.25 0 00-2.25-2.25H15a2.25 2.25 0 01-2.25-2.25V6a2.25 2.25 0 012.25-2.25h2.25A2.25 2.25 0 0121 6v2.25a2.25 2.25 0 01-2.25 2.25H21m0-2.25v2.25m0-9V15m2.25 2.25 0 001.5 0V15m2.25-2.25h-9m-9 0H3m2.25 2.25H3m9 0h9M3 15v2.25M21 15V15" />
+                  </svg>
+                  Connect Wallet
+                </button>
+              ) : (
+                <button
+                  onClick={handleRequestPayout}
+                  className="px-6 py-2 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                  style={{ backgroundColor: '#635BFF' }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#5a52e6'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#635BFF'}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Request Payout
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -292,6 +310,8 @@ export default function Dashboard() {
             <MonthlyPayoutChart
               transactions={transactionData?.transactions || []}
               loading={transactionsLoading}
+              hasNoWallet={hasNoWallet}
+              onConnectWallet={hasNoWallet ? () => setIsConnectWalletModalOpen(true) : undefined}
             />
 
             {/* Verified Transactions Table */}
@@ -346,10 +366,29 @@ export default function Dashboard() {
                         </tr>
                       ))
                     ) : !transactionData?.transactions || transactionData.transactions.length === 0 ? (
-                      // Empty state
+                      // Empty state: Connect Wallet CTA when no wallet, else fallback text
                       <tr>
-                        <td className="px-6 py-8 text-center text-sm text-gray-400" colSpan={5}>
-                          No transactions found
+                        <td className="px-6 py-8 text-center" colSpan={5}>
+                          {hasNoWallet ? (
+                            <div className="flex flex-col items-center gap-4">
+                              <p className="text-sm text-gray-500">Connect your wallet to see verified transactions</p>
+                              <button
+                                type="button"
+                                onClick={() => setIsConnectWalletModalOpen(true)}
+                                className="px-6 py-2.5 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                                style={{ backgroundColor: '#635BFF' }}
+                                onMouseEnter={(e) => { e.target.style.backgroundColor = '#5a52e6'; }}
+                                onMouseLeave={(e) => { e.target.style.backgroundColor = '#635BFF'; }}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a2.25 2.25 0 00-2.25-2.25H15a2.25 2.25 0 01-2.25-2.25V6a2.25 2.25 0 012.25-2.25h2.25A2.25 2.25 0 0121 6v2.25a2.25 2.25 0 01-2.25 2.25H21m0-2.25v2.25m0-9V15m2.25 2.25 0 001.5 0V15m2.25-2.25h-9m-9 0H3m2.25 2.25H3m9 0h9M3 15v2.25M21 15V15" />
+                                </svg>
+                                Connect Wallet
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400">No transactions found</span>
+                          )}
                         </td>
                       </tr>
                     ) : (
@@ -414,6 +453,13 @@ export default function Dashboard() {
       <AccountSettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
+        onUpdate={handleProfileUpdate}
+      />
+
+      {/* Connect Wallet Modal (for users without a wallet) */}
+      <ConnectWalletModal
+        isOpen={isConnectWalletModalOpen}
+        onClose={() => setIsConnectWalletModalOpen(false)}
         onUpdate={handleProfileUpdate}
       />
     </PropProofLayout>

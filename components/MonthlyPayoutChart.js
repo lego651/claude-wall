@@ -14,9 +14,10 @@ import {
 
 /**
  * Reusable Monthly Payout Chart Component
- * Displays a bar chart of monthly payout history with period selector
+ * Displays a bar chart of monthly payout history with period selector.
+ * When hasNoWallet and no data, shows Connect Wallet CTA instead of generic empty text.
  */
-export default function MonthlyPayoutChart({ transactions = [], loading = false }) {
+export default function MonthlyPayoutChart({ transactions = [], loading = false, hasNoWallet = false, onConnectWallet }) {
   const [chartPeriod, setChartPeriod] = useState('6M');
 
   // Filter chart data based on selected period
@@ -118,8 +119,27 @@ export default function MonthlyPayoutChart({ transactions = [], loading = false 
             </div>
           </div>
         ) : chartData.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-sm text-gray-400">No chart data available</p>
+          <div className="flex flex-col items-center justify-center h-full gap-4">
+            {hasNoWallet && onConnectWallet ? (
+              <>
+                <p className="text-sm text-gray-500">Connect your wallet to see payout history</p>
+                <button
+                  type="button"
+                  onClick={onConnectWallet}
+                  className="px-6 py-2.5 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                  style={{ backgroundColor: '#635BFF' }}
+                  onMouseEnter={(e) => { e.target.style.backgroundColor = '#5a52e6'; }}
+                  onMouseLeave={(e) => { e.target.style.backgroundColor = '#635BFF'; }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a2.25 2.25 0 00-2.25-2.25H15a2.25 2.25 0 01-2.25-2.25V6a2.25 2.25 0 012.25-2.25h2.25A2.25 2.25 0 0121 6v2.25a2.25 2.25 0 01-2.25 2.25H21m0-2.25v2.25m0-9V15m2.25 2.25 0 001.5 0V15m2.25-2.25h-9m-9 0H3m2.25 2.25H3m9 0h9M3 15v2.25M21 15V15" />
+                  </svg>
+                  Connect Wallet
+                </button>
+              </>
+            ) : (
+              <p className="text-sm text-gray-400">No chart data available</p>
+            )}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
