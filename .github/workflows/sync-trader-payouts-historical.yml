@@ -1,0 +1,66 @@
+# Sync Historical Trader Payouts (Daily)
+#
+# Runs daily at 3 AM PST (11:00 UTC) to update JSON files
+# with the current month's payout data for each trader wallet, then commits and pushes.
+#
+# Mirrors firm payouts: keeps 30d and 12m historical trader data up-to-date in data/traders/.
+
+name: Sync Trader Payouts (Historical)
+
+on:
+  schedule:
+    # 3 AM PST = 11:00 UTC (PST is UTC-8)
+    - cron: "0 11 * * *"
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync-and-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Update trader monthly JSON files
+        env:
+          ARBISCAN_API_KEY: ${{ secrets.ARBISCAN_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/update-trader-monthly-json.js
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --quiet data/traders/ || echo "changes=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        if: steps.git-check.outputs.changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add data/traders/
+          git commit -m "chore: update trader payout data $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: Log result
+        run: |
+          if [ "${{ steps.git-check.outputs.changes }}" == "true" ]; then
+            echo "Changes committed and pushed at $(date -u)"
+          else
+            echo "No changes to commit at $(date -u)"
+          fi
