@@ -53,7 +53,7 @@ export async function GET(request) {
         // Check if profile exists
         const { data: existingProfile, error: profileCheckError } = await serviceClient
           .from("profiles")
-          .select("id, wallet_address")
+          .select("id, wallet_address, display_name, handle")
           .eq("id", session.user.id)
           .maybeSingle();
 
@@ -67,10 +67,30 @@ export async function GET(request) {
           walletValue: existingProfile?.wallet_address || "null",
         });
 
+        // Default display_name and handle from Google/auth (so they are stored in DB, not only in UI)
+        const defaultDisplayName =
+          session.user.user_metadata?.full_name ||
+          session.user.user_metadata?.name ||
+          session.user.email?.split("@")[0] ||
+          null;
+        const emailPrefix = session.user.email?.split("@")[0];
+        const rawHandle = emailPrefix
+          ? emailPrefix.toLowerCase().replace(/[^a-z0-9_]/g, "")
+          : "";
+        const defaultHandle =
+          rawHandle.length >= 3
+            ? rawHandle
+            : rawHandle.length > 0
+              ? (rawHandle + "0".repeat(3)).slice(0, 3)
+              : null;
+
         // Prepare profile data
         const profileData = {
           id: session.user.id,
           email: session.user.email,
+          display_name: defaultDisplayName,
+          handle: defaultHandle,
+          updated_at: new Date().toISOString(),
         };
 
         // Add wallet address if provided and not already set
@@ -105,6 +125,8 @@ export async function GET(request) {
             console.log("📝 Created profile data:", {
               id: newProfile?.id,
               email: newProfile?.email,
+              display_name: newProfile?.display_name || "null",
+              handle: newProfile?.handle || "null",
               wallet_address: newProfile?.wallet_address || "null",
             });
             if (walletAddress) {
@@ -113,40 +135,38 @@ export async function GET(request) {
               triggerBackfill(walletAddress, session.user.id);
             }
           }
-        } else if (walletAddress) {
-          // Update existing profile with wallet address (even if it's already set, we'll update it)
-          console.log("🔄 Updating existing profile with wallet:", walletAddress);
-          const { data: updatedProfile, error: updateError } = await serviceClient
-            .from("profiles")
-            .update({ 
-              wallet_address: walletAddress,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", session.user.id)
-            .select()
-            .single();
-
-          if (updateError) {
-            console.error("❌ Error updating profile with wallet address:", {
-              error: updateError,
-              message: updateError.message,
-              code: updateError.code,
-              userId: session.user.id,
-              walletAddress,
-            });
-          } else {
-            console.log("✅ Wallet address linked to existing profile:", walletAddress);
-            console.log("📝 Updated profile data:", {
-              id: updatedProfile?.id,
-              wallet_address: updatedProfile?.wallet_address || "null",
-            });
-            // Trigger backfill for new wallet
-            triggerBackfill(walletAddress, session.user.id);
-          }
         } else {
-          console.log("ℹ️ Profile already exists for user:", session.user.id);
-          if (existingProfile?.wallet_address) {
-            console.log("ℹ️ Profile already has wallet address:", existingProfile.wallet_address);
+          // Existing profile: backfill display_name/handle from auth if null, and optionally update wallet
+          const updatePayload = { updated_at: new Date().toISOString() };
+          if (existingProfile.display_name == null && defaultDisplayName) {
+            updatePayload.display_name = defaultDisplayName;
+          }
+          if (existingProfile.handle == null && defaultHandle) {
+            updatePayload.handle = defaultHandle;
+          }
+          if (walletAddress && !existingProfile.wallet_address) {
+            updatePayload.wallet_address = walletAddress;
+          }
+
+          if (Object.keys(updatePayload).length > 1) {
+            console.log("🔄 Updating existing profile:", Object.keys(updatePayload));
+            const { error: updateError } = await serviceClient
+              .from("profiles")
+              .update(updatePayload)
+              .eq("id", session.user.id);
+
+            if (updateError) {
+              console.error("❌ Error updating profile in callback:", updateError.message);
+            } else {
+              if (updatePayload.display_name) console.log("✅ Set display_name from auth");
+              if (updatePayload.handle) console.log("✅ Set handle from auth");
+              if (updatePayload.wallet_address) {
+                console.log("✅ Wallet address linked:", updatePayload.wallet_address);
+                triggerBackfill(updatePayload.wallet_address, session.user.id);
+              }
+            }
+          } else if (walletAddress && existingProfile.wallet_address) {
+            triggerBackfill(walletAddress, session.user.id);
           }
         }
       } catch (error) {

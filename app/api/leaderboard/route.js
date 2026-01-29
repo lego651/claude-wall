@@ -5,40 +5,27 @@ import { calculateStats } from "@/lib/transactionProcessor";
 
 /**
  * Leaderboard API Route
- * 
+ *
  * GET /api/leaderboard
- * 
- * Returns all public profiles with their cached transaction statistics
- * Only includes users with wallet_address, display_name, and handle
- * Uses JSON files and trader_records table to avoid Arbiscan API calls
- * Uses anon key for public access (relies on RLS policy)
+ *
+ * Returns all public profiles with their transaction statistics.
+ * Data source priority: trader_records (by wallet) then trader_payout_history (Supabase JSON).
+ * Uses anon key so unauthenticated visitors can load the page.
  */
 export async function GET() {
   try {
-    // Use anon client for public access (RLS will handle permissions)
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("[Leaderboard] Missing Supabase env vars");
+      return NextResponse.json({ traders: [] });
+    }
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Fetch all profiles that have wallet addresses and display names (public profiles)
-    // Join with trader_records to get cached stats
+    // Fetch public profiles (wallet + display_name + handle)
     const { data: profiles, error } = await supabase
       .from("profiles")
-      .select(`
-        id,
-        display_name,
-        handle,
-        wallet_address,
-        created_at,
-        trader_records (
-          total_payout_usd,
-          last_30_days_payout_usd,
-          avg_payout_usd,
-          payout_count,
-          last_synced_at
-        )
-      `)
+      .select("id, display_name, handle, wallet_address, created_at")
       .not("wallet_address", "is", null)
       .not("display_name", "is", null)
       .not("handle", "is", null);
@@ -55,11 +42,26 @@ export async function GET() {
       return NextResponse.json({ traders: [] });
     }
 
-    // Map profiles to traders with stats from trader_records OR JSON files
+    // Only profiles with non-empty handle (used for /trader/[handle] links)
+    const validProfiles = profiles.filter(
+      (p) => p.handle != null && String(p.handle).trim().length > 0
+    );
+    if (validProfiles.length === 0) {
+      return NextResponse.json({ traders: [] });
+    }
+
     const traders = await Promise.all(
-      profiles.map(async (profile) => {
-        const record = profile.trader_records?.[0] || null;
+      validProfiles.map(async (profile) => {
         const walletAddress = profile.wallet_address.toLowerCase();
+
+        // Try cached stats from trader_records (keyed by wallet_address)
+        const { data: recordRow } = await supabase
+          .from("trader_records")
+          .select("total_payout_usd, last_30_days_payout_usd, avg_payout_usd, payout_count, last_synced_at")
+          .eq("wallet_address", walletAddress)
+          .maybeSingle();
+
+        const record = recordRow && Number(recordRow.total_payout_usd) > 0 ? recordRow : null;
         
         // If we have cached stats from trader_records, use them
         if (record && record.total_payout_usd > 0) {
