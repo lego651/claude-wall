@@ -97,9 +97,13 @@ export default function Login() {
       // Query parameters in redirectURL can cause it to not match the whitelist
       const redirectURL = `${currentOrigin}/api/auth/callback`;
       
-      // Store wallet in sessionStorage (OAuth providers may strip query params anyway)
+      // Store wallet in both sessionStorage AND cookie for server-side access
       if (pendingWallet) {
         sessionStorage.setItem("pending_wallet_address", pendingWallet);
+
+        // Set cookie so server can access it in the callback
+        // Expires in 10 minutes, just long enough for OAuth flow
+        document.cookie = `pending_wallet=${pendingWallet}; path=/; max-age=600; SameSite=Lax`;
       }
 
       // Log for debugging (always log in development, check origin for localhost)
@@ -122,21 +126,11 @@ export default function Login() {
       }
 
       // Build OAuth options
-      const oauthOptions = {
-        redirectTo: redirectURL,
-      };
-
-      // Only add queryParams if there's a pending wallet
-      // Empty queryParams object might cause issues with redirect validation
-      if (pendingWallet) {
-        oauthOptions.queryParams = {
-          wallet: pendingWallet,
-        };
-      }
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { data, error} = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: oauthOptions,
+        options: {
+          redirectTo: redirectURL,
+        },
       });
 
       if (error) {

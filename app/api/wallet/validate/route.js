@@ -12,7 +12,17 @@ import path from "path";
  */
 export async function POST(req) {
   try {
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return NextResponse.json(
+        { error: "Invalid request body", valid: false },
+        { status: 400 }
+      );
+    }
+
     const { wallet_address, current_user_id } = body;
 
     if (!wallet_address) {
@@ -46,11 +56,17 @@ export async function POST(req) {
     }
 
     // 2. Check if it's a prop firm address
-    const propFirmsPath = path.join(process.cwd(), "data", "propfirms.json");
-    const propFirmsData = JSON.parse(fs.readFileSync(propFirmsPath, "utf8"));
-    const allPropFirmAddresses = propFirmsData.firms.flatMap(firm => 
-      firm.addresses.map(addr => addr.toLowerCase())
-    );
+    let allPropFirmAddresses = [];
+    try {
+      const propFirmsPath = path.join(process.cwd(), "data", "propfirms.json");
+      const propFirmsData = JSON.parse(fs.readFileSync(propFirmsPath, "utf8"));
+      allPropFirmAddresses = propFirmsData.firms.flatMap(firm =>
+        firm.addresses.map(addr => addr.toLowerCase())
+      );
+    } catch (fileError) {
+      console.error("Error reading propfirms.json:", fileError);
+      // Continue without prop firm validation if file is missing
+    }
 
     if (allPropFirmAddresses.includes(trimmedAddress)) {
       return NextResponse.json(
@@ -164,8 +180,13 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("Error in wallet validation:", error);
+    console.error("Error stack:", error.stack);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error: "Internal server error",
+        valid: false,
+        details: error.message
+      },
       { status: 500 }
     );
   }

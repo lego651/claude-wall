@@ -1,33 +1,39 @@
 import { createClient } from "@/libs/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { exec } from "child_process";
+import { promisify } from "util";
 import config from "@/config";
+
+const execPromise = promisify(exec);
 
 export async function GET(request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  // Try to get wallet from query params (may be stripped by OAuth provider)
-  let walletAddress = requestUrl.searchParams.get("wallet");
   const next = requestUrl.searchParams.get("next") ?? config.auth.callbackUrl;
+
+  // Declare walletAddress outside the if block so it's accessible later
+  let walletAddress = null;
 
   console.log("🔐 Auth callback received:", {
     hasCode: !!code,
-    walletAddress: walletAddress || "none",
     allParams: Object.fromEntries(requestUrl.searchParams.entries()),
     fullUrl: requestUrl.toString(),
   });
-  
-  // Note: If wallet is not in query params, it should be in sessionStorage on client side
-  // But since this is server-side, we can't access sessionStorage here
-  // The wallet should be passed through OAuth queryParams or we need to handle it client-side
 
   if (code) {
     const supabase = await createClient();
     const { data: { session }, error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
-    
+
+    // Try to get wallet from cookie (set by signin page before OAuth redirect)
+    const cookieStore = await cookies();
+    walletAddress = cookieStore.get('pending_wallet')?.value || null;
+
     console.log("👤 Session exchange result:", {
       hasSession: !!session,
       userId: session?.user?.id,
+      walletFromCookie: walletAddress || "none",
       sessionError: sessionError?.message,
     });
 
@@ -103,6 +109,8 @@ export async function GET(request) {
             });
             if (walletAddress) {
               console.log("✅ Wallet address linked:", walletAddress);
+              // Trigger backfill for new wallet
+              triggerBackfill(walletAddress, session.user.id);
             }
           }
         } else if (walletAddress) {
@@ -132,6 +140,8 @@ export async function GET(request) {
               id: updatedProfile?.id,
               wallet_address: updatedProfile?.wallet_address || "null",
             });
+            // Trigger backfill for new wallet
+            triggerBackfill(walletAddress, session.user.id);
           }
         } else {
           console.log("ℹ️ Profile already exists for user:", session.user.id);
@@ -154,12 +164,92 @@ export async function GET(request) {
     console.log("⚠️ No code parameter in callback URL");
   }
 
-  // Build redirect URL - include wallet in query if it was provided (for client-side cleanup)
+  // Clear the pending_wallet cookie
+  const cookieStore = await cookies();
+  cookieStore.delete('pending_wallet');
+
+  // Build redirect URL
   const redirectUrl = new URL(next, request.url);
   if (walletAddress) {
     redirectUrl.searchParams.set("wallet_linked", "true");
   }
 
   // URL to redirect to after sign in process completes
-  return NextResponse.redirect(redirectUrl);
+  const response = NextResponse.redirect(redirectUrl);
+
+  // Delete the cookie in the response as well
+  response.cookies.delete('pending_wallet');
+
+  return response;
+}
+
+/**
+ * Trigger backfill for a newly linked wallet
+ * Runs in background, doesn't block the OAuth redirect
+ */
+async function triggerBackfill(walletAddress, userId) {
+  try {
+    console.log(`[OAuth Backfill] Triggering backfill for wallet: ${walletAddress}`);
+
+    // Check if ARBISCAN_API_KEY is available
+    if (!process.env.ARBISCAN_API_KEY) {
+      console.error('[OAuth Backfill] ARBISCAN_API_KEY not found - skipping backfill');
+      return;
+    }
+
+    // Run backfill script in background (fire-and-forget)
+    const scriptPath = 'scripts/backfill-trader-history.js';
+    const command = `node ${scriptPath} ${walletAddress}`;
+
+    console.log(`[OAuth Backfill] Executing: ${command}`);
+
+    // Execute without awaiting (fire-and-forget)
+    // This runs in background and doesn't block the OAuth redirect
+    execPromise(command, {
+      timeout: 300000, // 5 minutes max
+      maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+    })
+      .then(({ stdout, stderr }) => {
+        if (stdout) {
+          console.log('[OAuth Backfill] Script output:', stdout);
+        }
+        if (stderr) {
+          console.warn('[OAuth Backfill] Script warnings:', stderr);
+        }
+
+        // Update profile to mark backfill as complete
+        const serviceClient = createServiceClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+          process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+          { auth: { persistSession: false } }
+        );
+
+        serviceClient
+          .from("profiles")
+          .update({
+            backfilled_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", userId)
+          .then(() => {
+            console.log(`[OAuth Backfill] ✅ Backfill complete for ${walletAddress}`);
+          })
+          .catch((err) => {
+            console.error('[OAuth Backfill] Failed to update backfilled_at:', err);
+          });
+      })
+      .catch((execError) => {
+        console.error('[OAuth Backfill] Script execution error:', execError.message);
+
+        // Don't fail the OAuth flow - backfill can be retried later
+        if (execError.killed) {
+          console.error('[OAuth Backfill] Timeout - wallet may have too many transactions');
+        }
+      });
+
+    console.log('[OAuth Backfill] ✅ Backfill job queued (running in background)');
+  } catch (error) {
+    console.error('[OAuth Backfill] Unexpected error:', error);
+    // Don't throw - we don't want to break the OAuth flow
+  }
 }

@@ -72,6 +72,17 @@ export default function ConnectWalletPage() {
         body: JSON.stringify({ wallet_address: trimmedAddress }),
       });
 
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("API returned non-JSON response:", {
+          status: response.status,
+          statusText: response.statusText,
+          contentType,
+        });
+        throw new Error("Server error. Please try again.");
+      }
+
       const data = await response.json();
 
       console.log("Wallet validation response:", {
@@ -108,7 +119,16 @@ export default function ConnectWalletPage() {
       router.push(config.auth.loginUrl);
     } catch (err) {
       console.error("Error validating wallet address:", err);
-      setError("Unable to validate wallet address. Please check your connection and try again.");
+
+      // Provide more specific error message
+      if (err.message === "Failed to fetch") {
+        setError("Cannot connect to server. Please ensure the development server is running (npm run dev).");
+      } else if (err.message.includes("Server error")) {
+        setError("Server error. Please check the console logs and try again.");
+      } else {
+        setError(err.message || "Unable to validate wallet address. Please check your connection and try again.");
+      }
+
       setIsValidating(false);
     }
   };
