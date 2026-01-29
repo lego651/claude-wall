@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [isConnectWalletModalOpen, setIsConnectWalletModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [backfillStatus, setBackfillStatus] = useState(null);
+  const [syncBannerDismissed, setSyncBannerDismissed] = useState(false);
 
   // Get wallet address from profile
   const walletAddress = profile?.wallet_address;
@@ -64,6 +65,19 @@ export default function Dashboard() {
 
     loadUserData();
   }, []);
+
+  // Auto-dismiss syncing banner after 60 seconds so it doesn't run forever
+  const showSyncBanner =
+    backfillStatus &&
+    backfillStatus.has_wallet &&
+    !backfillStatus.backfilled &&
+    !syncBannerDismissed;
+
+  useEffect(() => {
+    if (!showSyncBanner) return;
+    const timer = setTimeout(() => setSyncBannerDismissed(true), 60000);
+    return () => clearTimeout(timer);
+  }, [showSyncBanner]);
 
   // Check if backfill is in progress
   const checkBackfillStatus = async () => {
@@ -165,6 +179,7 @@ export default function Dashboard() {
 
     // If backfill was triggered, update status to show syncing banner
     if (backfillTriggered) {
+      setSyncBannerDismissed(false); // Show banner again for new sync
       setBackfillStatus({
         backfilled: false,
         has_wallet: true,
@@ -252,10 +267,20 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-8">
 
-        {/* Syncing Banner */}
-        {backfillStatus && backfillStatus.has_wallet && !backfillStatus.backfilled && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
-            <div className="flex items-start gap-3">
+        {/* Syncing Banner - dismissible and auto-hides after 60s */}
+        {showSyncBanner && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 relative">
+            <button
+              type="button"
+              onClick={() => setSyncBannerDismissed(true)}
+              className="absolute top-3 right-3 p-1 rounded-md text-blue-600 hover:bg-blue-100 transition-colors"
+              aria-label="Dismiss"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="flex items-start gap-3 pr-8">
               <div className="flex-shrink-0">
                 <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
