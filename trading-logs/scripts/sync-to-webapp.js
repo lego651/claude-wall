@@ -44,7 +44,7 @@ function extractMetadata(weekData) {
 }
 
 /**
- * Update reports.js file with new report metadata
+ * Update reports.js file with new report metadata (server version with fs)
  */
 function updateReportsFile(metadata, dataReportsPath) {
   const reportsFilePath = path.join(dataReportsPath, 'reports.js');
@@ -95,6 +95,59 @@ function updateReportsFile(metadata, dataReportsPath) {
   );
 
   fs.writeFileSync(reportsFilePath, updatedContent);
+  return true;
+}
+
+/**
+ * Update reports-data.js file with new report metadata (client-safe version)
+ */
+function updateReportsDataFile(metadata, dataReportsPath) {
+  const reportsDataFilePath = path.join(dataReportsPath, 'reports-data.js');
+
+  if (!fs.existsSync(reportsDataFilePath)) {
+    console.error(`❌ Error: reports-data.js not found at ${reportsDataFilePath}`);
+    process.exit(1);
+  }
+
+  let content = fs.readFileSync(reportsDataFilePath, 'utf8');
+
+  // Extract existing reports array
+  const arrayMatch = content.match(/export const reports = \[([\s\S]*?)\];/);
+  if (!arrayMatch) {
+    console.error('❌ Error: Could not find reports array in reports-data.js');
+    process.exit(1);
+  }
+
+  // Check if report already exists
+  if (content.includes(`slug: '${metadata.slug}'`)) {
+    console.log(`⚠️  Report ${metadata.slug} already exists in reports-data.js - skipping update`);
+    return false;
+  }
+
+  // Create new report entry (client-safe version without getContent function)
+  const newReportEntry = `  {
+    slug: '${metadata.slug}',
+    type: reportTypes.${metadata.type},
+    title: '${metadata.title}',
+    period: '${metadata.period}',
+    weekNumber: ${metadata.weekNumber},
+    year: ${metadata.year},
+    publishedAt: '${metadata.publishedAt}',
+    summary: {
+      totalR: ${metadata.summary.totalR},
+      winRate: ${metadata.summary.winRate},
+      totalTrades: ${metadata.summary.totalTrades},
+      bestDay: '${metadata.summary.bestDay}',
+    },
+  },`;
+
+  // Insert new report at the beginning of the array
+  const updatedContent = content.replace(
+    /export const reports = \[/,
+    `export const reports = [\n${newReportEntry}`
+  );
+
+  fs.writeFileSync(reportsDataFilePath, updatedContent);
   return true;
 }
 
@@ -159,15 +212,21 @@ function main() {
   console.log(`   From: ${sourcePath}`);
   console.log(`   To:   ${destPath}`);
 
-  // Step 2: Update reports.js
+  // Step 2: Update reports.js (server version with fs)
   const updated = updateReportsFile(metadata, dataReportsPath);
   if (updated) {
     console.log(`✅ Updated reports.js with new metadata`);
   }
 
+  // Step 3: Update reports-data.js (client-safe version for frontend)
+  const updatedData = updateReportsDataFile(metadata, dataReportsPath);
+  if (updatedData) {
+    console.log(`✅ Updated reports-data.js with new metadata (for client components)`);
+  }
+
   console.log('\n🎉 Sync complete!\n');
-  console.log(`📊 View report at: http://localhost:3000/reports/${metadata.slug}`);
-  console.log(`📋 All reports at: http://localhost:3000/reports`);
+  console.log(`📊 View report at: http://localhost:3000/admin/reports/${metadata.slug}`);
+  console.log(`📋 All reports at: http://localhost:3000/admin/reports`);
 }
 
 // Run

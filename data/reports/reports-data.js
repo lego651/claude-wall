@@ -10,6 +10,21 @@ export const reportTypes = {
 // All available trading reports (metadata only, no markdown content)
 export const reports = [
   {
+    slug: 'week-05-2026',
+    type: reportTypes.weekly,
+    title: 'Week 5, 2026',
+    period: '2026-01-27 to 2026-01-31',
+    weekNumber: 5,
+    year: 2026,
+    publishedAt: '2026-01-31',
+    summary: {
+      totalR: 2.6,
+      winRate: 56.25,
+      totalTrades: 16,
+      bestDay: 'Monday (+3.70R)',
+    },
+  },
+  {
     slug: 'week-04-2026',
     type: reportTypes.weekly,
     title: 'Week 4, 2026',

@@ -76,8 +76,11 @@ Use `scripts/calculate.js` functions:
 2. **Run Complete Workflow**: `node scripts/process-weekly-data.js data/YYYY/week-WW.json`
    - This ONE command does everything:
      - Generates markdown report
-     - Syncs to web app (copies MD + updates reports.js)
+     - Syncs to web app (copies MD + updates BOTH reports.js AND reports-data.js)
      - Aggregates all data
+   - **CRITICAL**: The sync MUST update BOTH files:
+     - `reports.js` (server version with fs - used by detail pages)
+     - `reports-data.js` (client-safe version - used by list page at /admin/reports)
 
 ### Step 5: Show User Summary
 Display:
@@ -148,10 +151,11 @@ node process-weekly-data.js ../data/2026/week-03.json
 
 This automatically:
 1. ✅ Generates markdown report (`reports/week-03-2026.md`)
-2. ✅ Copies markdown to web app (`app/reports/_assets/`)
-3. ✅ Updates `app/reports/_assets/reports.js` with metadata
-4. ✅ Aggregates all data for the year
-5. ✅ Makes it live on http://localhost:3000/reports
+2. ✅ Copies markdown to web app (`data/reports/`)
+3. ✅ Updates `data/reports/reports.js` with metadata (server version)
+4. ✅ Updates `data/reports/reports-data.js` with metadata (client version) **← CRITICAL FOR FRONTEND**
+5. ✅ Aggregates all data for the year
+6. ✅ Makes it live on http://localhost:3000/admin/reports
 
 **Manual steps (if needed):**
 ```bash
@@ -172,18 +176,19 @@ node aggregate-data.js 2026
 ### For Each Week:
 1. **Weekly JSON**: `data/YYYY/week-WW.json` (detailed trade data)
 2. **Weekly Report**: `reports/week-WW-YYYY.md` (markdown with ASCII charts, insights, recommendations)
-3. **Web App Report**: `app/reports/_assets/week-WW-YYYY.md` (auto-copied)
-4. **Web App Metadata**: `app/reports/_assets/reports.js` (auto-updated)
+3. **Web App Report**: `data/reports/week-WW-YYYY.md` (auto-copied)
+4. **Web App Metadata (Server)**: `data/reports/reports.js` (auto-updated - used by detail pages)
+5. **Web App Metadata (Client)**: `data/reports/reports-data.js` (auto-updated - used by list page)
 
 ### Aggregated (for frontend):
-5. **Daily Index**: `data/YYYY/aggregated/daily-index.json` (all days, flat structure)
-6. **Monthly Files**: `data/YYYY/aggregated/YYYY-MM.json` (month aggregations)
-7. **Yearly Summary**: `data/YYYY/aggregated/yearly-summary.json` (full year stats)
-8. **Navigation Index**: `data/YYYY/aggregated/index.json` (metadata)
+6. **Daily Index**: `data/YYYY/aggregated/daily-index.json` (all days, flat structure)
+7. **Monthly Files**: `data/YYYY/aggregated/YYYY-MM.json` (month aggregations)
+8. **Yearly Summary**: `data/YYYY/aggregated/yearly-summary.json` (full year stats)
+9. **Navigation Index**: `data/YYYY/aggregated/index.json` (metadata)
 
 ### Web App URLs:
-- **All Reports**: http://localhost:3000/reports
-- **Single Report**: http://localhost:3000/reports/week-WW-YYYY
+- **All Reports**: http://localhost:3000/admin/reports
+- **Single Report**: http://localhost:3000/admin/reports/week-WW-YYYY
 
 ---
 
@@ -198,6 +203,7 @@ node aggregate-data.js 2026
 - Auto-run aggregation after creating weekly file
 - Show user a nice summary with key metrics
 - **Always verify all week files exist before aggregating** - the aggregation script reads ALL week-*.json files, so make sure previous weeks aren't accidentally deleted
+- **CRITICAL: ALWAYS ensure BOTH reports.js AND reports-data.js are updated** - the frontend list page won't show new reports without reports-data.js being updated!
 
 ### ❌ DON'T:
 - **DON'T use ISO week calculation - use filename instead!**
