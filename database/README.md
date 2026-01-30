@@ -1,22 +1,126 @@
-# Database Setup
+# Database Migrations
 
-This directory contains the SQL schema for setting up the user profiles table in Supabase.
+This directory contains SQL migration files for the PropProof database.
 
-## Setup Instructions
+## Running Migrations
+
+### Option 1: Supabase Dashboard (Recommended)
 
 1. Go to your Supabase project dashboard
-2. Navigate to the SQL Editor
-3. Run the SQL script from `schema.sql`
+2. Navigate to **SQL Editor**
+3. Copy and paste the contents of the migration file
+4. Click **Run** to execute
 
-Alternatively, you can run it via the Supabase CLI:
+### Option 2: Supabase CLI
 
 ```bash
-supabase db reset
-# or
-psql -h your-db-host -U postgres -d postgres -f schema.sql
+# Install Supabase CLI if not already installed
+npm install -g supabase
+
+# Login to Supabase
+supabase login
+
+# Link to your project
+supabase link --project-ref YOUR_PROJECT_REF
+
+# Run migration
+supabase db push
 ```
 
-## Schema Overview
+### Option 3: Direct SQL Connection
+
+```bash
+# Connect to your Supabase Postgres instance
+psql "postgresql://postgres:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:5432/postgres"
+
+# Run migration
+\i /path/to/migration-file.sql
+```
+
+## Migration Files
+
+### Core Schema
+- `schema.sql` - Original profiles table and auth setup
+- `add-profile-fields.sql` - Additional profile fields
+- `add-isadmin-field.sql` - Admin user support
+- `add-public-profile-policy.sql` - Public profile visibility
+
+### Trading Features
+- `create-trader-records-table.sql` - Trader verification system
+- `create-pending-wallets-table.sql` - Wallet connection queue
+- `create-recent-trader-payouts-table.sql` - Recent payout tracking
+- `create-trader-payout-history-table.sql` - Historical payout data
+
+### Alpha Intelligence Engine (NEW)
+- `alpha-intelligence-schema.sql` - **TICKET-001** - Trustpilot reviews, subscriptions, weekly reports
+
+## Alpha Intelligence Schema
+
+The alpha intelligence schema adds the following tables:
+
+### 1. `firms`
+Reference table for prop firms (migrated from `data/propfirms.json`)
+
+### 2. `trustpilot_reviews`
+Stores scraped Trustpilot reviews with AI classification:
+- Review data (rating, title, text, date, author)
+- AI classification (category, severity, confidence)
+- Indexes for fast firm/date queries
+
+### 3. `firm_subscriptions`
+Tracks user subscriptions to weekly reports:
+- One subscription per user per firm
+- Email preferences
+- Last sent timestamp
+
+### 4. `weekly_reports`
+Cached weekly intelligence reports:
+- Stored as JSONB for flexibility
+- Email delivery metrics
+- Public archive (no auth required)
+
+### 5. `weekly_incidents`
+Aggregated incidents from multiple reviews:
+- AI-generated summaries
+- Severity levels
+- Source review references
+
+## Verification
+
+After running the alpha intelligence migration, verify with:
+
+```sql
+-- Check firms loaded
+SELECT id, name FROM firms;
+
+-- Verify table creation
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+  AND table_name IN ('trustpilot_reviews', 'firm_subscriptions', 'weekly_reports', 'weekly_incidents');
+
+-- Check RLS policies
+SELECT tablename, policyname
+FROM pg_policies
+WHERE schemaname = 'public'
+  AND tablename IN ('firms', 'trustpilot_reviews', 'firm_subscriptions', 'weekly_reports', 'weekly_incidents');
+```
+
+## Rollback
+
+To rollback the alpha intelligence schema:
+
+```sql
+DROP TABLE IF EXISTS weekly_incidents CASCADE;
+DROP TABLE IF EXISTS weekly_reports CASCADE;
+DROP TABLE IF EXISTS firm_subscriptions CASCADE;
+DROP TABLE IF EXISTS trustpilot_reviews CASCADE;
+DROP TABLE IF EXISTS firms CASCADE;
+DROP FUNCTION IF EXISTS get_week_number(DATE);
+DROP FUNCTION IF EXISTS get_year(DATE);
+```
+
+## Original Schema (Profiles)
 
 The `profiles` table extends Supabase's built-in `auth.users` table with additional fields:
 
@@ -32,19 +136,54 @@ The `profiles` table extends Supabase's built-in `auth.users` table with additio
 - `created_at` - Timestamp
 - `updated_at` - Auto-updated timestamp
 
-## Row Level Security (RLS)
+### Row Level Security (RLS)
 
-The table has RLS enabled with the following policies:
+All tables have RLS enabled with appropriate policies:
 
 - Users can view their own profile
 - Users can update their own profile
 - Users can insert their own profile
+- Public data (firms, reviews, reports) is readable by anyone
 
-## Indexes
+### Indexes
 
 - Index on `wallet_address` for faster lookups
 - Index on `email` for faster lookups
+- Indexes on firm_id and dates for intelligence queries
 
-## Triggers
+### Triggers
 
 - Automatic `updated_at` timestamp update on row changes
+
+## Next Steps
+
+After running `alpha-intelligence-schema.sql`:
+
+1. ✅ Verify all tables created
+2. ✅ Verify RLS policies applied
+3. ✅ Verify 8 firms seeded
+4. 🔄 Proceed to **TICKET-002** (Trustpilot Scraper)
+
+## Environment Variables
+
+Ensure the following are set for the application:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# OpenAI (for AI classification)
+OPENAI_API_KEY=your_openai_key
+
+# Resend (for email delivery)
+RESEND_API_KEY=your_resend_key
+```
+
+## Support
+
+For issues or questions:
+- Check Supabase logs in Dashboard > Database > Logs
+- Review RLS policies if getting permission errors
+- Ensure service role key is set for cron jobs
