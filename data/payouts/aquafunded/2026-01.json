@@ -2,12 +2,12 @@
   "firmId": "aquafunded",
   "period": "2026-01",
   "timezone": "UTC",
-  "generatedAt": "2026-01-29T11:26:31.273Z",
+  "generatedAt": "2026-01-30T11:23:17.792Z",
   "summary": {
-    "totalPayouts": 298671,
-    "payoutCount": 126,
+    "totalPayouts": 313677,
+    "payoutCount": 130,
     "largestPayout": 8175,
-    "avgPayout": 2370
+    "avgPayout": 2413
   },
   "dailyBuckets": [
     {
@@ -184,9 +184,52 @@
       "rise": 8956,
       "crypto": 0,
       "wire": 0
+    },
+    {
+      "date": "2026-01-29",
+      "total": 15006,
+      "rise": 15006,
+      "crypto": 0,
+      "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0x87bafcaed144300eb1fb8110f372456a82558c0afec036a4faabdf0e94f5ece7",
+      "firm_id": "aquafunded",
+      "amount": 2307.65,
+      "payment_method": "rise",
+      "timestamp": "2026-01-29T17:50:02.000Z",
+      "from_address": "0x6f405a66cb4048fb05e72d74fcccd5073697c469",
+      "to_address": "0x0773e14d8d85a55247d11495e0dd6f1d00cf635d"
+    },
+    {
+      "tx_hash": "0x14a9c1ad83d21d660115daf26c10d99977fcc38ee1c723bbc2b42a805cf4ad4f",
+      "firm_id": "aquafunded",
+      "amount": 2564.23,
+      "payment_method": "rise",
+      "timestamp": "2026-01-29T17:45:02.000Z",
+      "from_address": "0x6f405a66cb4048fb05e72d74fcccd5073697c469",
+      "to_address": "0xc16743f62db378b1873b2355fccc43113c65d4ac"
+    },
+    {
+      "tx_hash": "0x3852a2087ea55be1bad5762fa1339386c0785b57ef228429c9736da506aafc3b",
+      "firm_id": "aquafunded",
+      "amount": 7235,
+      "payment_method": "rise",
+      "timestamp": "2026-01-29T17:32:51.000Z",
+      "from_address": "0x6f405a66cb4048fb05e72d74fcccd5073697c469",
+      "to_address": "0xabc7cdccaecc6503fd7d0e070e494a47b153b16f"
+    },
+    {
+      "tx_hash": "0xf3e6299c33a12582f09a67d1b40d9bd9cb3c4c9456c9df8e4f24363e07f7480b",
+      "firm_id": "aquafunded",
+      "amount": 2899.59,
+      "payment_method": "rise",
+      "timestamp": "2026-01-29T16:41:17.000Z",
+      "from_address": "0x6f405a66cb4048fb05e72d74fcccd5073697c469",
+      "to_address": "0x803b700d75d36f76cecae57c0aef4c4f1187ede2"
+    },
     {
       "tx_hash": "0x94135912b96dee605ab571938e0abf04a1f295d5d87e4363b61bfce803007ebb",
       "firm_id": "aquafunded",

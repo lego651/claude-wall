@@ -2,12 +2,12 @@
   "firmId": "fxify",
   "period": "2026-01",
   "timezone": "UTC",
-  "generatedAt": "2026-01-28T18:41:47.560Z",
+  "generatedAt": "2026-01-30T11:23:29.253Z",
   "summary": {
-    "totalPayouts": 178283,
-    "payoutCount": 47,
+    "totalPayouts": 178542,
+    "payoutCount": 48,
     "largestPayout": 31166,
-    "avgPayout": 3793
+    "avgPayout": 3720
   },
   "dailyBuckets": [
     {
@@ -142,9 +142,25 @@
       "rise": 2710,
       "crypto": 0,
       "wire": 0
+    },
+    {
+      "date": "2026-01-29",
+      "total": 259,
+      "rise": 259,
+      "crypto": 0,
+      "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0xcbbefb3568e377e062a0940dbfb429f034ede8d8abe9a718233a50276d5c9110",
+      "firm_id": "fxify",
+      "amount": 259.14,
+      "payment_method": "rise",
+      "timestamp": "2026-01-29T13:59:02.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xabe98aad78b69cdadc35682bed8d66f115688a83"
+    },
     {
       "tx_hash": "0xfbfd1d88102ef7d68b75f583ccd36cd3973a470b34e264b5a7cbe3e8c5b920e0",
       "firm_id": "fxify",
