@@ -139,7 +139,10 @@ export async function POST(req) {
  *
  * GET /api/backfill-trader
  *
- * Returns whether the authenticated user's wallet has been backfilled
+ * Returns whether the authenticated user's wallet has been backfilled.
+ * For returning users: if backfilled_at is null but we already have transaction
+ * data in Supabase (trader_records or trader_payout_history), we treat them as
+ * backfilled and set backfilled_at so the "Syncing" banner is not shown again.
  */
 export async function GET(req) {
   try {
@@ -165,10 +168,66 @@ export async function GET(req) {
       });
     }
 
+    // Already marked backfilled — no need to check data
+    if (profile.backfilled_at) {
+      return NextResponse.json({
+        backfilled: true,
+        has_wallet: !!profile.wallet_address,
+        backfilled_at: profile.backfilled_at,
+      });
+    }
+
+    // No wallet — not backfilled
+    if (!profile.wallet_address?.trim()) {
+      return NextResponse.json({
+        backfilled: false,
+        has_wallet: false,
+        backfilled_at: null,
+      });
+    }
+
+    const walletLower = profile.wallet_address.toLowerCase();
+
+    // Returning user: backfilled_at is null but we may already have data in Supabase.
+    // If so, treat as backfilled and set backfilled_at so the syncing banner doesn't show.
+    const { data: cachedRecord } = await supabase
+      .from("trader_records")
+      .select("wallet_address, last_synced_at")
+      .eq("wallet_address", walletLower)
+      .maybeSingle();
+
+    const hasCachedData = !!cachedRecord?.last_synced_at;
+
+    let hasHistoryData = false;
+    if (!hasCachedData) {
+      const { data: historyRows } = await supabase
+        .from("trader_payout_history")
+        .select("year_month")
+        .eq("wallet_address", walletLower)
+        .limit(1);
+      hasHistoryData = Array.isArray(historyRows) && historyRows.length > 0;
+    }
+
+    const alreadyHasData = hasCachedData || hasHistoryData;
+
+    if (alreadyHasData) {
+      const now = new Date().toISOString();
+      await supabase
+        .from("profiles")
+        .update({ backfilled_at: now, updated_at: now })
+        .eq("id", user.id);
+
+      return NextResponse.json({
+        backfilled: true,
+        has_wallet: true,
+        backfilled_at: now,
+      });
+    }
+
     return NextResponse.json({
-      backfilled: !!profile.backfilled_at,
-      has_wallet: !!profile.wallet_address,
-      backfilled_at: profile.backfilled_at,
+      backfilled: false,
+      has_wallet: true,
+      backfilled_at: null,
     });
 
   } catch (error) {
