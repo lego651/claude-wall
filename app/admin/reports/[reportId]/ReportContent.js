@@ -77,12 +77,12 @@ export default function ReportContent({
                 {/* Top Strategy Highlight */}
                 {topStrategy && (
                   <Link href={`/admin/strategies/${getStrategyId(topStrategy.name)}`}>
-                    <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl px-5 py-3 flex items-center gap-3 mb-8 w-fit hover:bg-emerald-100 hover:border-emerald-200 transition-colors cursor-pointer">
+                    <div className={`rounded-2xl px-5 py-3 flex items-center gap-3 mb-8 w-fit transition-colors cursor-pointer border ${topStrategy.totalR >= 0 ? 'bg-emerald-50/60 border-emerald-100 hover:bg-emerald-100 hover:border-emerald-200' : 'bg-rose-50/60 border-rose-100 hover:bg-rose-100 hover:border-rose-200'}`}>
                       <span className="text-xl">🥇</span>
                       <div>
-                        <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest block">TOP STRATEGY</span>
+                        <span className={`text-[9px] font-black uppercase tracking-widest block ${topStrategy.totalR >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>TOP STRATEGY</span>
                         <div className="text-sm font-black text-slate-900">
-                          {topStrategy.name} <span className="text-emerald-500 ml-1">+{topStrategy.totalR.toFixed(2)}R</span>
+                          {topStrategy.name} <span className={`ml-1 ${topStrategy.totalR >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{topStrategy.totalR > 0 ? '+' : ''}{topStrategy.totalR.toFixed(2)}R</span>
                         </div>
                       </div>
                     </div>
@@ -191,12 +191,14 @@ export default function ReportContent({
                       <h3 className="text-sm font-black text-slate-900 transition-colors uppercase tracking-wider">{strat.name.toUpperCase()}</h3>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{strat.trades} TRADES</span>
                     </div>
-                    <span className="text-sm font-black text-emerald-500">+{strat.totalR.toFixed(2)}R</span>
+                    <span className={`text-sm font-black ${strat.totalR >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      {strat.totalR > 0 ? '+' : ''}{strat.totalR.toFixed(2)}R
+                    </span>
                   </div>
                   <div className="h-4 bg-slate-50 rounded-lg overflow-hidden relative group-hover:bg-slate-100 transition-colors cursor-pointer">
                     <div 
                       className="h-full bg-slate-600 transition-all duration-1000 group-hover:bg-slate-500 rounded-r-md relative"
-                      style={{ width: `${(strat.totalR / strategyMaxR) * 100}%` }}
+                      style={{ width: `${(Math.abs(strat.totalR) / strategyMaxR) * 100}%` }}
                     >
                        <div className="w-full h-full opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:4px_4px]" />
                     </div>
@@ -224,17 +226,24 @@ export default function ReportContent({
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{day.day.toUpperCase()}</span>
                 <span className="text-xs font-bold text-slate-300 mb-6">{day.date}</span>
 
-                <div className="h-48 w-full bg-slate-50 rounded-2xl mb-6 relative flex items-end justify-center p-2">
-                  {day.totalR !== 0 && (
-                    <div 
-                      className="w-full rounded-t-xl transition-all duration-700 bg-slate-600"
-                      style={{ height: `${(Math.abs(day.totalR) / dailyMaxR) * 100}%`, minHeight: day.totalR === 0 ? '4px' : '8px' }}
+                <div className="h-48 w-1/2 mx-auto bg-slate-50 rounded-2xl mb-6 relative p-2">
+                  {/* Baseline: same line for all days */}
+                  <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-px bg-slate-300 z-0" aria-hidden="true" />
+                  {day.totalR > 0 && (
+                    <div
+                      className="absolute left-0 right-0 bottom-1/2 rounded-t-xl bg-slate-600 transition-all duration-700 z-10"
+                      style={{ height: `${(day.totalR / dailyMaxR) * 50}%`, minHeight: '8px' }}
                     >
                       <div className="w-full h-full opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:3px_3px]" />
                     </div>
                   )}
-                  {day.totalR === 0 && (
-                    <div className="w-full h-1 bg-slate-300 rounded-full" />
+                  {day.totalR < 0 && (
+                    <div
+                      className="absolute left-0 right-0 top-1/2 rounded-b-xl bg-slate-600 transition-all duration-700 z-10"
+                      style={{ height: `${(Math.abs(day.totalR) / dailyMaxR) * 50}%`, minHeight: '8px' }}
+                    >
+                      <div className="w-full h-full opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:3px_3px]" />
+                    </div>
                   )}
                 </div>
 

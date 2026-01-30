@@ -23,34 +23,54 @@ const STRATEGIES = [
   { id: 'GOLD_2', name: 'GOLD 2', description: 'Gold Trading Strategy 2', color: 'error' },
 ];
 
-// Compact weekly performance card with bar chart
+// Compact weekly performance card with bar chart (positive up from baseline, negative down)
 function WeeklyStrategyCard({ strategy, weekData, weekSummary, maxR }) {
   const strategyR = weekData?.[strategy.id] || 0;
   const isPositive = strategyR >= 0;
   const strategyStats = weekSummary?.byStrategy?.[strategy.id];
   
-  // Calculate bar height as percentage of max R (minimum height for visibility)
-  const maxHeight = 160; // Maximum bar height in pixels
-  const minHeight = 12; // Minimum bar height for very small values
-  const barHeight = maxR > 0 
-    ? Math.max(minHeight, (Math.abs(strategyR) / maxR) * maxHeight)
+  const maxHeight = 160;
+  const halfHeight = maxHeight / 2;
+  const minHeight = 12;
+  const barHeightPx = maxR > 0
+    ? Math.max(minHeight, (Math.abs(strategyR) / maxR) * halfHeight)
     : minHeight;
 
   return (
     <div className="flex flex-col items-center flex-1 min-w-0">
-      {/* Vertical bar chart container */}
-      <div className="w-full my-6 flex items-end justify-center px-8" style={{ height: `${maxHeight}px` }}>
-        <div 
-          className="rounded-t-lg"
-          style={{ 
-            width: '45%',
-            height: `${barHeight}px`,
-            backgroundColor: '#94a3b8',
-            backgroundImage: 'radial-gradient(circle, rgba(255, 255, 255, 0.3) 1px, transparent 1px)',
-            backgroundSize: '4px 4px',
-            minHeight: `${minHeight}px`
-          }}
+      {/* Vertical bar chart: baseline at center, positive up, negative down */}
+      <div className="w-full my-6 relative px-8" style={{ height: `${maxHeight}px` }}>
+        {/* Baseline */}
+        <div
+          className="absolute left-0 right-0 top-1/2 h-px -translate-y-px bg-slate-300 z-0"
+          aria-hidden="true"
         />
+        {strategyR > 0 && (
+          <div
+            className="absolute left-1/2 bottom-1/2 -translate-x-1/2 rounded-t-lg z-10"
+            style={{
+              width: '45%',
+              height: `${barHeightPx}px`,
+              backgroundColor: '#94a3b8',
+              backgroundImage: 'radial-gradient(circle, rgba(255, 255, 255, 0.3) 1px, transparent 1px)',
+              backgroundSize: '4px 4px',
+              minHeight: `${minHeight}px`,
+            }}
+          />
+        )}
+        {strategyR < 0 && (
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 rounded-b-lg z-10"
+            style={{
+              width: '45%',
+              height: `${barHeightPx}px`,
+              backgroundColor: '#94a3b8',
+              backgroundImage: 'radial-gradient(circle, rgba(255, 255, 255, 0.3) 1px, transparent 1px)',
+              backgroundSize: '4px 4px',
+              minHeight: `${minHeight}px`,
+            }}
+          />
+        )}
       </div>
       
       {/* R value - green for positive, red for negative */}
@@ -383,7 +403,7 @@ export default function PortfolioPage() {
                         <div>
                           <div className="text-[9px] font-black text-emerald-700 uppercase tracking-widest block">TOP PERFORMER</div>
                           <div className="text-sm font-bold text-slate-900">
-                            {topStrategy.name} <span className="text-emerald-600 ml-1">+{topStrategyR.toFixed(2)}R</span>
+                            {topStrategy.name} <span className={topStrategyR >= 0 ? 'text-emerald-600' : 'text-red-500'}>{topStrategyR > 0 ? '+' : ''}{topStrategyR.toFixed(2)}R</span>
                           </div>
                         </div>
                       </div>
