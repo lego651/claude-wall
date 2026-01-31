@@ -1,0 +1,148 @@
+/**
+ * TICKET-011: HTML Email Template for weekly digest
+ * One aggregated email per user: header + one section per firm + footer.
+ * Inline CSS for email clients; mobile-responsive (max-width: 600px).
+ */
+
+export interface DigestReportInput {
+  firmId: string;
+  firmName?: string;
+  weekStart: string;
+  weekEnd: string;
+  payouts: {
+    total: number;
+    count: number;
+    largest: number;
+    avgPayout: number;
+    changeVsLastWeek: number | null;
+  };
+  trustpilot: {
+    avgRating: number;
+    ratingChange: number | null;
+    reviewCount: number;
+    sentiment: { positive: number; neutral: number; negative: number };
+  };
+  incidents: Array<{
+    incident_type: string;
+    severity: string;
+    title: string;
+    summary: string;
+    review_count: number;
+  }>;
+  ourTake: string;
+}
+
+export interface DigestEmailOptions {
+  weekStart: string;
+  weekEnd: string;
+  manageSubscriptionsUrl: string;
+  unsubscribeUrl: string;
+  baseUrl: string;
+}
+
+function severityColor(severity: string): string {
+  if (severity === 'high') return '#dc2626';
+  if (severity === 'medium') return '#ca8a04';
+  return '#16a34a';
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+export function buildWeeklyDigestHtml(
+  reports: DigestReportInput[],
+  options: DigestEmailOptions
+): string {
+  const { weekStart, weekEnd, manageSubscriptionsUrl, unsubscribeUrl, baseUrl } = options;
+  const weekLabel = `Week of ${weekStart} – ${weekEnd}`;
+
+  const firmSections = reports
+    .map((r) => {
+      const firmName = r.firmName ?? r.firmId;
+      const firmUrl = `${baseUrl}/propfirm/${r.firmId}`.replace(/\/\/+/g, '/');
+      const changePayout =
+        r.payouts.changeVsLastWeek != null
+          ? r.payouts.changeVsLastWeek >= 0
+            ? `<span style="color:#059669;">↑${r.payouts.changeVsLastWeek}%</span>`
+            : `<span style="color:#dc2626;">↓${Math.abs(r.payouts.changeVsLastWeek)}%</span>`
+          : '';
+      const changeRating =
+        r.trustpilot.ratingChange != null
+          ? r.trustpilot.ratingChange >= 0
+            ? `<span style="color:#059669;">↑${r.trustpilot.ratingChange.toFixed(1)}</span>`
+            : `<span style="color:#dc2626;">↓${Math.abs(r.trustpilot.ratingChange).toFixed(1)}</span>`
+          : '';
+      const pctPos =
+        r.trustpilot.reviewCount > 0
+          ? Math.round((r.trustpilot.sentiment.positive / r.trustpilot.reviewCount) * 100)
+          : 0;
+      const pctNeu =
+        r.trustpilot.reviewCount > 0
+          ? Math.round((r.trustpilot.sentiment.neutral / r.trustpilot.reviewCount) * 100)
+          : 0;
+      const pctNeg =
+        r.trustpilot.reviewCount > 0
+          ? Math.round((r.trustpilot.sentiment.negative / r.trustpilot.reviewCount) * 100)
+          : 0;
+
+      const incidentCards = r.incidents
+        .map(
+          (i) => `
+    <div style="background:#fef2f2;border-left:4px solid ${severityColor(i.severity)};padding:16px;margin:12px 0;">
+      <h3 style="margin:0 0 8px 0;color:#991b1b;font-size:16px;">⚠️ ${escapeHtml(i.title)} (${i.severity})</h3>
+      <p style="color:#450a0a;margin:0;font-size:14px;">${escapeHtml(i.summary)}</p>
+      <p style="color:#7f1d1d;font-size:12px;margin:8px 0 0 0;">${i.review_count} reviews</p>
+    </div>`
+        )
+        .join('');
+
+      return `
+  <div style="padding:24px;border-bottom:1px solid #e5e7eb;">
+    <h2 style="margin:0 0 16px 0;font-size:20px;color:#111827;">${escapeHtml(firmName)}</h2>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr><td style="padding:8px 0;"><strong>📊 Payouts</strong></td></tr>
+      <tr><td style="padding:4px 0;color:#374151;">$${r.payouts.total.toLocaleString()} ${changePayout} · ${r.payouts.count} payouts (largest: $${r.payouts.largest.toLocaleString()}, avg: $${r.payouts.avgPayout.toLocaleString()})</td></tr>
+      <tr><td style="padding:12px 0 0 0;"><strong>💬 Trustpilot</strong></td></tr>
+      <tr><td style="padding:4px 0;color:#374151;">${r.trustpilot.avgRating.toFixed(1)}/5 ${changeRating} · ${r.trustpilot.reviewCount} reviews · 😊 ${pctPos}% positive · 😐 ${pctNeu}% neutral · 😟 ${pctNeg}% negative</td></tr>
+    </table>
+    ${r.incidents.length > 0 ? `<p style="margin:0 0 8px 0;"><strong>🚨 Incidents (${r.incidents.length})</strong></p>${incidentCards}` : ''}
+    <p style="margin:16px 0 0 0;"><strong>⚖️ PropProof Analysis</strong></p>
+    <p style="color:#374151;margin:8px 0 0 0;font-size:14px;line-height:1.5;">${escapeHtml(r.ourTake)}</p>
+    <p style="margin:16px 0 0 0;"><a href="${firmUrl}" style="display:inline-block;background:#7c3aed;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">View On-Chain Proof</a></p>
+  </div>`;
+    })
+    .join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Weekly Digest - ${weekLabel}</title>
+</head>
+<body style="font-family:Arial,sans-serif;margin:0;background:#f3f4f6;">
+  <div style="max-width:600px;margin:0 auto;background:#fff;">
+    <div style="background:linear-gradient(to right, #7c3aed, #2563eb);padding:32px;text-align:center;">
+      <h1 style="color:#fff;margin:0;font-size:24px;">Your Weekly Digest</h1>
+      <p style="color:rgba(255,255,255,0.9);margin:8px 0 0 0;font-size:14px;">${weekLabel}</p>
+    </div>
+    ${firmSections}
+    <div style="padding:24px;text-align:center;border-top:1px solid #e5e7eb;">
+      <p style="color:#9ca3af;font-size:12px;margin:0;">
+        <a href="${manageSubscriptionsUrl}" style="color:#6b7280;">Manage subscriptions</a>
+        &nbsp;|&nbsp;
+        <a href="${unsubscribeUrl}" style="color:#6b7280;">Unsubscribe</a>
+      </p>
+    </div>
+    <div style="background:#f9fafb;padding:24px;text-align:center;">
+      <p style="color:#6b7280;font-size:12px;margin:0;">PropProof – Blockchain-verified prop firm intelligence</p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
