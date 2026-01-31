@@ -18,10 +18,18 @@ interface CreateCustomerPortalParams {
   returnUrl: string;
 }
 
-// Initialize Stripe once to avoid repeated instantiation
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-02-24.acacia",
-});
+// Lazy init so build (no env) doesn't call new Stripe(undefined)
+let stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!stripe) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
+    stripe = new Stripe(key, {
+      apiVersion: "2025-02-24.acacia",
+    });
+  }
+  return stripe;
+}
 
 // This is used to create a Stripe Checkout for one-time payments. It's usually triggered with the <ButtonCheckout /> component. Webhooks are used to update the user's state in the database.
 export const createCheckout = async ({
@@ -50,7 +58,7 @@ export const createCheckout = async ({
     extraParams.tax_id_collection = { enabled: true };
   }
 
-  const stripeSession = await stripe.checkout.sessions.create({
+  const stripeSession = await getStripe().checkout.sessions.create({
     mode,
     allow_promotion_codes: true,
     client_reference_id: clientReferenceId,
@@ -81,7 +89,7 @@ export const createCustomerPortal = async ({
   returnUrl,
 }: CreateCustomerPortalParams): Promise<string | null> => {
   try {
-    const portalSession = await stripe.billingPortal.sessions.create({
+    const portalSession = await getStripe().billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,
     });
@@ -98,7 +106,7 @@ export const findCheckoutSession = async (
   sessionId: string
 ): Promise<Stripe.Checkout.Session | null> => {
   try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+    const session = await getStripe().checkout.sessions.retrieve(sessionId, {
       expand: ["line_items"],
     });
 
