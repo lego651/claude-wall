@@ -113,11 +113,8 @@ export default function PropFirmsListPage() {
     return name.substring(0, 2).toUpperCase();
   };
 
-  // Get logo URL - use firm.logo if available, otherwise try local file
+  // Try .webp first (matches public/logos/firms: the5ers.webp, fundingpips.webp, etc.)
   const getLogoUrl = (firm) => {
-    if (firm.logo) return firm.logo;
-    // Fallback: try local logo files - we'll let the browser try both formats
-    // The onError handler will fallback to initials if image doesn't exist
     return `/logos/firms/${firm.id}.webp`;
   };
 

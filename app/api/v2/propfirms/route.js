@@ -84,10 +84,16 @@ export async function GET(request) {
   try {
     const supabase = createSupabaseClient();
 
-    // Fetch all firms with their metadata
-    const { data: firms, error: firmsError } = await supabase
+    // Fetch all firms (logo_url from alpha schema; last_payout_at may not exist in all DBs)
+    let firmsResult = await supabase
       .from('firms')
-      .select('id, name, logo, website, last_payout_at');
+      .select('id, name, logo_url, website, last_payout_at');
+    if (firmsResult.error?.code === '42703') {
+      firmsResult = await supabase
+        .from('firms')
+        .select('id, name, logo_url, website');
+    }
+    const { data: firms, error: firmsError } = firmsResult;
 
     if (firmsError) {
       throw new Error(`Failed to fetch firms: ${firmsError.message}`);
@@ -173,7 +179,7 @@ export async function GET(request) {
       data.push({
         id: firm.id,
         name: firm.name,
-        logo: firm.logo,
+        logo: firm.logo_url ?? firm.logo ?? null,
         website: firm.website,
         metrics,
       });

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import apiClient from "@/libs/api";
 import config from "@/config";
+import SubscriptionSettings from "@/components/SubscriptionSettings";
 
 export default function SettingsPage() {
   const supabase = createClient();
@@ -455,6 +456,9 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
+
+        {/* Weekly Digest Subscriptions (TICKET-014) */}
+        <SubscriptionSettings />
 
         {/* Security Section */}
         <div className="bg-white border border-red-200 rounded-2xl p-8 shadow-sm">

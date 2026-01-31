@@ -181,10 +181,8 @@ export default function PropFirmDetailPage() {
   ];
   const activeRangeIndex = rangeOptions.findIndex((o) => o.value === chartPeriod);
 
-  // Get logo URL - use firm.logo if available, otherwise try local file
+  // Try .webp first (matches public/logos/firms: the5ers.webp, fundingpips.webp, etc.)
   const getLogoUrl = () => {
-    if (firm?.logo) return firm.logo;
-    // Fallback: try local logo files - we'll let the browser try both formats
     return `/logos/firms/${firmId}.webp`;
   };
 
