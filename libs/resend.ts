@@ -12,22 +12,24 @@ const getResendClient = (): Resend | null => {
 };
 
 export const sendEmail = async ({
+  from,
   to,
   subject,
   text,
   html,
   replyTo,
-}: Omit<EmailConfig, "from">): Promise<void> => {
+}: Omit<EmailConfig, "from"> & { from?: string }): Promise<void> => {
   const resend = getResendClient();
 
   if (!resend) {
-    console.warn("RESEND_API_KEY is not set, skipping email send");
-    return;
+    const msg = "RESEND_API_KEY is not set; cannot send email";
+    console.error(msg);
+    throw new Error(msg);
   }
 
   try {
     const emailOptions: any = {
-      from: config.resend.fromNoReply,
+      from: from ?? config.resend.fromNoReply,
       to,
       subject,
     };
@@ -42,7 +44,14 @@ export const sendEmail = async ({
       emailOptions.replyTo = replyTo;
     }
 
-    await resend.emails.send(emailOptions);
+    const { data, error } = await resend.emails.send(emailOptions);
+    if (error) {
+      console.error("Resend API error:", error);
+      throw new Error(error.message || "Resend send failed");
+    }
+    if (data?.id) {
+      console.log("[Resend] Email sent, id:", data.id);
+    }
   } catch (error) {
     console.error("Failed to send email:", error);
     throw error;
