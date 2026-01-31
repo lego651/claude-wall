@@ -20,6 +20,14 @@ import { classifyReview } from '../lib/ai/classifier';
 const SAMPLE_SIZE = 50;
 const FETCH_LIMIT = 150;
 
+interface ReviewRow {
+  id: number;
+  firm_id: string;
+  rating: number;
+  title: string | null;
+  review_text: string | null;
+}
+
 function shuffle<T>(arr: T[]): T[] {
   const out = [...arr];
   for (let i = out.length - 1; i > 0; i--) {
@@ -53,7 +61,8 @@ async function main() {
     process.exit(1);
   }
 
-  const sample = shuffle(rows).slice(0, Math.min(SAMPLE_SIZE, rows.length));
+  const typedRows = rows as ReviewRow[];
+  const sample = shuffle(typedRows).slice(0, Math.min(SAMPLE_SIZE, typedRows.length));
   console.log(`Selected ${sample.length} random reviews. Running classifier...\n`);
 
   const outPath = resolve(process.cwd(), `validation-sample-${new Date().toISOString().slice(0, 10)}.csv`);
