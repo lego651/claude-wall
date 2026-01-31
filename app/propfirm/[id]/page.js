@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import PropProofLayout from '@/components/PropProofLayout';
+import FirmWeeklyReportCard from '@/components/FirmWeeklyReportCard';
 import { timeSince } from '@/lib/utils/timeSince';
 
 export default function PropFirmDetailPage() {
@@ -491,6 +492,9 @@ export default function PropFirmDetailPage() {
             </ResponsiveContainer>
           )}
         </div>
+
+        {/* Weekly digest follow card (TICKET-013) */}
+        <FirmWeeklyReportCard firmId={firmId} />
 
         {/* Top 10 & Latest Payouts - Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
