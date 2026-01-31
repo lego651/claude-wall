@@ -1,0 +1,42 @@
+# Sync Trustpilot Reviews (Daily)
+#
+# TICKET-004: Daily Scraper Cron Job
+# Runs daily at 2 AM UTC to scrape 3 pages per firm for the5ers, fundingpips, fundednext.
+# Data is written to Supabase (trustpilot_reviews). No git push.
+#
+# Uses GitHub Actions (not Vercel cron) because the scraper needs Playwright/Chromium
+# and runs ~2–5 minutes; Vercel cron has a 10s timeout on free tier.
+
+name: Sync Trustpilot Reviews (Daily)
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  scrape-trustpilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Trustpilot scraper (3 pages per firm)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/backfill-trustpilot.ts
