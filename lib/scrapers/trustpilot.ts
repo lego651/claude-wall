@@ -6,7 +6,7 @@
  * Uses Playwright for headless browser automation
  */
 
-import { chromium, Browser, Page } from 'playwright';
+import { chromium, Browser } from 'playwright';
 import { createServiceClient } from '@/libs/supabase/service';
 
 // ============================================================================
@@ -25,6 +25,7 @@ export interface TrustpilotReview {
 export interface ScraperConfig {
   headless?: boolean;
   maxReviews?: number;
+  maxPages?: number; // Pages to scrape per firm (default 3)
   delayMs?: number; // Random delay between requests (2000-5000ms recommended)
   timeout?: number; // Page load timeout
 }
@@ -46,7 +47,8 @@ export interface ScraperResult {
 
 const DEFAULT_CONFIG: ScraperConfig = {
   headless: true,
-  maxReviews: 50,
+  maxReviews: 150, // 3 pages × ~20 per page
+  maxPages: 3,
   delayMs: 3000, // 3 second delay between pages
   timeout: 30000, // 30 second timeout
 };
@@ -61,7 +63,6 @@ const TRUSTPILOT_URLS: Record<string, string> = {
   aquafunded: 'https://www.trustpilot.com/review/aquafunded.com',
   instantfunding: 'https://www.trustpilot.com/review/instantfunding.com',
   fxify: 'https://www.trustpilot.com/review/fxify.com',
-  // Add more as needed for TICKET-003
 };
 
 // ============================================================================
@@ -164,72 +165,105 @@ export async function scrapeTrustpilot(
     const page = await context.newPage();
     page.setDefaultTimeout(cfg.timeout!);
 
-    // Navigate to Trustpilot page
-    console.log(`[Trustpilot Scraper] Navigating to ${trustpilotUrl}`);
-    await page.goto(trustpilotUrl, { waitUntil: 'networkidle' });
+    const maxPages = cfg.maxPages ?? 3;
+    const seenUrls = new Set<string>();
+    const allParsedReviews: Array<{
+      rating: number;
+      title: string | null;
+      reviewText: string;
+      reviewerName: string | null;
+      reviewDate: Date;
+      trustpilotUrl: string;
+    }> = [];
 
-    // Wait for reviews to load
-    await page.waitForSelector('[data-service-review-card-paper]', { timeout: 10000 });
+    for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+      const pageUrl = pageNum === 1
+        ? trustpilotUrl
+        : `${trustpilotUrl}${trustpilotUrl.includes('?') ? '&' : '?'}page=${pageNum}`;
 
-    console.log(`[Trustpilot Scraper] Page loaded, extracting reviews...`);
+      console.log(`[Trustpilot Scraper] Navigating to page ${pageNum}/${maxPages}: ${pageUrl}`);
+      await page.goto(pageUrl, { waitUntil: 'networkidle' });
 
-    // Extract reviews
-    const reviews = await page.$$eval('[data-service-review-card-paper]', (cards) => {
-      return cards.slice(0, 50).map((card) => {
-        // Extract rating
-        const ratingElement = card.querySelector('[data-service-review-rating]');
-        const ratingStr = ratingElement?.getAttribute('data-service-review-rating');
-        const rating = ratingStr ? parseInt(ratingStr) : 0;
+      await page.waitForSelector('[data-service-review-card-paper]', { timeout: 10000 }).catch(() => null);
+      const cards = await page.$$('[data-service-review-card-paper]');
+      if (cards.length === 0 && pageNum > 1) {
+        console.log(`[Trustpilot Scraper] No reviews on page ${pageNum}, stopping pagination`);
+        break;
+      }
 
-        // Extract title
-        const titleElement = card.querySelector('h2');
-        const title = titleElement?.textContent?.trim() || null;
+      const reviews = await page.$$eval('[data-service-review-card-paper]', (elements) => {
+        return elements.map((card) => {
+          const ratingElement = card.querySelector('[data-service-review-rating]');
+          const ratingStr = ratingElement?.getAttribute('data-service-review-rating');
+          const rating = ratingStr ? parseInt(ratingStr) : 0;
 
-        // Extract review text
-        const textElement = card.querySelector('[data-service-review-text-typography]');
-        const reviewText = textElement?.textContent?.trim() || '';
+          const titleElement = card.querySelector('h2');
+          const title = titleElement?.textContent?.trim() || null;
 
-        // Extract reviewer name
-        const nameElement = card.querySelector('[data-consumer-name-typography]');
-        const reviewerName = nameElement?.textContent?.trim() || null;
+          const textElement = card.querySelector('[data-service-review-text-typography]');
+          const reviewText = textElement?.textContent?.trim() || '';
 
-        // Extract date
-        const dateElement = card.querySelector('time');
-        const dateString = dateElement?.getAttribute('datetime') || dateElement?.textContent?.trim() || '';
+          const nameElement = card.querySelector('[data-consumer-name-typography]');
+          const reviewerName = nameElement?.textContent?.trim() || null;
 
-        // Extract review URL
-        const linkElement = card.querySelector('a[href*="/reviews/"]');
-        const reviewUrl = linkElement?.getAttribute('href') || '';
+          const dateElement = card.querySelector('time');
+          const dateString = dateElement?.getAttribute('datetime') || dateElement?.textContent?.trim() || '';
 
-        return {
-          rating,
-          title,
-          reviewText,
-          reviewerName,
-          dateString,
-          reviewUrl: reviewUrl.startsWith('http') ? reviewUrl : `https://www.trustpilot.com${reviewUrl}`,
-        };
+          const linkElement = card.querySelector('a[href*="/reviews/"]');
+          const reviewUrl = linkElement?.getAttribute('href') || '';
+          const fullUrl = reviewUrl.startsWith('http') ? reviewUrl : `https://www.trustpilot.com${reviewUrl}`;
+
+          return {
+            rating,
+            title,
+            reviewText,
+            reviewerName,
+            dateString,
+            reviewUrl: fullUrl,
+          };
+        });
       });
-    });
 
-    console.log(`[Trustpilot Scraper] Extracted ${reviews.length} reviews from page`);
+      console.log(`[Trustpilot Scraper] Page ${pageNum}: extracted ${reviews.length} reviews`);
 
-    // Parse and validate reviews
-    result.reviews = reviews
-      .filter(r => r.reviewText && r.rating > 0)
-      .map(r => ({
-        rating: r.rating,
-        title: r.title,
-        reviewText: r.reviewText,
-        reviewerName: r.reviewerName,
-        reviewDate: parseTrustpilotDate(r.dateString),
-        trustpilotUrl: r.reviewUrl,
-      }));
+      const parsed = reviews
+        .filter(r => r.reviewText && r.rating > 0)
+        .map(r => ({
+          rating: r.rating,
+          title: r.title,
+          reviewText: r.reviewText,
+          reviewerName: r.reviewerName,
+          reviewDate: parseTrustpilotDate(r.dateString),
+          trustpilotUrl: r.reviewUrl,
+        }));
 
+      let added = 0;
+      for (const r of parsed) {
+        if (!seenUrls.has(r.trustpilotUrl)) {
+          seenUrls.add(r.trustpilotUrl);
+          allParsedReviews.push(r);
+          added++;
+        }
+      }
+      if (parsed.length > 0 && added < parsed.length) {
+        console.log(`[Trustpilot Scraper] Page ${pageNum}: ${added} new, ${parsed.length - added} duplicates skipped`);
+      }
+
+      if (allParsedReviews.length >= (cfg.maxReviews ?? 150)) {
+        console.log(`[Trustpilot Scraper] Reached maxReviews (${cfg.maxReviews}), stopping`);
+        break;
+      }
+
+      if (pageNum < maxPages) {
+        await randomDelay(cfg.delayMs!);
+      }
+    }
+
+    result.reviews = allParsedReviews.slice(0, cfg.maxReviews ?? 150);
     result.reviewsScraped = result.reviews.length;
     result.success = true;
 
-    console.log(`[Trustpilot Scraper] Successfully scraped ${result.reviewsScraped} reviews`);
+    console.log(`[Trustpilot Scraper] Successfully scraped ${result.reviewsScraped} reviews (${maxPages} pages)`);
 
     // Close browser
     await browser.close();
