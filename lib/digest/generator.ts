@@ -56,8 +56,6 @@ function getPayoutSummaryForRange(
   weekStart: Date,
   weekEnd: Date
 ): { total: number; count: number; largest: number; avgPayout: number } {
-  const startStr = weekStart.toISOString().slice(0, 10);
-  const endStr = weekEnd.toISOString().slice(0, 23) + 'Z';
   const startTime = weekStart.toISOString();
   const endTime = weekEnd.toISOString();
 
