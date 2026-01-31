@@ -12,6 +12,13 @@ export interface BatchClassificationResult {
   errors: string[];
 }
 
+interface TrustpilotReviewRow {
+  id: number;
+  rating: number;
+  title: string | null;
+  review_text: string | null;
+}
+
 /**
  * Fetch all reviews where classified_at IS NULL, run classifyReview() on each,
  * update DB. Log failures and continue. Returns counts and error messages.
@@ -35,9 +42,10 @@ export async function runBatchClassification(): Promise<BatchClassificationResul
     return result;
   }
 
-  console.log(`[Batch Classify] Found ${rows.length} unclassified review(s)`);
+  const typedRows = rows as TrustpilotReviewRow[];
+  console.log(`[Batch Classify] Found ${typedRows.length} unclassified review(s)`);
 
-  for (const row of rows) {
+  for (const row of typedRows) {
     try {
       const classification = await classifyReview({
         rating: row.rating,
@@ -47,7 +55,7 @@ export async function runBatchClassification(): Promise<BatchClassificationResul
       await updateReviewClassification(row.id, classification);
       result.classified++;
       if (result.classified % 10 === 0) {
-        console.log(`[Batch Classify] Classified ${result.classified}/${rows.length}`);
+        console.log(`[Batch Classify] Classified ${result.classified}/${typedRows.length}`);
       }
     } catch (err) {
       result.failed++;
