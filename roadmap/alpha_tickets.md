@@ -335,18 +335,16 @@ Build function to compile weekly reports.
 **Owner:** Frontend Dev (or Backend if needed)
 
 **Description:**
-Create mobile-responsive HTML email template.
+Create mobile-responsive HTML email template for the **weekly digest** (one email per user per week).
+
+**Email model:** Each user receives **one aggregated email per week** containing sections for all firms they follow (default: follow all firms). Template renders multiple firm sections in a single email.
 
 **Acceptance Criteria:**
 - [ ] Create `components/EmailTemplate.jsx` (or pure HTML if not using React)
-- [ ] Sections:
-  - Header (firm name, week, logo)
-  - Payout summary (stats + trend indicator)
-  - Trustpilot sentiment (rating + breakdown)
-  - Incidents (cards with severity badges)
-  - PropProof analysis ("Our Take")
-  - Trust score (number + change)
-  - CTA button ("View On-Chain Proof")
+- [ ] Sections (repeat per firm the user follows, then shared footer):
+  - Header (e.g. "Your Weekly Digest - Week of [Date]")
+  - Per firm: firm name, logo; payout summary (stats + trend); Trustpilot sentiment (rating + breakdown); incidents (cards with severity badges); PropProof "Our Take"
+  - CTA button ("View On-Chain Proof") per firm or one global
   - Footer (manage subscriptions, unsubscribe links)
 - [ ] Styling:
   - Mobile-responsive (max-width: 600px)
@@ -371,18 +369,19 @@ Create mobile-responsive HTML email template.
 **Owner:** Backend Dev
 
 **Description:**
-Build API routes for managing firm subscriptions.
+Build API routes for managing which firms a user **follows** (for the weekly digest). Users receive **one aggregated email per week** with reports for all firms they follow. By default, new users can follow all firms (or opt-in per firm, TBD).
 
 **Acceptance Criteria:**
 - [ ] Create `app/api/subscriptions/route.js`:
-  - `GET /api/subscriptions` - List user's subscriptions
-  - `POST /api/subscriptions` - Subscribe to firm
+  - `GET /api/subscriptions` - List firms the user follows (from `firm_subscriptions`)
+  - `POST /api/subscriptions` - Subscribe to (follow) a firm
   - Response includes: firm details, subscribed date, next report date
 - [ ] Create `app/api/subscriptions/[firmId]/route.js`:
-  - `DELETE /api/subscriptions/[firmId]` - Unsubscribe from firm
+  - `DELETE /api/subscriptions/[firmId]` - Unfollow firm
 - [ ] Authentication: Verify user via Supabase auth (reject if not logged in)
 - [ ] Validation: Check firm exists in `firms` table
 - [ ] Deduplication: Handle duplicate subscribe requests (return existing subscription)
+- [ ] Default: Consider "follow all firms" for new users (e.g. seed `firm_subscriptions` for all firms on first subscribe, or single "digest" subscription)
 - [ ] Write API tests (at least 5 test cases)
 
 **Test Cases:**
@@ -400,20 +399,20 @@ Build API routes for managing firm subscriptions.
 **Owner:** Frontend Dev
 
 **Description:**
-Add subscription card to firm detail pages.
+Add card to firm detail pages so users can **follow** this firm for the weekly digest. Users receive **one aggregated email per week** with all firms they follow (this firm included when followed).
 
 **Acceptance Criteria:**
 - [ ] Create `components/FirmWeeklyReportCard.jsx`
 - [ ] Display:
   - Heading: "Get Weekly Intelligence Reports"
-  - Description: "Automated digest of payouts + community sentiment every Monday"
+  - Description: "One weekly digest email with payouts + community sentiment for the firms you follow (every Monday)"
   - Benefits list (4 bullet points with icons)
-  - Subscribe/Unsubscribe button (changes based on state)
-  - "Next report: Monday, [date]" timestamp
+  - Follow / Unfollow button (changes based on state; "Follow" = include this firm in my digest)
+  - "Next digest: Monday, [date]" timestamp
 - [ ] Button states:
-  - Not logged in: "Sign In to Subscribe" → redirect to `/signin`
-  - Logged in, not subscribed: "Subscribe (Free)" → call API
-  - Logged in, subscribed: "Subscribed ✓" → allow unsubscribe
+  - Not logged in: "Sign In to Follow" → redirect to `/signin`
+  - Logged in, not following: "Follow (Free)" → call API
+  - Logged in, following: "Following ✓" → allow unfollow
 - [ ] Styling:
   - Gradient background (purple to blue)
   - Border with shadow
@@ -434,18 +433,18 @@ Add subscription card to firm detail pages.
 **Owner:** Frontend Dev
 
 **Description:**
-Add subscription management section to user settings.
+Add section in user settings to manage which firms the user **follows** for the weekly digest (one aggregated email per week).
 
 **Acceptance Criteria:**
 - [ ] Create `components/SubscriptionSettings.jsx`
-- [ ] Display list of subscribed firms:
+- [ ] Display list of followed firms:
   - Firm logo + name
-  - Subscribed date
-  - Unsubscribe button per firm
-- [ ] Empty state: "You're not subscribed to any firms yet" + link to `/propfirms`
-- [ ] "Unsubscribe from all" button at bottom
+  - Followed date
+  - Unfollow button per firm
+- [ ] Empty state: "You're not following any firms yet. You'll get one weekly digest with all firms you follow." + link to `/propfirms`
+- [ ] "Unfollow all" button at bottom
 - [ ] Add to existing `/settings` page (or `/dashboard/settings`)
-- [ ] Test unsubscribe flow (confirm modal optional but nice)
+- [ ] Test unfollow flow (confirm modal optional but nice)
 
 **Reference:**
 - See `alpha_scope_v3.md` lines 605-652 for full component code
@@ -460,22 +459,24 @@ Add subscription management section to user settings.
 **Owner:** Backend Dev
 
 **Description:**
-Integrate Resend for email delivery.
+Integrate Resend for **one aggregated weekly digest email per user** (not per firm). Each user gets one email containing reports for all firms they follow.
 
 **Acceptance Criteria:**
 - [ ] Verify `RESEND_API_KEY` exists in environment (already set up per CLAUDE.md)
-- [ ] Create `lib/email/send-digest.js` with `sendWeeklyDigest(subscriber, report)` function
-- [ ] Convert report JSON → HTML email using template (TICKET-011)
+- [ ] Create `lib/email/send-digest.js` with `sendWeeklyDigest(user, reports[])` function
+  - `user`: subscriber (user_id, email from auth)
+  - `reports`: array of report JSONs for the firms the user follows (from `weekly_reports`)
+- [ ] Build one HTML email from template (TICKET-011) with multiple firm sections (one section per report)
 - [ ] Include unsubscribe link with token
-- [ ] Send via Resend API
+- [ ] Send via Resend API (one email per user)
 - [ ] Handle errors (log failures, mark as failed in database)
-- [ ] Track sent emails (update `weekly_reports.emails_sent`)
+- [ ] Track sent emails (e.g. update `last_sent_at` on `firm_subscriptions` for that user; or single digest sent timestamp)
 - [ ] Test by sending to self
 
 **Technical Notes:**
 - Resend free tier: 3,000 emails/month (sufficient for Alpha)
 - From address: `reports@propproof.com` (configure in Resend)
-- Subject line: `[FirmName] Weekly Report - Week of [Date]`
+- Subject line: `Your Weekly PropProof Digest - Week of [Date]` (one subject per user, not per firm)
 
 **Dependencies:** TICKET-011
 
@@ -487,21 +488,22 @@ Integrate Resend for email delivery.
 **Owner:** Backend Dev
 
 **Description:**
-Automate weekly report generation and delivery.
+Automate weekly report generation and **one aggregated email per user per week**.
 
 **Acceptance Criteria:**
-- [ ] Create `app/api/cron/send-weekly-reports/route.js`
+- [ ] Create `app/api/cron/send-weekly-reports/route.js` (or GitHub Action)
 - [ ] Schedule: Every Monday at 8 AM UTC
 - [ ] Logic:
-  1. For each firm:
-     - Generate report for previous week (Mon-Sun)
-     - Fetch all subscribers
-     - Send email to each subscriber
-     - Update `last_sent_at` in `firm_subscriptions`
-     - Update `emails_sent` in `weekly_reports`
-  2. Log summary (emails sent, failures)
-- [ ] Add to `vercel.json` cron config
-- [ ] Test manual trigger (generate report for last week)
+  1. **Reports:** For each firm (e.g. the5ers, fundingpips, fundednext), generate report for previous week (Mon-Sun) if not already in `weekly_reports`; store in `weekly_reports`.
+  2. **Per user (one email each):**
+     - Fetch firms the user follows from `firm_subscriptions`
+     - Fetch `report_json` from `weekly_reports` for those firms for that week
+     - Build **one** aggregated HTML email (template with one section per firm)
+     - Send **one** email to the user via `sendWeeklyDigest(user, reports)`
+     - Update `last_sent_at` for that user (e.g. on each of their `firm_subscriptions` rows, or single digest timestamp)
+  3. Log summary (emails sent, failures)
+- [ ] Add to `vercel.json` cron config or GitHub Actions (if cron runs long)
+- [ ] Test manual trigger (generate reports for last week, then send one test digest to self)
 - [ ] Monitor first automated run
 
 **Dependencies:** TICKET-010, TICKET-015
@@ -566,8 +568,8 @@ Public launch announcement.
 ### Must Achieve:
 - [ ] 150+ reviews scraped across 3 firms
 - [ ] AI classification >80% accuracy (validated on 50 samples)
-- [ ] 50+ total subscribers (across all firms)
-- [ ] 4 automated weekly reports sent successfully (1 per week)
+- [ ] 50+ total subscribers (each gets one aggregated digest per week)
+- [ ] 4 automated weekly digests sent successfully (1 email per user per week)
 - [ ] 60%+ email open rate (vs 20-25% industry avg)
 - [ ] 10%+ click-through rate (to firm pages)
 - [ ] 0 critical bugs (scraper failures, failed email deliveries)
