@@ -45,6 +45,11 @@ export interface WeeklyReportJson {
 // PAYOUT SUMMARY FOR DATE RANGE (from JSON files)
 // ============================================================================
 
+/** Shape of monthly payout JSON from payoutDataLoader */
+interface MonthlyPayoutData {
+  transactions?: Array<{ amount?: number; timestamp?: string }>;
+}
+
 function getYearMonth(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -68,7 +73,7 @@ function getPayoutSummaryForRange(
 
   const allTransactions: Array<{ amount: number; timestamp: string }> = [];
   for (const yearMonth of months) {
-    const data = loadMonthlyData(firmId, yearMonth);
+    const data = loadMonthlyData(firmId, yearMonth) as MonthlyPayoutData | null;
     if (data?.transactions) {
       for (const t of data.transactions) {
         const ts = t.timestamp ?? '';
