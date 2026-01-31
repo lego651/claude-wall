@@ -49,10 +49,18 @@ async function main() {
     process.exit(1);
   }
 
-  const userIds = [...new Set(subs.map((s) => s.user_id))];
+  const userIds = [...new Set(subs.map((s) => s.user_id as string))];
   const firstUserId = userIds[0];
+  if (!firstUserId) {
+    console.error("No user_id in subscriptions.");
+    process.exit(1);
+  }
 
-  const { data: profile } = await supabase.from("profiles").select("id, email").eq("id", firstUserId).single();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, email")
+    .eq("id", firstUserId as string)
+    .single();
   const profileEmail = profile?.email;
   const email = toEmailOverride || defaultToEmail || profileEmail;
   if (!email) {
@@ -94,7 +102,7 @@ async function main() {
   console.log("");
 
   const result = await sendWeeklyDigest(
-    { id: firstUserId, email },
+    { id: firstUserId, email: String(email) },
     reports,
     {
       weekStart: start.toISOString().slice(0, 10),
