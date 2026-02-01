@@ -421,7 +421,7 @@ export default function PropFirmOverviewPage() {
             </div>
           ) : incidents.length > 0 ? (
             <ul className="space-y-4">
-              {incidents.slice(0, 5).map((inc) => (
+              {incidents.slice(0, 2).map((inc) => (
                 <li
                   key={inc.id}
                   className="flex gap-3 p-3 rounded-lg bg-slate-50/50 border border-slate-100"

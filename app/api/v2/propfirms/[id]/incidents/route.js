@@ -77,5 +77,28 @@ export async function GET(request, { params }) {
     })
     .filter((r) => r.week_start >= cutoffStr);
 
-  return NextResponse.json({ incidents }, { headers });
+  // Resolve review_ids to source URLs (Trustpilot) for up to 3 links per incident
+  const allReviewIds = [...new Set(incidents.flatMap((r) => r.review_ids || []))].filter(Boolean);
+  let idToUrl = {};
+  if (allReviewIds.length > 0) {
+    const { data: reviewRows } = await supabase
+      .from('trustpilot_reviews')
+      .select('id, trustpilot_url')
+      .in('id', allReviewIds);
+    if (reviewRows?.length) {
+      idToUrl = Object.fromEntries(reviewRows.map((row) => [row.id, row.trustpilot_url]));
+    }
+  }
+
+  const incidentsWithLinks = incidents.map((r) => {
+    const ids = Array.isArray(r.review_ids) ? r.review_ids : [];
+    const source_links = ids
+      .slice(0, 3)
+      .map((id) => idToUrl[id])
+      .filter(Boolean);
+    const { review_ids: _rid, ...rest } = r;
+    return { ...rest, source_links };
+  });
+
+  return NextResponse.json({ incidents: incidentsWithLinks }, { headers });
 }

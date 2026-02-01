@@ -233,6 +233,14 @@ export default function PropFirmIdLayout({ children }) {
                   </svg>
                 )}
                 {tab.label}
+                {tab.icon === "intelligence" && (
+                  <span
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white"
+                    style={{ backgroundColor: THEME.primary }}
+                  >
+                    NEW
+                  </span>
+                )}
               </Link>
             );
           })}
