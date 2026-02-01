@@ -53,7 +53,7 @@ const DEFAULT_CONFIG: ScraperConfig = {
   timeout: 30000, // 30 second timeout
 };
 
-// Trustpilot URL mappings for known firms
+// Trustpilot URL mappings for supported firms (FTMO and TopStep not supported yet)
 const TRUSTPILOT_URLS: Record<string, string> = {
   fundednext: 'https://www.trustpilot.com/review/fundednext.com',
   the5ers: 'https://www.trustpilot.com/review/the5ers.com',
@@ -64,6 +64,9 @@ const TRUSTPILOT_URLS: Record<string, string> = {
   instantfunding: 'https://www.trustpilot.com/review/instantfunding.com',
   fxify: 'https://www.trustpilot.com/review/fxify.com',
 };
+
+/** Firm IDs we scrape (all firms with Trustpilot URLs). Use for backfill and daily sync. */
+export const TRUSTPILOT_FIRM_IDS = Object.keys(TRUSTPILOT_URLS) as string[];
 
 // ============================================================================
 // HELPER FUNCTIONS
