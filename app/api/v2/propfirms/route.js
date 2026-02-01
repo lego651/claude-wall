@@ -13,9 +13,23 @@
  */
 
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { loadPeriodData } from '@/lib/services/payoutDataLoader';
 import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
+
+const PROPFIRMS_JSON = path.join(process.cwd(), 'data', 'propfirms.json');
+
+function readFirmsFromFile() {
+  try {
+    const raw = fs.readFileSync(PROPFIRMS_JSON, 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed.firms) ? parsed.firms : [];
+  } catch {
+    return [];
+  }
+}
 
 // Valid options
 const VALID_PERIODS = ['1d', '7d', '30d', '12m'];
@@ -82,80 +96,80 @@ export async function GET(request) {
   }
 
   try {
-    const supabase = createSupabaseClient();
-
-    // Fetch all firms (logo_url from alpha schema; last_payout_at may not exist in all DBs)
-    let firmsResult = await supabase
-      .from('firms')
-      .select('id, name, logo_url, website, last_payout_at');
-    if (firmsResult.error?.code === '42703') {
-      firmsResult = await supabase
-        .from('firms')
-        .select('id, name, logo_url, website');
-    }
-    const { data: firms, error: firmsError } = firmsResult;
-
-    if (firmsError) {
-      throw new Error(`Failed to fetch firms: ${firmsError.message}`);
-    }
-
-    if (!firms || firms.length === 0) {
-      return NextResponse.json(
-        {
-          data: [],
-          meta: {
-            period,
-            sort,
-            order,
-            count: 0,
-          },
-        },
-        { headers }
-      );
-    }
-
-    // For real-time metrics, batch-load payouts for all firms (avoid N+1 queries)
+    let firms = [];
     let payoutsByFirmId = null;
-    if (period === '1d') {
-      const hoursBack = periodToHours(period);
-      const cutoffDate = new Date(Date.now() - (hoursBack * 60 * 60 * 1000)).toISOString();
-      const firmIds = firms.map(f => f.id);
+    const useSupabase = Boolean(
+      process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
 
-      const { data: payoutsRows, error: payoutsError } = await supabase
-        .from('recent_payouts')
-        .select('firm_id, amount')
-        .in('firm_id', firmIds)
-        .gte('timestamp', cutoffDate);
+    if (useSupabase) {
+      const supabase = createSupabaseClient();
 
-      if (payoutsError) {
-        throw new Error(`Failed to fetch payouts: ${payoutsError.message}`);
+      let firmsResult = await supabase
+        .from('firms')
+        .select('id, name, logo_url, website, last_payout_at');
+      if (firmsResult.error?.code === '42703') {
+        firmsResult = await supabase
+          .from('firms')
+          .select('id, name, logo_url, website');
       }
+      const { data: supabaseFirms, error: firmsError } = firmsResult;
 
-      payoutsByFirmId = new Map();
-      for (const row of payoutsRows || []) {
-        const firmId = row.firm_id;
-        const amount = Number(row.amount);
-        if (!firmId || !Number.isFinite(amount)) continue;
+      if (!firmsError && supabaseFirms?.length) {
+        firms = supabaseFirms.map((f) => ({
+          id: f.id,
+          name: f.name,
+          logo_url: f.logo_url,
+          website: f.website,
+          last_payout_at: f.last_payout_at,
+        }));
 
-        if (!payoutsByFirmId.has(firmId)) {
-          payoutsByFirmId.set(firmId, []);
+        if (period === '1d') {
+          const hoursBack = periodToHours(period);
+          const cutoffDate = new Date(Date.now() - (hoursBack * 60 * 60 * 1000)).toISOString();
+          const firmIds = firms.map((f) => f.id);
+
+          const { data: payoutsRows, error: payoutsError } = await supabase
+            .from('recent_payouts')
+            .select('firm_id, amount')
+            .in('firm_id', firmIds)
+            .gte('timestamp', cutoffDate);
+
+          if (!payoutsError && payoutsRows) {
+            payoutsByFirmId = new Map();
+            for (const row of payoutsRows) {
+              const firmId = row.firm_id;
+              const amount = Number(row.amount);
+              if (!firmId || !Number.isFinite(amount)) continue;
+              if (!payoutsByFirmId.has(firmId)) payoutsByFirmId.set(firmId, []);
+              payoutsByFirmId.get(firmId).push(amount);
+            }
+          }
         }
-        payoutsByFirmId.get(firmId).push(amount);
       }
     }
 
-    // Build response data
+    // Fallback to static list when Supabase is missing or returns no firms
+    if (firms.length === 0) {
+      const fileFirms = readFirmsFromFile();
+      firms = fileFirms.map((f) => ({
+        id: f.id,
+        name: f.name,
+        logo_url: null,
+        website: null,
+        last_payout_at: null,
+      }));
+    }
+
     const data = [];
 
     for (const firm of firms) {
       let metrics;
 
-      if (period === '1d') {
-        // Use Supabase for real-time data (last 24h only)
-        const amounts = payoutsByFirmId?.get(firm.id) || [];
+      if (period === '1d' && payoutsByFirmId) {
+        const amounts = payoutsByFirmId.get(firm.id) || [];
         const totalPayouts = amounts.reduce((sum, a) => sum + a, 0);
         const largestPayout = amounts.length > 0 ? Math.max(...amounts) : 0;
-
         metrics = {
           totalPayouts: Math.round(totalPayouts),
           payoutCount: amounts.length,
@@ -164,9 +178,7 @@ export async function GET(request) {
           latestPayoutAt: firm.last_payout_at,
         };
       } else {
-        // Use JSON files for historical data (7d, 30d, 12m)
         const historicalData = loadPeriodData(firm.id, period);
-        
         metrics = {
           totalPayouts: Math.round(historicalData.summary?.totalPayouts || 0),
           payoutCount: historicalData.summary?.payoutCount || 0,
