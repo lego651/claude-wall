@@ -15,12 +15,9 @@ import {
 import { THEME } from "@/lib/theme";
 import { timeSince } from "@/lib/utils/timeSince";
 
-const PERIOD_30D = "30d";
-
 export default function PropFirmOverviewPage() {
   const params = useParams();
   const firmId = params?.id;
-  const [period, setPeriod] = useState(PERIOD_30D);
 
   const [chartData, setChartData] = useState(null);
   const [chartLoading, setChartLoading] = useState(true);
@@ -33,7 +30,7 @@ export default function PropFirmOverviewPage() {
   const [incidentsLoading, setIncidentsLoading] = useState(true);
 
   useEffect(() => {
-    if (!firmId || period !== PERIOD_30D) return;
+    if (!firmId) return;
     let cancelled = false;
     setChartLoading(true);
     setChartError(null);
@@ -54,7 +51,7 @@ export default function PropFirmOverviewPage() {
     return () => {
       cancelled = true;
     };
-  }, [firmId, period]);
+  }, [firmId]);
 
   useEffect(() => {
     if (!firmId) return;
@@ -150,30 +147,26 @@ export default function PropFirmOverviewPage() {
       {/* Performance Intelligence: icon + label left, 30 DAYS / 12 MONTHS right */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-2">
+          <h2 className="text-lg font-bold text-slate-900">
+            Performance Intelligence
+          </h2>
           <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
           </span>
-          <h2 className="text-lg font-bold text-slate-900">
-            Performance Intelligence
-          </h2>
         </div>
-        <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-[20px] border border-slate-200">
-          <button
-            type="button"
-            onClick={() => setPeriod(PERIOD_30D)}
-            className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold rounded-[16px] transition-all ${
-              period === PERIOD_30D
-                ? "text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-            }`}
-            style={period === PERIOD_30D ? { backgroundColor: THEME.primary } : {}}
+        <div className="flex items-center gap-0 p-1 bg-slate-100 rounded-[20px] border border-slate-200">
+          <span
+            className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold rounded-[16px] shadow-sm"
+            style={{ backgroundColor: THEME.dashboard.stripColor, color: THEME.primary }}
+            aria-current="true"
           >
             <svg
-              className="w-4 h-4"
+              className="w-4 h-4 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden
             >
               <path
                 strokeLinecap="round"
@@ -183,28 +176,23 @@ export default function PropFirmOverviewPage() {
               />
             </svg>
             30 Days
-          </button>
-          <button
-            type="button"
-            disabled
-            className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold rounded-[16px] text-slate-400 cursor-not-allowed bg-white/50"
-            title="12 months not supported on this page"
+          </span>
+          <Link
+            href={`/propfirm/${firmId}/payouts`}
+            className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold rounded-[16px] transition-all text-slate-600 hover:text-slate-900"
           >
             <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
+              className="w-4 h-4 flex-shrink-0"
+              fill="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
+              <rect x="4" y="14" width="4" height="6" rx="1" />
+              <rect x="10" y="9" width="4" height="11" rx="1" />
+              <rect x="16" y="5" width="4" height="15" rx="1" />
             </svg>
             12 Months
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -217,18 +205,14 @@ export default function PropFirmOverviewPage() {
             </span>
             <div className="p-2 bg-slate-50 rounded-lg">
               <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
+                className="w-4 h-4 text-slate-500"
+                fill="currentColor"
                 viewBox="0 0 24 24"
-                style={{ color: THEME.primary }}
+                aria-hidden
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
+                <rect x="4" y="14" width="4" height="6" rx="1" />
+                <rect x="10" y="9" width="4" height="11" rx="1" />
+                <rect x="16" y="5" width="4" height="15" rx="1" />
               </svg>
             </div>
           </div>
@@ -251,6 +235,7 @@ export default function PropFirmOverviewPage() {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden
               >
                 <path
                   strokeLinecap="round"
@@ -274,19 +259,16 @@ export default function PropFirmOverviewPage() {
             <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
               Observed Avg
             </span>
-            <div className="p-2 bg-slate-50 rounded-lg">
+            <div className="p-2 bg-emerald-50 rounded-lg">
               <svg
-                className="w-4 h-4 text-slate-500"
-                fill="none"
-                stroke="currentColor"
+                className="w-4 h-4 text-emerald-500"
+                fill="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+                <rect x="5" y="15" width="14" height="4" rx="0.5" />
+                <rect x="7" y="10" width="10" height="4" rx="0.5" />
+                <rect x="9" y="5" width="6" height="4" rx="0.5" />
               </svg>
             </div>
           </div>
@@ -303,13 +285,13 @@ export default function PropFirmOverviewPage() {
             <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
               Last Signal
             </span>
-            <div className="p-2 bg-slate-50 rounded-lg">
+            <div className="p-2 bg-orange-50 rounded-lg">
               <svg
-                className="w-4 h-4"
+                className="w-4 h-4 text-orange-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                style={{ color: THEME.primary }}
+                aria-hidden
               >
                 <path
                   strokeLinecap="round"
@@ -492,14 +474,12 @@ export default function PropFirmOverviewPage() {
 
         {/* Right section: Firm Signals (30d) + Signal Alert — full right column after nav */}
         <div className="lg:col-span-1 flex flex-col gap-6">
-        {/* Firm Signals (30d) */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex-shrink-0">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-slate-900">
-              Firm Signals (30d)
-            </h2>
-            <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
-              STABLE
+        {/* Firm Signals (30d) — matches FirmSignalsCard reference */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex-shrink-0">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="font-bold text-gray-900">Firm Signals (30d)</h3>
+            <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded ${(signals?.healthStatus === "WATCHLIST" && "text-yellow-600 bg-yellow-50") || (signals?.healthStatus === "ELEVATED_RISK" && "text-red-600 bg-red-50") || "text-green-600 bg-green-50"}`}>
+              {typeof signals?.healthStatus === "string" ? signals.healthStatus : "STABLE"}
             </span>
           </div>
           {signalsLoading ? (
@@ -507,74 +487,99 @@ export default function PropFirmOverviewPage() {
               <span className="loading loading-spinner loading-sm" />
             </div>
           ) : signals ? (
-            <div className="space-y-4">
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
-                  Payout Data
-                </p>
-                <p className="text-sm font-semibold text-emerald-600 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Steady Activity
-                </p>
-                <ul className="mt-1 text-xs text-slate-600 list-disc list-inside space-y-0.5">
-                  <li>Consistent daily payout volume</li>
-                  <li>High transaction velocity</li>
-                </ul>
+            <div className="space-y-6 mb-8">
+              {/* Payout Data: purple stacked layers icon */}
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 mt-0.5" style={{ color: THEME.primary }}>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <rect x="5" y="15" width="14" height="4" rx="0.5" />
+                    <rect x="7" y="10" width="10" height="4" rx="0.5" />
+                    <rect x="9" y="5" width="6" height="4" rx="0.5" />
+                  </svg>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-[10px] font-bold text-slate-900 uppercase tracking-wide">
+                      Payout Data
+                    </span>
+                    <span className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden />
+                      <span className="text-xs font-bold text-slate-900">Steady Activity</span>
+                    </span>
+                  </div>
+                  <ul className="text-xs text-slate-500 list-disc list-inside space-y-0.5 ml-0">
+                    <li>Consistent daily payout volume</li>
+                    <li>High transaction velocity</li>
+                  </ul>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
-                  Trustpilot
-                </p>
-                <p className="text-sm font-semibold text-emerald-600 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Mostly Positive
-                </p>
-                <ul className="mt-1 text-xs text-slate-600 list-disc list-inside space-y-0.5">
-                  <li>Frequent mentions of &apos;Fast Payouts&apos;</li>
-                  <li>Reliable customer support signals</li>
-                </ul>
+              {/* Trustpilot: green outline star */}
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 mt-0.5 text-emerald-500">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                  </svg>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-[10px] font-bold text-slate-900 uppercase tracking-wide">
+                      Trustpilot
+                    </span>
+                    <span className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden />
+                      <span className="text-xs font-bold text-slate-900">Mostly Positive</span>
+                    </span>
+                  </div>
+                  <ul className="text-xs text-slate-500 list-disc list-inside space-y-0.5 ml-0">
+                    <li>Frequent mentions of &apos;Fast Payouts&apos;</li>
+                    <li>Reliable customer support signals</li>
+                  </ul>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
-                  X (Twitter)
-                </p>
-                <p className="text-sm font-semibold text-red-600 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                  High Discussion
-                </p>
-                <ul className="mt-1 text-xs text-slate-600 list-disc list-inside space-y-0.5">
-                  <li>Numerous payout proof screenshots</li>
-                  <li>Discussion around new scaling rules</li>
-                </ul>
+              {/* X (Twitter): light blue X logo */}
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 mt-0.5 text-sky-400">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-[10px] font-bold text-slate-900 uppercase tracking-wide">
+                      X (Twitter)
+                    </span>
+                    <span className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-700" aria-hidden />
+                      <span className="text-xs font-bold text-slate-900">High Discussion</span>
+                    </span>
+                  </div>
+                  <ul className="text-xs text-slate-500 list-disc list-inside space-y-0.5 ml-0">
+                    <li>Numerous payout proof screenshots</li>
+                    <li>Discussion around new scaling rules</li>
+                  </ul>
+                </div>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-slate-500">No signal data available</p>
+            <p className="text-sm text-gray-500">No signal data available</p>
           )}
           <Link
             href={`/propfirm/${firmId}/intelligence`}
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
-            style={{ color: THEME.primary }}
+            className="w-full flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group"
           >
-            View detailed intelligence
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
+            <span className="text-sm font-bold text-gray-700">View detailed intelligence</span>
+            <svg className="w-[18px] h-[18px] text-gray-400 group-hover:text-indigo-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
-          <p className="text-[10px] text-slate-400 mt-2">
-            Signals are derived from observed trends and reported events based on
-            sampled public sources.
-          </p>
+          <div className="pt-4 mt-6 border-t border-gray-50 flex items-start gap-2">
+            <svg className="w-3.5 h-3.5 text-gray-300 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-[10px] text-gray-400 leading-normal italic">
+              Signals are derived from observed trends and reported events based on sampled public sources.
+            </p>
+          </div>
         </div>
 
         {/* Signal Alert — theme strip blue */}

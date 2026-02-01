@@ -12,14 +12,16 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import FirmWeeklyReportCard from "@/components/FirmWeeklyReportCard";
+import { THEME } from "@/lib/theme";
 import { timeSince } from "@/lib/utils/timeSince";
 
 const PERIOD_30D = "30d";
+const PERIOD_12M = "12m";
 
 export default function PropFirmPayoutsPage() {
   const params = useParams();
   const firmId = params?.id;
-  const [chartPeriod, setChartPeriod] = useState(PERIOD_30D);
+  const [chartPeriod, setChartPeriod] = useState(PERIOD_12M);
 
   const [chartData, setChartData] = useState(null);
   const [chartLoading, setChartLoading] = useState(true);
@@ -32,11 +34,11 @@ export default function PropFirmPayoutsPage() {
   const [latestPayoutsLoading, setLatestPayoutsLoading] = useState(true);
 
   useEffect(() => {
-    if (!firmId || chartPeriod !== PERIOD_30D) return;
+    if (!firmId) return;
     let cancelled = false;
     setChartLoading(true);
     setChartError(null);
-    fetch(`/api/v2/propfirms/${firmId}/chart?period=30d`)
+    fetch(`/api/v2/propfirms/${firmId}/chart?period=${chartPeriod}`)
       .then((r) => {
         if (!r.ok) {
           return r.json().then((err) => {
@@ -63,7 +65,7 @@ export default function PropFirmPayoutsPage() {
     if (!firmId) return;
     let cancelled = false;
     setTopPayoutsLoading(true);
-    fetch(`/api/v2/propfirms/${firmId}/top-payouts?period=30d`)
+    fetch(`/api/v2/propfirms/${firmId}/top-payouts?period=${chartPeriod}`)
       .then((r) => (r.ok ? r.json() : { payouts: [] }))
       .then((data) => {
         if (!cancelled) setTopPayouts(data.payouts || []);
@@ -74,7 +76,7 @@ export default function PropFirmPayoutsPage() {
     return () => {
       cancelled = true;
     };
-  }, [firmId]);
+  }, [firmId, chartPeriod]);
 
   useEffect(() => {
     if (!firmId) return;
@@ -136,7 +138,7 @@ export default function PropFirmPayoutsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Reporting period - 30d only; 12 Months disabled */}
+      {/* Reporting period - 30d and 12m; default 12 months */}
       <div className="flex flex-col items-center gap-3 mb-8">
         <span className="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">
           Viewing stats for
@@ -146,18 +148,19 @@ export default function PropFirmPayoutsPage() {
             type="button"
             onClick={() => setChartPeriod(PERIOD_30D)}
             className={`px-6 py-2.5 text-xs font-bold rounded-[16px] transition-all ${
-              chartPeriod === PERIOD_30D
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
+              chartPeriod === PERIOD_30D ? "shadow-sm" : "text-slate-600 hover:text-slate-900"
             }`}
+            style={chartPeriod === PERIOD_30D ? { backgroundColor: THEME.dashboard.stripColor, color: THEME.primary } : {}}
           >
             30 Days
           </button>
           <button
             type="button"
-            disabled
-            className="px-6 py-2.5 text-xs font-bold rounded-[16px] text-slate-400 cursor-not-allowed"
-            title="12 months not supported on this page"
+            onClick={() => setChartPeriod(PERIOD_12M)}
+            className={`px-6 py-2.5 text-xs font-bold rounded-[16px] transition-all ${
+              chartPeriod === PERIOD_12M ? "shadow-sm" : "text-slate-600 hover:text-slate-900"
+            }`}
+            style={chartPeriod === PERIOD_12M ? { backgroundColor: THEME.dashboard.stripColor, color: THEME.primary } : {}}
           >
             12 Months
           </button>

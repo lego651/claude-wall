@@ -56,8 +56,7 @@ export default function PropFirmIdLayout({ children }) {
         {/* Back link */}
         <Link
           href="/propfirms"
-          className="inline-flex items-center gap-1.5 text-sm font-medium mb-6 transition-colors hover:opacity-80"
-          style={{ color: THEME.primary }}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 mb-6 transition-colors hover:text-slate-700"
         >
           <svg
             className="w-4 h-4"
@@ -209,16 +208,13 @@ export default function PropFirmIdLayout({ children }) {
                 {tab.icon === "payout" && (
                   <svg
                     className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
+                    fill="currentColor"
                     viewBox="0 0 24 24"
+                    aria-hidden
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                    />
+                    <rect x="4" y="14" width="4" height="6" rx="1" />
+                    <rect x="10" y="9" width="4" height="11" rx="1" />
+                    <rect x="16" y="5" width="4" height="15" rx="1" />
                   </svg>
                 )}
                 {tab.icon === "intelligence" && (
