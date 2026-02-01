@@ -8,6 +8,12 @@ import { getOpenAIClient } from '@/lib/ai/openai-client';
 import { detectIncidents, type DetectedIncident } from './incident-aggregator';
 import { getWeekNumber, getYear, getWeekBounds } from './week-utils';
 import { loadMonthlyData } from '@/lib/services/payoutDataLoader';
+import {
+  NEGATIVE_SENTIMENT_CATEGORIES,
+  POSITIVE_SENTIMENT_CATEGORY,
+  NEUTRAL_SENTIMENT_CATEGORY,
+  LEGACY_CATEGORY_MAP,
+} from '@/lib/ai/classification-taxonomy';
 
 // ============================================================================
 // TYPES
@@ -115,7 +121,12 @@ async function getReviewsAndSentiment(
   return { reviews: list, avgRating };
 }
 
-const NEGATIVE_CATEGORIES = ['payout_issue', 'scam_warning', 'platform_issue', 'rule_violation'];
+/** True if category counts as negative for digest (new or legacy) */
+function isNegativeSentiment(category: string | null): boolean {
+  if (!category) return false;
+  const norm = LEGACY_CATEGORY_MAP[category] ?? category;
+  return (NEGATIVE_SENTIMENT_CATEGORIES as readonly string[]).includes(norm);
+}
 
 // ============================================================================
 // AI OUR TAKE
@@ -189,9 +200,13 @@ export async function generateWeeklyReport(
   const ratingChange = prevReviews.reviews.length > 0 ? avgRating - prevReviews.avgRating : null;
 
   const sentiment = {
-    positive: reviews.filter((r) => r.category === 'positive').length,
-    neutral: reviews.filter((r) => r.category === 'neutral').length,
-    negative: reviews.filter((r) => r.category && NEGATIVE_CATEGORIES.includes(r.category)).length,
+    positive: reviews.filter(
+      (r) => r.category === POSITIVE_SENTIMENT_CATEGORY || r.category === 'positive'
+    ).length,
+    neutral: reviews.filter(
+      (r) => r.category === NEUTRAL_SENTIMENT_CATEGORY || r.category === 'neutral'
+    ).length,
+    negative: reviews.filter((r) => isNegativeSentiment(r.category)).length,
   };
 
   const trustpilot: TrustpilotSummary = {

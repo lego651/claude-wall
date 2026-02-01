@@ -1,18 +1,38 @@
 /**
  * TICKET-009: Incident Aggregator
  * Groups related reviews by category, generates AI incident summary, stores in weekly_incidents.
+ * Phase 1 (Option B): spike-based (>=3 in 7d) + severity override (high_risk_allegation >=1 in 7d).
+ * See docs/CLASSIFIER-TAXONOMY.md and lib/ai/classification-taxonomy.ts.
  */
 
 import { createServiceClient } from '@/libs/supabase/service';
 import { getOpenAIClient } from '@/lib/ai/openai-client';
 import { getWeekNumber, getYear } from './week-utils';
+import {
+  NEGATIVE_SPIKE_CATEGORIES,
+  SEVERITY_OVERRIDE_CATEGORIES,
+  MIN_REVIEWS_FOR_SPIKE_INCIDENT,
+  MIN_REVIEWS_FOR_HIGH_RISK_INCIDENT,
+  normalizeCategory,
+} from '@/lib/ai/classification-taxonomy';
 
-const NEGATIVE_CATEGORIES = ['payout_issue', 'scam_warning', 'platform_issue', 'rule_violation'] as const;
-const MIN_REVIEWS_FOR_INCIDENT = 3;
+// All categories that can produce an incident (spike or severity override); includes legacy for query
+const INCIDENT_QUERY_CATEGORIES = [
+  ...NEGATIVE_SPIKE_CATEGORIES,
+  ...SEVERITY_OVERRIDE_CATEGORIES,
+  // Legacy equivalents so existing rows are included
+  'payout_issue',
+  'scam_warning',
+  'platform_issue',
+  'rule_violation',
+];
+
 const SEVERITY_ORDER = { low: 0, medium: 1, high: 2 } as const;
 
+export type IncidentType = (typeof NEGATIVE_SPIKE_CATEGORIES)[number] | (typeof SEVERITY_OVERRIDE_CATEGORIES)[number];
+
 export interface IncidentInput {
-  incident_type: (typeof NEGATIVE_CATEGORIES)[number];
+  incident_type: IncidentType;
   severity: 'low' | 'medium' | 'high';
   title: string;
   summary: string;
@@ -36,8 +56,8 @@ type ReviewRow = {
 };
 
 /**
- * Fetch negative-category reviews in date range, group by category, create incidents (3+ reviews),
- * generate AI title/summary/affected_users, store in weekly_incidents.
+ * Fetch incident-eligible reviews in date range, group by normalized category,
+ * create incidents: spike-based (>=3) for normal negative, severity override (>=1) for high_risk_allegation.
  */
 export async function detectIncidents(
   firmId: string,
@@ -57,30 +77,35 @@ export async function detectIncidents(
     .eq('firm_id', firmId)
     .gte('review_date', startStr)
     .lte('review_date', endStr)
-    .in('category', [...NEGATIVE_CATEGORIES]);
+    .in('category', INCIDENT_QUERY_CATEGORIES);
 
   if (error) throw new Error(`Failed to fetch reviews: ${error.message}`);
   if (!reviews?.length) return [];
 
-  const byCategory = new Map<string, ReviewRow[]>();
+  const byNormalizedCategory = new Map<string, ReviewRow[]>();
   for (const r of reviews as ReviewRow[]) {
-    const cat = r.category ?? 'other';
-    if (!NEGATIVE_CATEGORIES.includes(cat as (typeof NEGATIVE_CATEGORIES)[number])) continue;
-    if (!byCategory.has(cat)) byCategory.set(cat, []);
-    byCategory.get(cat)!.push(r);
+    const cat = r.category ?? null;
+    const norm = normalizeCategory(cat);
+    if (!norm) continue;
+    if (!byNormalizedCategory.has(norm)) byNormalizedCategory.set(norm, []);
+    byNormalizedCategory.get(norm)!.push(r);
   }
 
   const incidents: DetectedIncident[] = [];
+  const isHighRisk = (c: string) => (SEVERITY_OVERRIDE_CATEGORIES as readonly string[]).includes(c);
 
-  for (const [category, group] of byCategory) {
-    if (group.length < MIN_REVIEWS_FOR_INCIDENT) continue;
+  for (const [normCategory, group] of byNormalizedCategory) {
+    const minRequired = isHighRisk(normCategory)
+      ? MIN_REVIEWS_FOR_HIGH_RISK_INCIDENT
+      : MIN_REVIEWS_FOR_SPIKE_INCIDENT;
+    if (group.length < minRequired) continue;
 
     const reviewIds = group.map((r) => r.id);
     const summaries = group.map((r) => r.ai_summary ?? '(no summary)').filter(Boolean);
     const maxSeverity = deriveSeverity(group);
 
     const { title, summary, affected_users } = await generateIncidentSummary(
-      category as (typeof NEGATIVE_CATEGORIES)[number],
+      normCategory,
       summaries,
       group.length
     );
@@ -89,7 +114,7 @@ export async function detectIncidents(
       firm_id: firmId,
       week_number: weekNumber,
       year,
-      incident_type: category as (typeof NEGATIVE_CATEGORIES)[number],
+      incident_type: normCategory as IncidentType,
       severity: maxSeverity,
       title,
       summary,

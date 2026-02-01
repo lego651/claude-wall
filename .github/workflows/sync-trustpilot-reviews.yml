@@ -1,7 +1,7 @@
 # Sync Trustpilot Reviews (Daily)
 #
 # TICKET-004: Daily Scraper Cron Job
-# Runs daily at 3 AM PST (11:00 UTC) to scrape 3 pages per firm for the5ers, fundingpips, fundednext.
+# Runs daily at 3 AM PST (11:00 UTC) to scrape 3 pages per firm for all firms with Trustpilot URLs.
 # During PDT: 3 AM PDT = 10:00 UTC.
 # Data is written to Supabase (trustpilot_reviews). No git push.
 #
@@ -37,8 +37,9 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run Trustpilot scraper (3 pages per firm)
+      - name: Run Trustpilot scraper (all firms, 3 pages per firm)
         env:
+          TRUSTPILOT_BACKFILL_PAGES: "3"
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npx tsx scripts/backfill-trustpilot.ts

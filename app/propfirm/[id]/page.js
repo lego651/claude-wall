@@ -491,8 +491,8 @@ export default function PropFirmDetailPage() {
           )}
         </div>
 
-        {/* Weekly digest follow card (TICKET-013) */}
-        <FirmWeeklyReportCard firmId={firmId} />
+        {/* Weekly digest follow card (TICKET-013) - hidden for fundednext for now */}
+        {firmId !== 'fundednext' && <FirmWeeklyReportCard firmId={firmId} />}
 
         {/* Top 10 & Latest Payouts - Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">

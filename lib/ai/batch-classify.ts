@@ -1,10 +1,15 @@
 /**
  * TICKET-008: Batch Classification
- * Fetches unclassified reviews, runs classifier on each, updates DB.
+ * Fetches unclassified reviews, runs classifier on each, writes to DB in batches.
+ * - OpenAI: one call per review (sequential, to avoid rate limits).
+ * - Supabase: one upsert per BATCH_SIZE reviews (reduces round-trips).
  */
 
 import { createServiceClient } from '@/libs/supabase/service';
-import { classifyReview, updateReviewClassification } from './classifier';
+import { classifyReview, updateReviewClassificationsBulk } from './classifier';
+
+const BATCH_SIZE = 50; // Flush to Supabase every N classified reviews
+const LOG_INTERVAL = 100; // Log progress every N classified reviews
 
 export interface BatchClassificationResult {
   classified: number;
@@ -43,7 +48,15 @@ export async function runBatchClassification(): Promise<BatchClassificationResul
   }
 
   const typedRows = rows as TrustpilotReviewRow[];
-  console.log(`[Batch Classify] Found ${typedRows.length} unclassified review(s)`);
+  console.log(`[Batch Classify] Found ${typedRows.length} unclassified review(s) (batch write size: ${BATCH_SIZE})`);
+
+  const pending: Array<{ id: number; result: Awaited<ReturnType<typeof classifyReview>> }> = [];
+
+  const flush = async () => {
+    if (pending.length === 0) return;
+    await updateReviewClassificationsBulk(pending);
+    pending.length = 0;
+  };
 
   for (const row of typedRows) {
     try {
@@ -52,9 +65,10 @@ export async function runBatchClassification(): Promise<BatchClassificationResul
         title: row.title ?? undefined,
         text: row.review_text ?? '',
       });
-      await updateReviewClassification(row.id, classification);
+      pending.push({ id: row.id, result: classification });
       result.classified++;
-      if (result.classified % 10 === 0) {
+      if (pending.length >= BATCH_SIZE) await flush();
+      if (result.classified % LOG_INTERVAL === 0) {
         console.log(`[Batch Classify] Classified ${result.classified}/${typedRows.length}`);
       }
     } catch (err) {
@@ -65,5 +79,6 @@ export async function runBatchClassification(): Promise<BatchClassificationResul
     }
   }
 
+  await flush();
   return result;
 }
