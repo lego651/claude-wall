@@ -18,7 +18,12 @@ import { scrapeAndStoreReviews, TRUSTPILOT_FIRM_IDS } from '../lib/scrapers/trus
 const DELAY_BETWEEN_FIRMS_MS = 5000;
 const DEFAULT_PAGES = 6;
 const MAX_PAGES = parseInt(process.env.TRUSTPILOT_BACKFILL_PAGES || '', 10) || DEFAULT_PAGES;
-const MAX_REVIEWS = Math.min(MAX_PAGES * 55, 400); // ~20 per page, cap 400
+const MAX_REVIEWS_ENV = process.env.TRUSTPILOT_MAX_REVIEWS
+  ? parseInt(process.env.TRUSTPILOT_MAX_REVIEWS, 10)
+  : null;
+const MAX_REVIEWS = MAX_REVIEWS_ENV != null && MAX_REVIEWS_ENV > 0
+  ? Math.min(MAX_REVIEWS_ENV, 400)
+  : Math.min(MAX_PAGES * 55, 400);
 
 async function main() {
   const firms = TRUSTPILOT_FIRM_IDS;
@@ -26,7 +31,7 @@ async function main() {
   console.log('TICKET-003: TRUSTPILOT HISTORICAL BACKFILL');
   console.log('='.repeat(80));
   console.log(`Firms: ${firms.join(', ')} (${firms.length} total)`);
-  console.log(`Target: ${MAX_PAGES} pages per firm (set TRUSTPILOT_BACKFILL_PAGES=3 for daily cron)\n`);
+  console.log(`Target: ${MAX_PAGES} pages per firm, max ${MAX_REVIEWS} reviews (daily: 3 pages, 50 reviews)\n`);
 
   const results: Array<{
     firmId: string;

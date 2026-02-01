@@ -37,9 +37,10 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run Trustpilot scraper (all firms, 3 pages per firm)
+      - name: Run Trustpilot scraper (all firms, 3 pages per firm, max 50 reviews)
         env:
           TRUSTPILOT_BACKFILL_PAGES: "3"
+          TRUSTPILOT_MAX_REVIEWS: "50"
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npx tsx scripts/backfill-trustpilot.ts

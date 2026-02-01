@@ -20,7 +20,7 @@ Example: `npx tsx scripts/backfill-weekly-incidents.ts 12` backfills the last 12
 
 ## 2. Weekly reports sending job → uses incident data
 
-- **What:** A **weekly** cron (e.g. Monday 8:00 UTC) triggers the “send weekly reports” API.
+- **What:** A **weekly** cron (Monday 14:00 UTC, after the daily incident job at 13:00 UTC) triggers the “send weekly reports” API.
 - **How:** That API generates the **previous** week’s report for each firm. For each firm it calls `generateWeeklyReport(firmId, previousWeekStart, previousWeekEnd)`, which:
   1. Fetches payouts and reviews for that week.
   2. Calls **`detectIncidents(firmId, previousWeekStart, previousWeekEnd)`** → computes incidents for that week, **writes them to `weekly_incidents`**, and returns them.
@@ -29,3 +29,5 @@ Example: `npx tsx scripts/backfill-weekly-incidents.ts 12` backfills the last 12
 - **So:** The weekly report (and the email) **are based on incident data**. That data is produced by **calling** `detectIncidents` at report time (not by reading from `weekly_incidents`). The same call also **writes** to `weekly_incidents`, so last week’s incidents are stored for APIs and UI.
 
 **Summary:** Weekly report job runs weekly → for each firm it **computes** incidents for the previous week (and stores them in `weekly_incidents`) → report JSON includes those incidents → email is sent from that report. So yes: the weekly sending job is based on incident data; that data is computed at report time and also written to `weekly_incidents`.
+
+**No duplication:** The daily job only runs for the **current** week; the weekly report runs `detectIncidents` for the **previous** week when generating. They target different weeks. The weekly report is scheduled **after** the daily incident job on Mondays (14:00 UTC vs 13:00 UTC) so the most recent daily run is complete before reports are sent.

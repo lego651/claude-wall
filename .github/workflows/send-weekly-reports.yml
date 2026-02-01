@@ -1,8 +1,9 @@
 # Weekly Digest – send aggregated reports to subscribers
 #
 # TICKET-016: Weekly Digest Cron Job (GitHub Actions)
-# Runs every Monday at 8:00 UTC. Triggers the deployed API to generate reports
-# for the previous week and send one aggregated email per user.
+# Runs every Monday at 14:00 UTC (after daily incidents at 13:00 UTC) so the
+# most recent daily incident job has completed before we generate and send reports.
+# Triggers the deployed API to generate reports for the previous week and send emails.
 #
 # Requires repo secrets:
 #   CRON_SECRET – must match CRON_SECRET in Vercel env (for Authorization: Bearer)
@@ -12,8 +13,8 @@ name: Send Weekly Reports (Digest)
 
 on:
   schedule:
-    # Monday 8:00 UTC
-    - cron: "0 8 * * 1"
+    # Monday 14:00 UTC (1h after daily incidents at 13:00 UTC)
+    - cron: "0 14 * * 1"
   workflow_dispatch:
 
 jobs:
