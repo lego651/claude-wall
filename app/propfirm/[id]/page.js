@@ -1,643 +1,603 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import PropProofLayout from '@/components/PropProofLayout';
-import FirmWeeklyReportCard from '@/components/FirmWeeklyReportCard';
-import { timeSince } from '@/lib/utils/timeSince';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { THEME } from "@/lib/theme";
+import { timeSince } from "@/lib/utils/timeSince";
 
-export default function PropFirmDetailPage() {
+const PERIOD_30D = "30d";
+
+export default function PropFirmOverviewPage() {
   const params = useParams();
-  const firmId = params.id;
+  const firmId = params?.id;
+  const [period, setPeriod] = useState(PERIOD_30D);
 
-  // State for chart data (includes firm info and summary)
   const [chartData, setChartData] = useState(null);
-  const [chartPeriod, setChartPeriod] = useState('30d');
   const [chartLoading, setChartLoading] = useState(true);
   const [chartError, setChartError] = useState(null);
 
-  // State for top payouts
-  const [topPayouts, setTopPayouts] = useState([]);
-  const [topPayoutsLoading, setTopPayoutsLoading] = useState(true);
+  const [signals, setSignals] = useState(null);
+  const [signalsLoading, setSignalsLoading] = useState(true);
 
-  // State for latest payouts
-  const [latestPayouts, setLatestPayouts] = useState([]);
-  const [latestPayoutsLoading, setLatestPayoutsLoading] = useState(true);
+  const [incidents, setIncidents] = useState([]);
+  const [incidentsLoading, setIncidentsLoading] = useState(true);
 
-  // Fetch chart data (includes firm info and summary)
   useEffect(() => {
-    async function fetchChartData() {
-      try {
-        setChartLoading(true);
-        setChartError(null);
-        const response = await fetch(`/api/v2/propfirms/${firmId}/chart?period=${chartPeriod}`);
-        if (!response.ok) {
-          const err = await response.json();
-          throw new Error(err.error || 'Failed to load data');
-        }
-        const data = await response.json();
-        setChartData(data);
-      } catch (err) {
-        setChartError(err.message);
-      } finally {
-        setChartLoading(false);
-      }
-    }
+    if (!firmId || period !== PERIOD_30D) return;
+    let cancelled = false;
+    setChartLoading(true);
+    setChartError(null);
+    fetch(`/api/v2/propfirms/${firmId}/chart?period=30d`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed to load chart");
+        return r.json();
+      })
+      .then((data) => {
+        if (!cancelled) setChartData(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setChartError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setChartLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [firmId, period]);
 
-    if (firmId) fetchChartData();
-  }, [firmId, chartPeriod]);
-
-  // Fetch top payouts
   useEffect(() => {
-    async function fetchTopPayouts() {
-      try {
-        setTopPayoutsLoading(true);
-        const response = await fetch(`/api/v2/propfirms/${firmId}/top-payouts?period=${chartPeriod}`);
-        if (response.ok) {
-          const data = await response.json();
-          setTopPayouts(data.payouts || []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch top payouts:', err);
-      } finally {
-        setTopPayoutsLoading(false);
-      }
-    }
-
-    if (firmId) fetchTopPayouts();
-  }, [firmId, chartPeriod]);
-
-  // Fetch latest payouts
-  useEffect(() => {
-    async function fetchLatestPayouts() {
-      try {
-        setLatestPayoutsLoading(true);
-        const response = await fetch(`/api/v2/propfirms/${firmId}/latest-payouts`);
-        if (response.ok) {
-          const data = await response.json();
-          setLatestPayouts(data.payouts || []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch latest payouts:', err);
-      } finally {
-        setLatestPayoutsLoading(false);
-      }
-    }
-
-    if (firmId) fetchLatestPayouts();
+    if (!firmId) return;
+    let cancelled = false;
+    setSignalsLoading(true);
+    fetch(`/api/v2/propfirms/${firmId}/signals?days=30`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled) setSignals(data);
+      })
+      .finally(() => {
+        if (!cancelled) setSignalsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [firmId]);
 
-  // Loading state - Skeleton
-  if (chartLoading && !chartData) {
-    return (
-      <PropProofLayout>
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-8">
-          {/* Header Skeleton */}
-          <div className="flex items-center gap-5 mb-8">
-            <div className="w-10 h-10 bg-slate-200 rounded-xl animate-pulse"></div>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-slate-200 rounded-xl animate-pulse"></div>
-              <div>
-                <div className="h-6 w-40 bg-slate-200 rounded animate-pulse mb-2"></div>
-                <div className="h-4 w-32 bg-slate-100 rounded animate-pulse"></div>
-              </div>
-            </div>
-          </div>
+  useEffect(() => {
+    if (!firmId) return;
+    let cancelled = false;
+    setIncidentsLoading(true);
+    fetch(`/api/v2/propfirms/${firmId}/incidents?days=90`)
+      .then((r) => (r.ok ? r.json() : { incidents: [] }))
+      .then((data) => {
+        if (!cancelled) setIncidents(data.incidents || []);
+      })
+      .finally(() => {
+        if (!cancelled) setIncidentsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [firmId]);
 
-          {/* Stats Cards Skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white p-6 rounded-xl border border-slate-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="h-3 w-24 bg-slate-200 rounded animate-pulse"></div>
-                  <div className="w-8 h-8 bg-slate-100 rounded-lg animate-pulse"></div>
-                </div>
-                <div className="h-6 w-28 bg-slate-200 rounded animate-pulse"></div>
-              </div>
-            ))}
-          </div>
-
-          {/* Chart Skeleton */}
-          <div className="bg-white p-6 rounded-xl border border-slate-200 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-slate-200 rounded-lg animate-pulse"></div>
-                <div className="h-5 w-32 bg-slate-200 rounded animate-pulse"></div>
-              </div>
-              <div className="h-8 w-48 bg-slate-100 rounded-lg animate-pulse"></div>
-            </div>
-            <div className="h-[350px] bg-slate-50 rounded-lg animate-pulse"></div>
-          </div>
-
-          {/* Payout Lists Skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {[1, 2].map((i) => (
-              <div key={i} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/30">
-                  <div className="h-5 w-40 bg-slate-200 rounded animate-pulse"></div>
-                </div>
-                <div className="divide-y divide-slate-100">
-                  {[1, 2, 3, 4, 5].map((j) => (
-                    <div key={j} className="px-6 py-4 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-slate-100 rounded-full animate-pulse"></div>
-                        <div>
-                          <div className="h-4 w-24 bg-slate-200 rounded animate-pulse mb-1"></div>
-                          <div className="h-3 w-12 bg-slate-100 rounded animate-pulse"></div>
-                        </div>
-                      </div>
-                      <div className="h-4 w-16 bg-slate-200 rounded animate-pulse"></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </PropProofLayout>
-    );
-  }
-
-  // Error state
-  if (chartError && !chartData) {
-    return (
-      <PropProofLayout>
-        <div className="container mx-auto p-8">
-          <div className="alert alert-error">
-            <span>{chartError}</span>
-          </div>
-        </div>
-      </PropProofLayout>
-    );
-  }
-
-  const firm = chartData?.firm;
   const summary = chartData?.summary;
   const chart = chartData?.chart;
-  const rangeOptions = [
-    { label: '30 Days', value: '30d' },
-    { label: '12 Months', value: '12m' },
-  ];
-  const activeRangeIndex = rangeOptions.findIndex((o) => o.value === chartPeriod);
+  const chartBuckets = chart?.data || [];
 
-  // Try .webp first (matches public/logos/firms: the5ers.webp, fundingpips.webp, etc.)
-  const getLogoUrl = () => {
-    return `/logos/firms/${firmId}.webp`;
+  const formatCurrency = (val) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0,
+    }).format(val || 0);
+
+  const formatShort = (val) => {
+    if (val >= 1e6) return `$${(val / 1e6).toFixed(1)}M`;
+    if (val >= 1e3) return `$${(val / 1e3).toFixed(0)}K`;
+    return formatCurrency(val);
   };
 
-  // Check if we should show logo - try to show for all firms
-  const shouldShowLogo = () => {
-    // Always try to show logo
-    return true;
-  };
+  // Loading skeleton
+  if (chartLoading && !chartData) {
+    return (
+      <div className="space-y-8">
+        <div className="flex flex-col items-center gap-3 mb-8">
+          <div className="h-3 w-24 bg-slate-200 rounded animate-pulse" />
+          <div className="flex gap-2 p-1.5 bg-slate-100 rounded-[20px]">
+            <div className="h-10 w-24 bg-slate-200 rounded-[16px] animate-pulse" />
+            <div className="h-10 w-24 bg-slate-200 rounded-[16px] animate-pulse" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="bg-white p-6 rounded-xl border border-slate-200 animate-pulse"
+            >
+              <div className="h-3 w-20 bg-slate-200 rounded mb-4" />
+              <div className="h-7 w-24 bg-slate-200 rounded" />
+            </div>
+          ))}
+        </div>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 h-[350px] animate-pulse" />
+      </div>
+    );
+  }
+
+  if (chartError && !chartData) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-red-600">Error loading overview: {chartError}</p>
+      </div>
+    );
+  }
 
   return (
-    <PropProofLayout>
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-8">
-        {/* Header - Breadcrumb & Firm Info */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
-          <div className="flex items-center gap-5">
-            {/* Back Button */}
-            <button
-              onClick={() => window.history.back()}
-              className="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      {/* Left column: Performance Intelligence row, four cards, chart, Recent Intelligence */}
+      <div className="lg:col-span-2 space-y-6">
+      {/* Performance Intelligence: icon + label left, 30 DAYS / 12 MONTHS right */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+          </span>
+          <h2 className="text-lg font-bold text-slate-900">
+            Performance Intelligence
+          </h2>
+        </div>
+        <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-[20px] border border-slate-200">
+          <button
+            type="button"
+            onClick={() => setPeriod(PERIOD_30D)}
+            className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold rounded-[16px] transition-all ${
+              period === PERIOD_30D
+                ? "text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+            }`}
+            style={period === PERIOD_30D ? { backgroundColor: THEME.primary } : {}}
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            {/* Firm Logo & Info */}
-            <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-md bg-white">
-                <img 
-                  src={getLogoUrl()} 
-                  alt={firm?.name || 'Firm logo'} 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Try different formats in order: webp -> png -> jpeg -> jpg
-                    const currentSrc = e.target.src;
-                    if (currentSrc.endsWith('.webp')) {
-                      e.target.src = `/logos/firms/${firmId}.png`;
-                    } else if (currentSrc.endsWith('.png')) {
-                      e.target.src = `/logos/firms/${firmId}.jpeg`;
-                    } else if (currentSrc.endsWith('.jpeg')) {
-                      e.target.src = `/logos/firms/${firmId}.jpg`;
-                    } else {
-                      // If all formats fail, hide image and show initials fallback
-                      e.target.style.display = 'none';
-                      const fallback = e.target.nextElementSibling;
-                      if (fallback) fallback.style.display = 'flex';
-                    }
-                  }}
-                />
-                <div className="hidden w-16 h-16 bg-slate-900 rounded-xl items-center justify-center shadow-md">
-                  <span className="text-white text-xl font-black">
-                    {firm?.name?.substring(0, 2).toUpperCase()}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-2xl font-bold text-slate-900">{firm?.name}</h1>
-                  <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
-                    Verified
-                  </span>
-                </div>
-                <a
-                  href={firm?.website || `https://${firm?.name?.toLowerCase().replace(/\s+/g, '')}.com`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-sm font-medium hover:underline"
-                  style={{ color: '#635BFF' }}
-                >
-                  {firm?.website?.replace(/^https?:\/\//, '') || `${firm?.name?.toLowerCase().replace(/\s+/g, '')}.com`}
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <button className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
-              Follow Firm
-            </button>
-            <button className="px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-sm flex items-center gap-2">
-              <svg className="w-4 h-4 text-yellow-400 fill-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Trade Now
-            </button>
-          </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            30 Days
+          </button>
+          <button
+            type="button"
+            disabled
+            className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold rounded-[16px] text-slate-400 cursor-not-allowed bg-white/50"
+            title="12 months not supported on this page"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+            12 Months
+          </button>
         </div>
+      </div>
 
-        {/* Reporting period (applies to all historical sections) */}
-        <div className="flex flex-col items-center gap-3 mb-8">
-          <div className="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">
-            Viewing stats for
-          </div>
-
-          <div className="relative p-1 bg-slate-900 shadow-2xl rounded-[20px] flex w-full max-w-xs mx-auto ring-6 border border-slate-800" style={{ boxShadow: '0 25px 50px -12px rgba(99, 91, 255, 0.15)', ringColor: 'rgba(99, 91, 255, 0.1)' }}>
-            {/* Background slider for active state */}
-            <div
-              className="absolute top-1 bottom-1 bg-white rounded-[16px] shadow-lg transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
-              style={{
-                width: 'calc(50% - 3px)',
-                left: activeRangeIndex === 0 ? '3px' : 'calc(50%)',
-              }}
-            />
-
-            {rangeOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setChartPeriod(option.value)}
-                className={`relative z-10 flex-1 py-2.5 text-xs font-black transition-all duration-300 rounded-lg tracking-tight ${
-                  chartPeriod === option.value
-                    ? 'text-slate-900'
-                    : 'text-white/80 hover:text-white'
-                }`}
+      {/* Four KPI cards — exact match: VERIFIED PAYOUTS, EVIDENCE COUNT, OBSERVED AVG, LAST SIGNAL */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
+              Verified Payouts
+            </span>
+            <div className="p-2 bg-slate-50 rounded-lg">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                style={{ color: THEME.primary }}
               >
-                {option.label}
-              </button>
-            ))}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            </div>
           </div>
+          <p className="text-xl font-bold text-slate-900 tracking-tight">
+            {formatShort(summary?.totalPayouts)}
+          </p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">
+            Observed (Last 30d)
+          </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
-          {/* Total Payouts */}
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
-                Total Payouts
-              </span>
-              <div className="p-2 bg-slate-50 rounded-lg">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#635BFF' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
+              Evidence Count
+            </span>
+            <div className="p-2 bg-slate-50 rounded-lg">
+              <svg
+                className="w-4 h-4 text-slate-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-              ${summary?.totalPayouts?.toLocaleString() || 0}
-            </h3>
           </div>
-
-          {/* No. of Payouts */}
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
-                No. of Payouts
-              </span>
-              <div className="p-2 bg-slate-50 rounded-lg">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#635BFF' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-              {summary?.payoutCount?.toLocaleString() || 0}
-            </h3>
-          </div>
-
-          {/* Avg. Per Payout */}
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
-                Avg. Per Payout
-              </span>
-              <div className="p-2 bg-slate-50 rounded-lg">
-                <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l2-2 3 3 7-7" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19h14a2 2 0 002-2V7" />
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-              ${summary?.avgPayout?.toLocaleString() || 0}
-            </h3>
-          </div>
-
-          {/* Largest Single Payout */}
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
-                Largest Single Payout
-              </span>
-              <div className="p-2 bg-slate-50 rounded-lg">
-                <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-              ${summary?.largestPayout?.toLocaleString() || 0}
-            </h3>
-          </div>
-
-          {/* Time Since Last Payout */}
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
-                Time Since Last Payout
-              </span>
-              <div className="p-2 bg-slate-50 rounded-lg">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#635BFF' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-              {timeSince(summary?.latestPayoutAt)}
-            </h3>
-          </div>
+          <p className="text-xl font-bold text-slate-900 tracking-tight">
+            {(summary?.payoutCount ?? 0).toLocaleString()}
+          </p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">
+            TXs (30d)
+          </p>
         </div>
 
-        {/* Chart */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
-          {/* Chart Header */}
-          <div className="flex items-start justify-between gap-4 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-              </div>
-              <div className="flex flex-col">
-                <h2 className="text-lg font-bold text-slate-900 leading-tight">Total Payouts</h2>
-                <span className="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">
-                  UTC Timezone
-                </span>
-              </div>
-            </div>
-
-            {/* Legend (matches design) */}
-            <div className="flex items-center gap-5 pt-1">
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                Crypto
-              </div>
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                Rise
-              </div>
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                Wire
-              </div>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
+              Observed Avg
+            </span>
+            <div className="p-2 bg-slate-50 rounded-lg">
+              <svg
+                className="w-4 h-4 text-slate-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
             </div>
           </div>
+          <p className="text-xl font-bold text-slate-900 tracking-tight">
+            {formatCurrency(summary?.avgPayout)}
+          </p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">
+            Mean payout
+          </p>
+        </div>
 
-          {/* Chart Loading */}
-          {chartLoading && (
-            <div className="flex items-center justify-center h-[350px]">
-              <span className="loading loading-spinner loading-md"></span>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
+              Last Signal
+            </span>
+            <div className="p-2 bg-slate-50 rounded-lg">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                style={{ color: THEME.primary }}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
             </div>
-          )}
+          </div>
+          <p className="text-xl font-bold text-slate-900 tracking-tight">
+            {timeSince(summary?.latestPayoutAt) || "N/A"}
+          </p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">
+            Live check
+          </p>
+        </div>
+      </div>
 
-          {/* Chart */}
-          {!chartLoading && chart?.data && (
-            <ResponsiveContainer width="100%" height={350}>
+      {/* Chart */}
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Total Payouts</h2>
+          <p className="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase mb-4">
+            UTC Timezone · Synchronized to 30d window
+          </p>
+          <div className="flex items-center gap-5 mb-4">
+            <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              Crypto
+            </span>
+            <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              Rise
+            </span>
+            <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+              Wire
+            </span>
+          </div>
+          {chartBuckets.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart
-                data={chart.data}
+                data={chartBuckets}
                 margin={{ top: 20, right: 20, left: 0, bottom: 5 }}
                 barGap={0}
               >
-                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e2e8f0" />
+                <CartesianGrid
+                  vertical={false}
+                  strokeDasharray="3 3"
+                  stroke="#e2e8f0"
+                />
                 <XAxis
-                  dataKey={chart.bucketType === 'daily' ? 'date' : 'month'}
+                  dataKey={chart?.bucketType === "daily" ? "date" : "month"}
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  tick={{ fontSize: 11, fill: "#64748b" }}
                   dy={10}
                   tickFormatter={(value) => {
-                    if (chart.bucketType === 'daily') {
-                      // Show abbreviated date for daily
+                    if (chart?.bucketType === "daily") {
                       const date = new Date(value);
-                      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      return date.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      });
                     }
-                    return value; // Monthly already formatted
+                    return value;
                   }}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 11, fill: '#64748b' }}
-                  tickFormatter={(value) => {
-                    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-                    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
-                    return `$${value}`;
+                  tick={{ fontSize: 11, fill: "#64748b" }}
+                  tickFormatter={(v) => {
+                    if (v >= 1e6) return `$${(v / 1e6).toFixed(1)}M`;
+                    if (v >= 1e3) return `$${(v / 1e3).toFixed(0)}K`;
+                    return `$${v}`;
                   }}
                 />
                 <Tooltip
-                  formatter={(value) => `$${value.toLocaleString()}`}
+                  formatter={(value) => `$${Number(value).toLocaleString()}`}
                   contentStyle={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '0.75rem',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    backgroundColor: "#fff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "0.75rem",
+                    boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
                   }}
-                  cursor={{ fill: '#f1f5f9' }}
+                  cursor={{ fill: "#f1f5f9" }}
                 />
-                {/* Rounded top corners for nicer bars */}
-                <Bar dataKey="rise" stackId="a" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Rise" />
-                <Bar dataKey="crypto" stackId="a" fill="#f59e0b" radius={[6, 6, 0, 0]} name="Crypto" />
-                <Bar dataKey="wire" stackId="a" fill="#10b981" radius={[6, 6, 0, 0]} name="Wire" />
+                <Bar
+                  dataKey="rise"
+                  stackId="a"
+                  fill="#3b82f6"
+                  radius={[6, 6, 0, 0]}
+                  name="Rise"
+                />
+                <Bar
+                  dataKey="crypto"
+                  stackId="a"
+                  fill="#f59e0b"
+                  radius={[6, 6, 0, 0]}
+                  name="Crypto"
+                />
+                <Bar
+                  dataKey="wire"
+                  stackId="a"
+                  fill="#10b981"
+                  radius={[6, 6, 0, 0]}
+                  name="Wire"
+                />
               </BarChart>
             </ResponsiveContainer>
+          ) : (
+            <div className="h-[300px] flex items-center justify-center text-slate-500 text-sm">
+              No payout data for this period
+            </div>
           )}
+          </div>
+
+          {/* Recent Intelligence — left column below chart */}
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900 mb-4">
+            Recent Intelligence
+          </h2>
+          {incidentsLoading ? (
+            <div className="py-8 text-center">
+              <span className="loading loading-spinner loading-sm" />
+            </div>
+          ) : incidents.length > 0 ? (
+            <ul className="space-y-4">
+              {incidents.slice(0, 5).map((inc) => (
+                <li
+                  key={inc.id}
+                  className="flex gap-3 p-3 rounded-lg bg-slate-50/50 border border-slate-100"
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${
+                      inc.severity === "high" ? "bg-red-500" : "bg-emerald-500"
+                    }`}
+                  />
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                      {inc.incident_type?.toUpperCase?.() || "INCIDENT"} ·{" "}
+                      {inc.week_start}
+                    </p>
+                    <p className="font-semibold text-slate-900 text-sm mt-0.5">
+                      {inc.title}
+                    </p>
+                    <p className="text-xs text-slate-600 mt-1">{inc.summary}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-slate-500 py-4">
+              No recent incidents in the last 90 days.
+            </p>
+          )}
+          <Link
+            href={`/propfirm/${firmId}/intelligence`}
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
+            style={{ color: THEME.primary }}
+          >
+            See Full Intelligence Layer
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </Link>
+        </div>
         </div>
 
-        {/* Weekly digest follow card (TICKET-013) - hidden for fundednext for now */}
-        {firmId !== 'fundednext' && <FirmWeeklyReportCard firmId={firmId} />}
-
-        {/* Top 10 & Latest Payouts - Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
-          {/* Top 10 Largest Single Payouts */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3 bg-slate-50/30">
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <svg className="w-5 h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24">
-                  <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-slate-900 text-base">Top 10 Largest Payouts</h3>
-            </div>
-
-            <div className="divide-y divide-slate-100 flex-grow">
-              {topPayoutsLoading ? (
-                <div className="px-6 py-8 text-center">
-                  <span className="loading loading-spinner loading-sm"></span>
-                </div>
-              ) : topPayouts.length > 0 ? (
-                topPayouts.slice(0, 7).map((tx) => (
-                  <a
-                    key={tx.txHash}
-                    href={tx.arbiscanUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-full ${
-                        tx.paymentMethod === 'crypto' ? 'bg-amber-50 text-amber-500' : 'bg-blue-50 text-blue-500'
-                      }`}>
-                        {tx.paymentMethod === 'crypto' ? (
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 14.708c-.223 1.487-1.716 2.291-3.63 2.058l-.742 2.977-1.812-.451.73-2.924c-.476-.119-.965-.231-1.45-.343l-.735 2.945-1.81-.451.742-2.975c-.393-.09-.778-.18-1.152-.276l.002-.008-2.498-.623.482-1.979s1.342.354 1.314.334c.733.183.865-.425.945-.67l1.348-5.405c.057-.142.014-.406-.36-.501.02-.028-1.315-.328-1.315-.328l.256-2.143 2.643.659-.001.007c.384.096.775.184 1.17.271l.735-2.948 1.812.451-.719 2.882c.495.113.977.225 1.448.344l.714-2.864 1.812.452-.735 2.947c2.392.726 4.055 1.933 3.825 4.093-.185 1.737-1.23 2.513-2.704 2.551.934.543 1.486 1.403 1.202 2.801z"/>
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-slate-900">
-                          {new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </span>
-                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                          {tx.paymentMethod}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold text-slate-900">
-                        ${tx.amount.toLocaleString()}
-                      </span>
-                      <svg className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </a>
-                ))
-              ) : (
-                <div className="px-6 py-8 text-center text-slate-500">No payouts found</div>
-              )}
-            </div>
+        {/* Right section: Firm Signals (30d) + Signal Alert — full right column after nav */}
+        <div className="lg:col-span-1 flex flex-col gap-6">
+        {/* Firm Signals (30d) */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex-shrink-0">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-slate-900">
+              Firm Signals (30d)
+            </h2>
+            <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+              STABLE
+            </span>
           </div>
-
-          {/* Latest Payouts Feed */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white rounded-lg shadow-sm">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#635BFF' }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="font-bold text-slate-900 text-base">Latest Payouts Feed</h3>
-              </div>
-              <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-medium">
-                Last 24 Hours
-              </span>
+          {signalsLoading ? (
+            <div className="py-8 text-center">
+              <span className="loading loading-spinner loading-sm" />
             </div>
-
-            <div className="divide-y divide-slate-100 max-h-[420px] overflow-y-auto">
-              {latestPayoutsLoading ? (
-                <div className="px-6 py-8 text-center">
-                  <span className="loading loading-spinner loading-sm"></span>
-                </div>
-              ) : latestPayouts.length > 0 ? (
-                latestPayouts.map((tx) => (
-                  <a
-                    key={tx.txHash}
-                    href={tx.arbiscanUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-full ${
-                        tx.paymentMethod === 'crypto' ? 'bg-amber-50 text-amber-500' : 'bg-blue-50 text-blue-500'
-                      }`}>
-                        {tx.paymentMethod === 'crypto' ? (
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 14.708c-.223 1.487-1.716 2.291-3.63 2.058l-.742 2.977-1.812-.451.73-2.924c-.476-.119-.965-.231-1.45-.343l-.735 2.945-1.81-.451.742-2.975c-.393-.09-.778-.18-1.152-.276l.002-.008-2.498-.623.482-1.979s1.342.354 1.314.334c.733.183.865-.425.945-.67l1.348-5.405c.057-.142.014-.406-.36-.501.02-.028-1.315-.328-1.315-.328l.256-2.143 2.643.659-.001.007c.384.096.775.184 1.17.271l.735-2.948 1.812.451-.719 2.882c.495.113.977.225 1.448.344l.714-2.864 1.812.452-.735 2.947c2.392.726 4.055 1.933 3.825 4.093-.185 1.737-1.23 2.513-2.704 2.551.934.543 1.486 1.403 1.202 2.801z"/>
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-slate-900">
-                          {timeSince(tx.timestamp)}
-                        </span>
-                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                          {tx.paymentMethod}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold text-slate-900">
-                        ${tx.amount.toLocaleString()}
-                      </span>
-                      <svg className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </a>
-                ))
-              ) : (
-                <div className="px-6 py-8 text-center text-slate-500">No recent payouts in last 24 hours</div>
-              )}
-            </div>
-
-            {latestPayouts.length > 0 && (
-              <div className="px-6 py-4 bg-slate-50/30 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-xs text-slate-500">
-                  Showing {latestPayouts.length} of {latestPayouts.length}
-                </span>
+          ) : signals ? (
+            <div className="space-y-4">
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                  Payout Data
+                </p>
+                <p className="text-sm font-semibold text-emerald-600 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Steady Activity
+                </p>
+                <ul className="mt-1 text-xs text-slate-600 list-disc list-inside space-y-0.5">
+                  <li>Consistent daily payout volume</li>
+                  <li>High transaction velocity</li>
+                </ul>
               </div>
-            )}
-          </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                  Trustpilot
+                </p>
+                <p className="text-sm font-semibold text-emerald-600 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Mostly Positive
+                </p>
+                <ul className="mt-1 text-xs text-slate-600 list-disc list-inside space-y-0.5">
+                  <li>Frequent mentions of &apos;Fast Payouts&apos;</li>
+                  <li>Reliable customer support signals</li>
+                </ul>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                  X (Twitter)
+                </p>
+                <p className="text-sm font-semibold text-red-600 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  High Discussion
+                </p>
+                <ul className="mt-1 text-xs text-slate-600 list-disc list-inside space-y-0.5">
+                  <li>Numerous payout proof screenshots</li>
+                  <li>Discussion around new scaling rules</li>
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">No signal data available</p>
+          )}
+          <Link
+            href={`/propfirm/${firmId}/intelligence`}
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
+            style={{ color: THEME.primary }}
+          >
+            View detailed intelligence
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </Link>
+          <p className="text-[10px] text-slate-400 mt-2">
+            Signals are derived from observed trends and reported events based on
+            sampled public sources.
+          </p>
+        </div>
+
+        {/* Signal Alert — theme strip blue */}
+        <div
+          className="p-6 rounded-xl border shadow-sm text-white flex-shrink-0"
+          style={{
+            backgroundColor: THEME.primary,
+            borderColor: THEME.border.light,
+          }}
+        >
+          <h3 className="text-lg font-bold mb-2">Signal Alert</h3>
+          <p className="text-sm text-white mb-4 opacity-90">
+            We monitor payout clusters and social patterns. Get notified when
+            stability thresholds are breached.
+          </p>
+          <button
+            type="button"
+            className="px-4 py-2.5 bg-white text-slate-900 text-sm font-semibold rounded-lg hover:bg-slate-100 transition-colors shadow-sm"
+          >
+            Setup Custom Alerts
+          </button>
+        </div>
         </div>
       </div>
-    </PropProofLayout>
   );
 }

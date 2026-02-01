@@ -4,7 +4,7 @@
  * PP2-009: GET /api/v2/propfirms/[id]/chart
  * 
  * Returns chart data and summary statistics for a specific firm.
- * Uses JSON files for historical data (30d, 12m).
+ * Uses Supabase for firm metadata. Uses JSON files for historical data (30d, 12m).
  * 
  * Query params:
  *   - period: 30d, 12m (default: 30d)
@@ -61,7 +61,6 @@ export async function GET(request, { params }) {
   try {
     const supabase = createSupabaseClient();
 
-    // Fetch firm metadata from Supabase
     const { data: firm, error: firmError } = await supabase
       .from('firms')
       .select('id, name, logo, website, last_payout_at')
@@ -75,10 +74,8 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Load historical data from JSON files
     const historicalData = loadPeriodData(firmId, period);
 
-    // Build response
     let chartData;
     let bucketType;
     let summary;
@@ -87,8 +84,6 @@ export async function GET(request, { params }) {
       bucketType = 'daily';
       chartData = historicalData.dailyBuckets || [];
       summary = historicalData.summary || {};
-      
-      // Ensure we have 30 days of data (fill gaps with zeros)
       chartData = fillDailyGaps(chartData, 30);
     } else {
       bucketType = 'monthly';
@@ -96,11 +91,9 @@ export async function GET(request, { params }) {
       summary = historicalData.summary || {};
     }
 
-    // Add latest payout timestamp from Supabase (always fresh)
     summary.latestPayoutAt = firm.last_payout_at;
     summary.totalPayouts = Math.round(summary.totalPayouts || 0);
     summary.largestPayout = Math.round(summary.largestPayout || 0);
-    // Ensure avgPayout is always present (API-level computation)
     const payoutCount = summary.payoutCount || 0;
     const avgPayout =
       typeof summary.avgPayout === 'number'
