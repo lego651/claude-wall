@@ -1,61 +1,61 @@
 {
   "year": 2026,
   "summary": {
-    "totalR": 38.3,
-    "averageR": 0.5,
-    "totalTrades": 77,
-    "winning": 49,
-    "losing": 28,
-    "winRate": 63.6,
-    "totalWeeks": 4,
+    "totalR": 50.9,
+    "averageR": 0.54,
+    "totalTrades": 94,
+    "winning": 62,
+    "losing": 32,
+    "winRate": 66,
+    "totalWeeks": 5,
     "byStrategy": {
       "AS_1": {
-        "totalR": 9,
-        "averageR": 0.6,
-        "trades": 15,
-        "winning": 9,
-        "losing": 6,
-        "winRate": 60
+        "totalR": 10,
+        "averageR": 0.53,
+        "trades": 19,
+        "winning": 11,
+        "losing": 8,
+        "winRate": 57.9
       },
       "AS_2": {
-        "totalR": 10.3,
-        "averageR": 0.64,
-        "trades": 16,
-        "winning": 12,
+        "totalR": 13.4,
+        "averageR": 0.67,
+        "trades": 20,
+        "winning": 16,
         "losing": 4,
-        "winRate": 75
+        "winRate": 80
       },
       "EU": {
-        "totalR": 4.4,
-        "averageR": 0.28,
-        "trades": 16,
-        "winning": 9,
-        "losing": 7,
-        "winRate": 56.3
+        "totalR": 6.4,
+        "averageR": 0.34,
+        "trades": 19,
+        "winning": 11,
+        "losing": 8,
+        "winRate": 57.9
       },
       "NQI": {
-        "totalR": 6.9,
-        "averageR": 0.69,
-        "trades": 10,
-        "winning": 7,
-        "losing": 3,
-        "winRate": 70
+        "totalR": 7.9,
+        "averageR": 0.66,
+        "trades": 12,
+        "winning": 8,
+        "losing": 4,
+        "winRate": 66.7
       },
       "GOLD_1": {
-        "totalR": 5.5,
-        "averageR": 0.92,
-        "trades": 6,
-        "winning": 5,
+        "totalR": 7,
+        "averageR": 1,
+        "trades": 7,
+        "winning": 6,
         "losing": 1,
-        "winRate": 83.3
+        "winRate": 85.7
       },
       "GOLD_2": {
-        "totalR": 2.2,
-        "averageR": 0.16,
-        "trades": 14,
-        "winning": 7,
+        "totalR": 6.2,
+        "averageR": 0.36,
+        "trades": 17,
+        "winning": 10,
         "losing": 7,
-        "winRate": 50
+        "winRate": 58.8
       }
     },
     "byMonth": [
@@ -66,6 +66,14 @@
         "trades": 77,
         "winRate": 63.6,
         "tradingDays": 20
+      },
+      {
+        "month": "2026-02",
+        "totalR": 12.6,
+        "averageR": 0.74,
+        "trades": 17,
+        "winRate": 76.5,
+        "tradingDays": 5
       }
     ]
   }

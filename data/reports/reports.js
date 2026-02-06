@@ -16,6 +16,23 @@ function getMarkdownContent(filename) {
 // All available trading reports
 export const reports = [
   {
+    slug: 'week-06-2026',
+    type: reportTypes.weekly,
+    title: 'Week 6, 2026',
+    period: '2026-02-02 to 2026-02-06',
+    weekNumber: 6,
+    year: 2026,
+    publishedAt: '2026-02-06',
+    summary: {
+      totalR: 12.6,
+      winRate: 76.5,
+      totalTrades: 17,
+      bestDay: 'Wednesday (+4.80R)',
+    },
+    // Function to get markdown content
+    getContent: () => getMarkdownContent('week-06-2026.md'),
+  },
+  {
     slug: 'week-05-2026',
     type: reportTypes.weekly,
     title: 'Week 5, 2026',
