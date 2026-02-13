@@ -9,6 +9,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { loadPeriodData } from '@/lib/services/payoutDataLoader';
 import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
+import { createLogger } from '@/lib/logger';
+import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
 
 function createSupabaseClient() {
   return createClient(
@@ -28,10 +30,16 @@ const NEGATIVE_CATEGORIES = [
 
 export async function GET(request, { params }) {
   const { id: firmId } = await params;
+  const requestId = getRequestId(request);
+  const log = createLogger({ requestId, route: '/api/v2/propfirms/[id]/signals', firmId });
+  const start = Date.now();
   const { searchParams } = new URL(request.url);
   const days = Math.min(365, Math.max(1, parseInt(searchParams.get('days') || '30', 10) || 30));
 
+  log.info({ method: 'GET', params: { days } }, 'API request');
+
   const { ok, headers } = validateOrigin(request);
+  setRequestIdHeader(headers, requestId);
   if (!ok) {
     return NextResponse.json({ error: 'Forbidden origin' }, { status: 403, headers });
   }
@@ -106,6 +114,7 @@ export async function GET(request, { params }) {
       sentiment: { positive, neutral, negative },
     };
 
+    log.info({ duration: Date.now() - start }, 'API response');
     return NextResponse.json(
       {
         firm_id: firmId,
@@ -117,9 +126,13 @@ export async function GET(request, { params }) {
       { headers }
     );
   } catch (e) {
+    log.error(
+      { error: e?.message, stack: e?.stack, duration: Date.now() - start },
+      'API error'
+    );
     return NextResponse.json(
       { error: e?.message || 'Internal error' },
-      { status: 500 }
+      { status: 500, headers }
     );
   }
 }

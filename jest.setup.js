@@ -12,6 +12,7 @@ import '@testing-library/jest-dom';
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test-project.supabase.co';
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
 process.env.ARBISCAN_API_KEY = 'test-arbiscan-api-key';
+process.env.LOG_LEVEL = 'fatal'; // pino: no output during tests
 
 // Set timezone for consistent date handling
 process.env.TZ = 'UTC';

@@ -10,6 +10,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
+import { createLogger } from '@/lib/logger';
+import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
 
 function createSupabaseClient() {
   return createClient(
@@ -88,6 +90,7 @@ export async function GET(request, { params }) {
       arbiscanUrl: `https://arbiscan.io/tx/${p.tx_hash}`,
     }));
 
+    log.info({ duration: Date.now() - start, count: formattedPayouts.length }, 'API response');
     return NextResponse.json(
       {
         firmId,
@@ -96,9 +99,11 @@ export async function GET(request, { params }) {
       },
       { headers }
     );
-
   } catch (error) {
-    console.error('[API] Error:', error);
+    log.error(
+      { error: error.message, stack: error.stack, duration: Date.now() - start },
+      'API error'
+    );
     return NextResponse.json(
       { error: error.message },
       { status: 500, headers }

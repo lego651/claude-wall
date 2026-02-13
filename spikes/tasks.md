@@ -127,17 +127,17 @@ export async function fetchNativeTransactions(address, apiKey) {
 Replace `console.log()` with structured logging to enable debugging in production.
 
 **Acceptance Criteria**:
-- [ ] Install `pino` logger (`yarn add pino`)
-- [ ] Create `lib/logger.js` with configured pino instance
-- [ ] Define log levels: debug, info, warn, error
-- [ ] Add context fields: requestId, userId, firmId, timestamp
-- [ ] Replace all `console.log` in API routes with `logger.info`
-- [ ] Replace all `console.error` with `logger.error`
-- [ ] Add request ID middleware
-- [ ] Log all API calls (route, method, params, duration)
-- [ ] Log all errors (stack trace, context)
-- [ ] Configure JSON output for production
-- [ ] Add unit tests for logger configuration
+- [x] Install `pino` logger (`yarn add pino`)
+- [x] Create `lib/logger.js` with configured pino instance
+- [x] Define log levels: debug, info, warn, error
+- [x] Add context fields: requestId, userId, firmId, timestamp
+- [x] Replace all `console.log` in API routes with `logger.info`
+- [x] Replace all `console.error` with `logger.error`
+- [x] Add request ID middleware
+- [x] Log all API calls (route, method, params, duration)
+- [x] Log all errors (stack trace, context)
+- [x] Configure JSON output for production
+- [x] Add unit tests for logger configuration
 
 **Dependencies**: None
 

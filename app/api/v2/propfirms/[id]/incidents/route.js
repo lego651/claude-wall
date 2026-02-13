@@ -29,10 +29,16 @@ function getWeekStartDate(year, weekNumber) {
 
 export async function GET(request, { params }) {
   const { id: firmId } = await params;
+  const requestId = getRequestId(request);
+  const log = createLogger({ requestId, route: '/api/v2/propfirms/[id]/incidents', firmId });
+  const start = Date.now();
   const { searchParams } = new URL(request.url);
   const days = Math.min(365, Math.max(1, parseInt(searchParams.get('days') || '90', 10) || 90));
 
+  log.info({ method: 'GET', params: { days } }, 'API request');
+
   const { ok, headers } = validateOrigin(request);
+  setRequestIdHeader(headers, requestId);
   if (!ok) {
     return NextResponse.json({ error: 'Forbidden origin' }, { status: 403, headers });
   }
@@ -100,5 +106,6 @@ export async function GET(request, { params }) {
     return { ...rest, source_links };
   });
 
+  log.info({ duration: Date.now() - start, count: incidentsWithLinks.length }, 'API response');
   return NextResponse.json({ incidents: incidentsWithLinks }, { headers });
 }

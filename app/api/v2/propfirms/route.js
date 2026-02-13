@@ -18,6 +18,8 @@ import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { loadPeriodData } from '@/lib/services/payoutDataLoader';
 import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
+import { createLogger } from '@/lib/logger';
+import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
 
 const PROPFIRMS_JSON = path.join(process.cwd(), 'data', 'propfirms.json');
 
@@ -56,20 +58,25 @@ function periodToHours(period) {
 }
 
 export async function GET(request) {
+  const requestId = getRequestId(request);
+  const log = createLogger({ requestId, route: '/api/v2/propfirms' });
+  const start = Date.now();
   const { searchParams } = new URL(request.url);
-  
-  // Parse and validate query params
-  const period = VALID_PERIODS.includes(searchParams.get('period')) 
-    ? searchParams.get('period') 
+
+  const period = VALID_PERIODS.includes(searchParams.get('period'))
+    ? searchParams.get('period')
     : '1d';
-  const sort = VALID_SORT_FIELDS.includes(searchParams.get('sort')) 
-    ? searchParams.get('sort') 
+  const sort = VALID_SORT_FIELDS.includes(searchParams.get('sort'))
+    ? searchParams.get('sort')
     : 'totalPayouts';
-  const order = VALID_ORDERS.includes(searchParams.get('order')) 
-    ? searchParams.get('order') 
+  const order = VALID_ORDERS.includes(searchParams.get('order'))
+    ? searchParams.get('order')
     : 'desc';
 
+  log.info({ method: 'GET', params: { period, sort, order } }, 'API request');
+
   const { ok, headers } = validateOrigin(request);
+  setRequestIdHeader(headers, requestId);
   if (!ok) {
     return NextResponse.json(
       { error: 'Forbidden origin' },
@@ -212,6 +219,7 @@ export async function GET(request) {
       return order === 'desc' ? bVal - aVal : aVal - bVal;
     });
 
+    log.info({ duration: Date.now() - start, count: data.length }, 'API response');
     return NextResponse.json(
       {
         data,
@@ -224,9 +232,11 @@ export async function GET(request) {
       },
       { headers }
     );
-
   } catch (error) {
-    console.error('[API] Error:', error);
+    log.error(
+      { error: error.message, stack: error.stack, duration: Date.now() - start },
+      'API error'
+    );
     return NextResponse.json(
       { error: error.message },
       { status: 500, headers }
