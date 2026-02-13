@@ -1,0 +1,32 @@
+{
+  "summary": {
+    "totalPayouts": 15000,
+    "payoutCount": 3,
+    "largestPayout": 8000,
+    "avgPayout": 5000
+  },
+  "dailyBuckets": [
+    { "date": "2025-01-15", "total": 5000, "rise": 3000, "crypto": 2000, "wire": 0 },
+    { "date": "2025-01-16", "total": 10000, "rise": 5000, "crypto": 5000, "wire": 0 }
+  ],
+  "transactions": [
+    {
+      "tx_hash": "0xabc",
+      "timestamp": "2025-01-15T12:00:00.000Z",
+      "amount": 5000,
+      "payment_method": "rise"
+    },
+    {
+      "tx_hash": "0xdef",
+      "timestamp": "2025-01-16T14:00:00.000Z",
+      "amount": 8000,
+      "payment_method": "crypto"
+    },
+    {
+      "tx_hash": "0x123",
+      "timestamp": "2025-01-16T16:00:00.000Z",
+      "amount": 2000,
+      "payment_method": "wire"
+    }
+  ]
+}

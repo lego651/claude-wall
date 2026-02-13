@@ -304,27 +304,27 @@ Achieve 100% test coverage for API security functions.
 Achieve 95%+ test coverage for file loading and data aggregation logic.
 
 **Acceptance Criteria**:
-- [ ] Test `loadMonthlyData()`:
+- [x] Test `loadMonthlyData()`:
   - ✅ Loads existing file successfully
   - ✅ Returns null for missing file
   - ✅ Handles corrupted JSON gracefully
   - ✅ Logs errors appropriately
-- [ ] Test `getAvailableMonths()`:
+- [x] Test `getAvailableMonths()`:
   - ✅ Returns sorted months (newest first)
   - ✅ Filters non-JSON files
   - ✅ Returns empty array for missing dir
-- [ ] Test `loadPeriodData()`:
+- [x] Test `loadPeriodData()`:
   - ✅ Filters to last 7 days correctly
   - ✅ Filters to last 30 days correctly
   - ✅ Aggregates 12 months correctly
   - ✅ Calculates summary metrics accurately
   - ✅ Handles missing files gracefully
   - ✅ Merges data from multiple months
-- [ ] Test `getTopPayoutsFromFiles()`:
+- [x] Test `getTopPayoutsFromFiles()`:
   - ✅ Returns top N payouts sorted by amount
   - ✅ Filters by period (30d, 12m)
   - ✅ Handles empty data
-- [ ] Coverage: 95%
+- [x] Coverage: 95%
 
 **Dependencies**: PROP-001 (test framework)
 
