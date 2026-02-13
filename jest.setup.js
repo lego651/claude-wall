@@ -16,11 +16,12 @@ process.env.TZ = 'UTC';
 // Global test timeout (increase if needed for async operations)
 jest.setTimeout(10000);
 
-// Mock console methods to reduce noise in test output
+// Suppress console output during tests (code under test still runs normally)
 global.console = {
   ...console,
-  // Uncomment to suppress console.log during tests
-  // log: jest.fn(),
-  // error: jest.fn(),
-  // warn: jest.fn(),
+  log: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  info: jest.fn(),
+  debug: jest.fn(),
 };
