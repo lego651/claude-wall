@@ -1,0 +1,42 @@
+# Validate JSON vs Supabase payout data overlap (PROP-018)
+#
+# Runs after historical sync (or on schedule). Fails if >5% of Supabase
+# payouts for a firm/month are missing from JSON (indicates stale or failed sync).
+#
+# Requires: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (secrets).
+# If secrets are not set, the script exits 0 (skips validation).
+
+name: Validate Data Overlap
+
+on:
+  schedule:
+    - cron: "45 11 * * *"  # 11:45 UTC daily (after sync at 11:00, file size at 11:30)
+  workflow_dispatch:
+  # Optional: run after historical sync
+  # workflow_run:
+  #   workflows: ["Sync Firm Payouts (Historical)"]
+  #   types: [completed]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Validate data overlap
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/validate-data-overlap.js

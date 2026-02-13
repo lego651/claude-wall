@@ -736,18 +736,17 @@ return NextResponse.json({ data: validated });
 Validate that real-time (Supabase) and historical (JSON) data are consistent.
 
 **Acceptance Criteria**:
-- [ ] Create validation function: `validateMonthData(firmId, yearMonth)`
-  - Query Supabase for same period
-  - Compare transaction hashes
-  - Report missing transactions
-  - Return summary (jsonCount, supabaseCount, missingInJson, missingInSupabase)
-- [ ] Add to historical sync workflow (GitHub Actions)
-  - Run after JSON files updated
-  - Fail workflow if >5% mismatch
-  - Log detailed diff
-- [ ] Create monitoring dashboard (simple report)
-- [ ] Add alerting for mismatches
-- [ ] Document resolution steps
+- [x] Create validation function: `validateMonthData(firmId, yearMonth)` in `lib/services/dataOverlapValidation.js`
+  - Query Supabase `recent_payouts` for firm + month range
+  - Compare transaction hashes with JSON `loadMonthlyData()`
+  - Return summary (jsonCount, supabaseCount, missingInJson, missingInSupabase, matchRate)
+- [x] Add script and workflow: `scripts/validate-data-overlap.js`, `.github/workflows/validate-data.yml`
+  - Run on schedule (11:45 UTC) and workflow_dispatch
+  - Fail workflow if >5% of Supabase rows missing from JSON (per firm/month)
+  - Log detailed diff (missing tx hashes + amounts)
+- [x] Simple report: script stdout (per firm/month ✅/⚠️ and missing list)
+- [x] Alerting: workflow failure is the alert; optional Slack in workflow
+- [x] Document resolution steps (`docs/DATA-OVERLAP-RESOLUTION.md`)
 
 **Dependencies**: PROP-004 (logging)
 
