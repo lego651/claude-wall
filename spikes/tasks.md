@@ -684,18 +684,17 @@ Prevent database connection exhaustion and slow queries.
 Validate all API responses to catch data corruption early.
 
 **Acceptance Criteria**:
-- [ ] Install Zod (`yarn add zod`)
-- [ ] Create schemas in `lib/schemas/propfirms.js`:
-  - `FirmSchema`
-  - `PayoutSchema`
-  - `MetricsSchema`
-  - `ChartDataSchema`
-- [ ] Validate Supabase query results
-- [ ] Validate JSON file contents
-- [ ] Validate API responses before sending
-- [ ] Add error logging for validation failures
-- [ ] Add unit tests for schemas
-- [ ] Document validation approach
+- [x] Install Zod (`yarn add zod`)
+- [x] Create schemas in `lib/schemas/propfirms.js`:
+  - `FirmSchema`, `FirmIdSchema`, `MetricsSchema`
+  - `PayoutSchema`, `TopPayoutsResponseSchema` (top-payout item has date)
+  - `PropfirmsListResponseSchema`, `LatestPayoutsResponseSchema`, `ChartDataSchema`
+- [ ] Validate Supabase query results (optional; response validation covers output)
+- [ ] Validate JSON file contents (optional)
+- [x] Validate API responses before sending (list, latest-payouts, chart, top-payouts)
+- [x] Add error logging for validation failures (`parseOrLog` → log.warn)
+- [x] Add unit tests for schemas (`lib/schemas/propfirms.test.js`)
+- [x] Document validation approach (`docs/DATA-VALIDATION.md`)
 
 **Dependencies**: PROP-004 (logging)
 

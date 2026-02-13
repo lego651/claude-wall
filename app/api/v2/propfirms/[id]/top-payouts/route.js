@@ -20,6 +20,7 @@ import { createLogger } from '@/lib/logger';
 import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
 import { cache } from '@/lib/cache';
 import { withQueryGuard } from '@/lib/supabaseQuery';
+import { validateTopPayoutsResponse } from '@/lib/schemas/propfirms';
 
 const VALID_PERIODS = ['30d', '12m'];
 
@@ -99,9 +100,16 @@ export async function GET(request, { params }) {
       .slice(0, 10);
 
     const body = { firmId, period, payouts };
-    await cache.set(topCacheKey, body, 1800);
-    log.info({ duration: Date.now() - start, count: payouts.length }, 'API response');
-    return NextResponse.json(body, { headers });
+    const validated = validateTopPayoutsResponse(body);
+    if (!validated) {
+      return NextResponse.json(
+        { error: 'Response validation failed' },
+        { status: 500, headers }
+      );
+    }
+    await cache.set(topCacheKey, validated, 1800);
+    log.info({ duration: Date.now() - start, count: validated.payouts.length }, 'API response');
+    return NextResponse.json(validated, { headers });
   } catch (error) {
     log.error(
       { error: error.message, stack: error.stack, duration: Date.now() - start },

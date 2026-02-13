@@ -22,6 +22,7 @@ import { createLogger } from '@/lib/logger';
 import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
 import { cache } from '@/lib/cache';
 import { withQueryGuard } from '@/lib/supabaseQuery';
+import { validatePropfirmsListResponse } from '@/lib/schemas/propfirms';
 
 const PROPFIRMS_JSON = path.join(process.cwd(), 'data', 'propfirms.json');
 
@@ -242,9 +243,16 @@ export async function GET(request) {
         count: data.length,
       },
     };
-    await cache.set(cacheKey, body, 300);
-    log.info({ duration: Date.now() - start, count: data.length }, 'API response');
-    return NextResponse.json(body, { headers });
+    const validated = validatePropfirmsListResponse(body);
+    if (!validated) {
+      return NextResponse.json(
+        { error: 'Response validation failed' },
+        { status: 500, headers }
+      );
+    }
+    await cache.set(cacheKey, validated, 300);
+    log.info({ duration: Date.now() - start, count: validated.data.length }, 'API response');
+    return NextResponse.json(validated, { headers });
   } catch (error) {
     log.error(
       { error: error.message, stack: error.stack, duration: Date.now() - start },

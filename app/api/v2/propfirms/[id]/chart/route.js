@@ -18,6 +18,7 @@ import { createLogger } from '@/lib/logger';
 import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
 import { cache } from '@/lib/cache';
 import { withQueryGuard } from '@/lib/supabaseQuery';
+import { validateChartResponse } from '@/lib/schemas/propfirms';
 
 const VALID_PERIODS = ['30d', '12m'];
 
@@ -114,7 +115,8 @@ export async function GET(request, { params }) {
     summary.latestPayoutAt = firm.last_payout_at;
     summary.totalPayouts = Math.round(summary.totalPayouts || 0);
     summary.largestPayout = Math.round(summary.largestPayout || 0);
-    const payoutCount = summary.payoutCount || 0;
+    summary.payoutCount = summary.payoutCount ?? 0;
+    const payoutCount = summary.payoutCount;
     const avgPayout =
       typeof summary.avgPayout === 'number'
         ? summary.avgPayout
@@ -137,8 +139,15 @@ export async function GET(request, { params }) {
         data: chartData,
       },
     };
-    await cache.set(chartCacheKey, body, 600);
-    return NextResponse.json(body, { headers });
+    const validated = validateChartResponse(body);
+    if (!validated) {
+      return NextResponse.json(
+        { error: 'Response validation failed' },
+        { status: 500, headers }
+      );
+    }
+    await cache.set(chartCacheKey, validated, 600);
+    return NextResponse.json(validated, { headers });
 
   } catch (error) {
     log.error(

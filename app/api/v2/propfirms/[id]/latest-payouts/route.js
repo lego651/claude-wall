@@ -13,6 +13,7 @@ import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
 import { createLogger } from '@/lib/logger';
 import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
 import { withQueryGuard } from '@/lib/supabaseQuery';
+import { validateLatestPayoutsResponse } from '@/lib/schemas/propfirms';
 
 function createSupabaseClient() {
   return createClient(
@@ -96,15 +97,20 @@ export async function GET(request, { params }) {
       arbiscanUrl: `https://arbiscan.io/tx/${p.tx_hash}`,
     }));
 
-    log.info({ duration: Date.now() - start, count: formattedPayouts.length }, 'API response');
-    return NextResponse.json(
-      {
-        firmId,
-        payouts: formattedPayouts,
-        count: formattedPayouts.length,
-      },
-      { headers }
-    );
+    const body = {
+      firmId,
+      payouts: formattedPayouts,
+      count: formattedPayouts.length,
+    };
+    const validated = validateLatestPayoutsResponse(body);
+    if (!validated) {
+      return NextResponse.json(
+        { error: 'Response validation failed' },
+        { status: 500, headers }
+      );
+    }
+    log.info({ duration: Date.now() - start, count: validated.payouts.length }, 'API response');
+    return NextResponse.json(validated, { headers });
   } catch (error) {
     log.error(
       { error: error.message, stack: error.stack, duration: Date.now() - start },
