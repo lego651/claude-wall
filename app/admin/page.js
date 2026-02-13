@@ -44,8 +44,15 @@ export default function AdminPage() {
             <h2 className="text-3xl font-black text-gray-900">Manage Your Assets</h2>
           </div>
 
-          {/* Primary Cards Row - Trading Reports and Portfolio Analysis */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {/* Primary Cards Row - Dashboard, Trading Reports, Portfolio */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <MenuCard
+              title="System health"
+              description="API latency, Arbiscan usage, file sizes, database stats, cache hit rates."
+              icon="📈"
+              href="/admin/dashboard"
+              color="bg-white"
+            />
             <MenuCard
               title="Trading Reports"
               description="View detailed verified payouts, monthly trading history, and blockchain transaction records."

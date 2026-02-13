@@ -7,6 +7,7 @@ const AdminLayout = ({ children }) => {
   const pathname = usePathname();
 
   const navItems = [
+    { label: "Dashboard", path: "/admin/dashboard" },
     { label: "Reports", path: "/admin/reports" },
     { label: "Portfolio", path: "/admin/portfolio" },
     { label: "Strategies", path: "/admin/strategies" },

@@ -858,21 +858,21 @@ Enable application performance monitoring to track API latencies.
 Build a dashboard to visualize system health metrics.
 
 **Acceptance Criteria**:
-- [ ] Create admin page: `/admin/dashboard`
-  - Require authentication
+- [x] Create admin page: `/admin/dashboard`
+  - Require authentication (admin layout + is_admin)
   - Display key metrics:
-    - API response times (P50, P95, P99)
+    - API response times (P50, P95, P99) — note: see Vercel Analytics
     - Arbiscan API usage (calls/day, % of limit)
     - File sizes (largest files, total size)
-    - Database stats (row counts, storage usage)
-    - Cache hit rates
-    - Error rates by endpoint
+    - Database stats (row counts; storage usage see Supabase dashboard)
+    - Cache hit rates (in-memory since process start)
+    - Error rates by endpoint — note: see Vercel Analytics
   - Auto-refresh every 30s
-- [ ] Add API endpoint: `/api/admin/metrics`
+- [x] Add API endpoint: `/api/admin/metrics`
   - Return JSON with all metrics
-- [ ] Style with Tailwind + DaisyUI
-- [ ] Add export to CSV
-- [ ] Document dashboard usage
+- [x] Style with Tailwind + DaisyUI
+- [x] Add export to CSV
+- [x] Document dashboard usage (`docs/ADMIN-DASHBOARD.md`)
 
 **Dependencies**: PROP-019 (usage tracking), PROP-020 (APM)
 
