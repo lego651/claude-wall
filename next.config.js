@@ -1,3 +1,5 @@
+const { withSentryConfig } = require('@sentry/nextjs');
+
 const nextConfig = {
   reactStrictMode: true,
   images: {
@@ -59,4 +61,15 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+const sentryWebpackPluginOptions = {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+};
+
+module.exports =
+  process.env.SENTRY_DSN && process.env.SENTRY_ORG && process.env.SENTRY_PROJECT
+    ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+    : nextConfig;

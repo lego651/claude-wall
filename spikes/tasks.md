@@ -188,16 +188,16 @@ export async function GET(request) {
 Add Sentry for real-time error tracking and alerting.
 
 **Acceptance Criteria**:
-- [ ] Create Sentry account (free tier)
-- [ ] Install `@sentry/nextjs` (`yarn add @sentry/nextjs`)
-- [ ] Run `npx @sentry/wizard@latest -i nextjs` to configure
-- [ ] Set `SENTRY_DSN` environment variable
-- [ ] Configure error sampling (100% in prod)
-- [ ] Add source maps for stack traces
-- [ ] Test error reporting (trigger sample error)
-- [ ] Set up alerts for critical errors
-- [ ] Document Sentry dashboard usage
-- [ ] Add performance monitoring for API routes
+- [x] Create Sentry account (free tier) — user action
+- [x] Install `@sentry/nextjs` (`yarn add @sentry/nextjs`)
+- [x] Run `npx @sentry/wizard@latest -i nextjs` to configure — manual config added instead
+- [x] Set `SENTRY_DSN` environment variable (see docs/SENTRY.md)
+- [x] Configure error sampling (100% in prod; all errors sent when DSN set)
+- [x] Add source maps for stack traces (via SENTRY_AUTH_TOKEN + org/project in build)
+- [ ] Test error reporting (trigger sample error) — user verifies in Sentry
+- [ ] Set up alerts for critical errors — user config in Sentry dashboard
+- [x] Document Sentry dashboard usage (docs/SENTRY.md)
+- [x] Add performance monitoring for API routes (tracesSampleRate in server/edge/client configs)
 
 **Dependencies**: None
 
