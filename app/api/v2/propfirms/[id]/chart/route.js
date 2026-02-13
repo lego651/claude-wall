@@ -16,6 +16,7 @@ import { loadPeriodData } from '@/lib/services/payoutDataLoader';
 import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
 import { createLogger } from '@/lib/logger';
 import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
+import { cache } from '@/lib/cache';
 
 const VALID_PERIODS = ['30d', '12m'];
 
@@ -82,7 +83,14 @@ export async function GET(request, { params }) {
       );
     }
 
-    const historicalData = loadPeriodData(firmId, period);
+    const chartCacheKey = `chart:${firmId}:${period}`;
+    const cached = await cache.get(chartCacheKey);
+    if (cached) {
+      log.info({ cache: 'hit', key: chartCacheKey }, 'API response');
+      return NextResponse.json(cached, { headers });
+    }
+
+    const historicalData = await loadPeriodData(firmId, period);
 
     let chartData;
     let bucketType;
@@ -111,23 +119,22 @@ export async function GET(request, { params }) {
           : 0;
     summary.avgPayout = Math.round(avgPayout);
 
-    return NextResponse.json(
-      {
-        firm: {
-          id: firm.id,
-          name: firm.name,
-          logo: firm.logo,
-          website: firm.website,
-        },
-        summary,
-        chart: {
-          period,
-          bucketType,
-          data: chartData,
-        },
+    const body = {
+      firm: {
+        id: firm.id,
+        name: firm.name,
+        logo: firm.logo,
+        website: firm.website,
       },
-      { headers }
-    );
+      summary,
+      chart: {
+        period,
+        bucketType,
+        data: chartData,
+      },
+    };
+    await cache.set(chartCacheKey, body, 600);
+    return NextResponse.json(body, { headers });
 
   } catch (error) {
     log.error(

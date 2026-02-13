@@ -18,6 +18,7 @@ import { getTopPayoutsFromFiles } from '@/lib/services/payoutDataLoader';
 import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
 import { createLogger } from '@/lib/logger';
 import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
+import { cache } from '@/lib/cache';
 
 const VALID_PERIODS = ['30d', '12m'];
 
@@ -85,20 +86,22 @@ export async function GET(request, { params }) {
       );
     }
 
+    const topCacheKey = `top-payouts:${firmId}:${period}`;
+    const cached = await cache.get(topCacheKey);
+    if (cached) {
+      log.info({ cache: 'hit', key: topCacheKey }, 'API response');
+      return NextResponse.json(cached, { headers });
+    }
+
     // Get top payouts from JSON files (Rise only)
-    const payouts = getTopPayoutsFromFiles(firmId, period, 5000)
+    const payouts = await getTopPayoutsFromFiles(firmId, period, 5000)
       .filter(p => p.paymentMethod === 'rise')
       .slice(0, 10);
 
+    const body = { firmId, period, payouts };
+    await cache.set(topCacheKey, body, 1800);
     log.info({ duration: Date.now() - start, count: payouts.length }, 'API response');
-    return NextResponse.json(
-      {
-        firmId,
-        period,
-        payouts,
-      },
-      { headers }
-    );
+    return NextResponse.json(body, { headers });
   } catch (error) {
     log.error(
       { error: error.message, stack: error.stack, duration: Date.now() - start },

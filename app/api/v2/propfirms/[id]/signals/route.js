@@ -78,7 +78,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Firm not found' }, { status: 404, headers });
     }
 
-    const historical = loadPeriodData(firmId, '30d');
+    const historical = await loadPeriodData(firmId, '30d');
     const summary = historical?.summary || {};
     const payout = {
       totalPayouts: Math.round(summary.totalPayouts || 0),

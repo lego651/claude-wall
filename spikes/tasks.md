@@ -524,21 +524,21 @@ Test all firm detail endpoints: chart, latest-payouts, top-payouts, signals, inc
 Add Redis-based caching to reduce file I/O and database queries.
 
 **Acceptance Criteria**:
-- [ ] Install Vercel KV (`yarn add @vercel/kv`)
-- [ ] Configure `KV_REST_API_URL` and `KV_REST_API_TOKEN`
-- [ ] Create `lib/cache.js` helper:
+- [x] Install Vercel KV (`yarn add @vercel/kv`)
+- [x] Configure `KV_REST_API_URL` and `KV_REST_API_TOKEN`
+- [x] Create `lib/cache.js` helper:
   - `get(key)` - Retrieve from cache
   - `set(key, value, ttl)` - Store with expiration
   - `invalidate(pattern)` - Clear by pattern
-- [ ] Cache API responses:
+- [x] Cache API responses:
   - `/api/v2/propfirms?period=*` → 5 min TTL
   - `/api/v2/propfirms/[id]/chart?period=*` → 10 min TTL
   - `/api/v2/propfirms/[id]/top-payouts` → 30 min TTL
-- [ ] Cache file reads:
+- [x] Cache file reads:
   - `loadMonthlyData()` results → 5 min TTL
-- [ ] Add cache hit/miss logging
-- [ ] Add unit tests
-- [ ] Document caching strategy
+- [x] Add cache hit/miss logging
+- [x] Add unit tests
+- [x] Document caching strategy
 
 **Dependencies**: None
 

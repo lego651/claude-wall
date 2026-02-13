@@ -20,6 +20,7 @@ import { loadPeriodData } from '@/lib/services/payoutDataLoader';
 import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
 import { createLogger } from '@/lib/logger';
 import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
+import { cache } from '@/lib/cache';
 
 const PROPFIRMS_JSON = path.join(process.cwd(), 'data', 'propfirms.json');
 
@@ -100,6 +101,13 @@ export async function GET(request) {
         },
       }
     );
+  }
+
+  const cacheKey = `propfirms:${period}:${sort}:${order}`;
+  const cached = await cache.get(cacheKey);
+  if (cached) {
+    log.info({ cache: 'hit', key: cacheKey }, 'API response');
+    return NextResponse.json(cached, { headers });
   }
 
   try {
@@ -185,7 +193,7 @@ export async function GET(request) {
           latestPayoutAt: firm.last_payout_at,
         };
       } else {
-        const historicalData = loadPeriodData(firm.id, period);
+        const historicalData = await loadPeriodData(firm.id, period);
         metrics = {
           totalPayouts: Math.round(historicalData.summary?.totalPayouts || 0),
           payoutCount: historicalData.summary?.payoutCount || 0,
@@ -219,19 +227,18 @@ export async function GET(request) {
       return order === 'desc' ? bVal - aVal : aVal - bVal;
     });
 
-    log.info({ duration: Date.now() - start, count: data.length }, 'API response');
-    return NextResponse.json(
-      {
-        data,
-        meta: {
-          period,
-          sort,
-          order,
-          count: data.length,
-        },
+    const body = {
+      data,
+      meta: {
+        period,
+        sort,
+        order,
+        count: data.length,
       },
-      { headers }
-    );
+    };
+    await cache.set(cacheKey, body, 300);
+    log.info({ duration: Date.now() - start, count: data.length }, 'API response');
+    return NextResponse.json(body, { headers });
   } catch (error) {
     log.error(
       { error: error.message, stack: error.stack, duration: Date.now() - start },

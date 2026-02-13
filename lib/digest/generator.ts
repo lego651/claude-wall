@@ -62,11 +62,11 @@ function getYearMonth(d: Date): string {
   return `${y}-${m}`;
 }
 
-function getPayoutSummaryForRange(
+async function getPayoutSummaryForRange(
   firmId: string,
   weekStart: Date,
   weekEnd: Date
-): { total: number; count: number; largest: number; avgPayout: number } {
+): Promise<{ total: number; count: number; largest: number; avgPayout: number }> {
   const startTime = weekStart.toISOString();
   const endTime = weekEnd.toISOString();
 
@@ -79,7 +79,7 @@ function getPayoutSummaryForRange(
 
   const allTransactions: Array<{ amount: number; timestamp: string }> = [];
   for (const yearMonth of months) {
-    const data = loadMonthlyData(firmId, yearMonth) as MonthlyPayoutData | null;
+    const data = (await loadMonthlyData(firmId, yearMonth)) as MonthlyPayoutData | null;
     if (data?.transactions) {
       for (const t of data.transactions) {
         const ts = t.timestamp ?? '';
@@ -182,9 +182,9 @@ export async function generateWeeklyReport(
   const weekNumber = getWeekNumber(weekStart);
   const year = getYear(weekStart);
 
-  const payoutThis = getPayoutSummaryForRange(firmId, weekStart, weekEnd);
+  const payoutThis = await getPayoutSummaryForRange(firmId, weekStart, weekEnd);
   const prevBounds = getWeekBounds(new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000));
-  const payoutPrev = getPayoutSummaryForRange(firmId, prevBounds.weekStart, prevBounds.weekEnd);
+  const payoutPrev = await getPayoutSummaryForRange(firmId, prevBounds.weekStart, prevBounds.weekEnd);
   const changeVsLastWeek =
     payoutPrev.total > 0
       ? Math.round(((payoutThis.total - payoutPrev.total) / payoutPrev.total) * 100)
