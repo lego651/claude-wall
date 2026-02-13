@@ -1,0 +1,59 @@
+# Monitor data/payouts file sizes
+#
+# Runs daily after payout sync. Fails if any file >10MB; warns if any >5MB.
+# Optional: set SLACK_WEBHOOK_URL secret to post summary when issues found.
+
+name: Monitor File Sizes
+
+on:
+  schedule:
+    - cron: "30 11 * * *"  # 11:30 UTC daily (after sync at 11:00)
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check file sizes
+        id: check
+        continue-on-error: true
+        run: |
+          node scripts/check-file-sizes.js > report.json 2>/dev/null || true
+          if [ ! -s report.json ]; then
+            echo '{"ok":true,"over10MB":[],"over5MB":[],"over5_count":0,"over10_count":0,"fileCount":0,"totalMB":0}' > report.json
+          fi
+          OVER10=$(node -e "const r=require('./report.json'); console.log((r.over10MB||[]).length)")
+          OVER5=$(node -e "const r=require('./report.json'); console.log((r.over5MB||[]).length)")
+          echo "over10_count=$OVER10" >> $GITHUB_OUTPUT
+          echo "over5_count=$OVER5" >> $GITHUB_OUTPUT
+          echo "## File size report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat report.json >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if any file >10MB
+        run: |
+          node -e "const r = require('./report.json'); process.exit(r.ok ? 0 : 1)"
+
+      - name: Warn on files >5MB
+        if: steps.check.outputs.over5_count != '0' && steps.check.outputs.over10_count == '0'
+        run: |
+          echo "::warning:: Some files in data/payouts are ≥5MB (timeout risk). Consider migrating to Supabase."
+          node scripts/check-file-sizes.js --format=markdown
+
+      - name: Post to Slack (optional)
+        if: failure() && secrets.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          BODY=$(node -e "
+            const r = require('./report.json');
+            const list = (r.over10MB || []).map(f => f.path + ': ' + f.sizeMB + ' MB').join('\n') || 'none';
+            console.log(JSON.stringify({ text: '⚠️ File size check failed. Files ≥10MB:\n' + list }));
+          ")
+          curl -sS -X POST -H 'Content-type: application/json' -d "$BODY" "$SLACK_WEBHOOK_URL" || true

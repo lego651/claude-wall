@@ -224,20 +224,20 @@ SENTRY_AUTH_TOKEN=xxx # For source maps upload
 Monitor JSON file sizes and alert when approaching timeout risk (>5MB).
 
 **Acceptance Criteria**:
-- [ ] Create script: `scripts/check-file-sizes.js`
+- [x] Create script: `scripts/check-file-sizes.js`
   - Scan `data/payouts/` directory
   - Report files >1MB, >5MB, >10MB
   - Calculate total size
   - Output JSON for monitoring
-- [ ] Add GitHub Actions workflow: `.github/workflows/monitor-file-sizes.yml`
+- [x] Add GitHub Actions workflow: `.github/workflows/monitor-file-sizes.yml`
   - Run daily (alongside historical sync)
   - Fail if any file >10MB
   - Warn if any file >5MB
   - Post to Slack if issues found
-- [ ] Add file size logging to API routes
+- [x] Add file size logging to API routes
   - Log when loading file >500KB
-- [ ] Create dashboard (simple markdown report)
-- [ ] Document mitigation steps
+- [x] Create dashboard (simple markdown report)
+- [x] Document mitigation steps
 
 **Dependencies**: PROP-004 (logging)
 
