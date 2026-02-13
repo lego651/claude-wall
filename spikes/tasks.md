@@ -775,18 +775,16 @@ Validate that real-time (Supabase) and historical (JSON) data are consistent.
 Track Arbiscan API usage to prevent hitting daily limits.
 
 **Acceptance Criteria**:
-- [ ] Create `ArbiscanUsageTracker` class:
-  - Track daily call count
-  - Reset at midnight UTC
-  - Alert at 80% usage (80k/100k)
-  - Expose `getUsage()` method
-- [ ] Integrate with `fetchWithRetry()`
-- [ ] Log usage stats on every sync
-- [ ] Add monitoring endpoint: `/api/admin/arbiscan-usage`
-  - Return: { calls: N, limit: 100000, percentage: X% }
-  - Require admin auth
-- [ ] Add Slack alert at 80%, 90%, 95%
-- [ ] Document usage patterns
+- [x] Create `ArbiscanUsageTracker` class in `lib/arbiscan.js`:
+  - Track daily call count, reset at midnight UTC
+  - Alert at 80%, 90%, 95% (log.warn + optional Slack)
+  - `getUsage()` returns { calls, limit: 100000, percentage, day }
+- [x] Integrate with `fetchWithRetry()` (trackCall() each attempt)
+- [x] Log usage stats on every sync (syncAllFirms logs arbiscan usage)
+- [x] Add monitoring endpoint: `GET /api/admin/arbiscan-usage`
+  - Returns { calls, limit, percentage, day }; requires auth + is_admin
+- [x] Add Slack alert at 80%, 90%, 95% (when SLACK_WEBHOOK_URL set; once per threshold per day)
+- [x] Document usage patterns (`docs/ARBISCAN-USAGE.md`)
 
 **Dependencies**: PROP-004 (logging)
 
