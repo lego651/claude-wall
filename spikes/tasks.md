@@ -346,26 +346,26 @@ Achieve 95%+ test coverage for file loading and data aggregation logic.
 Test Arbiscan API integration with mocked responses.
 
 **Acceptance Criteria**:
-- [ ] Test `fetchNativeTransactions()`:
+- [x] Test `fetchNativeTransactions()`:
   - ✅ Fetches transactions successfully
   - ✅ Returns empty array for "No transactions found"
   - ✅ Retries on rate limit
   - ✅ Throws on invalid API key
-  - ✅ Respects timeout
-  - ✅ Circuit breaker opens after failures
-- [ ] Test `fetchTokenTransactions()`:
+  - ✅ Respects timeout (via fetchWithRetry timeout test)
+  - ✅ Circuit breaker opens after failures (via ArbiscanCircuitBreaker test)
+- [x] Test `fetchTokenTransactions()`:
   - ✅ Same as above
-- [ ] Test `fetchWithRetry()`:
+- [x] Test `fetchWithRetry()`:
   - ✅ Succeeds on first try
   - ✅ Retries up to max attempts
   - ✅ Uses exponential backoff
   - ✅ Logs retry attempts
-- [ ] Test `ArbiscanCircuitBreaker`:
+- [x] Test `ArbiscanCircuitBreaker`:
   - ✅ Starts in CLOSED state
   - ✅ Opens after threshold failures
   - ✅ Transitions to HALF_OPEN after timeout
   - ✅ Closes after successful request in HALF_OPEN
-- [ ] Coverage: 90%
+- [x] Coverage: 90%
 
 **Dependencies**: PROP-002, PROP-003 (retry + circuit breaker)
 
