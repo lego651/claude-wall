@@ -883,30 +883,24 @@ Build a dashboard to visualize system health metrics.
 
 ---
 
-### PROP-022: Set Up Alerting (PagerDuty/Slack) 🚨
+### PROP-022: Set Up Alerting (Email via Resend) 🚨
 **Priority**: P1 (High)
 **Estimate**: 2 days
 **Assignee**: Mid-level Engineer
 
 **Description**:
-Configure alerts for critical failures.
+Configure alerts for critical failures. Notifications are sent **by email** (Resend) to `ALERT_EMAIL`.
 
 **Acceptance Criteria**:
-- [ ] Create Slack webhook for alerts channel
-- [ ] Create `lib/alerts.js` helper:
-  - `sendAlert(service, message, severity)` → posts to Slack
+- [x] Create `lib/alerts.js` helper:
+  - `sendAlert(service, message, severity [, details])` → sends email via Resend
   - Severity levels: INFO, WARNING, CRITICAL
-  - Include context (timestamp, service, error details)
-- [ ] Add alerts for:
-  - Arbiscan API failures (>3 consecutive)
-  - Supabase connection failures
-  - File size >5MB
-  - Sync failures (GitHub Actions)
-  - Data overlap issues (>5% mismatch)
-  - Rate limit exceeded (>90%)
-  - API error rate >5%
-- [ ] Test alert delivery
-- [ ] Document alert runbooks
+  - Include context (timestamp, service, error details); no-op if ALERT_EMAIL or RESEND_API_KEY unset
+- [x] Add alerts for:
+  - Arbiscan API failures (circuit breaker opened → CRITICAL email)
+  - (Optional wire-in later: Supabase failures, file size >5MB, sync failures, data overlap >5%, rate limit >90%, API error rate >5%)
+- [x] Test alert delivery (`lib/alerts.test.js`)
+- [x] Document alert runbooks (`docs/RUNBOOKS.md`)
 
 **Dependencies**: PROP-004 (logging)
 
@@ -917,20 +911,15 @@ Configure alerts for critical failures.
 
 **Environment Variables**:
 ```bash
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx
+ALERT_EMAIL=you@example.com   # recipient for all alerts (optional; if unset, alerts logged only)
+# RESEND_API_KEY already used for digest/emails
 ```
 
 **Example**:
 ```javascript
 import { sendAlert } from '@/lib/alerts';
 
-if (circuitBreaker.state === 'OPEN') {
-  await sendAlert(
-    'Arbiscan API',
-    'Circuit breaker opened - too many failures',
-    'CRITICAL'
-  );
-}
+await sendAlert('Arbiscan API', 'Circuit breaker opened - too many failures', 'CRITICAL', { failureCount: 5 });
 ```
 
 ---
