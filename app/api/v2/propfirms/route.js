@@ -23,6 +23,7 @@ import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
 import { cache } from '@/lib/cache';
 import { withQueryGuard } from '@/lib/supabaseQuery';
 import { validatePropfirmsListResponse } from '@/lib/schemas/propfirms';
+import { trackApiResponse } from '@/lib/analytics';
 
 const PROPFIRMS_JSON = path.join(process.cwd(), 'data', 'propfirms.json');
 
@@ -81,6 +82,7 @@ export async function GET(request) {
   const { ok, headers } = validateOrigin(request);
   setRequestIdHeader(headers, requestId);
   if (!ok) {
+    trackApiResponse('/api/v2/propfirms', Date.now() - start, 403);
     return NextResponse.json(
       { error: 'Forbidden origin' },
       { status: 403, headers }
@@ -93,6 +95,7 @@ export async function GET(request) {
   });
 
   if (limited) {
+    trackApiResponse('/api/v2/propfirms', Date.now() - start, 429);
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
       {
@@ -109,6 +112,7 @@ export async function GET(request) {
   const cached = await cache.get(cacheKey);
   if (cached) {
     log.info({ cache: 'hit', key: cacheKey }, 'API response');
+    trackApiResponse('/api/v2/propfirms', Date.now() - start, 200);
     return NextResponse.json(cached, { headers });
   }
 
@@ -245,6 +249,7 @@ export async function GET(request) {
     };
     const validated = validatePropfirmsListResponse(body);
     if (!validated) {
+      trackApiResponse('/api/v2/propfirms', Date.now() - start, 500);
       return NextResponse.json(
         { error: 'Response validation failed' },
         { status: 500, headers }
@@ -252,12 +257,14 @@ export async function GET(request) {
     }
     await cache.set(cacheKey, validated, 300);
     log.info({ duration: Date.now() - start, count: validated.data.length }, 'API response');
+    trackApiResponse('/api/v2/propfirms', Date.now() - start, 200);
     return NextResponse.json(validated, { headers });
   } catch (error) {
     log.error(
       { error: error.message, stack: error.stack, duration: Date.now() - start },
       'API error'
     );
+    trackApiResponse('/api/v2/propfirms', Date.now() - start, 500);
     return NextResponse.json(
       { error: error.message },
       { status: 500, headers }

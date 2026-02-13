@@ -822,19 +822,19 @@ export async function fetchNativeTransactions(address, apiKey) {
 Enable application performance monitoring to track API latencies.
 
 **Acceptance Criteria**:
-- [ ] Enable Vercel Analytics in dashboard
-- [ ] Install `@vercel/analytics` package
-- [ ] Add Analytics component to root layout
-- [ ] Configure custom events:
-  - Track API response times by route
-  - Track Arbiscan API calls
-  - Track file I/O durations
-  - Track cache hit/miss rates
-- [ ] Set up performance budgets:
+- [ ] Enable Vercel Analytics in dashboard (manual in Vercel project settings)
+- [x] Install `@vercel/analytics` package
+- [x] Add Analytics component to root layout
+- [x] Configure custom events:
+  - Track API response times by route (`trackApiResponse` in `lib/analytics.js`, wired in `/api/v2/propfirms`)
+  - Track Arbiscan API calls (`trackArbiscanCall` helper; optional wire-in)
+  - Track file I/O durations (optional; doc in MONITORING.md)
+  - Track cache hit/miss rates (`trackCacheResult` helper; optional wire-in)
+- [x] Set up performance budgets (documented in MONITORING.md):
   - P95 latency <500ms for 1d period
   - P95 latency <2s for 12m period
-- [ ] Create alerts for SLA violations
-- [ ] Document metrics
+- [x] Create alerts for SLA violations (documented: Vercel notifications, third-party APM)
+- [x] Document metrics (`docs/MONITORING.md`)
 
 **Dependencies**: None
 
