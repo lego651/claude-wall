@@ -12,6 +12,8 @@
 | `npm run test` | Run all tests once |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:coverage` | Run tests with coverage report (enforced on pre-commit) |
+| `npm run test:e2e` | Run Playwright E2E tests (starts app if needed) |
+| `npm run test:e2e:ui` | Run E2E tests with Playwright UI |
 
 ---
 
@@ -78,10 +80,24 @@ describe('myFunction', () => {
 
 ---
 
+## E2E tests (Playwright) – PROP-023
+
+- **Stack**: `@playwright/test`, Chromium.
+- **Location**: `tests/e2e/*.spec.js` (e.g. `tests/e2e/propfirms.spec.js`).
+- **Run**: `npm run test:e2e` (uses `node node_modules/@playwright/test/cli.js test`). Do not use `npx playwright test`—that runs the browser-only CLI and tests will fail. The config starts the app via `webServer` if not already running; in CI it runs `npm run build && npm run start`.
+- **Base URL**: `http://localhost:3000` (override with `PLAYWRIGHT_BASE_URL`).
+- **Coverage**: Prop firms leaderboard: page load, period switch, sort by column, click firm to details, loading skeleton, error state, empty state; responsive (mobile); accessibility (landmark, focus).
+- **CI**: `.github/workflows/e2e-tests.yml` runs E2E on push/PR to `main`; artifact `playwright-report` on failure.
+
+---
+
 ## Files
 
 | File | Purpose |
 |------|---------|
 | `jest.config.js` | Jest config, `@/` mapping, coverage, transform |
 | `jest.setup.js` | Env vars, timeout, console suppression, jest-dom |
+| `playwright.config.js` | Playwright E2E config, webServer, baseURL |
+| `tests/e2e/propfirms.spec.js` | E2E tests for /propfirms leaderboard |
+| `tests/e2e/fixtures/setup.js` | Optional global setup for E2E |
 | `docs/TESTING.md` | This guide |

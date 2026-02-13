@@ -935,20 +935,21 @@ await sendAlert('Arbiscan API', 'Circuit breaker opened - too many failures', 'C
 Test full user flows with Playwright.
 
 **Acceptance Criteria**:
-- [ ] Install Playwright (`yarn add -D @playwright/test`)
-- [ ] Configure Playwright (`playwright.config.js`)
-- [ ] Create test suite: `tests/e2e/propfirms.spec.js`
-  - ✅ Page loads and displays firms
-  - ✅ Can switch between periods (1d, 7d, 30d, 12m)
-  - ✅ Can sort by column (click header)
-  - ✅ Can click firm to view details
-  - ✅ Loading states work correctly
-  - ✅ Error states display properly
-- [ ] Test responsive design (mobile, tablet, desktop)
-- [ ] Test accessibility (ARIA labels, keyboard nav)
-- [ ] Add visual regression tests (screenshots)
-- [ ] Run tests in CI/CD pipeline
-- [ ] Document E2E testing approach
+- [x] Install Playwright (`@playwright/test` in package.json)
+- [x] Configure Playwright (`playwright.config.js` with webServer, baseURL, chromium)
+- [x] Create test suite: `tests/e2e/propfirms.spec.js`
+  - Page loads and displays firms
+  - Can switch between periods (1d, 7d, 30d, 12m)
+  - Can sort by column (click header)
+  - Can click firm to view details
+  - Loading state shows skeleton
+  - Error state displays when API fails
+  - Empty state when no firms
+- [x] Test responsive design (mobile viewport, table scrollable)
+- [x] Test accessibility (main landmark, focusable period buttons)
+- [ ] Add visual regression tests (screenshots) – optional follow-up
+- [x] Run tests in CI/CD pipeline (`.github/workflows/e2e-tests.yml`)
+- [x] Document E2E testing approach (`docs/TESTING.md`)
 
 **Dependencies**: PROP-001 (test framework)
 

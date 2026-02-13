@@ -43,10 +43,11 @@ module.exports = {
   // Setup files
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
 
-  // Ignore patterns
+  // Ignore patterns (exclude E2E Playwright specs from Jest)
   testPathIgnorePatterns: [
     '/node_modules/',
     '/.next/',
+    'tests/e2e/',
   ],
 
   // Verbose output
