@@ -469,34 +469,34 @@ Test all firm detail endpoints: chart, latest-payouts, top-payouts, signals, inc
 **Acceptance Criteria**:
 
 **Chart API** (`/api/v2/propfirms/[id]/chart`):
-- [ ] ✅ Returns 200 for valid firm
-- [ ] ✅ Returns 404 for non-existent firm
-- [ ] ✅ Returns daily buckets for 30d period
-- [ ] ✅ Returns monthly buckets for 12m period
-- [ ] ✅ Fills gaps with zero values
-- [ ] ✅ Returns summary metrics
+- [x] ✅ Returns 200 for valid firm
+- [x] ✅ Returns 404 for non-existent firm
+- [x] ✅ Returns daily buckets for 30d period
+- [x] ✅ Returns monthly buckets for 12m period
+- [x] ✅ Fills gaps with zero values
+- [x] ✅ Returns summary metrics
 
 **Latest Payouts API** (`/api/v2/propfirms/[id]/latest-payouts`):
-- [ ] ✅ Returns payouts from last 24h
-- [ ] ✅ Returns empty array if no payouts
-- [ ] ✅ Returns 404 for non-existent firm
-- [ ] ✅ Includes Arbiscan URLs
+- [x] ✅ Returns payouts from last 24h
+- [x] ✅ Returns empty array if no payouts
+- [x] ✅ Returns 404 for non-existent firm
+- [x] ✅ Includes Arbiscan URLs
 
 **Top Payouts API** (`/api/v2/propfirms/[id]/top-payouts`):
-- [ ] ✅ Returns top 10 payouts for 30d
-- [ ] ✅ Returns top 10 payouts for 12m
-- [ ] ✅ Filters to Rise payments only
-- [ ] ✅ Sorted by amount (descending)
+- [x] ✅ Returns top 10 payouts for 30d
+- [x] ✅ Returns top 10 payouts for 12m
+- [x] ✅ Filters to Rise payments only
+- [x] ✅ Sorted by amount (descending)
 
 **Signals API** (`/api/v2/propfirms/[id]/signals`):
-- [ ] ✅ Returns payout summary
-- [ ] ✅ Returns Trustpilot sentiment
-- [ ] ✅ Filters reviews by date range
+- [x] ✅ Returns payout summary
+- [x] ✅ Returns Trustpilot sentiment
+- [x] ✅ Filters reviews by date range
 
 **Incidents API** (`/api/v2/propfirms/[id]/incidents`):
-- [ ] ✅ Returns incidents from last N days
-- [ ] ✅ Includes source links (Trustpilot URLs)
-- [ ] ✅ Sorted by week (newest first)
+- [x] ✅ Returns incidents from last N days
+- [x] ✅ Includes source links (Trustpilot URLs)
+- [x] ✅ Sorted by week (newest first)
 
 **Coverage**: 85% for all endpoints
 

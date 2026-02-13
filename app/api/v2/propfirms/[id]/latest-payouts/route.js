@@ -22,8 +22,12 @@ function createSupabaseClient() {
 
 export async function GET(request, { params }) {
   const { id: firmId } = await params;
+  const requestId = getRequestId(request);
+  const log = createLogger({ requestId, route: '/api/v2/propfirms/[id]/latest-payouts', firmId });
+  const start = Date.now();
 
   const { ok, headers } = validateOrigin(request);
+  setRequestIdHeader(headers, requestId);
   if (!ok) {
     return NextResponse.json(
       { error: 'Forbidden origin' },

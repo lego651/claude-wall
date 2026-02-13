@@ -8,6 +8,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
+import { createLogger } from '@/lib/logger';
+import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
 
 function createSupabaseClient() {
   return createClient(
