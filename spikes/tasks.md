@@ -656,34 +656,13 @@ Replace blocking file reads with async I/O to improve concurrency.
 Prevent database connection exhaustion and slow queries.
 
 **Acceptance Criteria**:
-- [ ] Configure connection pooling in Supabase client:
-  ```javascript
-  const supabase = createClient(url, key, {
-    db: {
-      pool: {
-        min: 2,
-        max: 10,
-        idleTimeoutMillis: 30000,
-      },
-    },
-  });
-  ```
-- [ ] Add query timeout wrapper:
-  ```javascript
-  async function queryWithTimeout(query, timeout = 5000) {
-    return Promise.race([
-      query,
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Query timeout')), timeout)
-      ),
-    ]);
-  }
-  ```
-- [ ] Apply timeout to all Supabase queries
-- [ ] Log slow queries (>1s)
-- [ ] Add fallback for timeout errors
-- [ ] Update tests
-- [ ] Document timeout strategy
+- [x] Connection pooling: Handled by Supabase (Supavisor); JS client uses REST, no client-side pool config (see docs/SUPABASE-TIMEOUT.md).
+- [x] Add query timeout wrapper: `lib/supabaseQuery.js` – `withQueryGuard()`, `queryWithTimeout()` (5s default).
+- [x] Apply timeout to Supabase queries (v2 propfirms API routes + payoutSyncService).
+- [x] Log slow queries (>1s) via `withQueryGuard` slowThresholdMs.
+- [x] Add fallback for timeout errors (500 / "Database timeout" in API; sync continues with error per firm).
+- [ ] Update tests (optional: add timeout-path test).
+- [x] Document timeout strategy (`docs/SUPABASE-TIMEOUT.md`)
 
 **Dependencies**: PROP-004 (logging)
 

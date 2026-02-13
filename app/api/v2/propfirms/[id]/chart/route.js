@@ -17,6 +17,7 @@ import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
 import { createLogger } from '@/lib/logger';
 import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
 import { cache } from '@/lib/cache';
+import { withQueryGuard } from '@/lib/supabaseQuery';
 
 const VALID_PERIODS = ['30d', '12m'];
 
@@ -70,11 +71,14 @@ export async function GET(request, { params }) {
   try {
     const supabase = createSupabaseClient();
 
-    const { data: firm, error: firmError } = await supabase
-      .from('firms')
-      .select('id, name, logo, website, last_payout_at')
-      .eq('id', firmId)
-      .single();
+    const { data: firm, error: firmError } = await withQueryGuard(
+      supabase
+        .from('firms')
+        .select('id, name, logo, website, last_payout_at')
+        .eq('id', firmId)
+        .single(),
+      { context: 'chart firms' }
+    );
 
     if (firmError || !firm) {
       return NextResponse.json(

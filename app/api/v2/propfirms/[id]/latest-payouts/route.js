@@ -12,6 +12,7 @@ import { createClient } from '@supabase/supabase-js';
 import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
 import { createLogger } from '@/lib/logger';
 import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
+import { withQueryGuard } from '@/lib/supabaseQuery';
 
 function createSupabaseClient() {
   return createClient(
@@ -57,11 +58,10 @@ export async function GET(request, { params }) {
     const supabase = createSupabaseClient();
 
     // Verify firm exists
-    const { data: firm, error: firmError } = await supabase
-      .from('firms')
-      .select('id')
-      .eq('id', firmId)
-      .single();
+    const { data: firm, error: firmError } = await withQueryGuard(
+      supabase.from('firms').select('id').eq('id', firmId).single(),
+      { context: 'latest-payouts firms' }
+    );
 
     if (firmError || !firm) {
       return NextResponse.json(
@@ -72,13 +72,15 @@ export async function GET(request, { params }) {
 
     // Fetch all payouts from the last 24 hours
     const cutoffDate = new Date(Date.now() - (24 * 60 * 60 * 1000)).toISOString();
-    const { data: payouts, error: payoutsError } = await supabase
-      .from('recent_payouts')
-      .select('tx_hash, amount, payment_method, timestamp')
-      .eq('firm_id', firmId)
-      .gte('timestamp', cutoffDate)
-      .order('timestamp', { ascending: false })
-      ;
+    const { data: payouts, error: payoutsError } = await withQueryGuard(
+      supabase
+        .from('recent_payouts')
+        .select('tx_hash, amount, payment_method, timestamp')
+        .eq('firm_id', firmId)
+        .gte('timestamp', cutoffDate)
+        .order('timestamp', { ascending: false }),
+      { context: 'latest-payouts recent_payouts' }
+    );
 
     if (payoutsError) {
       throw new Error(`Failed to fetch payouts: ${payoutsError.message}`);

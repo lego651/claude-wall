@@ -11,6 +11,7 @@ import { loadPeriodData } from '@/lib/services/payoutDataLoader';
 import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
 import { createLogger } from '@/lib/logger';
 import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
+import { withQueryGuard } from '@/lib/supabaseQuery';
 
 function createSupabaseClient() {
   return createClient(
@@ -68,11 +69,10 @@ export async function GET(request, { params }) {
   try {
     const supabase = createSupabaseClient();
 
-    const { data: firm, error: firmError } = await supabase
-      .from('firms')
-      .select('id, name')
-      .eq('id', firmId)
-      .single();
+    const { data: firm, error: firmError } = await withQueryGuard(
+      supabase.from('firms').select('id, name').eq('id', firmId).single(),
+      { context: 'signals firms' }
+    );
 
     if (firmError || !firm) {
       return NextResponse.json({ error: 'Firm not found' }, { status: 404, headers });
@@ -89,11 +89,14 @@ export async function GET(request, { params }) {
         : 0,
     };
 
-    const { data: reviews, error: revError } = await supabase
-      .from('trustpilot_reviews')
-      .select('category')
-      .eq('firm_id', firmId)
-      .gte('review_date', cutoffStr);
+    const { data: reviews, error: revError } = await withQueryGuard(
+      supabase
+        .from('trustpilot_reviews')
+        .select('category')
+        .eq('firm_id', firmId)
+        .gte('review_date', cutoffStr),
+      { context: 'signals trustpilot_reviews' }
+    );
 
     if (revError) {
       return NextResponse.json({ error: revError.message }, { status: 500 });

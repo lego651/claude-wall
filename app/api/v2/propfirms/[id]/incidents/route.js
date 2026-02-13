@@ -10,6 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
 import { createLogger } from '@/lib/logger';
 import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
+import { withQueryGuard } from '@/lib/supabaseQuery';
 
 function createSupabaseClient() {
   return createClient(
@@ -63,12 +64,26 @@ export async function GET(request, { params }) {
   }
 
   const supabase = createSupabaseClient();
-  const { data: rows, error: err } = await supabase
-    .from('weekly_incidents')
-    .select('id, firm_id, week_number, year, incident_type, severity, title, summary, review_count, affected_users, review_ids, created_at')
-    .eq('firm_id', firmId)
-    .order('year', { ascending: false })
-    .order('week_number', { ascending: false });
+  let rows;
+  let err;
+  try {
+    const result = await withQueryGuard(
+      supabase
+        .from('weekly_incidents')
+        .select('id, firm_id, week_number, year, incident_type, severity, title, summary, review_count, affected_users, review_ids, created_at')
+        .eq('firm_id', firmId)
+        .order('year', { ascending: false })
+        .order('week_number', { ascending: false }),
+      { context: 'incidents weekly_incidents' }
+    );
+    rows = result.data;
+    err = result.error;
+  } catch (e) {
+    return NextResponse.json(
+      { error: e.message === 'Query timeout' ? 'Database timeout' : e.message },
+      { status: 500 }
+    );
+  }
 
   if (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -89,10 +104,10 @@ export async function GET(request, { params }) {
   const allReviewIds = [...new Set(incidents.flatMap((r) => r.review_ids || []))].filter(Boolean);
   let idToUrl = {};
   if (allReviewIds.length > 0) {
-    const { data: reviewRows } = await supabase
-      .from('trustpilot_reviews')
-      .select('id, trustpilot_url')
-      .in('id', allReviewIds);
+    const { data: reviewRows } = await withQueryGuard(
+      supabase.from('trustpilot_reviews').select('id, trustpilot_url').in('id', allReviewIds),
+      { context: 'incidents trustpilot_reviews' }
+    );
     if (reviewRows?.length) {
       idToUrl = Object.fromEntries(reviewRows.map((row) => [row.id, row.trustpilot_url]));
     }

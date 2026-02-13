@@ -21,6 +21,7 @@ import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
 import { createLogger } from '@/lib/logger';
 import { getRequestId, setRequestIdHeader } from '@/middleware/requestId';
 import { cache } from '@/lib/cache';
+import { withQueryGuard } from '@/lib/supabaseQuery';
 
 const PROPFIRMS_JSON = path.join(process.cwd(), 'data', 'propfirms.json');
 
@@ -120,13 +121,15 @@ export async function GET(request) {
     if (useSupabase) {
       const supabase = createSupabaseClient();
 
-      let firmsResult = await supabase
-        .from('firms')
-        .select('id, name, logo_url, website, last_payout_at');
+      let firmsResult = await withQueryGuard(
+        supabase.from('firms').select('id, name, logo_url, website, last_payout_at'),
+        { context: 'propfirms firms' }
+      );
       if (firmsResult.error?.code === '42703') {
-        firmsResult = await supabase
-          .from('firms')
-          .select('id, name, logo_url, website');
+        firmsResult = await withQueryGuard(
+          supabase.from('firms').select('id, name, logo_url, website'),
+          { context: 'propfirms firms fallback' }
+        );
       }
       const { data: supabaseFirms, error: firmsError } = firmsResult;
 
@@ -144,11 +147,14 @@ export async function GET(request) {
           const cutoffDate = new Date(Date.now() - (hoursBack * 60 * 60 * 1000)).toISOString();
           const firmIds = firms.map((f) => f.id);
 
-          const { data: payoutsRows, error: payoutsError } = await supabase
-            .from('recent_payouts')
-            .select('firm_id, amount')
-            .in('firm_id', firmIds)
-            .gte('timestamp', cutoffDate);
+          const { data: payoutsRows, error: payoutsError } = await withQueryGuard(
+            supabase
+              .from('recent_payouts')
+              .select('firm_id, amount')
+              .in('firm_id', firmIds)
+              .gte('timestamp', cutoffDate),
+            { context: 'propfirms recent_payouts' }
+          );
 
           if (!payoutsError && payoutsRows) {
             payoutsByFirmId = new Map();
