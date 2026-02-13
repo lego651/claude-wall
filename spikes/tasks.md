@@ -268,23 +268,23 @@ Action required: Consider migrating to Supabase storage
 Achieve 100% test coverage for API security functions.
 
 **Acceptance Criteria**:
-- [ ] Test `validateOrigin()`:
+- [x] Test `validateOrigin()`:
   - ✅ Allows same-origin requests
   - ✅ Allows missing origin header (server-to-server)
   - ✅ Allows whitelisted origins
   - ✅ Blocks unknown origins
   - ✅ Returns correct CORS headers
-- [ ] Test `isRateLimited()`:
+- [x] Test `isRateLimited()`:
   - ✅ Allows first request from IP
   - ✅ Rate limits after threshold (60/min)
   - ✅ Resets after window expires
   - ✅ Handles missing IP gracefully
   - ✅ Returns correct retry-after time
-- [ ] Test `getClientIp()`:
+- [x] Test `getClientIp()`:
   - ✅ Extracts IP from x-forwarded-for
   - ✅ Handles multiple IPs (takes first)
   - ✅ Fallback to "unknown" if missing
-- [ ] Coverage: 100%
+- [x] Coverage: 100%
 
 **Dependencies**: PROP-001 (test framework)
 
