@@ -585,15 +585,14 @@ Optimize Supabase queries with missing indexes.
 
 **Acceptance Criteria**:
 - [ ] Audit current indexes (check Supabase dashboard)
-- [ ] Create migration file: `supabase/migrations/002_add_indexes.sql`
-- [ ] Add indexes:
+- [x] Create migration file: `supabase/migrations/002_add_indexes.sql`
+- [x] Add indexes:
   ```sql
   CREATE INDEX IF NOT EXISTS idx_recent_payouts_firm_timestamp
     ON recent_payouts(firm_id, timestamp DESC);
 
   CREATE INDEX IF NOT EXISTS idx_recent_payouts_timestamp
-    ON recent_payouts(timestamp)
-    WHERE timestamp >= NOW() - INTERVAL '24 hours';
+    ON recent_payouts(timestamp DESC);
 
   CREATE INDEX IF NOT EXISTS idx_trustpilot_firm_date
     ON trustpilot_reviews(firm_id, review_date DESC);
@@ -603,7 +602,7 @@ Optimize Supabase queries with missing indexes.
   ```
 - [ ] Run migration in staging
 - [ ] Benchmark query performance (before/after)
-- [ ] Document expected speedups
+- [x] Document expected speedups (`docs/DATABASE-OPTIMIZATION.md`)
 - [ ] Deploy to production
 
 **Dependencies**: None
@@ -627,20 +626,14 @@ Optimize Supabase queries with missing indexes.
 Replace blocking file reads with async I/O to improve concurrency.
 
 **Acceptance Criteria**:
-- [ ] Convert `loadMonthlyData()` to async:
-  ```javascript
-  async function loadMonthlyDataAsync(firmId, yearMonth) {
-    const content = await fs.promises.readFile(filePath, 'utf8');
-    return JSON.parse(content);
-  }
-  ```
-- [ ] Update `loadPeriodData()` to be async
-- [ ] Update `getTopPayoutsFromFiles()` to be async
-- [ ] Update all API routes to `await` file loads
-- [ ] Add error handling for file errors
-- [ ] Benchmark performance improvement
-- [ ] Update tests to handle async
-- [ ] Document async patterns
+- [x] Convert `loadMonthlyData()` to async (uses `fs.promises.readFile`, `fs.promises.stat`, `fs.promises.access`)
+- [x] Update `loadPeriodData()` to be async
+- [x] Update `getTopPayoutsFromFiles()` to be async
+- [x] Update all API routes to `await` file loads
+- [x] Add error handling for file errors (try/catch, log, return null)
+- [ ] Benchmark performance improvement (user/load test)
+- [x] Update tests to handle async
+- [x] Document async patterns (`docs/ASYNC-FILE-IO.md`)
 
 **Dependencies**: None
 
