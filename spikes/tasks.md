@@ -88,16 +88,16 @@ describe('fetchWithRetry', () => {
 Prevent cascading failures by stopping requests to Arbiscan when it's consistently failing.
 
 **Acceptance Criteria**:
-- [ ] Create `ArbiscanCircuitBreaker` class
+- [x] Create `ArbiscanCircuitBreaker` class
   - States: CLOSED (normal), OPEN (blocking), HALF_OPEN (testing)
   - Threshold: 5 consecutive failures
   - Timeout: 60 seconds before retry
-- [ ] Track failure/success counts
-- [ ] Expose `execute()` method to wrap API calls
-- [ ] Add logging when circuit opens/closes
-- [ ] Integrate with `fetchWithRetry()`
-- [ ] Add unit tests (100% coverage)
-- [ ] Document circuit breaker behavior
+- [x] Track failure/success counts
+- [x] Expose `execute()` method to wrap API calls
+- [x] Add logging when circuit opens/closes
+- [x] Integrate with `fetchWithRetry()`
+- [x] Add unit tests (100% coverage)
+- [x] Document circuit breaker behavior
 
 **Dependencies**: PROP-002 (retry logic)
 
