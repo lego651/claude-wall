@@ -430,24 +430,24 @@ Test the core sync logic with mocked Arbiscan and Supabase.
 Test the main propfirms listing endpoint with real database queries.
 
 **Acceptance Criteria**:
-- [ ] Test successful responses:
+- [x] Test successful responses:
   - ✅ Returns 200 for 1d period (Supabase)
   - ✅ Returns 200 for 7d, 30d, 12m (JSON files)
   - ✅ Returns correct data structure
   - ✅ Returns sorted data (asc/desc)
   - ✅ Returns metadata (period, sort, order, count)
-- [ ] Test error handling:
+- [x] Test error handling:
   - ✅ Returns 429 when rate limited
   - ✅ Returns 403 for forbidden origin
   - ✅ Returns 500 on database error (with fallback)
-- [ ] Test parameter validation:
+- [x] Test parameter validation:
   - ✅ Defaults to 1d period for invalid input
   - ✅ Defaults to totalPayouts sort for invalid input
   - ✅ Defaults to desc order for invalid input
-- [ ] Test CORS headers:
+- [x] Test CORS headers:
   - ✅ Sets Access-Control-Allow-Origin
   - ✅ Sets Access-Control-Allow-Methods
-- [ ] Coverage: 85%
+- [x] Coverage: 85%
 
 **Dependencies**: PROP-001 (test framework)
 
