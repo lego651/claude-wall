@@ -385,29 +385,29 @@ Test Arbiscan API integration with mocked responses.
 Test the core sync logic with mocked Arbiscan and Supabase.
 
 **Acceptance Criteria**:
-- [ ] Test `processPayouts()`:
+- [x] Test `processPayouts()`:
   - ✅ Filters to 24h window correctly
   - ✅ Filters by firm addresses
   - ✅ Converts amounts to USD
   - ✅ Removes spam (<$10)
   - ✅ Deduplicates by tx_hash
   - ✅ Maps tokens to payment methods
-- [ ] Test `syncFirmPayouts()`:
+- [x] Test `syncFirmPayouts()`:
   - ✅ Fetches transactions from all addresses
   - ✅ Respects rate limits (sleeps between calls)
   - ✅ Upserts to Supabase correctly
   - ✅ Updates firm metadata
   - ✅ Handles errors gracefully
   - ✅ Returns sync summary
-- [ ] Test `syncAllFirms()`:
+- [x] Test `syncAllFirms()`:
   - ✅ Syncs all firms sequentially
   - ✅ Cleans up old payouts
   - ✅ Returns aggregate summary
   - ✅ Logs errors but continues
-- [ ] Test `cleanupOldPayouts()`:
+- [x] Test `cleanupOldPayouts()`:
   - ✅ Deletes payouts older than cutoff
   - ✅ Returns deletion count
-- [ ] Coverage: 85%
+- [x] Coverage: 85%
 
 **Dependencies**: PROP-001 (test framework)
 
