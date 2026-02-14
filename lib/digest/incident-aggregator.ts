@@ -5,7 +5,7 @@
  * See docs/CLASSIFIER-TAXONOMY.md and lib/ai/classification-taxonomy.ts.
  */
 
-import { createServiceClient } from '@/libs/supabase/service';
+import { createServiceClient } from '@/lib/supabase/service';
 import { getOpenAIClient } from '@/lib/ai/openai-client';
 import { getWeekNumber, getYear } from './week-utils';
 import {

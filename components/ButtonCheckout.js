@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import apiClient from "@/libs/api";
+import apiClient from "@/lib/api";
 import config from "@/config";
 
 // This component is used to create Stripe Checkout Sessions

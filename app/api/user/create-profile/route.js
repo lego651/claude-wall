@@ -1,4 +1,4 @@
-import { createClient } from "@/libs/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 // Simple endpoint to create a profile for the current user if it doesn't exist

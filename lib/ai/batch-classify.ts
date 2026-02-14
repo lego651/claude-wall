@@ -5,7 +5,7 @@
  * - Supabase: one upsert per BATCH_SIZE reviews (reduces round-trips).
  */
 
-import { createServiceClient } from '@/libs/supabase/service';
+import { createServiceClient } from '@/lib/supabase/service';
 import { classifyReview, updateReviewClassificationsBulk } from './classifier';
 
 const BATCH_SIZE = 50; // Flush to Supabase every N classified reviews

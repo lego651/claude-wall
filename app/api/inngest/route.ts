@@ -1,7 +1,7 @@
 import { serve } from "inngest/next";
-import { inngest } from "@/libs/inngest";
-import { syncPropFirmPayouts } from "@/libs/inngest-payouts";
-import { syncTraderPayouts } from "@/libs/inngest-traders";
+import { inngest } from "@/lib/inngest";
+import { syncPropFirmPayouts } from "@/lib/inngest-payouts";
+import { syncTraderPayouts } from "@/lib/inngest-traders";
 
 /**
  * Inngest handler route

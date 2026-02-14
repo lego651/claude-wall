@@ -7,7 +7,7 @@
  */
 
 import { chromium, Browser } from 'playwright';
-import { createServiceClient } from '@/libs/supabase/service';
+import { createServiceClient } from '@/lib/supabase/service';
 
 // ============================================================================
 // TYPES

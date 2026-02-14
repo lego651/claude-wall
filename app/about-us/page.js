@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getSEOTags } from "@/libs/seo";
+import { getSEOTags } from "@/lib/seo";
 import config from "@/config";
 
 export const metadata = getSEOTags({

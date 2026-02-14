@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { createClient } from "@/libs/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import config from "@/config";
 
 // Sign-in page with Google OAuth only

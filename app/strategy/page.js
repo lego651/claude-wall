@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { strategies, getFeaturedStrategies, getAllTags } from "@/data/strategies/strategies";
-import { getSEOTags } from "@/libs/seo";
+import { getSEOTags } from "@/lib/seo";
 import PropProofLayout from "@/components/PropProofLayout";
 
 export const metadata = getSEOTags({

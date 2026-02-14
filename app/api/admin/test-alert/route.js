@@ -4,7 +4,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createClient } from '@/libs/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { sendAlert } from '@/lib/alerts';
 
 export async function POST() {

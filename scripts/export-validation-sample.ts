@@ -14,7 +14,7 @@ import { resolve } from 'path';
 import { createWriteStream } from 'fs';
 config({ path: resolve(process.cwd(), '.env') });
 
-import { createServiceClient } from '../libs/supabase/service';
+import { createServiceClient } from '../lib/supabase/service';
 import { classifyReview } from '../lib/ai/classifier';
 
 const SAMPLE_SIZE = 50;

@@ -6,7 +6,7 @@
  * POST: Subscribe to (follow) a firm. Validates firm exists; returns existing if already subscribed.
  */
 
-import { createClient } from "@/libs/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 /** Return next Monday 00:00 UTC as ISO string (next digest date). */

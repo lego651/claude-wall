@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { createServiceClient } from "@/libs/supabase/service";
+import { createServiceClient } from "@/lib/supabase/service";
 
 // Dynamic import for ESM-only module (unsubscribe-token uses crypto)
 async function verifyToken(token) {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { reports, getReportBySlug } from "@/data/reports/reports";
-import { getSEOTags } from "@/libs/seo";
+import { getSEOTags } from "@/lib/seo";
 import AdminLayout from "@/components/AdminLayout";
 import ReportContent from "./ReportContent";
 

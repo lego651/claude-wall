@@ -1,5 +1,5 @@
-import { createCustomerPortal } from "@/libs/stripe";
-import { createClient } from "@/libs/supabase/server";
+import { createCustomerPortal } from "@/lib/stripe";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
 import type { CreatePortalRequest } from "@/types";
 

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/libs/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import config from "@/config";
 
 // This is a server-side component to ensure the user is logged in.

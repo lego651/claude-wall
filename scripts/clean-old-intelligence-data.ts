@@ -11,7 +11,7 @@ import { config } from 'dotenv';
 import { resolve } from 'path';
 config({ path: resolve(process.cwd(), '.env') });
 
-import { createServiceClient } from '@/libs/supabase/service';
+import { createServiceClient } from '@/lib/supabase/service';
 
 const TRUSTPILOT_RETAIN_DAYS = 7;
 const INCIDENTS_RETAIN_DAYS = 30;

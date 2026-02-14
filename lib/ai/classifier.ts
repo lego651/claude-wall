@@ -5,7 +5,7 @@
  */
 
 import { getOpenAIClient } from './openai-client';
-import { createServiceClient } from '@/libs/supabase/service';
+import { createServiceClient } from '@/lib/supabase/service';
 import {
   CLASSIFICATION_CATEGORIES,
   type ClassificationCategory,

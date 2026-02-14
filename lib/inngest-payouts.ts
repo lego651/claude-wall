@@ -1,4 +1,4 @@
-import { inngest } from "@/libs/inngest";
+import { inngest } from "@/lib/inngest";
 import { syncAllFirms } from "@/lib/services/payoutSyncService";
 
 // Cron function to sync prop firm payouts only (no trader sync)
@@ -19,4 +19,3 @@ export const syncPropFirmPayouts = inngest.createFunction(
     return result;
   }
 );
-

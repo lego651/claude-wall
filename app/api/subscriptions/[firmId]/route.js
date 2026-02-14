@@ -3,7 +3,7 @@
  * TICKET-012: DELETE /api/subscriptions/[firmId]
  */
 
-import { createClient } from "@/libs/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function DELETE(req, { params }) {

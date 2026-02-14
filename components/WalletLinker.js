@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/libs/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 // Component to link wallet address from sessionStorage after OAuth redirect
 // This handles the case where OAuth providers strip query parameters

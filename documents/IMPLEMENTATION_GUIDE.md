@@ -621,7 +621,7 @@ console.log('Phase 1 Resolved Rules:', phase1.resolvedRules);
 **File: `/app/firms/page.js`**
 
 ```javascript
-import { getAllFirms } from '@/libs/data/firms';
+import { getAllFirms } from '@/lib/data/firms';
 import Link from 'next/link';
 
 export default function FirmsDirectory() {
@@ -663,7 +663,7 @@ export default function FirmsDirectory() {
 **File: `/app/firms/[slug]/page.js`**
 
 ```javascript
-import { getFirmData, getAllFirmSlugs } from '@/libs/data/firms';
+import { getFirmData, getAllFirmSlugs } from '@/lib/data/firms';
 import { notFound } from 'next/navigation';
 
 export async function generateStaticParams() {

@@ -18,7 +18,7 @@ import { config } from "dotenv";
 import { resolve } from "path";
 config({ path: resolve(process.cwd(), ".env") });
 
-import { createServiceClient } from "../libs/supabase/service";
+import { createServiceClient } from "../lib/supabase/service";
 import { sendWeeklyDigest, type WeeklyReportJson } from "../lib/email/send-digest";
 import { getWeekBounds, getWeekNumber, getYear } from "../lib/digest/week-utils";
 

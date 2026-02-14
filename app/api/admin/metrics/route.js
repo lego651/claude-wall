@@ -9,7 +9,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { createClient } from '@/libs/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { usageTracker } from '@/lib/arbiscan';
 import { getCacheStats } from '@/lib/cache';
 import { sendAlert } from '@/lib/alerts';

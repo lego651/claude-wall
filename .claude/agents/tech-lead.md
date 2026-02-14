@@ -74,7 +74,7 @@ export default async function ServerPage() {
 **Client Components (interactive)**:
 ```javascript
 "use client";
-import { createClient } from "@/libs/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ClientComponent() {
   useEffect(() => {
@@ -88,7 +88,7 @@ export default function ClientComponent() {
 ### API Route Standards
 ```javascript
 import { NextResponse } from "next/server";
-import { createClient } from "@/libs/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req) {
   // Always validate environment variables

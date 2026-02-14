@@ -60,19 +60,19 @@ const supabase = createClient();
   - `app/dashboard/` - Protected user pages
   - `app/blog/` - Blog functionality with MDX support
 - **`components/`** - Reusable UI components (buttons, testimonials, features)
-- **`libs/`** - Core utilities and integrations
-  - `libs/supabase/` - Database client configurations (server, client, middleware)
-  - `libs/stripe.js` - Payment processing
-  - `libs/seo.js` - SEO tag generation
-  - `libs/resend.js` - Email service
+- **`lib/`** - Core utilities and integrations
+ - `lib/supabase/` - Database client configurations (server, client, middleware)
+ - `lib/stripe.ts` - Payment processing
+ - `lib/seo.js` - SEO tag generation
+ - `lib/resend.ts` - Email service
 - **`config.js`** - Central configuration (app settings, Stripe plans, colors, auth URLs)
 
 ### Tech Stack Integration
 
 **Authentication & Database:**
 - Supabase with SSR support
-- Server components use `@/libs/supabase/server`
-- Client components use `@/libs/supabase/client`
+- Server components use `@/lib/supabase/server`
+- Client components use `@/lib/supabase/client`
 - Middleware handles session updates
 
 **Payments:**
@@ -114,7 +114,7 @@ export default async function ServerPage() {
 ### Client Components (Interactive)
 ```javascript
 "use client";
-import { createClient } from "@/libs/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ClientComponent() {
   useEffect(() => {
@@ -128,7 +128,7 @@ export default function ClientComponent() {
 ### API Routes
 ```javascript
 import { NextResponse } from "next/server";
-import { createClient } from "@/libs/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req) {
   const supabase = await createClient();
@@ -185,8 +185,8 @@ The `next.config.js` includes webpack configuration to suppress known Supabase r
 
 ## Key Integration Points
 
-**SEO:** Handled by `libs/seo.js` with default tags in root layout
-**Email:** Resend integration in `libs/resend.js` for transactional emails
+**SEO:** Handled by `lib/seo.js` with default tags in root layout
+**Email:** Resend integration in `lib/resend.ts` for transactional emails
 **Payments:** Stripe webhooks handle subscription events and user updates
 **Auth:** Middleware updates user sessions on all routes
 **Database:** Supabase with automatic session management via SSR package

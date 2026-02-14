@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getStrategyBySlug } from "@/data/strategies/strategies";
-import { getSEOTags } from "@/libs/seo";
+import { getSEOTags } from "@/lib/seo";
 import { promises as fs } from "fs";
 import path from "path";
 import MarkdownRenderer from "@/components/MarkdownRenderer";

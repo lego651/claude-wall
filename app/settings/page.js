@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/libs/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import apiClient from "@/libs/api";
+import apiClient from "@/lib/api";
 import config from "@/config";
 import SubscriptionSettings from "@/components/SubscriptionSettings";
 

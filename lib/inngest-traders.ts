@@ -1,4 +1,4 @@
-import { inngest } from "@/libs/inngest";
+import { inngest } from "@/lib/inngest";
 import { syncAllTradersRealtime } from "@/lib/services/traderRealtimeSyncService";
 
 export const syncTraderPayouts = inngest.createFunction(

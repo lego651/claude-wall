@@ -1,4 +1,4 @@
-import { sendEmail } from "@/libs/resend";
+import { sendEmail } from "@/lib/resend";
 import { NextResponse, type NextRequest } from "next/server";
 import type { LeadRequest } from "@/types";
 

@@ -3,7 +3,7 @@
  * Compiles payout summary, Trustpilot summary, incidents, and AI "Our Take"; stores in weekly_reports.
  */
 
-import { createServiceClient } from '@/libs/supabase/service';
+import { createServiceClient } from '@/lib/supabase/service';
 import { getOpenAIClient } from '@/lib/ai/openai-client';
 import { detectIncidents, type DetectedIncident } from './incident-aggregator';
 import { getWeekNumber, getYear, getWeekBounds } from './week-utils';

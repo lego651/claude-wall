@@ -1,5 +1,5 @@
-import { createCheckout } from "@/libs/stripe";
-import { createClient } from "@/libs/supabase/server";
+import { createCheckout } from "@/lib/stripe";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
 import type { CreateCheckoutRequest } from "@/types";
 

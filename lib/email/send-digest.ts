@@ -3,10 +3,10 @@
  * One email containing reports for all firms the user follows.
  */
 
-import { sendEmail } from "@/libs/resend";
+import { sendEmail } from "@/lib/resend";
 import { buildWeeklyDigestHtml, type DigestReportInput } from "@/lib/email/weekly-digest-html";
 import { createUnsubscribeToken } from "@/lib/email/unsubscribe-token";
-import { createServiceClient } from "@/libs/supabase/service";
+import { createServiceClient } from "@/lib/supabase/service";
 
 /** Shape of report_json from weekly_reports (matches WeeklyReportJson from generator). */
 export interface WeeklyReportJson {

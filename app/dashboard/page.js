@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { createClient } from "@/libs/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useTransactions } from "@/lib/hooks/useTransactions";
 import propfirmsData from "@/data/propfirms.json";
 import PropProofLayout from "@/components/PropProofLayout";
