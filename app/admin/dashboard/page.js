@@ -20,10 +20,12 @@ function metricsToCSV(data) {
     rows.push(`check_supabase,${data.checks.supabase?.status ?? ""}`);
     rows.push(`check_propfirmsData,${data.checks.propfirmsData?.status ?? ""}`);
   }
-  if (data?.propfirmsData?.counts) {
-    rows.push(`propfirms_count_24h,${data.propfirmsData.counts["24h"] ?? ""}`);
-    rows.push(`propfirms_count_7d,${data.propfirmsData.counts["7d"] ?? ""}`);
-    rows.push(`propfirms_count_30d,${data.propfirmsData.counts["30d"] ?? ""}`);
+  if (data?.propfirmsData?.firmsWithIssues?.length) {
+    data.propfirmsData.firmsWithIssues.forEach((f, i) => {
+      rows.push(`propfirms_issue_${i + 1}_firm,${f.firmName ?? f.firmId}`);
+      rows.push(`propfirms_issue_${i + 1}_status,${f.status}`);
+      rows.push(`propfirms_issue_${i + 1}_counts,${f.counts?.["24h"] ?? ""}/${f.counts?.["7d"] ?? ""}/${f.counts?.["30d"] ?? ""}`);
+    });
   }
   rows.push(`arbiscan_calls,${data?.arbiscan?.calls ?? ""}`);
   rows.push(`arbiscan_limit,${data?.arbiscan?.limit ?? ""}`);
@@ -280,11 +282,11 @@ export default function AdminDashboardPage() {
                               : "badge-success"
                         }`}
                       >
-                        {data.checks.propfirmsData.status ?? "—"}
+                        {data.checks.propfirmsData.status ?? "ok"}
                       </span>
-                      {data.checks.propfirmsData.counts && (
+                      {data.checks.propfirmsData.firmsWithIssues?.length > 0 && (
                         <span className="text-xs text-base-content/60">
-                          {data.checks.propfirmsData.counts["24h"] ?? 0} / {data.checks.propfirmsData.counts["7d"] ?? 0} / {data.checks.propfirmsData.counts["30d"] ?? 0}
+                          {data.checks.propfirmsData.firmsWithIssues.length} firm(s) with issues
                         </span>
                       )}
                     </div>
@@ -297,51 +299,54 @@ export default function AdminDashboardPage() {
 
         {data && (
           <div className="space-y-8">
-            {/* Prop firms data (24h, 7d, 30d + erratic) */}
+            {/* Prop firms payout data – only firms with warning or critical */}
             {data.propfirmsData && (
               <section>
                 <h2 className="text-lg font-semibold mb-4">Prop firms payout data</h2>
                 <div className="card card-border bg-base-100 shadow">
                   <div className="card-body">
-                    <div className="flex flex-wrap items-center gap-6 mb-3">
-                      <div className="stat padding-0">
-                        <div className="stat-title text-xs">Last 24h</div>
-                        <div className="stat-value text-lg">{data.propfirmsData.counts?.["24h"] ?? "—"}</div>
+                    {!data.propfirmsData.firmsWithIssues?.length ? (
+                      <p className="text-base-content/70">No prop firms with payout data issues.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="table table-sm">
+                          <thead>
+                            <tr>
+                              <th>Firm</th>
+                              <th>Status</th>
+                              <th>24h / 7d / 30d</th>
+                              <th>Issues</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {data.propfirmsData.firmsWithIssues.map((f) => (
+                              <tr key={f.firmId}>
+                                <td className="font-medium">{f.firmName ?? f.firmId}</td>
+                                <td>
+                                  <span className={`badge ${f.status === "critical" ? "badge-error" : "badge-warning"}`}>
+                                    {f.status}
+                                  </span>
+                                </td>
+                                <td className="text-sm text-base-content/70">
+                                  {f.counts?.["24h"] ?? 0} / {f.counts?.["7d"] ?? 0} / {f.counts?.["30d"] ?? 0}
+                                </td>
+                                <td>
+                                  <ul className="list-disc list-inside text-xs space-y-0.5">
+                                    {f.flags?.map((flag, i) => (
+                                      <li key={i} className={flag.type === "zero" ? "text-error" : "text-warning"}>
+                                        {flag.message}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                      <div className="stat padding-0">
-                        <div className="stat-title text-xs">Last 7d</div>
-                        <div className="stat-value text-lg">{data.propfirmsData.counts?.["7d"] ?? "—"}</div>
-                      </div>
-                      <div className="stat padding-0">
-                        <div className="stat-title text-xs">Last 30d</div>
-                        <div className="stat-value text-lg">{data.propfirmsData.counts?.["30d"] ?? "—"}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-base-content/70">Erratic check</span>
-                        <span
-                          className={`badge ${
-                            data.propfirmsData.erratic?.status === "critical"
-                              ? "badge-error"
-                              : data.propfirmsData.erratic?.status === "warning"
-                                ? "badge-warning"
-                                : "badge-success"
-                          }`}
-                        >
-                          {data.propfirmsData.erratic?.status ?? "ok"}
-                        </span>
-                      </div>
-                    </div>
-                    {data.propfirmsData.erratic?.flags?.length > 0 && (
-                      <ul className="list-disc list-inside text-sm text-base-content/80 space-y-1">
-                        {data.propfirmsData.erratic.flags.map((f, i) => (
-                          <li key={i}>
-                            <span className={f.type === "zero" ? "text-error" : "text-warning"}>{f.message}</span>
-                          </li>
-                        ))}
-                      </ul>
                     )}
-                    <p className="text-xs text-base-content/50 mt-2">
-                      Payout row counts from recent_payouts. Erratic = 24h or 7d significantly lower or higher than usual (vs 7d/30d baseline). Zero in 24h when 7d had data triggers a critical alert.
+                    <p className="text-xs text-base-content/50 mt-3">
+                      Per-firm payout counts from recent_payouts. Only firms with erratic data (24h/7d much lower or higher than usual, or 0 in 24h when 7d had data) are listed.
                     </p>
                   </div>
                 </div>

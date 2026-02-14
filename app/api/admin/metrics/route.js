@@ -82,7 +82,17 @@ async function getDbStats(supabase) {
   return { counts, latencyMs, ok };
 }
 
-/** Payout counts for 24h, 7d, 30d and erratic detection (vs usual). */
+/** Count payouts per firm for a time window; returns Map<firmId, count>. */
+function countByFirm(rows) {
+  const map = new Map();
+  for (const row of rows || []) {
+    const id = row.firm_id;
+    if (id != null) map.set(id, (map.get(id) || 0) + 1);
+  }
+  return map;
+}
+
+/** Per-firm payout counts (24h, 7d, 30d) and erratic detection. Returns only firms with warning or critical. */
 async function getPropfirmsPayoutCounts(supabase) {
   const now = Date.now();
   const ms24h = 24 * 60 * 60 * 1000;
@@ -94,38 +104,65 @@ async function getPropfirmsPayoutCounts(supabase) {
     '30d': new Date(now - ms30d).toISOString(),
   };
 
-  const counts = { '24h': null, '7d': null, '30d': null };
+  let firms = [];
+  try {
+    const { data: firmsRows } = await supabase.from('firms').select('id, name');
+    firms = firmsRows || [];
+  } catch {
+    // ignore
+  }
+
+  const count24hByFirm = new Map();
+  const count7dByFirm = new Map();
+  const count30dByFirm = new Map();
   for (const [label, cutoff] of Object.entries(cutoffs)) {
     try {
-      const { count, error } = await supabase
+      const { data: rows } = await supabase
         .from('recent_payouts')
-        .select('*', { count: 'exact', head: true })
+        .select('firm_id')
         .gte('timestamp', cutoff);
-      counts[label] = error ? null : count;
+      const map = countByFirm(rows);
+      if (label === '24h') map.forEach((c, id) => count24hByFirm.set(id, c));
+      else if (label === '7d') map.forEach((c, id) => count7dByFirm.set(id, c));
+      else map.forEach((c, id) => count30dByFirm.set(id, c));
     } catch {
-      counts[label] = null;
+      // ignore
     }
   }
 
-  const c24 = counts['24h'] ?? 0;
-  const c7 = counts['7d'] ?? 0;
-  const c30 = counts['30d'] ?? 0;
-  const expected24h = c7 >= 7 ? c7 / 7 : null;
-  const expected7d = c30 >= 10 ? (c30 * 7) / 30 : null;
+  const firmsWithIssues = [];
+  for (const firm of firms) {
+    const firmId = firm.id;
+    const c24 = count24hByFirm.get(firmId) ?? 0;
+    const c7 = count7dByFirm.get(firmId) ?? 0;
+    const c30 = count30dByFirm.get(firmId) ?? 0;
+    const expected24h = c7 >= 7 ? c7 / 7 : null;
+    const expected7d = c30 >= 10 ? (c30 * 7) / 30 : null;
 
-  const flags = [];
-  if (expected24h != null && expected24h >= 1) {
-    if (c24 === 0) flags.push({ period: '24h', type: 'zero', message: 'Payout count is 0 (7d had data)' });
-    else if (c24 < 0.2 * expected24h) flags.push({ period: '24h', type: 'low', message: `24h count ${c24} is much lower than usual (~${Math.round(expected24h)}/day)` });
-    else if (c24 > 3 * expected24h) flags.push({ period: '24h', type: 'high', message: `24h count ${c24} is much higher than usual (~${Math.round(expected24h)}/day)` });
-  }
-  if (expected7d != null && expected7d >= 1) {
-    if (c7 < 0.2 * expected7d) flags.push({ period: '7d', type: 'low', message: `7d count ${c7} is much lower than usual (~${Math.round(expected7d)} for 7d)` });
-    else if (c7 > 3 * expected7d) flags.push({ period: '7d', type: 'high', message: `7d count ${c7} is much higher than usual (~${Math.round(expected7d)} for 7d)` });
+    const flags = [];
+    if (expected24h != null && expected24h >= 1) {
+      if (c24 === 0) flags.push({ period: '24h', type: 'zero', message: '0 in 24h (7d had data)' });
+      else if (c24 < 0.2 * expected24h) flags.push({ period: '24h', type: 'low', message: `24h ${c24} much lower than usual (~${Math.round(expected24h)}/day)` });
+      else if (c24 > 3 * expected24h) flags.push({ period: '24h', type: 'high', message: `24h ${c24} much higher than usual (~${Math.round(expected24h)}/day)` });
+    }
+    if (expected7d != null && expected7d >= 1) {
+      if (c7 < 0.2 * expected7d) flags.push({ period: '7d', type: 'low', message: `7d ${c7} much lower than usual (~${Math.round(expected7d)} for 7d)` });
+      else if (c7 > 3 * expected7d) flags.push({ period: '7d', type: 'high', message: `7d ${c7} much higher than usual (~${Math.round(expected7d)} for 7d)` });
+    }
+
+    if (flags.length === 0) continue;
+    const status = flags.some((f) => f.type === 'zero') ? 'critical' : 'warning';
+    firmsWithIssues.push({
+      firmId,
+      firmName: firm.name || firmId,
+      counts: { '24h': c24, '7d': c7, '30d': c30 },
+      status,
+      flags,
+    });
   }
 
-  const status = flags.some((f) => f.type === 'zero') ? 'critical' : flags.length > 0 ? 'warning' : 'ok';
-  return { counts: { '24h': c24, '7d': c7, '30d': c30 }, erratic: { status, flags } };
+  const overallStatus = firmsWithIssues.some((f) => f.status === 'critical') ? 'critical' : firmsWithIssues.length > 0 ? 'warning' : 'ok';
+  return { firmsWithIssues, overallStatus };
 }
 
 export async function GET() {
@@ -189,10 +226,9 @@ export async function GET() {
     supabase: { status: supabaseStatus, latencyMs: dbResult.latencyMs, label: 'Database' },
     cacheConfigured: { set: !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN), label: 'Cache configured' },
     propfirmsData: {
-      status: propfirmsData.erratic.status,
+      status: propfirmsData.overallStatus,
       label: 'Prop firms payout data',
-      counts: propfirmsData.counts,
-      flags: propfirmsData.erratic.flags,
+      firmsWithIssues: propfirmsData.firmsWithIssues,
     },
   };
 
@@ -221,13 +257,11 @@ export async function GET() {
       { latencyMs: dbResult.latencyMs }
     ).catch(() => {});
   }
-  if (propfirmsData.erratic.status === 'critical' && shouldSendAlert('propfirms_data_critical')) {
-    const msg = propfirmsData.erratic.flags.find((f) => f.type === 'zero')
-      ? 'Prop firms payout count dropped to 0 in last 24h (7d had data).'
-      : 'Prop firms data erratic: ' + propfirmsData.erratic.flags.map((f) => f.message).join('; ');
-    sendAlert('Admin dashboard', msg, 'CRITICAL', {
-      counts: propfirmsData.counts,
-      flags: propfirmsData.erratic.flags,
+  const criticalFirms = propfirmsData.firmsWithIssues.filter((f) => f.status === 'critical');
+  if (criticalFirms.length > 0 && shouldSendAlert('propfirms_data_critical')) {
+    const names = criticalFirms.map((f) => f.firmName || f.firmId).join(', ');
+    sendAlert('Admin dashboard', `Prop firms payout data: ${criticalFirms.length} firm(s) critical (${names}).`, 'CRITICAL', {
+      firms: criticalFirms.map((f) => ({ firmId: f.firmId, firmName: f.firmName, counts: f.counts, flags: f.flags })),
     }).catch(() => {});
   }
 
@@ -258,8 +292,8 @@ export async function GET() {
       hitRate: cache.hitRate,
     },
     propfirmsData: {
-      counts: propfirmsData.counts,
-      erratic: propfirmsData.erratic,
+      firmsWithIssues: propfirmsData.firmsWithIssues,
+      overallStatus: propfirmsData.overallStatus,
     },
     apiLatency: { note: 'See Vercel Analytics for P50/P95/P99 by route' },
     errorRates: { note: 'See Vercel Analytics or logs for error rates by endpoint' },
