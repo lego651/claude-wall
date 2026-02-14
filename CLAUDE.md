@@ -65,6 +65,7 @@ const supabase = createClient();
  - `lib/seo.js` - SEO tag generation
  - `lib/resend.ts` - Email service
 - **`migrations/`** - **Single source for all SQL migrations.** Numbered files (01_, 02_, …) define run order. Run via Supabase SQL Editor or `psql`. Do not create other migration folders (e.g. `supabase/migrations`, `database/`).
+- **`documents/`** - **Single place for all markdown documentation.** See [Documents folder](#documents-folder) below for subfolder rules.
 - **`config.js`** - Central configuration (app settings, Stripe plans, colors, auth URLs)
 
 ### Tech Stack Integration
@@ -182,6 +183,22 @@ export async function POST(req) {
 
 ### Warning Suppression
 The `next.config.js` includes webpack configuration to suppress known Supabase realtime warnings that are harmless but noisy during development.
+
+## Documents folder
+
+All markdown (`.md`) documentation belongs under **`documents/`**. Do not create ad‑hoc doc folders at the project root (e.g. `docs/`, `specs/`). Use these subfolders:
+
+| Subfolder | Purpose |
+|-----------|--------|
+| **`documents/alpha`** | Old and used files — reference material, completed designs, runbooks, and docs no longer actively edited. |
+| **`documents/spikes`** | New ideas and current investigation — spikes, explorations, deep-dives, and in-progress analysis. |
+| **`documents/sprints`** | Old sprint breakdowns — past sprint plans and retrospectives. |
+| **`documents/current_sprint`** | Current sprint only — active planning: e.g. `tasks.md`, `scope.md`, and other sprint-specific files. |
+
+**Rules:**
+1. Put every new or moved `.md` file under `documents/` (or one of these subfolders).
+2. Use `documents/current_sprint/` for the active sprint; when a sprint ends, move its contents to `documents/sprints/` (e.g. by sprint name or date).
+3. Use `documents/spikes/` for exploration and ideas; when a spike is done or adopted, move the file to `documents/alpha` if it becomes reference.
 
 ## Database migrations
 
