@@ -6,12 +6,12 @@ const { test, expect } = require('@playwright/test');
 
 test('page loads and displays firms', async ({ page }) => {
   await page.goto('/propfirms');
-    await expect(page.getByRole('heading', { name: /Prop Firm.*Leaderboard/i })).toBeVisible();
-    await expect(page.getByText(/Viewing Stats For/i)).toBeVisible();
-    await page.waitForSelector('table tbody tr', { state: 'visible', timeout: 15000 });
-    const rows = page.locator('table tbody tr');
-    await expect(rows.first()).toBeVisible();
-    await expect(rows).toHaveCount(await rows.count());
+  await expect(page.getByRole('heading', { name: /Prop Firm.*On-Chain Analytics/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Firm Payout Insights/i })).toBeVisible();
+  await page.waitForSelector('table tbody tr', { state: 'visible', timeout: 15000 });
+  const rows = page.locator('table tbody tr');
+  await expect(rows.first()).toBeVisible();
+  await expect(rows).toHaveCount(await rows.count());
 });
 
 test('can switch between periods (1d, 7d, 30d, 12m)', async ({ page }) => {
@@ -32,25 +32,25 @@ test('can switch between periods (1d, 7d, 30d, 12m)', async ({ page }) => {
 });
 
 test('can sort by column (click header)', async ({ page }) => {
-    await page.goto('/propfirms');
-    await page.waitForSelector('table tbody tr', { state: 'visible', timeout: 15000 });
-    const aggHeader = page.getByRole('columnheader', { name: /Aggregate Payouts/i });
-    await aggHeader.click();
-    await expect(page.locator('table tbody tr').first()).toBeVisible();
-    await aggHeader.click();
-    await expect(page.locator('table tbody tr').first()).toBeVisible();
-    const peakHeader = page.getByRole('columnheader', { name: /Peak Payout/i });
-    await peakHeader.click();
-    await expect(page.locator('table tbody tr').first()).toBeVisible();
+  await page.goto('/propfirms');
+  await page.waitForSelector('table tbody tr', { state: 'visible', timeout: 15000 });
+  const totalHeader = page.getByRole('columnheader', { name: /Total Payouts/i });
+  await totalHeader.click();
+  await expect(page.locator('table tbody tr').first()).toBeVisible();
+  await totalHeader.click();
+  await expect(page.locator('table tbody tr').first()).toBeVisible();
+  const latestHeader = page.getByRole('columnheader', { name: /Latest Payout/i });
+  await latestHeader.click();
+  await expect(page.locator('table tbody tr').first()).toBeVisible();
 });
 
 test('can view firm details', async ({ page }) => {
-    await page.goto('/propfirms');
-    await page.waitForSelector('table tbody tr', { state: 'visible', timeout: 15000 });
-    await page.goto('/propfirms/fundingpips');
-    await expect(page).toHaveURL(/\/propfirms\/fundingpips/);
-    await expect(page.getByRole('heading', { level: 1 }).or(page.getByRole('heading', { level: 2 }))).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('body')).toContainText('FundingPips', { timeout: 5000 });
+  await page.goto('/propfirms');
+  await page.waitForSelector('table tbody tr', { state: 'visible', timeout: 15000 });
+  await page.goto('/propfirms/fundingpips');
+  await expect(page).toHaveURL(/\/propfirms\/fundingpips/);
+  await expect(page.getByRole('heading', { level: 1, name: /FundingPips/i })).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('body')).toContainText('FundingPips', { timeout: 5000 });
 });
 
 test('loading state shows skeleton', async ({ page }) => {
@@ -79,10 +79,10 @@ test('empty state when no firms', async ({ page }) => {
 });
 
 test('mobile viewport shows leaderboard', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/propfirms');
-    await expect(page.getByRole('heading', { name: /Prop Firm.*Leaderboard/i })).toBeVisible();
-    await page.waitForSelector('table', { state: 'visible', timeout: 15000 });
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto('/propfirms');
+  await expect(page.getByRole('heading', { name: /Prop Firm.*On-Chain Analytics/i })).toBeVisible();
+  await page.waitForSelector('table', { state: 'visible', timeout: 15000 });
 });
 
 test('table is scrollable on small viewport', async ({ page }) => {

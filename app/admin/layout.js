@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import config from "@/config";
 
+export const dynamic = "force-dynamic";
+
 // Server-side layout to protect admin routes
 // Only users with is_admin = true can access /admin and its subpages
 // Public routes like /admin/strategies/public/* are excluded from protection
