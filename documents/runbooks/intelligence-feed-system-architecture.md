@@ -86,11 +86,12 @@
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ STEP 4: EMAIL DIGEST                                                     │
-│ POST /api/cron/send-weekly-reports (MISSING ❌)                         │
-│ ├─ Query: user_subscriptions WHERE active = true                        │
-│ ├─ For each user: get incidents from subscribed firms (past 7 days)     │
-│ ├─ Generate HTML email: firm sections + incident cards                  │
-│ └─ Send via Resend API                                                  │
+│ GET /api/cron/send-weekly-reports                                        │
+│ ├─ Query: user_subscriptions WHERE email_enabled = true                 │
+│ ├─ For each user: weekly_reports (report_json) for subscribed firms     │
+│ │   (last week’s week_number/year)                                      │
+│ ├─ sendWeeklyDigest(user, reports[], options) → HTML + Resend           │
+│ └─ One email per user (content = that user’s firms only)                  │
 └──────────────────────────────────────────────────────────────────────────┘
        │
        ▼
@@ -108,6 +109,7 @@
                               │  Supabase Database       │
                               │  ├─ trustpilot_reviews   │
                               │  ├─ weekly_incidents     │
+                              │  ├─ weekly_reports       │
                               │  └─ user_subscriptions   │
                               └────────┬─────────────────┘
                                        │
@@ -167,11 +169,9 @@ trustpilot_reviews (current week, grouped by category)
 
 ### 4. EMAIL (Weekly Monday 2 PM UTC)
 ```
-user_subscriptions (active)
-  → weekly_incidents (past 7 days, user's firms)
-  → HTML template
-  → Resend API
-  → User inbox
+user_subscriptions (email_enabled)
+  → weekly_reports (report_json, last week, user's firms)
+  → sendWeeklyDigest → HTML + Resend → User inbox
 ```
 
 ### 5. RENDER (Real-time)
@@ -181,6 +181,32 @@ weekly_incidents (last 30 days)
   → UI: /propfirms/[id]/intelligence
   → User browser
 ```
+
+## weekly_reports vs weekly_incidents
+
+| Table | Purpose | Grain | Used by |
+|-------|---------|--------|---------|
+| **weekly_incidents** | One row per detected incident (e.g. “payout delays” from ≥3 reviews). | Many rows per firm per week (0 to N incidents). | UI incidents API; also consumed by report generator. |
+| **weekly_reports** | One cached “full report” per firm per week (payouts + Trustpilot + incidents + “Our Take”). | One row per (firm_id, week_number, year). `report_json` holds the full snapshot. | Weekly digest cron: reads `report_json` to build each user’s email. |
+
+```
+                    trustpilot_reviews (classified)
+                              │
+         ┌────────────────────┼────────────────────┐
+         │                    │                    │
+         ▼                    ▼                    ▼
+  detectIncidents()     generateWeeklyReport()   (reviews + payouts)
+         │                    │
+         │                    │  report_json = { payouts, trustpilot,
+         │                    │                  incidents[], ourTake }
+         ▼                    ▼
+  weekly_incidents       weekly_reports
+  (many rows per         (one row per firm/week;
+   firm/week)             used by send-weekly-reports)
+```
+
+- **weekly_incidents**: written by incident-detection step; each row = one incident (type, severity, title, summary). APIs and UI query this for “last 30d incidents.”
+- **weekly_reports**: written by `lib/digest/generator.ts` (when a report is generated). Holds a full week snapshot per firm. The **weekly email** uses `weekly_reports.report_json` (not a direct query to `weekly_incidents`) so each user gets one email with payouts + Trustpilot + incidents + ourTake for their subscribed firms.
 
 ## Database Schema
 
@@ -203,44 +229,65 @@ weekly_incidents (last 30 days)
 └─────────────────┴──────────────┴─────────────────────────┘
 ```
 
-### weekly_incidents
+### weekly_reports
+One row per (firm_id, week_number, year). Cached output of the report generator; used by the weekly digest cron.
 ```sql
 ┌─────────────────┬──────────────┬─────────────────────────┐
 │ Field           │ Type         │ Description             │
 ├─────────────────┼──────────────┼─────────────────────────┤
 │ id              │ SERIAL       │ Primary key             │
-│ firm_id         │ TEXT         │ e.g., "fundingpips"     │
-│ year            │ INTEGER      │ ISO year (2025)         │
-│ week_number     │ INTEGER      │ ISO week (1-53)         │
-│ incident_type   │ TEXT         │ Same as category        │
-│ severity        │ TEXT         │ high/medium/low         │
-│ title           │ TEXT         │ AI-generated            │
-│ summary         │ TEXT         │ AI-generated            │
-│ review_count    │ INTEGER      │ # reviews in incident   │
-│ affected_users  │ INTEGER      │ Estimate                │
-│ review_ids      │ INTEGER[]    │ Array of review IDs     │
-│ created_at      │ TIMESTAMPTZ  │ When detected           │
+│ firm_id         │ TEXT         │ FK firms(id)            │
+│ week_number     │ INT          │ ISO week (1-53)        │
+│ year            │ INT          │ ISO year                │
+│ report_json     │ JSONB        │ payouts, trustpilot,    │
+│                 │              │ incidents[], ourTake   │
+│ total_subscribers │ INT        │ Optional metric         │
+│ emails_sent     │ INT          │ Optional metric         │
+│ generated_at    │ TIMESTAMPTZ  │ When generated          │
 ├─────────────────┴──────────────┴─────────────────────────┤
-│ UNIQUE (firm_id, year, week_number, incident_type)       │
+│ UNIQUE (firm_id, week_number, year)                       │
 └───────────────────────────────────────────────────────────┘
 ```
+Populated by `lib/digest/generator.ts` → `generateWeeklyReport()`. Read by `GET /api/cron/send-weekly-reports` to build digest emails.
+
+### weekly_incidents
+Many rows per firm per week (0 or more). One row = one detected incident (e.g. “payout delays” from ≥3 reviews).
+```sql
+┌─────────────────┬──────────────┬─────────────────────────┐
+│ Field           │ Type         │ Description             │
+├─────────────────┼──────────────┼─────────────────────────┤
+│ id              │ SERIAL       │ Primary key             │
+│ firm_id         │ TEXT         │ FK firms(id)            │
+│ year            │ INT          │ ISO year                │
+│ week_number     │ INT          │ ISO week (1-53)         │
+│ incident_type   │ TEXT         │ payout_issue,           │
+│                 │              │ scam_warning, etc.      │
+│ severity        │ TEXT         │ low | medium | high     │
+│ title           │ TEXT         │ AI-generated            │
+│ summary         │ TEXT         │ AI-generated            │
+│ review_count    │ INT          │ # reviews in incident   │
+│ affected_users  │ TEXT         │ Optional estimate       │
+│ review_ids      │ INT[]        │ Source review IDs       │
+│ created_at      │ TIMESTAMPTZ  │ When detected           │
+└─────────────────┴──────────────┴─────────────────────────┘
+```
+Written by incident-detection script. Read by UI/API (`/api/v2/propfirms/[id]/incidents`) and by the report generator (to embed in `weekly_reports.report_json`).
 
 ### user_subscriptions
 ```sql
 ┌─────────────────┬──────────────┬─────────────────────────┐
 │ Field           │ Type         │ Description             │
 ├─────────────────┼──────────────┼─────────────────────────┤
-│ id              │ SERIAL       │ Primary key             │
-│ user_id         │ UUID         │ FK to auth.users        │
-│ firm_id         │ TEXT         │ Subscribed firm         │
-│ email           │ TEXT         │ Delivery address        │
-│ active          │ BOOLEAN      │ Subscription status     │
-│ created_at      │ TIMESTAMPTZ  │ When subscribed         │
-│ updated_at      │ TIMESTAMPTZ  │ Last modified           │
+│ id              │ UUID         │ Primary key             │
+│ user_id         │ UUID         │ FK auth.users            │
+│ firm_id         │ TEXT         │ Subscribed firm          │
+│ email_enabled   │ BOOLEAN      │ Include in digest        │
+│ created_at      │ TIMESTAMPTZ  │ When subscribed          │
 ├─────────────────┴──────────────┴─────────────────────────┤
 │ UNIQUE (user_id, firm_id)                                │
 └───────────────────────────────────────────────────────────┘
 ```
+Email comes from `profiles` (join by user_id). One user → many firms; digest = reports for that user’s subscribed firms only.
 
 ## Incident Categories
 
