@@ -176,7 +176,7 @@ export async function POST(req) {
 ### Pre-commit Checklist
 1. `npm run build` passes without errors
 2. `npm run lint` shows no warnings
-3. Tests pass (`npm run test`) — enforced by pre-commit
+3. Tests pass — pre-commit runs `npm run test:coverage:enforce-new` (tests + coverage; staged files in lib/, app/api/, components/ must have ≥80% coverage)
 4. No unused imports
 5. All async functions properly awaited
 6. Environment variables checked before use

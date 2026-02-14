@@ -11,6 +11,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:coverage:enforce-new": "jest --coverage --coverageReporters=text --coverageReporters=json-summary && node tests/coverage-check-new-code.js",
     "test:e2e": "node node_modules/@playwright/test/cli.js test",
     "test:e2e:ui": "node node_modules/@playwright/test/cli.js test --ui",
     "load:list": "k6 run tests/load/propfirms-list.js",
