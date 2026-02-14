@@ -455,7 +455,7 @@ export default function AdminDashboardPage() {
 
             {/* Files */}
             <section>
-              <h2 className="text-lg font-semibold mb-4">Payout files (data/payouts)</h2>
+              <h2 className="text-lg font-semibold mb-4">Payout files (data/propfirms)</h2>
               <div className="card card-border bg-base-100 shadow">
                 <div className="card-body">
                   <div className="flex flex-wrap gap-6">

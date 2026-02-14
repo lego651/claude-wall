@@ -1,4 +1,4 @@
-# Monitor data/payouts file sizes
+# Monitor data/propfirms file sizes
 #
 # Runs daily after payout sync. Fails if any file >10MB; warns if any >5MB.
 # Optional: set SLACK_WEBHOOK_URL secret to post summary when issues found.
@@ -43,7 +43,7 @@ jobs:
       - name: Warn on files >5MB
         if: steps.check.outputs.over5_count != '0' && steps.check.outputs.over10_count == '0'
         run: |
-          echo "::warning:: Some files in data/payouts are ≥5MB (timeout risk). Consider migrating to Supabase."
+          echo "::warning:: Some files in data/propfirms are ≥5MB (timeout risk). Consider migrating to Supabase."
           node scripts/check-file-sizes.js --format=markdown
 
       - name: Post to Slack (optional)

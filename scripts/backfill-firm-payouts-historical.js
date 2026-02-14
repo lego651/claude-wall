@@ -20,7 +20,7 @@ const path = require("path");
 // Reuse core config from update-monthly-json logic
 const ARBISCAN_API_BASE = "https://api.etherscan.io/v2/api";
 const ARBITRUM_CHAIN_ID = "42161";
-const PAYOUTS_DIR = path.join(process.cwd(), "data", "payouts");
+const PAYOUTS_DIR = path.join(process.cwd(), "data", "propfirms");
 const SUPPORTED_TOKENS = ["USDC", "USDT", "RISEPAY"];
 const PRICES = { ETH: 2500, USDC: 1.0, USDT: 1.0, RISEPAY: 1.0 };
 const TOKEN_TO_METHOD = {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Check file sizes in data/payouts/
+ * Check file sizes in data/propfirms/
  * Reports files >1MB, >5MB, >10MB and total size.
  * Output: JSON (default) or markdown for monitoring/dashboard.
  *
@@ -16,7 +16,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const PAYOUTS_DIR = path.join(process.cwd(), 'data', 'payouts');
+const PAYOUTS_DIR = path.join(process.cwd(), 'data', 'propfirms');
 const MB = 1024 * 1024;
 const THRESHOLD_1MB = 1 * MB;
 const THRESHOLD_5MB = 5 * MB;
@@ -60,7 +60,7 @@ function run() {
   const format = process.argv.includes('--format=markdown') ? 'markdown' : 'json';
   if (format === 'markdown') {
     const lines = [
-      '# File Size Report (data/payouts)',
+      '# File Size Report (data/propfirms)',
       '',
       `**Total:** ${report.fileCount} files, ${report.totalMB} MB`,
       '',

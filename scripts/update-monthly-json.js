@@ -28,7 +28,7 @@ const path = require('path');
 
 const ARBISCAN_API_BASE = 'https://api.etherscan.io/v2/api';
 const ARBITRUM_CHAIN_ID = '42161';
-const PAYOUTS_DIR = path.join(process.cwd(), 'data', 'payouts');
+const PAYOUTS_DIR = path.join(process.cwd(), 'data', 'propfirms');
 
 // Token config
 const SUPPORTED_TOKENS = ['USDC', 'USDT', 'RISEPAY'];

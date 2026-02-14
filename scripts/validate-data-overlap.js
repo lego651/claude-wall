@@ -18,7 +18,7 @@ import { createClient } from '@supabase/supabase-js';
 import { validateMonthData } from '@/lib/services/dataOverlapValidation';
 import { getAvailableMonths } from '@/lib/services/payoutDataLoader';
 
-const PAYOUTS_DIR = path.join(process.cwd(), 'data', 'payouts');
+const PAYOUTS_DIR = path.join(process.cwd(), 'data', 'propfirms');
 const PROPFIRMS_JSON = path.join(process.cwd(), 'data', 'propfirms.json');
 const MISMATCH_THRESHOLD = 0.05; // fail if >5% of Supabase rows missing from JSON
 
@@ -65,7 +65,7 @@ async function main() {
 
   const firmIds = getFirmIds();
   if (firmIds.length === 0) {
-    console.log('No firms found (data/propfirms.json or data/payouts/).');
+    console.log('No firms found (data/propfirms.json or data/propfirms/).');
     process.exit(0);
   }
 

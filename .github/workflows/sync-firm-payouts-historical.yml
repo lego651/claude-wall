@@ -47,14 +47,14 @@ jobs:
       - name: Check for changes
         id: git-check
         run: |
-          git diff --quiet data/payouts/ || echo "changes=true" >> $GITHUB_OUTPUT
+          git diff --quiet data/propfirms/ || echo "changes=true" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
         if: steps.git-check.outputs.changes == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add data/payouts/
+          git add data/propfirms/
           git commit -m "chore: update firm payout data $(date -u +%Y-%m-%d)"
           git push
 

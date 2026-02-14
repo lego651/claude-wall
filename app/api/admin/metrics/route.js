@@ -14,7 +14,7 @@ import { usageTracker } from '@/lib/arbiscan';
 import { getCacheStats } from '@/lib/cache';
 import { sendAlert } from '@/lib/alerts';
 
-const PAYOUTS_DIR = path.join(process.cwd(), 'data', 'payouts');
+const PAYOUTS_DIR = path.join(process.cwd(), 'data', 'propfirms');
 const LARGE_FILE_BYTES = 5 * 1024 * 1024; // 5MB warning
 const FAIL_FILE_BYTES = 10 * 1024 * 1024; // 10MB critical
 const ALERT_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour per check key

@@ -240,7 +240,7 @@ async function backfillFirm(firm) {
   
   // Group by month using firm's local timezone
   const months = groupByMonth(payouts, timezone);
-  const firmDir = path.join(process.cwd(), 'data', 'payouts', firm.id);
+  const firmDir = path.join(process.cwd(), 'data', 'propfirms', firm.id);
   
   if (!fs.existsSync(firmDir)) {
     fs.mkdirSync(firmDir, { recursive: true });
