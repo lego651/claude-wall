@@ -49,6 +49,7 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState(null);
   const [testAlertLoading, setTestAlertLoading] = useState(false);
   const [testAlertResult, setTestAlertResult] = useState(null);
+  const [propfirmsTooltip, setPropfirmsTooltip] = useState(null);
 
   const fetchMetrics = useCallback(async () => {
     try {
@@ -309,26 +310,43 @@ export default function AdminDashboardPage() {
                       <p className="text-base-content/70">No prop firms with payout data issues.</p>
                     ) : (
                       <>
-                        {/* Summary */}
+                        {/* Summary: counts + why only these firms + top 3 messages */}
                         {(() => {
-                          const critical = data.propfirmsData.firmsWithIssues.filter((f) => f.status === "critical").length;
-                          const warning = data.propfirmsData.firmsWithIssues.filter((f) => f.status === "warning").length;
+                          const issues = data.propfirmsData.firmsWithIssues;
+                          const critical = issues.filter((f) => f.status === "critical").length;
+                          const warning = issues.filter((f) => f.status === "warning").length;
+                          const allMessages = issues.flatMap((f) => (f.flags || []).map((flag) => ({ firm: f.firmName ?? f.firmId, message: flag.message })));
+                          const top3 = allMessages.slice(0, 3);
                           return (
-                            <div className="flex flex-wrap items-center gap-4 mb-4 p-3 rounded-lg bg-base-200/60">
-                              <span className="font-medium">
-                                {data.propfirmsData.firmsWithIssues.length} firm(s) with issues
-                              </span>
-                              {critical > 0 && (
-                                <span className="badge badge-error badge-sm">{critical} critical</span>
-                              )}
-                              {warning > 0 && (
-                                <span className="badge badge-warning badge-sm">{warning} warning</span>
+                            <div className="mb-4 space-y-3">
+                              <div className="flex flex-wrap items-center gap-4 p-3 rounded-lg bg-base-200/60">
+                                <span className="font-medium">
+                                  {issues.length} firm(s) with issues below — all other firms are ok.
+                                </span>
+                                {critical > 0 && (
+                                  <span className="badge badge-error badge-sm">{critical} critical</span>
+                                )}
+                                {warning > 0 && (
+                                  <span className="badge badge-warning badge-sm">{warning} warning</span>
+                                )}
+                              </div>
+                              {top3.length > 0 && (
+                                <div className="p-3 rounded-lg border border-base-300 bg-base-200/40">
+                                  <div className="text-sm font-medium text-base-content/80 mb-1">What&apos;s wrong (top 3):</div>
+                                  <ol className="list-decimal list-inside text-sm text-base-content/70 space-y-0.5">
+                                    {top3.map((item, i) => (
+                                      <li key={i}>
+                                        <span className="font-medium text-base-content/90">{item.firm}:</span> {item.message}
+                                      </li>
+                                    ))}
+                                  </ol>
+                                </div>
                               )}
                             </div>
                           );
                         })()}
                         {/* Table: rows = 24h, 7d, 30d; columns = firms */}
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto relative">
                           <table className="table table-sm w-full">
                             <thead>
                               <tr>
@@ -347,12 +365,24 @@ export default function AdminDashboardPage() {
                                   {data.propfirmsData.firmsWithIssues.map((f) => {
                                     const cellStatus = f.statusByPeriod?.[period] ?? "ok";
                                     const messages = f.messagesByPeriod?.[period] ?? [];
-                                    const tip = messages.length
-                                      ? `${f.firmName ?? f.firmId} (${period}): ${messages.join("; ")}`
-                                      : null;
                                     const count = f.counts?.[period];
+                                    const hasTip = messages.length > 0;
                                     return (
-                                      <td key={f.firmId} className="p-1 text-center align-middle">
+                                      <td
+                                        key={f.firmId}
+                                        className="p-1 text-center align-middle"
+                                        onMouseEnter={() =>
+                                          hasTip
+                                            ? setPropfirmsTooltip({
+                                                firmName: f.firmName ?? f.firmId,
+                                                period,
+                                                messages,
+                                                count,
+                                              })
+                                            : setPropfirmsTooltip(null)
+                                        }
+                                        onMouseLeave={() => setPropfirmsTooltip(null)}
+                                      >
                                         <div
                                           className={`inline-flex items-center justify-center min-w-[72px] min-h-[32px] rounded cursor-default ${
                                             cellStatus === "critical"
@@ -361,7 +391,6 @@ export default function AdminDashboardPage() {
                                                 ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-300 dark:border-amber-700"
                                                 : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border border-green-300 dark:border-green-700"
                                           }`}
-                                          title={tip ?? (count != null ? `Count: ${count}` : "")}
                                         >
                                           {cellStatus === "ok" ? "ok" : cellStatus}
                                         </div>
@@ -373,8 +402,28 @@ export default function AdminDashboardPage() {
                             </tbody>
                           </table>
                         </div>
+                        {/* Visible hover tooltip (below table so it never clips) */}
+                        {propfirmsTooltip && (
+                          <div
+                            className="mt-3 p-3 rounded-lg shadow-lg border border-base-300 bg-base-100 text-left text-sm"
+                            role="tooltip"
+                          >
+                            <div className="font-medium text-base-content">
+                              {propfirmsTooltip.firmName} ({propfirmsTooltip.period})
+                              {propfirmsTooltip.count != null && (
+                                <span className="ml-2 text-base-content/60">Count: {propfirmsTooltip.count}</span>
+                              )}
+                            </div>
+                            <p className="text-base-content/70 mt-1">Why this is warning/critical:</p>
+                            <ul className="list-disc list-inside mt-0.5 text-base-content/80 space-y-0.5">
+                              {propfirmsTooltip.messages.map((msg, i) => (
+                                <li key={i}>{msg}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                         <p className="text-xs text-base-content/50 mt-3">
-                          Each column is a firm; rows are time ranges. Green = ok, yellow = warning, red = critical. Hover a cell for details.
+                          Each column is a firm; rows are time ranges. Green = ok, yellow = warning, red = critical. Hover a yellow or red cell to see why.
                         </p>
                       </>
                     )}
