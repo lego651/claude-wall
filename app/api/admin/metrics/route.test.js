@@ -12,6 +12,11 @@ jest.mock('@/lib/arbiscan', () => ({
 }));
 jest.mock('@/lib/cache');
 jest.mock('@/lib/alerts', () => ({ sendAlert: jest.fn().mockResolvedValue(undefined) }));
+jest.mock('@/lib/digest/week-utils', () => ({
+  getWeekNumber: () => 6,
+  getYear: () => 2025,
+  getWeekBounds: () => ({ weekStart: new Date('2025-02-03T00:00:00.000Z'), weekEnd: new Date('2025-02-09T23:59:59.999Z') }),
+}));
 jest.mock('fs', () => ({
   promises: {
     access: jest.fn().mockResolvedValue(undefined),
@@ -128,11 +133,35 @@ describe('GET /api/admin/metrics', () => {
                 }),
               };
             }
+            if (args[0] === 'id, name') {
+              return {
+                not: jest.fn().mockReturnValue({
+                  order: jest.fn().mockResolvedValue({ data: [], error: null }),
+                }),
+              };
+            }
             return Promise.resolve({ data: [] });
           }),
         };
       }
-      if (['recent_payouts', 'trustpilot_reviews', 'weekly_incidents'].includes(table)) {
+      if (table === 'weekly_reports') {
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+            }),
+          }),
+        };
+      }
+      if (table === 'user_subscriptions') {
+        return {
+          select: jest.fn().mockImplementation((cols, opts) => {
+            if (opts && opts.head === true) return Promise.resolve({ count: 0, error: null });
+            return { eq: jest.fn().mockResolvedValue({ count: 0, error: null }) };
+          }),
+        };
+      }
+      if (['recent_payouts', 'trustpilot_reviews', 'weekly_incidents', 'weekly_reports', 'user_subscriptions'].includes(table)) {
         return {
           select: jest.fn().mockResolvedValue({ count: 0, error: null }),
         };
@@ -163,6 +192,11 @@ describe('GET /api/admin/metrics', () => {
       ],
       note: 'Updated by daily GitHub Actions (sync-trustpilot-reviews). Refresh to see latest run.',
     });
+    expect(body.intelligenceFeed).toBeDefined();
+    expect(body.intelligenceFeed.lastWeek).toBeDefined();
+    expect(body.intelligenceFeed.lastWeek.weekLabel).toBe('W06 2025');
+    expect(body.intelligenceFeed.subscriptionsTotal).toBe(0);
+    expect(body.intelligenceFeed.subscriptionsEmailEnabled).toBe(0);
   });
 
   it('includes trustpilotScraper.firms as empty when getTrustpilotScraperStatus returns empty', async () => {
@@ -187,11 +221,25 @@ describe('GET /api/admin/metrics', () => {
                 }),
               };
             }
+            if (args[0] === 'id, name') {
+              return { not: jest.fn().mockReturnValue({ order: jest.fn().mockResolvedValue({ data: [], error: null }) }) };
+            }
             return Promise.resolve({ data: [] });
           }),
         };
       }
-      if (['recent_payouts', 'trustpilot_reviews', 'weekly_incidents'].includes(table)) {
+      if (table === 'weekly_reports') {
+        return { select: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ eq: jest.fn().mockResolvedValue({ data: [], error: null }) }) }) };
+      }
+      if (table === 'user_subscriptions') {
+        return {
+          select: jest.fn().mockImplementation((cols, opts) => {
+            if (opts && opts.head === true) return Promise.resolve({ count: 0, error: null });
+            return { eq: jest.fn().mockResolvedValue({ count: 0, error: null }) };
+          }),
+        };
+      }
+      if (['recent_payouts', 'trustpilot_reviews', 'weekly_incidents', 'weekly_reports', 'user_subscriptions'].includes(table)) {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {
@@ -238,11 +286,25 @@ describe('GET /api/admin/metrics', () => {
             if (args[0] && String(args[0]).includes('last_scraper_run_at')) {
               return { not: jest.fn().mockReturnValue({ order: jest.fn().mockResolvedValue({ data: [], error: null }) }) };
             }
+            if (args[0] === 'id, name') {
+              return { not: jest.fn().mockReturnValue({ order: jest.fn().mockResolvedValue({ data: [], error: null }) }) };
+            }
             return Promise.resolve({ data: [] });
           }),
         };
       }
-      if (['recent_payouts', 'trustpilot_reviews', 'weekly_incidents'].includes(table)) {
+      if (table === 'weekly_reports') {
+        return { select: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ eq: jest.fn().mockResolvedValue({ data: [], error: null }) }) }) };
+      }
+      if (table === 'user_subscriptions') {
+        return {
+          select: jest.fn().mockImplementation((cols, opts) => {
+            if (opts && opts.head === true) return Promise.resolve({ count: 0, error: null });
+            return { eq: jest.fn().mockResolvedValue({ count: 0, error: null }) };
+          }),
+        };
+      }
+      if (['recent_payouts', 'trustpilot_reviews', 'weekly_incidents', 'weekly_reports', 'user_subscriptions'].includes(table)) {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {
@@ -537,7 +599,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (['recent_payouts', 'trustpilot_reviews', 'weekly_incidents'].includes(table)) {
+      if (['recent_payouts', 'trustpilot_reviews', 'weekly_incidents', 'weekly_reports', 'user_subscriptions'].includes(table)) {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {
@@ -649,7 +711,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (['recent_payouts', 'trustpilot_reviews', 'weekly_incidents'].includes(table)) {
+      if (['recent_payouts', 'trustpilot_reviews', 'weekly_incidents', 'weekly_reports', 'user_subscriptions'].includes(table)) {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {

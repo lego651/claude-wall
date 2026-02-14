@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/server';
 import { usageTracker } from '@/lib/arbiscan';
 import { getCacheStats } from '@/lib/cache';
 import { sendAlert } from '@/lib/alerts';
+import { getWeekNumber, getYear, getWeekBounds } from '@/lib/digest/week-utils';
 
 const PAYOUTS_DIR = path.join(process.cwd(), 'data', 'propfirms');
 const LARGE_FILE_BYTES = 5 * 1024 * 1024; // 5MB warning
@@ -64,7 +65,7 @@ async function getFileStats() {
 }
 
 async function getDbStats(supabase) {
-  const tables = ['firms', 'recent_payouts', 'trustpilot_reviews', 'weekly_incidents'];
+  const tables = ['firms', 'recent_payouts', 'trustpilot_reviews', 'weekly_incidents', 'weekly_reports', 'user_subscriptions'];
   const counts = {};
   const start = Date.now();
   let ok = true;
@@ -90,6 +91,68 @@ function countByFirm(rows) {
     if (id != null) map.set(id, (map.get(id) || 0) + 1);
   }
   return map;
+}
+
+/** Intelligence feed: last week report coverage, subscription counts. */
+async function getIntelligenceFeedStatus(supabase) {
+  const now = new Date();
+  const lastWeekDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 7));
+  const { weekStart } = getWeekBounds(lastWeekDate);
+  const weekNumber = getWeekNumber(weekStart);
+  const year = getYear(weekStart);
+  const weekLabel = `W${String(weekNumber).padStart(2, '0')} ${year}`;
+
+  let firmsWithReport = [];
+  let firmsExpected = [];
+  let subscriptionsTotal = 0;
+  let subscriptionsEmailEnabled = 0;
+
+  try {
+    const { data: reportRows } = await supabase
+      .from('weekly_reports')
+      .select('firm_id')
+      .eq('week_number', weekNumber)
+      .eq('year', year);
+    firmsWithReport = (reportRows || []).map((r) => r.firm_id);
+
+    const { data: firmRows } = await supabase
+      .from('firms')
+      .select('id, name')
+      .not('trustpilot_url', 'is', null)
+      .order('id');
+    firmsExpected = firmRows || [];
+
+    const { count: total } = await supabase
+      .from('user_subscriptions')
+      .select('*', { count: 'exact', head: true });
+    const { count: enabled } = await supabase
+      .from('user_subscriptions')
+      .select('*', { count: 'exact', head: true })
+      .eq('email_enabled', true);
+    subscriptionsTotal = total ?? 0;
+    subscriptionsEmailEnabled = enabled ?? 0;
+  } catch {
+    // leave defaults
+  }
+
+  const firmIdsWithReport = new Set(firmsWithReport);
+  const firmsWithReportList = firmsExpected.filter((f) => firmIdsWithReport.has(f.id));
+  const firmsWithoutReportList = firmsExpected.filter((f) => !firmIdsWithReport.has(f.id));
+
+  return {
+    lastWeek: {
+      weekNumber,
+      year,
+      weekLabel,
+      firmsWithReport: firmsWithReportList.length,
+      firmsExpected: firmsExpected.length,
+      firmIdsWithReport: firmsWithReportList.map((f) => ({ id: f.id, name: f.name })),
+      firmIdsWithoutReport: firmsWithoutReportList.map((f) => ({ id: f.id, name: f.name })),
+    },
+    subscriptionsTotal,
+    subscriptionsEmailEnabled,
+    weekLabel,
+  };
 }
 
 /** Firms with Trustpilot URL and their last scraper run status (for admin dashboard). */
@@ -211,11 +274,12 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms] = await Promise.all([
+  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed] = await Promise.all([
     getFileStats(),
     getDbStats(supabase),
     getPropfirmsPayoutCounts(supabase),
     getTrustpilotScraperStatus(supabase),
+    getIntelligenceFeedStatus(supabase),
   ]);
 
   const arbiscan = usageTracker?.getUsage ? usageTracker.getUsage() : { calls: 0, limit: 0, percentage: 0, day: null };
@@ -325,6 +389,12 @@ export async function GET() {
     trustpilotScraper: {
       firms: trustpilotScraperFirms,
       note: 'Updated by daily GitHub Actions (sync-trustpilot-reviews). Refresh to see latest run.',
+    },
+    intelligenceFeed: {
+      lastWeek: intelligenceFeed.lastWeek,
+      subscriptionsTotal: intelligenceFeed.subscriptionsTotal,
+      subscriptionsEmailEnabled: intelligenceFeed.subscriptionsEmailEnabled,
+      weekLabel: intelligenceFeed.weekLabel,
     },
     apiLatency: { note: 'See Vercel Analytics for P50/P95/P99 by route' },
     errorRates: { note: 'See Vercel Analytics or logs for error rates by endpoint' },

@@ -47,6 +47,13 @@ function metricsToCSV(data) {
       rows.push(`trustpilot_${f.id}_error,${f.last_scraper_error ?? ""}`);
     });
   }
+  if (data?.intelligenceFeed) {
+    rows.push(`intelligence_subscriptionsTotal,${data.intelligenceFeed.subscriptionsTotal ?? ""}`);
+    rows.push(`intelligence_subscriptionsEmailEnabled,${data.intelligenceFeed.subscriptionsEmailEnabled ?? ""}`);
+    rows.push(`intelligence_lastWeek,${data.intelligenceFeed.weekLabel ?? ""}`);
+    rows.push(`intelligence_lastWeek_firmsWithReport,${data.intelligenceFeed.lastWeek?.firmsWithReport ?? ""}`);
+    rows.push(`intelligence_lastWeek_firmsExpected,${data.intelligenceFeed.lastWeek?.firmsExpected ?? ""}`);
+  }
   rows.push(`fetchedAt,${data?.fetchedAt ?? ""}`);
   return rows.join("\n");
 }
@@ -434,6 +441,70 @@ export default function AdminDashboardPage() {
                           Each column is a firm; rows are time ranges. Green = ok, yellow = warning, red = critical. Hover a yellow or red cell to see why.
                         </p>
                       </>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Intelligence feed (weekly reports + digest) */}
+            {data.intelligenceFeed && (
+              <section>
+                <h2 className="text-lg font-semibold mb-4">Intelligence feed</h2>
+                <p className="text-sm text-base-content/60 mb-3">
+                  Weekly reports and digest readiness. Digest uses <code className="text-xs bg-base-200 px-1 rounded">weekly_reports</code> for last week; missing reports = gaps in emails.
+                </p>
+                <div className="card card-border bg-base-100 shadow overflow-hidden">
+                  <div className="card-body">
+                    <div className="flex flex-wrap gap-6 mb-4">
+                      <div>
+                        <span className="text-base-content/60 text-sm">Subscriptions</span>
+                        <p className="font-semibold">{data.intelligenceFeed.subscriptionsTotal ?? 0}</p>
+                      </div>
+                      <div>
+                        <span className="text-base-content/60 text-sm">Email enabled</span>
+                        <p className="font-semibold">{data.intelligenceFeed.subscriptionsEmailEnabled ?? 0}</p>
+                      </div>
+                      <div>
+                        <span className="text-base-content/60 text-sm">Last week ({data.intelligenceFeed.weekLabel ?? "—"})</span>
+                        <p className="font-semibold">
+                          {(data.intelligenceFeed.lastWeek?.firmsWithReport ?? 0)} / {(data.intelligenceFeed.lastWeek?.firmsExpected ?? 0)} firms have report
+                        </p>
+                      </div>
+                    </div>
+                    {(data.intelligenceFeed.lastWeek?.firmIdsWithReport?.length > 0 || data.intelligenceFeed.lastWeek?.firmIdsWithoutReport?.length > 0) && (
+                      <div className="overflow-x-auto">
+                        <table className="table table-sm w-full">
+                          <thead>
+                            <tr>
+                              <th className="font-medium">Firm</th>
+                              <th className="text-right font-medium">Last week report</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[
+                              ...(data.intelligenceFeed.lastWeek.firmIdsWithReport || []).map((f) => ({ ...f, hasReport: true })),
+                              ...(data.intelligenceFeed.lastWeek.firmIdsWithoutReport || []).map((f) => ({ ...f, hasReport: false })),
+                            ]
+                              .sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id))
+                              .map((f) => (
+                                <tr key={f.id}>
+                                  <td className="font-medium">{f.name ?? f.id}</td>
+                                  <td className="text-right">
+                                    {f.hasReport ? (
+                                      <span className="badge badge-success badge-sm">OK</span>
+                                    ) : (
+                                      <span className="badge badge-warning badge-sm">Missing</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                    {(!data.intelligenceFeed.lastWeek?.firmIdsWithReport?.length && !data.intelligenceFeed.lastWeek?.firmIdsWithoutReport?.length) && (
+                      <p className="text-base-content/60 text-sm">No firms with Trustpilot URL, or no data for last week.</p>
                     )}
                   </div>
                 </div>
