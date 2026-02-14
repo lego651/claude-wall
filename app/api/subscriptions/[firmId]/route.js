@@ -29,7 +29,7 @@ export async function DELETE(req, { params }) {
     }
 
     const { data: deleted, error } = await supabase
-      .from("firm_subscriptions")
+      .from("user_subscriptions")
       .delete()
       .eq("user_id", user.id)
       .eq("firm_id", firm_id)

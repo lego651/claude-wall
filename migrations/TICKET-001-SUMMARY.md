@@ -38,7 +38,7 @@ Created complete database schema for Alpha Intelligence Engine (Trustpilot-based
 |-------|---------|--------------|
 | `firms` | Firm reference data | 8 firms seeded, public read access |
 | `trustpilot_reviews` | Scraped reviews | AI classification fields, dedupe by URL |
-| `firm_subscriptions` | User subscriptions | RLS per user, unique per user+firm |
+| `user_subscriptions` (renamed from `firm_subscriptions` in migration 20) | User subscriptions | RLS per user, unique per user+firm |
 | `weekly_reports` | Cached reports | JSONB storage, email metrics |
 | `weekly_incidents` | Aggregated incidents | AI summaries, review references |
 
@@ -58,7 +58,7 @@ Created complete database schema for Alpha Intelligence Engine (Trustpilot-based
 ## Acceptance Criteria ✅
 
 - [x] Create `trustpilot_reviews` table with all required fields
-- [x] Create `firm_subscriptions` table with user/firm relationship
+- [x] Create user subscriptions table (as `firm_subscriptions` in 11, renamed to `user_subscriptions` in 20)
 - [x] Create `weekly_reports` table with JSONB storage
 - [x] Create `weekly_incidents` table with review references
 - [x] Create `firms` table for reference integrity
@@ -96,13 +96,13 @@ SELECT id, name FROM firms;
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'
-  AND table_name IN ('firms', 'trustpilot_reviews', 'firm_subscriptions', 'weekly_reports', 'weekly_incidents');
+  AND table_name IN ('firms', 'trustpilot_reviews', 'user_subscriptions', 'weekly_reports', 'weekly_incidents');
 
 -- Should return ~15 policies
 SELECT tablename, policyname
 FROM pg_policies
 WHERE schemaname = 'public'
-  AND tablename IN ('firms', 'trustpilot_reviews', 'firm_subscriptions', 'weekly_reports', 'weekly_incidents');
+  AND tablename IN ('firms', 'trustpilot_reviews', 'user_subscriptions', 'weekly_reports', 'weekly_incidents');
 ```
 
 ## Expected Results

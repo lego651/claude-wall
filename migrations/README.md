@@ -37,7 +37,7 @@ psql "postgresql://postgres:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:54
 \i /path/to/migration-file.sql
 ```
 
-## Migration Files (run in order 01 → 19)
+## Migration Files (run in order 01 → 20)
 
 ### Core Schema
 - `01_schema.sql` - Original profiles table and auth setup
@@ -63,6 +63,7 @@ psql "postgresql://postgres:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:54
 - `17_verify-policies.sql` - RLS policy verification
 - `18_seed-firms-trustpilot-urls.sql` - Seed `firms.trustpilot_url` (single source of truth for Trustpilot scraper)
 - `19_firms_trustpilot_scraper_status.sql` - Add `last_scraper_*` columns to `firms` for admin dashboard monitoring
+- `20_rename_firm_subscriptions_to_user_subscriptions.sql` - Rename `firm_subscriptions` → `user_subscriptions` (user-centric naming)
 
 ## Alpha Intelligence Schema
 
@@ -77,8 +78,8 @@ Stores scraped Trustpilot reviews with AI classification:
 - AI classification (category, severity, confidence)
 - Indexes for fast firm/date queries
 
-### 3. `firm_subscriptions`
-Tracks user subscriptions to weekly reports:
+### 3. `user_subscriptions`
+Tracks user subscriptions to weekly reports (table created in 11 as `firm_subscriptions`, renamed in 20):
 - One subscription per user per firm
 - Email preferences
 - Last sent timestamp
@@ -107,13 +108,13 @@ SELECT id, name FROM firms;
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'
-  AND table_name IN ('trustpilot_reviews', 'firm_subscriptions', 'weekly_reports', 'weekly_incidents');
+  AND table_name IN ('trustpilot_reviews', 'user_subscriptions', 'weekly_reports', 'weekly_incidents');
 
 -- Check RLS policies
 SELECT tablename, policyname
 FROM pg_policies
 WHERE schemaname = 'public'
-  AND tablename IN ('firms', 'trustpilot_reviews', 'firm_subscriptions', 'weekly_reports', 'weekly_incidents');
+  AND tablename IN ('firms', 'trustpilot_reviews', 'user_subscriptions', 'weekly_reports', 'weekly_incidents');
 ```
 
 ## Rollback
@@ -123,7 +124,7 @@ To rollback the alpha intelligence schema:
 ```sql
 DROP TABLE IF EXISTS weekly_incidents CASCADE;
 DROP TABLE IF EXISTS weekly_reports CASCADE;
-DROP TABLE IF EXISTS firm_subscriptions CASCADE;
+DROP TABLE IF EXISTS user_subscriptions CASCADE;
 DROP TABLE IF EXISTS trustpilot_reviews CASCADE;
 DROP TABLE IF EXISTS firms CASCADE;
 DROP FUNCTION IF EXISTS get_week_number(DATE);

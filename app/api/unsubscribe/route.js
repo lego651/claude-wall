@@ -35,7 +35,7 @@ export async function GET(req) {
 
   const supabase = createServiceClient();
   const { error } = await supabase
-    .from("firm_subscriptions")
+    .from("user_subscriptions")
     .update({ email_enabled: false })
     .eq("user_id", userId);
 

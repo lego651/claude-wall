@@ -2,7 +2,7 @@
  * Subscription API - List and create firm subscriptions (weekly digest)
  * TICKET-012: GET /api/subscriptions, POST /api/subscriptions
  *
- * GET: List firms the user follows (from firm_subscriptions).
+ * GET: List firms the user follows (from user_subscriptions).
  * POST: Subscribe to (follow) a firm. Validates firm exists; returns existing if already subscribed.
  */
 
@@ -40,7 +40,7 @@ export async function GET() {
     }
 
     const { data: subscriptions, error } = await supabase
-      .from("firm_subscriptions")
+      .from("user_subscriptions")
       .select(
         `
         id,
@@ -137,7 +137,7 @@ export async function POST(req) {
     }
 
     const { data: existing, error: existingError } = await supabase
-      .from("firm_subscriptions")
+      .from("user_subscriptions")
       .select("id, subscribed_at, email_enabled")
       .eq("user_id", user.id)
       .eq("firm_id", firm_id)
@@ -171,7 +171,7 @@ export async function POST(req) {
     }
 
     const { data: inserted, error: insertError } = await supabase
-      .from("firm_subscriptions")
+      .from("user_subscriptions")
       .insert({
         user_id: user.id,
         firm_id: firm.id,
@@ -183,7 +183,7 @@ export async function POST(req) {
     if (insertError) {
       if (insertError.code === "23505") {
         const { data: row } = await supabase
-          .from("firm_subscriptions")
+          .from("user_subscriptions")
           .select("id, subscribed_at, email_enabled")
           .eq("user_id", user.id)
           .eq("firm_id", firm_id)

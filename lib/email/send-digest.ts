@@ -118,7 +118,7 @@ export async function sendWeeklyDigest(
   try {
     const supabase = createServiceClient();
     await supabase
-      .from("firm_subscriptions")
+      .from("user_subscriptions")
       .update({ last_sent_at: new Date().toISOString() })
       .eq("user_id", user.id);
   } catch (err) {
