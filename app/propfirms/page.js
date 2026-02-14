@@ -78,7 +78,7 @@ export default function PropFirmsListPage() {
   const [firms, setFirms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [period, setPeriod] = useState('1d');
+  const [period, setPeriod] = useState('7d');
   const [sort, setSort] = useState('totalPayouts');
   const [order, setOrder] = useState('desc');
 
