@@ -61,7 +61,7 @@ const PropProofLayout = ({ children }) => {
   // Always use common nav items
   const navItems = [
     { label: "Payouts", path: "/propfirms" },
-    { label: "Traders", path: "/leaderboard" },
+    { label: "Traders", path: "/traders" },
     { label: "Trading Study", path: "/study" },
   ];
 
@@ -87,8 +87,8 @@ const PropProofLayout = ({ children }) => {
           <nav className="hidden md:flex items-center bg-slate-50 rounded-lg p-1">
             {navItems.map((item) => {
               const isActive = pathname === item.path ||
-                (item.path === "/propfirms" && (pathname?.startsWith("/propfirm") || pathname?.startsWith("/propfirms"))) ||
-                (item.path === "/leaderboard" && (pathname?.startsWith("/leaderboard") || pathname?.startsWith("/trader"))) ||
+                (item.path === "/propfirms" && pathname?.startsWith("/propfirms")) ||
+                (item.path === "/traders" && pathname?.startsWith("/traders")) ||
                 (item.path === "/study" && pathname?.startsWith("/study"));
               return (
                 <Link
@@ -116,7 +116,7 @@ const PropProofLayout = ({ children }) => {
                         <p className="text-sm font-bold text-slate-800 leading-tight">{displayName}</p>
                         <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{accountType}</p>
                       </div>
-                      <Link href="/dashboard" className="flex items-center justify-center w-10 h-10 rounded-full border-2 border-white shadow-sm bg-indigo-100 text-indigo-700 font-bold text-sm overflow-hidden">
+                      <Link href="/user/dashboard" className="flex items-center justify-center w-10 h-10 rounded-full border-2 border-white shadow-sm bg-indigo-100 text-indigo-700 font-bold text-sm overflow-hidden">
                         {user?.user_metadata?.avatar_url ? (
                           <img src={user.user_metadata.avatar_url} alt={displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         ) : (

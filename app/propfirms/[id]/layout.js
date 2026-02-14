@@ -27,7 +27,7 @@ export default function PropFirmIdLayout({ children }) {
   const firmId = params?.id;
   const [firm, setFirm] = useState(null);
 
-  const basePath = `/propfirm/${firmId}`;
+  const basePath = `/propfirms/${firmId}`;
   const displayName = firm?.name || firmIdToName(firmId);
   const website =
     firm?.website || `https://${(firmId || "").replace(/-/g, "")}.com`;

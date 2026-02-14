@@ -64,7 +64,7 @@ export function buildWeeklyDigestHtml(
   const firmSections = reports
     .map((r) => {
       const firmName = r.firmName ?? r.firmId;
-      const firmUrl = `${baseUrl}/propfirm/${r.firmId}`.replace(/\/\/+/g, '/');
+      const firmUrl = `${baseUrl}/propfirms/${r.firmId}`.replace(/\/\/+/g, '/');
       const changePayout =
         r.payouts.changeVsLastWeek != null
           ? r.payouts.changeVsLastWeek >= 0

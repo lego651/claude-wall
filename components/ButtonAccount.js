@@ -107,7 +107,7 @@ const ButtonAccount = () => {
 							<div className="overflow-hidden rounded-xl shadow-xl ring-1 ring-base-content/10 bg-base-100 p-1">
 								<div className="space-y-0.5 text-sm">
 									<Link
-										href="/settings"
+										href="/user/settings"
 										className="flex items-center gap-2 hover:bg-base-300 duration-200 py-1.5 px-4 w-full rounded-lg font-medium"
 									>
 										<svg

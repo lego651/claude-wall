@@ -178,7 +178,7 @@ export default function PropFirmOverviewPage() {
             30 Days
           </span>
           <Link
-            href={`/propfirm/${firmId}/payouts`}
+            href={`/propfirms/${firmId}/payouts`}
             className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold rounded-[16px] transition-all text-slate-600 hover:text-slate-900"
           >
             <svg
@@ -450,7 +450,7 @@ export default function PropFirmOverviewPage() {
             </p>
           )}
           <Link
-            href={`/propfirm/${firmId}/intelligence`}
+            href={`/propfirms/${firmId}/intelligence`}
             className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
             style={{ color: THEME.primary }}
           >
@@ -564,7 +564,7 @@ export default function PropFirmOverviewPage() {
             <p className="text-sm text-gray-500">No signal data available</p>
           )}
           <Link
-            href={`/propfirm/${firmId}/intelligence`}
+            href={`/propfirms/${firmId}/intelligence`}
             className="w-full flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group"
           >
             <span className="text-sm font-bold text-gray-700">View detailed intelligence</span>

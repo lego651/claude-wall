@@ -12,7 +12,7 @@ const OnboardingPage = () => {
 
   const handleNext = () => {
     if (step < 3) setStep(step + 1);
-    else router.push(`/trader/new-trader`);
+    else router.push(`/traders/new-trader`);
   };
 
   return (
@@ -50,7 +50,7 @@ const OnboardingPage = () => {
             <div className="space-y-4">
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
-                  propproof.com/trader/
+                  propproof.com/traders/
                 </span>
                 <input
                   type="text"
@@ -263,7 +263,7 @@ const OnboardingPage = () => {
                     </svg>
                   </div>
                   <span className="text-sm font-medium text-gray-500 truncate">
-                    propproof.com/trader/{handle}
+                    propproof.com/traders/{handle}
                   </span>
                 </div>
                 <span className="text-xs font-bold text-black opacity-0 group-hover:opacity-100 transition-opacity">

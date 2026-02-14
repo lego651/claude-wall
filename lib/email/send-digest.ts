@@ -85,7 +85,7 @@ export async function sendWeeklyDigest(
 
   const { weekStart, weekEnd, baseUrl } = options;
   const base = baseUrl.replace(/\/$/, "");
-  const manageSubscriptionsUrl = `${base}/settings`;
+  const manageSubscriptionsUrl = `${base}/user/settings`;
   const token = createUnsubscribeToken(user.id);
   const unsubscribeUrl = `${base}/api/unsubscribe?token=${encodeURIComponent(token)}`;
 

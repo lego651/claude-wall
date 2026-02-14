@@ -51,7 +51,7 @@ export default function Page() {
               description="Real-time global rankings of top performing strategies and verified traders."
               icon="🏆"
               badge="Live"
-              href="/leaderboard"
+              href="/traders"
               color="bg-white"
             />
             <MenuCard

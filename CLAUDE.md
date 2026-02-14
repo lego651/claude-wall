@@ -58,7 +58,6 @@ const supabase = createClient();
 - **`app/`** - Next.js App Router pages and API routes
   - `app/api/` - API endpoints (auth, Stripe webhooks, lead generation)
   - `app/dashboard/` - Protected user pages
-  - `app/blog/` - Blog functionality with MDX support
 - **`components/`** - Reusable UI components (buttons, testimonials, features)
 - **`lib/`** - Core utilities and integrations
  - `lib/supabase/` - Database client configurations (server, client, middleware)

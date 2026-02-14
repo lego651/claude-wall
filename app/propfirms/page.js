@@ -292,7 +292,7 @@ export default function PropFirmsListPage() {
                     </div>
                     <div className="pt-2 flex items-center justify-between">
                       <button 
-                        onClick={() => router.push(`/propfirm/${firm.id}`)}
+                        onClick={() => router.push(`/propfirms/${firm.id}`)}
                         className="text-xs font-bold px-4 py-2 rounded-xl transition-all duration-300 active:scale-95"
                         style={{ color: '#635BFF', backgroundColor: 'rgba(99, 91, 255, 0.1)' }}
                         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#635BFF'; e.currentTarget.style.color = 'white'; }}
@@ -391,7 +391,7 @@ export default function PropFirmsListPage() {
                     return (
                       <tr
                         key={firm.id}
-                        onClick={() => router.push(`/propfirm/${firm.id}`)}
+                        onClick={() => router.push(`/propfirms/${firm.id}`)}
                         className="group hover:bg-slate-50 transition-all duration-150 cursor-pointer"
                       >
                         <td className="px-8 py-6">

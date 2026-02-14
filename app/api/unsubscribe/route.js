@@ -1,6 +1,6 @@
 /**
  * TICKET-015: Unsubscribe from weekly digest via token (link in email).
- * GET /api/unsubscribe?token=xxx → disable email for user, redirect to /settings?unsubscribed=1
+ * GET /api/unsubscribe?token=xxx → disable email for user, redirect to /user/settings?unsubscribed=1
  * Uses service role so the link works without the user being logged in.
  */
 
@@ -18,7 +18,7 @@ export async function GET(req) {
   const token = searchParams.get("token");
 
   if (!token) {
-    return NextResponse.redirect(new URL("/settings?error=missing_token", req.url));
+    return NextResponse.redirect(new URL("/user/settings?error=missing_token", req.url));
   }
 
   let userId;
@@ -26,11 +26,11 @@ export async function GET(req) {
     userId = await verifyToken(token);
   } catch (err) {
     console.error("[unsubscribe] verifyToken", err);
-    return NextResponse.redirect(new URL("/settings?error=invalid_token", req.url));
+    return NextResponse.redirect(new URL("/user/settings?error=invalid_token", req.url));
   }
 
   if (!userId) {
-    return NextResponse.redirect(new URL("/settings?error=invalid_token", req.url));
+    return NextResponse.redirect(new URL("/user/settings?error=invalid_token", req.url));
   }
 
   const supabase = createServiceClient();
@@ -41,8 +41,8 @@ export async function GET(req) {
 
   if (error) {
     console.error("[unsubscribe] update", error);
-    return NextResponse.redirect(new URL("/settings?error=update_failed", req.url));
+    return NextResponse.redirect(new URL("/user/settings?error=update_failed", req.url));
   }
 
-  return NextResponse.redirect(new URL("/settings?unsubscribed=1", req.url));
+  return NextResponse.redirect(new URL("/user/settings?unsubscribed=1", req.url));
 }

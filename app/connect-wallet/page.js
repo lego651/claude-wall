@@ -27,7 +27,7 @@ export default function ConnectWalletPage() {
 
       if (user) {
         // User is signed in, redirect to settings page
-        router.push("/settings");
+        router.push("/user/settings");
       }
     };
 

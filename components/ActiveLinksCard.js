@@ -51,7 +51,7 @@ export default function ActiveLinksCard({ verifiedFirms = [], loading = false })
             return (
               <a
                 key={firm.id}
-                href={`/propfirm/${firm.id}`}
+                href={`/propfirms/${firm.id}`}
                 className="flex flex-col gap-2 p-3 bg-slate-50/50 hover:bg-slate-100/50 rounded-xl border border-slate-200 transition-colors group"
               >
                 <div className="flex items-center justify-between">

@@ -113,7 +113,7 @@ const ProfilePage = ({ params }) => {
         <div>
           <h1 className="text-4xl font-bold mb-4">Trader Not Found</h1>
           <p className="text-gray-500 mb-8">This handle does not exist on PropProof.</p>
-          <Link href="/leaderboard" className="bg-black text-white px-6 py-3 rounded-xl font-bold">
+          <Link href="/traders" className="bg-black text-white px-6 py-3 rounded-xl font-bold">
             Back to Leaderboard
           </Link>
         </div>
@@ -125,7 +125,7 @@ const ProfilePage = ({ params }) => {
     <PropProofLayout>
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-8">
       <Link
-        href="/leaderboard"
+        href="/traders"
         className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 mb-6 group font-medium"
       >
         <svg
@@ -136,7 +136,7 @@ const ProfilePage = ({ params }) => {
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Back to leaderboard
+        Back to traders
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

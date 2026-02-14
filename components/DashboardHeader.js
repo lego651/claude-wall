@@ -42,9 +42,9 @@ export default function DashboardHeader({ onSettingsClick, onRequestPayoutClick 
   };
 
   const navItems = [
-    { label: "Dashboard", path: "/dashboard" },
-    { label: "Payout History", path: "/dashboard/payout-history" },
-    { label: "Tax Reports", path: "/dashboard/tax-reports" },
+    { label: "Dashboard", path: "/user/dashboard" },
+    { label: "Payout History", path: "/user/dashboard/payout-history" },
+    { label: "Tax Reports", path: "/user/dashboard/tax-reports" },
   ];
 
   const displayName = profile?.display_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
@@ -55,7 +55,7 @@ export default function DashboardHeader({ onSettingsClick, onRequestPayoutClick 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/user/dashboard" className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg" style={{ backgroundColor: '#635BFF' }}>
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

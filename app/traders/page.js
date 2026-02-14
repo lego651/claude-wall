@@ -228,7 +228,7 @@ const LeaderboardPage = () => {
                       <td className="px-6 py-6">
                         <div className="flex justify-center">
                           <Link
-                            href={`/trader/${trader.handle}`}
+                            href={`/traders/${trader.handle}`}
                             className="p-2 rounded-lg bg-gray-50 text-gray-400 opacity-0 group-hover:opacity-100 group-hover:bg-black group-hover:text-white transition-all flex items-center gap-1 text-xs font-bold"
                           >
                             Profile

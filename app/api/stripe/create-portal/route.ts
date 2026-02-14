@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     const portalUrl = await createCustomerPortal({
       customerId: profile.customer_id,
-      returnUrl: body.returnUrl || window?.location?.href || "/dashboard",
+      returnUrl: body.returnUrl || window?.location?.href || "/user/dashboard",
     });
 
     if (!portalUrl) {

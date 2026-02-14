@@ -56,7 +56,7 @@ const sampleReports = [
 const options = {
   weekStart: '2026-01-27',
   weekEnd: '2026-02-02',
-  manageSubscriptionsUrl: 'https://propproof.com/settings',
+  manageSubscriptionsUrl: 'https://propproof.com/user/settings',
   unsubscribeUrl: 'https://propproof.com/unsubscribe?token=test',
   baseUrl: 'https://propproof.com',
 };

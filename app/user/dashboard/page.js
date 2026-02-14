@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import config from "@/config";
 import { useTransactions } from "@/lib/hooks/useTransactions";
 import propfirmsData from "@/data/propfirms.json";
 import PropProofLayout from "@/components/PropProofLayout";
@@ -33,7 +34,7 @@ export default function Dashboard() {
         const { data: { user: currentUser } } = await supabase.auth.getUser();
 
         if (!currentUser) {
-          window.location.href = "/signin";
+          window.location.href = config.auth.loginUrl;
           return;
         }
 

@@ -47,8 +47,8 @@ test('can sort by column (click header)', async ({ page }) => {
 test('can view firm details', async ({ page }) => {
     await page.goto('/propfirms');
     await page.waitForSelector('table tbody tr', { state: 'visible', timeout: 15000 });
-    await page.goto('/propfirm/fundingpips');
-    await expect(page).toHaveURL(/\/propfirm\/fundingpips/);
+    await page.goto('/propfirms/fundingpips');
+    await expect(page).toHaveURL(/\/propfirms\/fundingpips/);
     await expect(page.getByRole('heading', { level: 1 }).or(page.getByRole('heading', { level: 2 }))).toBeVisible({ timeout: 10000 });
     await expect(page.locator('body')).toContainText('FundingPips', { timeout: 5000 });
 });

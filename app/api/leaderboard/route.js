@@ -42,7 +42,7 @@ export async function GET() {
       return NextResponse.json({ traders: [] });
     }
 
-    // Only profiles with non-empty handle (used for /trader/[handle] links)
+    // Only profiles with non-empty handle (used for /traders/[handle] links)
     const validProfiles = profiles.filter(
       (p) => p.handle != null && String(p.handle).trim().length > 0
     );
