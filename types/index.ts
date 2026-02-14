@@ -96,17 +96,6 @@ export interface StripeWebhookEvent {
   };
 }
 
-// Component Props Types
-export interface ButtonSigninProps {
-  text?: string;
-  extraStyle?: string;
-}
-
-export interface ButtonCheckoutProps {
-  priceId: string;
-  mode?: "payment" | "subscription";
-}
-
 // Supabase User with Metadata
 export interface UserMetadata {
   avatar_url?: string;
