@@ -140,20 +140,6 @@ export default function PropFirmsListPage() {
     }
   };
 
-  // Sort indicator
-  const SortIcon = ({ field }) => {
-    if (sort !== field) return null;
-    return (
-      <svg className="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        {order === 'desc' ? (
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        ) : (
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-        )}
-      </svg>
-    );
-  };
-
   // Get max payout count for progress bar calculation
   const maxPayoutCount = useMemo(() => {
     if (firms.length === 0) return 600;
@@ -162,23 +148,44 @@ export default function PropFirmsListPage() {
 
   return (
     <PropProofLayout>
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
-        {/* Header Section */}
-        <div className="flex flex-col items-center text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest leading-none mt-0.5">Live On-Chain Tracking</span>
+      <main className="flex-grow">
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
+          {/* Hero - match design: lavender badge, title, subtitle */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#EEF0FF] mb-6">
+              <span className="w-2 h-2 rounded-full bg-[#606EE6] flex-shrink-0" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#3D48B4]">
+                Real-Time Rise Payout Monitoring
+              </span>
+            </div>
+
+            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter mb-6">
+              <span className="text-[#2A2A35]">Prop Firm </span>
+              <span className="text-[#606EE6]">On-Chain Analytics</span>
+            </h1>
+
+            <p className="max-w-2xl mx-auto text-base text-[#6F788B] leading-relaxed font-normal mb-8">
+              Monitoring the trending Rise Payout ecosystem. While firms use various methods (BTC, Wise, Bank), we track public blockchain data to provide transparent payout distribution insights.
+            </p>
+
+            {/* Period selector - pill shape, dark blue-grey; selected = white + black text; unselected = light grey text */}
+            <div className="inline-flex flex-wrap justify-center gap-0 rounded-full p-1.5 bg-[#1A1E27] shadow-md mt-2">
+              {PERIODS.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setPeriod(p.value)}
+                  className={`px-6 py-2.5 text-sm font-semibold rounded-full transition-all ${
+                    period === p.value
+                      ? "bg-white text-black border border-slate-300 shadow-sm"
+                      : "text-[#ADB5BD] hover:text-slate-300"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-gray-900 tracking-tight mb-4">
-            Prop Firm <span className="text-transparent bg-clip-text bg-gradient-to-r" style={{ backgroundImage: 'linear-gradient(to right, #635BFF, #8b5cf6)' }}>Leaderboard</span>
-          </h1>
-          <p className="text-lg text-gray-500 font-medium max-w-2xl">
-            Real-time verification of proprietary firm payout distributions using public blockchain data.
-          </p>
-        </div>
 
         {/* Featured / Trending Section - hidden for now */}
         {false && !loading && !error && featuredFirms.length > 0 && (
@@ -279,54 +286,41 @@ export default function PropFirmsListPage() {
 
         {/* Loading Skeleton */}
         {loading && (
-          <>
-            {/* Period selector + table skeleton */}
-            <div>
-              <div className="flex flex-col items-center mb-10">
-                <div className="h-3 w-24 bg-gray-200 rounded animate-pulse mb-4" />
-                <div className="inline-flex bg-gray-100 p-1.5 rounded-[20px] gap-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-10 w-20 bg-gray-200 rounded-[16px] animate-pulse" />
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center gap-4 mb-8">
-                <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-                <div className="h-[1px] flex-grow bg-gray-100" />
-              </div>
-              <div className="bg-white/80 border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-gray-50/50 border-b border-gray-100">
-                        <th className="px-8 py-6"><div className="h-3 w-28 bg-gray-200 rounded animate-pulse" /></th>
-                        <th className="px-6 py-6 text-right"><div className="h-3 w-24 bg-gray-200 rounded animate-pulse ml-auto" /></th>
-                        <th className="px-6 py-6 text-right"><div className="h-3 w-20 bg-gray-200 rounded animate-pulse ml-auto" /></th>
-                        <th className="px-6 py-6 text-right"><div className="h-3 w-20 bg-gray-200 rounded animate-pulse ml-auto" /></th>
-                        <th className="px-8 py-6 text-right"><div className="h-3 w-24 bg-gray-200 rounded animate-pulse ml-auto" /></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {Array.from({ length: 8 }).map((_, i) => (
-                        <tr key={i} className="px-8 py-6">
-                          <td className="px-8 py-6">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 bg-gray-200 rounded-xl animate-pulse flex-shrink-0" />
-                              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
-                            </div>
-                          </td>
-                          <td className="px-6 py-6 text-right"><div className="h-4 w-20 bg-gray-200 rounded animate-pulse ml-auto" /></td>
-                          <td className="px-6 py-6 text-right"><div className="h-4 w-16 bg-gray-200 rounded animate-pulse ml-auto" /></td>
-                          <td className="px-6 py-6 text-right"><div className="h-4 w-16 bg-gray-200 rounded animate-pulse ml-auto" /></td>
-                          <td className="px-8 py-6 text-right"><div className="h-6 w-16 bg-gray-200 rounded-full animate-pulse ml-auto" /></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </>
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="h-7 w-48 bg-slate-200 rounded animate-pulse" />
+            <div className="h-4 w-64 bg-slate-100 rounded animate-pulse" />
+          </div>
+        )}
+        {loading && (
+          <div className="overflow-x-auto rounded-xl border border-slate-100 bg-slate-50 shadow-sm">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="px-8 py-5"><div className="h-3 w-24 bg-slate-200 rounded animate-pulse" /></th>
+                  <th className="px-6 py-5"><div className="h-3 w-28 bg-slate-200 rounded animate-pulse" /></th>
+                  <th className="px-6 py-5"><div className="h-3 w-36 bg-slate-200 rounded animate-pulse" /></th>
+                  <th className="px-6 py-5"><div className="h-3 w-32 bg-slate-200 rounded animate-pulse" /></th>
+                  <th className="px-8 py-5 text-right"><div className="h-3 w-24 bg-slate-200 rounded animate-pulse ml-auto" /></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-slate-200 rounded-xl animate-pulse flex-shrink-0" />
+                        <div className="h-4 w-32 bg-slate-200 rounded animate-pulse" />
+                      </div>
+                    </td>
+                    <td className="px-6 py-6"><div className="h-4 w-20 bg-slate-200 rounded animate-pulse" /></td>
+                    <td className="px-6 py-6"><div className="h-4 w-16 bg-slate-200 rounded animate-pulse" /></td>
+                    <td className="px-6 py-6"><div className="h-4 w-16 bg-slate-200 rounded animate-pulse" /></td>
+                    <td className="px-8 py-6 text-right"><div className="h-6 w-20 bg-slate-200 rounded-full animate-pulse ml-auto" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* Error State */}
@@ -336,134 +330,108 @@ export default function PropFirmsListPage() {
           </div>
         )}
 
-        {/* Leaderboard Section */}
+        {/* Firm Payout Insights - headings inside card, then table */}
         {!loading && !error && firms.length > 0 && (
-          <div>
-            {/* Date Range Selector - Centered */}
-            <div className="flex flex-col items-center mb-10">
-              <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-[0.2em] mb-4">Viewing Stats For</span>
-              <div className="inline-flex bg-[#0f172a] p-1.5 rounded-[20px] shadow-2xl shadow-gray-900/20 border border-white/5">
-                {PERIODS.map((p) => (
-                  <button
-                    key={p.value}
-                    onClick={() => setPeriod(p.value)}
-                    className={`px-8 py-2.5 text-xs font-bold rounded-[16px] transition-all duration-300 ${
-                      period === p.value 
-                        ? 'bg-white text-[#0f172a] shadow-xl transform scale-[1.02]' 
-                        : 'text-white/80 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 shadow-sm overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-8 pt-6 pb-4">
+              <h2 className="text-xl font-bold text-slate-900">Firm Payout Insights</h2>
+              <p className="text-sm text-slate-400 italic">Select a firm to view detailed on-chain analytics</p>
             </div>
 
-            <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl font-black text-gray-900 whitespace-nowrap">Verified Leaderboard</h2>
-              <div className="h-[1px] flex-grow bg-gradient-to-r from-gray-200 to-transparent"></div>
+            {/* Warning / note banner */}
+            <div className="mx-8 mt-4 mb-4 flex items-start gap-2 rounded-lg bg-[#FFF8ED] px-3 py-2">
+              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border border-amber-600 text-amber-700 text-xs font-bold">
+                !
+              </span>
+              <p className="text-xs text-[#B07B00] leading-snug">
+                <strong>Note:</strong> Tracking is limited to <strong>Rise Payouts</strong>. Total amounts may include operational transfers (salaries) and exclude non-Rise methods (Wise, BTC, Bank).
+              </p>
             </div>
-            
-            <div className="glass-card rounded-[2rem] overflow-hidden border border-gray-100 shadow-2xl shadow-gray-200/40">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-gray-50/50 border-b border-gray-100">
-                      <th className="px-8 py-6 text-[11px] font-bold uppercase tracking-widest text-gray-400">Trading Entity</th>
-                      <th 
-                        className="px-6 py-6 text-right text-[11px] font-bold uppercase tracking-widest text-gray-400 cursor-pointer hover:text-gray-600"
-                        onClick={() => handleSort('totalPayouts')}
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-slate-50">
+                    <th className="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Firm</th>
+                    <th
+                      className="px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-600"
+                      onClick={() => handleSort('totalPayouts')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Total Payouts
+                        <svg className="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </th>
+                    <th className="px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Average Payout Size</th>
+                    <th className="px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Largest Single Payout</th>
+                    <th className="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-right">Latest Payout</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {firms.map((firm, idx) => {
+                    const colorClass = getColorClass(firm.id, idx);
+                    return (
+                      <tr
+                        key={firm.id}
+                        onClick={() => router.push(`/propfirm/${firm.id}`)}
+                        className="group hover:bg-slate-50 transition-all duration-150 cursor-pointer"
                       >
-                        Aggregate Payouts <SortIcon field="totalPayouts" />
-                      </th>
-                      <th 
-                        className="px-6 py-6 text-right text-[11px] font-bold uppercase tracking-widest text-gray-400 cursor-pointer hover:text-gray-600"
-                        onClick={() => handleSort('avgPayout')}
-                      >
-                        Mean Exit <SortIcon field="avgPayout" />
-                      </th>
-                      <th 
-                        className="px-6 py-6 text-right text-[11px] font-bold uppercase tracking-widest text-gray-400 cursor-pointer hover:text-gray-600"
-                        onClick={() => handleSort('largestPayout')}
-                      >
-                        Peak Payout <SortIcon field="largestPayout" />
-                      </th>
-                      <th 
-                        className="px-8 py-6 text-right text-[11px] font-bold uppercase tracking-widest text-gray-400 cursor-pointer hover:text-gray-600"
-                        onClick={() => handleSort('latestPayout')}
-                      >
-                        Activity Status <SortIcon field="latestPayout" />
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100/50">
-                    {firms.map((firm, idx) => {
-                      const colorClass = getColorClass(firm.id, idx);
-                      return (
-                        <tr 
-                          key={firm.id} 
-                          className="group transition-all duration-200 cursor-pointer"
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 91, 255, 0.1)'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                          onClick={() => router.push(`/propfirm/${firm.id}`)}
-                        >
-                          <td className="px-8 py-6">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm transition-transform group-hover:scale-110 bg-white relative">
-                                <img 
-                                  src={getLogoUrl(firm)} 
-                                  alt={firm.name}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    // Try different formats in order: webp -> png -> jpeg -> jpg
-                                    const currentSrc = e.target.src;
-                                    if (currentSrc.endsWith('.webp')) {
-                                      e.target.src = `/logos/firms/${firm.id}.png`;
-                                    } else if (currentSrc.endsWith('.png')) {
-                                      e.target.src = `/logos/firms/${firm.id}.jpeg`;
-                                    } else if (currentSrc.endsWith('.jpeg')) {
-                                      e.target.src = `/logos/firms/${firm.id}.jpg`;
-                                    } else {
-                                      // If all formats fail, hide image and show initials fallback
-                                      e.target.style.display = 'none';
-                                      const fallback = e.target.nextElementSibling;
-                                      if (fallback) fallback.style.display = 'flex';
-                                    }
-                                  }}
-                                />
-                                <div className={`hidden w-10 h-10 ${colorClass} rounded-xl items-center justify-center text-white font-bold text-sm shadow-sm`} style={!colorClass ? { backgroundColor: '#635BFF' } : {}}>
-                                  {getInitials(firm.name)}
-                                </div>
+                        <td className="px-8 py-6">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-100 group-hover:border-indigo-200 transition-colors">
+                              <img
+                                src={getLogoUrl(firm)}
+                                alt={firm.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const currentSrc = e.target.src;
+                                  if (currentSrc.endsWith('.webp')) {
+                                    e.target.src = `/logos/firms/${firm.id}.png`;
+                                  } else if (currentSrc.endsWith('.png')) {
+                                    e.target.src = `/logos/firms/${firm.id}.jpeg`;
+                                  } else if (currentSrc.endsWith('.jpeg')) {
+                                    e.target.src = `/logos/firms/${firm.id}.jpg`;
+                                  } else {
+                                    e.target.style.display = 'none';
+                                    const fallback = e.target.nextElementSibling;
+                                    if (fallback) fallback.style.display = 'flex';
+                                  }
+                                }}
+                              />
+                              <div className={`hidden w-10 h-10 ${colorClass} rounded-xl items-center justify-center text-white font-bold text-sm`} style={!colorClass ? { backgroundColor: '#4f46e5' } : {}}>
+                                {getInitials(firm.name)}
                               </div>
-                              <span className="font-bold transition-colors underline underline-offset-4 decoration-2" style={{ color: '#635BFF', textDecorationColor: 'rgba(99, 91, 255, 0.3)' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#5548E6'; e.currentTarget.style.textDecorationColor = '#635BFF'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#635BFF'; e.currentTarget.style.textDecorationColor = 'rgba(99, 91, 255, 0.3)'; }}>
-                                {firm.name}
-                              </span>
                             </div>
-                          </td>
-                          <td className="px-6 py-6 text-right font-black text-gray-900 tabular-nums">
-                            {formatCurrency(firm.metrics?.totalPayouts)}
-                          </td>
-                          <td className="px-6 py-6 text-right font-semibold text-gray-500 tabular-nums">
-                            {formatCurrency(firm.metrics?.avgPayout)}
-                          </td>
-                          <td className="px-6 py-6 text-right font-bold text-gray-900 tabular-nums">
-                            {formatCurrency(firm.metrics?.largestPayout)}
-                          </td>
-                          <td className="px-8 py-6 text-right">
-                            <div className="flex flex-col items-end gap-1.5">
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border" style={{ backgroundColor: 'rgba(99, 91, 255, 0.1)', color: '#635BFF', borderColor: 'rgba(99, 91, 255, 0.2)' }}>
-                                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: '#635BFF' }}></span>
-                                On-Chain
-                              </span>
-                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{formatUpdatedTime(firm.metrics?.latestPayoutAt)}</span>
+                            <span className="text-sm font-bold text-indigo-600 group-hover:text-indigo-700 underline decoration-indigo-200 group-hover:decoration-indigo-500 underline-offset-4 transition-all">
+                              {firm.name}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-6">
+                          <span className="text-base font-extrabold text-slate-900">{formatCurrency(firm.metrics?.totalPayouts)}</span>
+                        </td>
+                        <td className="px-6 py-6">
+                          <span className="text-sm font-semibold text-slate-600">{formatCurrency(firm.metrics?.avgPayout)}</span>
+                        </td>
+                        <td className="px-6 py-6">
+                          <span className="text-sm font-semibold text-slate-600">{formatCurrency(firm.metrics?.largestPayout)}</span>
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                          <div className="flex flex-col items-end gap-1">
+                            <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">
+                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                              <span className="text-[10px] font-bold uppercase tracking-wider">On-Chain</span>
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">{formatUpdatedTime(firm.metrics?.latestPayoutAt)}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
@@ -472,10 +440,11 @@ export default function PropFirmsListPage() {
         {!loading && !error && firms.length === 0 && (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🏢</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No firms found</h3>
-            <p className="text-gray-600">Check back later for prop firm data</p>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">No firms found</h3>
+            <p className="text-slate-600">Check back later for prop firm data</p>
           </div>
         )}
+        </div>
       </main>
     </PropProofLayout>
   );

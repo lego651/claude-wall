@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/libs/supabase/client";
-import { THEME, themeStyles } from "@/lib/theme";
 import config from "@/config";
 
 const PropProofLayout = ({ children }) => {
@@ -70,89 +69,76 @@ const PropProofLayout = ({ children }) => {
   const accountType = profile?.has_access ? "Premium Account" : "Standard Account";
 
   return (
-    <div className="min-h-screen bg-slate-200/60 text-gray-900 flex flex-col">
-      {/* Navigation */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
+    <div className="min-h-screen bg-slate-200/60 text-slate-900 flex flex-col">
+      {/* Header - match screenshot: PropPulse, nav pills, user + logout */}
+      <header className="bg-white border-b border-slate-100 py-4 px-6 sticky top-0 z-50">
+        <div className="container mx-auto max-w-7xl flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <Link href="/propfirms" className="flex items-center gap-2 group">
-              <div className="p-1.5 rounded-lg transition-colors" style={{ backgroundColor: THEME.primary }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = THEME.primaryHover} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = THEME.primary}>
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-indigo-600 p-2 rounded-lg">
+                <svg className="text-white w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <span className="font-bold text-xl tracking-tight text-slate-900">PropPulse</span>
+              <span className="text-xl font-extrabold tracking-tight text-slate-900">PropPulse</span>
             </Link>
-            <nav className="hidden md:flex items-center gap-1">
-              {navItems.map((item) => {
-                // Check if current path matches or starts with the nav item path
-                const isActive = pathname === item.path || 
-                  (item.path === "/propfirms" && (pathname?.startsWith("/propfirm") || pathname?.startsWith("/propfirms"))) ||
-                  (item.path === "/leaderboard" && (pathname?.startsWith("/leaderboard") || pathname?.startsWith("/trader"))) ||
-                  (item.path === "/study" && pathname?.startsWith("/study"));
-                
-                return (
-                  <Link
-                    key={item.path}
-                    href={item.path}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                      isActive
-                        ? ""
-                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                    }`}
-                    style={isActive ? { ...themeStyles.textPrimary, ...themeStyles.bgLight } : {}}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
           </div>
-          <div className="flex items-center gap-3">
+
+          <nav className="hidden md:flex items-center bg-slate-50 rounded-lg p-1">
+            {navItems.map((item) => {
+              const isActive = pathname === item.path ||
+                (item.path === "/propfirms" && (pathname?.startsWith("/propfirm") || pathname?.startsWith("/propfirms"))) ||
+                (item.path === "/leaderboard" && (pathname?.startsWith("/leaderboard") || pathname?.startsWith("/trader"))) ||
+                (item.path === "/study" && pathname?.startsWith("/study"));
+              return (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
+                    isActive
+                      ? "text-indigo-600 bg-white rounded-md shadow-sm"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-4">
             {!loading && (
               <>
                 {user ? (
                   <>
-                    <Link 
-                      href="/dashboard" 
-                      className="hidden md:flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-                    >
-                      {user?.user_metadata?.avatar_url ? (
-                        <img
-                          src={user.user_metadata.avatar_url}
-                          alt={displayName}
-                          className="w-8 h-8 rounded-full"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-                          <span className="text-sm font-bold text-white">
-                            {displayName.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      <div className="text-right">
-                        <div className="text-sm font-semibold text-slate-900">{displayName}</div>
-                        <div className="text-xs text-slate-500">{accountType}</div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right hidden sm:block">
+                        <p className="text-sm font-bold text-slate-800 leading-tight">{displayName}</p>
+                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{accountType}</p>
                       </div>
-                    </Link>
+                      <Link href="/dashboard" className="flex items-center justify-center w-10 h-10 rounded-full border-2 border-white shadow-sm bg-indigo-100 text-indigo-700 font-bold text-sm overflow-hidden">
+                        {user?.user_metadata?.avatar_url ? (
+                          <img src={user.user_metadata.avatar_url} alt={displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        ) : (
+                          displayName.charAt(0).toUpperCase()
+                        )}
+                      </Link>
+                    </div>
                     <button
+                      type="button"
                       onClick={handleLogout}
-                      className="text-sm text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1"
+                      className="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm font-medium transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
-                      Logout
+                      <span className="hidden sm:inline">Logout</span>
                     </button>
                   </>
                 ) : (
-                  <Link 
+                  <Link
                     href={config.auth.loginUrl}
-                    className="text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm" 
-                    style={themeStyles.button} 
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = THEME.primaryHover} 
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = THEME.primary}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-indigo-700 transition-colors"
                   >
                     Sign In
                   </Link>
@@ -161,13 +147,13 @@ const PropProofLayout = ({ children }) => {
             )}
           </div>
         </div>
-      </nav>
+      </header>
 
       {/* Main Content */}
       <main className="flex-grow">{children}</main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 mt-12">
+      <footer className="border-t border-slate-200 mt-12 bg-white">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div className="space-y-4">
