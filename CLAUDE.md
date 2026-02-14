@@ -173,12 +173,16 @@ export async function POST(req) {
 
 ## Testing & Quality
 
+### Coverage rule (git commit)
+- **Newly added code** (in `lib/`, `app/api/`, `components/`) must have **≥80% test coverage**. Enforced by pre-commit via `tests/coverage-check-new.js`. If you only change files outside those paths, the coverage check is skipped.
+
 ### Pre-commit Checklist
 1. `npm run build` passes without errors
 2. `npm run lint` shows no warnings
-3. No unused imports
-4. All async functions properly awaited
-5. Environment variables checked before use
+3. **Test coverage ≥80% for new/changed code** in lib/, app/api/, components/ (automatic)
+4. No unused imports
+5. All async functions properly awaited
+6. Environment variables checked before use
 6. Proper error handling in API routes
 
 ### Warning Suppression

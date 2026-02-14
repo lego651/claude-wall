@@ -2,7 +2,7 @@
   "firmId": "fxify",
   "period": "2025-03",
   "timezone": "UTC",
-  "generatedAt": "2026-02-14T00:56:59.572Z",
+  "generatedAt": "2026-02-14T17:41:33.040Z",
   "summary": {
     "totalPayouts": 300308,
     "payoutCount": 87,
@@ -12,8 +12,8 @@
   "dailyBuckets": [
     {
       "date": "2025-03-04",
-      "total": 25007.69,
-      "rise": 25007.69,
+      "total": 25007.690000000002,
+      "rise": 25007.690000000002,
       "crypto": 0,
       "wire": 0
     },
@@ -26,8 +26,8 @@
     },
     {
       "date": "2025-03-06",
-      "total": 16707.8,
-      "rise": 16707.8,
+      "total": 16707.800000000003,
+      "rise": 16707.800000000003,
       "crypto": 0,
       "wire": 0
     },
@@ -82,8 +82,8 @@
     },
     {
       "date": "2025-03-18",
-      "total": 8443.56,
-      "rise": 8443.56,
+      "total": 8443.560000000001,
+      "rise": 8443.560000000001,
       "crypto": 0,
       "wire": 0
     },
@@ -103,8 +103,8 @@
     },
     {
       "date": "2025-03-21",
-      "total": 18421.39,
-      "rise": 18421.39,
+      "total": 18421.390000000003,
+      "rise": 18421.390000000003,
       "crypto": 0,
       "wire": 0
     },
@@ -153,769 +153,13 @@
   ],
   "transactions": [
     {
-      "tx_hash": "0x51e590721d9c52890f31805921dc2cbbfef5956117f43ebb12bb7255de96ae1d",
+      "tx_hash": "0x7d21e3e3ec984764c232808d61180cb09f44bdc670f362678d0dab3ed50b7c60",
       "firm_id": "fxify",
-      "amount": 1938.11,
+      "amount": 1034.95,
       "payment_method": "rise",
-      "timestamp": "2025-03-31T15:49:16.000Z",
+      "timestamp": "2025-03-04T10:40:56.000Z",
       "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xa7664e9aa17257769a6b2147212f7fc9b957fe83"
-    },
-    {
-      "tx_hash": "0xeef47c17ea0f530c62972d2823def59a5ef9cf9f9efbfef70e1033463b4cec7c",
-      "firm_id": "fxify",
-      "amount": 12150,
-      "payment_method": "rise",
-      "timestamp": "2025-03-31T14:27:51.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x9094d67cb664d2db0ec185a08238a32024c036b3"
-    },
-    {
-      "tx_hash": "0x742e976a786a882f04ab2057278c2b7c3aa6a1ff65713b7bf557f0fd79e0d090",
-      "firm_id": "fxify",
-      "amount": 3535.84,
-      "payment_method": "rise",
-      "timestamp": "2025-03-28T16:13:45.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x6db4f4c4c53e82b2dbab46f7675668dcac2e3f31"
-    },
-    {
-      "tx_hash": "0xf629b1fe689c8aa6c064443ff6dbc700991a754819a9b1d88af0a61621d94adf",
-      "firm_id": "fxify",
-      "amount": 15290.77,
-      "payment_method": "rise",
-      "timestamp": "2025-03-28T11:34:13.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x32ad99806c58d0cef246431a66a83e8bb5ba865f"
-    },
-    {
-      "tx_hash": "0x15a5dc9cccc0e8aaf2c7ea47b67270cf26200801c13e8985b0f6f2b8339067d7",
-      "firm_id": "fxify",
-      "amount": 66.64,
-      "payment_method": "rise",
-      "timestamp": "2025-03-27T15:27:43.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x8b25247c439b99d05b9c96a359f0d39821622b1e"
-    },
-    {
-      "tx_hash": "0xbe244020ca39bf474c22e0a90b97e03ade7ae4b73b20fee89b814e53589092af",
-      "firm_id": "fxify",
-      "amount": 7543.63,
-      "payment_method": "rise",
-      "timestamp": "2025-03-27T15:21:40.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x349140a66443ca104fb592c962ab99482da29344"
-    },
-    {
-      "tx_hash": "0x7b4ace8bd182eab2bbb0b6fd5c13180ec4cd9caa674459786ec7cd644345be47",
-      "firm_id": "fxify",
-      "amount": 7369.08,
-      "payment_method": "rise",
-      "timestamp": "2025-03-26T16:44:54.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xacc48945fc50b1d5f0b3b5ada171376cb5ff45b3"
-    },
-    {
-      "tx_hash": "0x9b49240a7d524d6f1e911cbe782441ca7aa88a641b29b543d08038a778223e27",
-      "firm_id": "fxify",
-      "amount": 6523.96,
-      "payment_method": "rise",
-      "timestamp": "2025-03-25T17:22:01.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x84fe7a6d697cb6c511d3c96ee240ba995a343f32"
-    },
-    {
-      "tx_hash": "0x6c44adc7f4c09e0b1fd26642f14a6a978d6c070340037d7fb79488bb7ccd6990",
-      "firm_id": "fxify",
-      "amount": 39600,
-      "payment_method": "rise",
-      "timestamp": "2025-03-25T14:57:43.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xd3860838379761874e6660e89de6c1e933853cbf"
-    },
-    {
-      "tx_hash": "0x1e922781f4a03c5a4373638042866b0d83c699434baf85775c8e162886d53bfb",
-      "firm_id": "fxify",
-      "amount": 10192.67,
-      "payment_method": "rise",
-      "timestamp": "2025-03-25T14:54:28.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x4446fe7fb5692bab04ce6d925c24c3539f160fe4"
-    },
-    {
-      "tx_hash": "0xc7e342aef33d69273364bf7ba10f7e76a6ca34ead2e4fb892c381dcc86f799eb",
-      "firm_id": "fxify",
-      "amount": 6993.83,
-      "payment_method": "rise",
-      "timestamp": "2025-03-24T16:45:17.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xcb74a5746f17c1285cb85a6c80801c6ace95d747"
-    },
-    {
-      "tx_hash": "0x7185fc2b2f19196876dfb75e9170572956db0952a1ca1f5f8963525fb329147e",
-      "firm_id": "fxify",
-      "amount": 2278.54,
-      "payment_method": "rise",
-      "timestamp": "2025-03-24T14:36:12.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x6b233865bc65d0ee2ad19f73050c3a22a87a982f"
-    },
-    {
-      "tx_hash": "0x71e6444565f780f689894cae185fb9d0fe6f13684765219b0af5ccb6a995f370",
-      "firm_id": "fxify",
-      "amount": 790.1,
-      "payment_method": "rise",
-      "timestamp": "2025-03-24T10:49:15.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x72fb2c1c396432fec419b4502e1a94cc68fab903"
-    },
-    {
-      "tx_hash": "0x59750e118d7d146c8c704badbf80a8ef14319a24dc010e66926fcc1acafd5772",
-      "firm_id": "fxify",
-      "amount": 1040.2,
-      "payment_method": "rise",
-      "timestamp": "2025-03-24T10:44:09.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xd560d44dd873c44852bb052bf9bea1655af3beb2"
-    },
-    {
-      "tx_hash": "0x463b06a6e87e9e57106d5e475c45d0726086983121bd5004a8a5e7566838131f",
-      "firm_id": "fxify",
-      "amount": 1667.15,
-      "payment_method": "rise",
-      "timestamp": "2025-03-21T18:55:39.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xddfb4d2508890790dee1584acc2c446d0c790272"
-    },
-    {
-      "tx_hash": "0xe970496ebccc7868d1225e1792f68ac0e48b06ca5bd21e2bd1033355d7155c76",
-      "firm_id": "fxify",
-      "amount": 1052.86,
-      "payment_method": "rise",
-      "timestamp": "2025-03-21T15:45:07.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xcd4fe72a5bc7354c78f34d9d3891e129fd218571"
-    },
-    {
-      "tx_hash": "0xfcf9f5e0e10273c0a9746b558fc7c129d452515e79129d9d4be73edd73c2e3b1",
-      "firm_id": "fxify",
-      "amount": 5689.63,
-      "payment_method": "rise",
-      "timestamp": "2025-03-21T09:39:50.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xec7972a903a0d69fed38bd4edcfb78aeea6b0a6d"
-    },
-    {
-      "tx_hash": "0x02e423b73490c8c278d1111593be0da0159ef880bdf304711529ae3fab21db8c",
-      "firm_id": "fxify",
-      "amount": 5310,
-      "payment_method": "rise",
-      "timestamp": "2025-03-21T09:22:10.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xf357817abfc6f59d1fa9893cecca3a1b8f681222"
-    },
-    {
-      "tx_hash": "0x9f67c398f3ba9a178ed1ca39147570ed738106f5731d08a2a9e87cb245e36331",
-      "firm_id": "fxify",
-      "amount": 2664.15,
-      "payment_method": "rise",
-      "timestamp": "2025-03-21T09:20:39.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xf5dc25657d7524568fdfae4756a84b5d03f17419"
-    },
-    {
-      "tx_hash": "0x8f518de5173ed68f815ffcd079217027b06d9c45f5a74b60a217bed1b795ee70",
-      "firm_id": "fxify",
-      "amount": 2037.6,
-      "payment_method": "rise",
-      "timestamp": "2025-03-21T09:08:35.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x7359ba9d6acc19d3235c29b06d1ca94102303e30"
-    },
-    {
-      "tx_hash": "0x7f0350bbd3f7ad6db0bb08e2d534773b2589d8d47a9c4bd594d6c3321b8cfc32",
-      "firm_id": "fxify",
-      "amount": 4708.54,
-      "payment_method": "rise",
-      "timestamp": "2025-03-20T16:23:24.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x56d185b96449c0fc57cc20f98c720cceab221fe3"
-    },
-    {
-      "tx_hash": "0x31af81514d245ead28c47b0bc7443c0bb1239956d4658f4eaee046b2107d86b2",
-      "firm_id": "fxify",
-      "amount": 4773.86,
-      "payment_method": "rise",
-      "timestamp": "2025-03-20T09:22:13.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x68a2a88b1cc30cfa2d373373900780e762e93887"
-    },
-    {
-      "tx_hash": "0xc76d6efad17fea778c93bf08cae2cdb2e0839c0809913e309351749b1ca91722",
-      "firm_id": "fxify",
-      "amount": 1969.6,
-      "payment_method": "rise",
-      "timestamp": "2025-03-19T16:06:15.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x6ef63e590393904af8a0ffd9069d7d8920b74e82"
-    },
-    {
-      "tx_hash": "0xde8972d34c075b82d24189f842db3f2034bc4c559af3ea34ae2c8753fa99ec47",
-      "firm_id": "fxify",
-      "amount": 97.5,
-      "payment_method": "rise",
-      "timestamp": "2025-03-18T12:23:01.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x1e13ee4418906690e92fb984b0c893a84f90b903"
-    },
-    {
-      "tx_hash": "0x31fa38cffc1b098845763533ac961cb6651ac2f5c759b55e3dcc40baa3279e8a",
-      "firm_id": "fxify",
-      "amount": 557.82,
-      "payment_method": "rise",
-      "timestamp": "2025-03-18T12:21:16.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x6317880238a665f711580afc41af30fb2e440fd4"
-    },
-    {
-      "tx_hash": "0x6195e65bc0d1c2d007111e547270ea427c66f75041c0f69de378044843e9936e",
-      "firm_id": "fxify",
-      "amount": 1200,
-      "payment_method": "rise",
-      "timestamp": "2025-03-18T12:15:58.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xb98b8829083457f6e7e78dba37fdb9ac21eb4715"
-    },
-    {
-      "tx_hash": "0x2d15af2e42ab6a252f7e5c41d30fa06bc9fc8db4d1aa108046a8215d9d5f81bf",
-      "firm_id": "fxify",
-      "amount": 1905.75,
-      "payment_method": "rise",
-      "timestamp": "2025-03-18T12:13:00.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xf82981b48620feb972a452ce6ae55f4bd7fffabe"
-    },
-    {
-      "tx_hash": "0xf19af33f1f4892cfa2c4f3a4fc1154e35e56f4b6648bc5d9e6f8088f06e01873",
-      "firm_id": "fxify",
-      "amount": 649.72,
-      "payment_method": "rise",
-      "timestamp": "2025-03-18T12:01:17.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x30c001a3bbebddb7f06beda607609538cee02123"
-    },
-    {
-      "tx_hash": "0xacdf2b2d500298aad3681f58a6f97ae3cfc524239fc4e3cbef6a01b357f57302",
-      "firm_id": "fxify",
-      "amount": 749.36,
-      "payment_method": "rise",
-      "timestamp": "2025-03-18T11:59:42.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x4b277285ee69ec0f53eb8ceeb0d1a203760ba69e"
-    },
-    {
-      "tx_hash": "0x4c24da80c43eaaccc9516ebbba121b7402ef07adeceafe185b3129168c076b38",
-      "firm_id": "fxify",
-      "amount": 443.32,
-      "payment_method": "rise",
-      "timestamp": "2025-03-18T09:14:03.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xa6e76f1e6341b22b03b0d1386eed408239a984d9"
-    },
-    {
-      "tx_hash": "0x235c510b9da5ee07cc851d87802898baa7d264489128251591d7852e2a25c12a",
-      "firm_id": "fxify",
-      "amount": 2338.11,
-      "payment_method": "rise",
-      "timestamp": "2025-03-18T09:12:06.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xba1809ec60d9c164dac3b476273273bdf0f8ccf8"
-    },
-    {
-      "tx_hash": "0xd1141b1f148741523a4fbc34c1b280edc56562e0f7891935087bd898e6c5aec0",
-      "firm_id": "fxify",
-      "amount": 501.98,
-      "payment_method": "rise",
-      "timestamp": "2025-03-18T09:08:32.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x99227a3f6933d97046bb529f41d48538589f8a02"
-    },
-    {
-      "tx_hash": "0x56de9eb1c877d3936b87415ac4ef8021a847a250a27ba500e700a5e8455c37fb",
-      "firm_id": "fxify",
-      "amount": 2150.59,
-      "payment_method": "rise",
-      "timestamp": "2025-03-17T17:20:32.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x0e81021b29ef6a3dc86a4e7f57b7bfe8e5f15c3b"
-    },
-    {
-      "tx_hash": "0x355fba2e7fcb41ba3d16b1af7ab1a25a636f08457400b7c3d9b7ea9e14d02bfb",
-      "firm_id": "fxify",
-      "amount": 18712.05,
-      "payment_method": "rise",
-      "timestamp": "2025-03-17T15:00:11.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xe719be48e27d347e465ff3d950dfb3480f614930"
-    },
-    {
-      "tx_hash": "0x3b8f403e15eb94a3c05fee821aa34c7a694a1bf37b764b755b5476ff12b37ce9",
-      "firm_id": "fxify",
-      "amount": 2849.2,
-      "payment_method": "rise",
-      "timestamp": "2025-03-17T10:28:03.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x4133f39ee9173ee1580ddd339d83be46ef0b8f96"
-    },
-    {
-      "tx_hash": "0xa1794d993d6d3f1216a624bbeff817dc7d9ade5085a07b0d5c741968cef60a8c",
-      "firm_id": "fxify",
-      "amount": 47.3,
-      "payment_method": "rise",
-      "timestamp": "2025-03-17T10:23:19.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xdb500388ddb5cfe5e154cfb1b2ed27c87b7249cc"
-    },
-    {
-      "tx_hash": "0x131206c69ecbd1284dcf93263e5eb7f1c49989aa4f5fc471934457e0f06534d4",
-      "firm_id": "fxify",
-      "amount": 703.77,
-      "payment_method": "rise",
-      "timestamp": "2025-03-17T10:19:58.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x159ecddce5585ec8d439ec3ec4afd98d8cd9930d"
-    },
-    {
-      "tx_hash": "0x0500a30d130dd0c5e9fd85eeb6135d74cc848cee9a918ea31a443059e71a4d2f",
-      "firm_id": "fxify",
-      "amount": 188.71,
-      "payment_method": "rise",
-      "timestamp": "2025-03-15T18:22:05.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x2b43adc857678f9c7b6593f936acdc151e18293a"
-    },
-    {
-      "tx_hash": "0xead53e1d5b619ef83015d46888134cb22523c309d7f0f75d37944ad1c611d08d",
-      "firm_id": "fxify",
-      "amount": 77.66,
-      "payment_method": "rise",
-      "timestamp": "2025-03-14T08:41:59.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xa614801b0b7dee8e06eec420c812c0280c147072"
-    },
-    {
-      "tx_hash": "0x97454998476b84dce7171f10bdb019b5f10a26604704e73937b9de78d683c36e",
-      "firm_id": "fxify",
-      "amount": 206.78,
-      "payment_method": "rise",
-      "timestamp": "2025-03-13T18:11:41.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xf1a26b2c1e50fa719974f809eaa44caf60c394c9"
-    },
-    {
-      "tx_hash": "0x49d7efb75bb10d6f77347c8e82f48b89cbc7e8cff7093c182c7e6fd5cf8efcd7",
-      "firm_id": "fxify",
-      "amount": 5686.42,
-      "payment_method": "rise",
-      "timestamp": "2025-03-13T15:28:36.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x0fa4eb5ea2447c8a6737bc7d0e92ecd00b56197c"
-    },
-    {
-      "tx_hash": "0x6d6103ede0caceaa4efc030be99b4ddeea3bf21afd3ef1949be3de4796bdb9ee",
-      "firm_id": "fxify",
-      "amount": 4341.55,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T16:57:40.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xcbe3dc055c5733e7fa9612d777b692ef85980b9b"
-    },
-    {
-      "tx_hash": "0x8b5030c0d6186ae4ce8fc3dd8f12495b47b3d0a8fa20321c19047199e035712f",
-      "firm_id": "fxify",
-      "amount": 3869.1,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T16:49:21.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x428882830ae69dabe6be14c776db1d45722c8cea"
-    },
-    {
-      "tx_hash": "0x5c5c7869fbd8cfd1aefeb74d3ad343f41e2d2e61f5a3bbee262f2c4634c65f44",
-      "firm_id": "fxify",
-      "amount": 40,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T16:34:56.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x8bfe144a9a6686ee2c83760a3c5b6ce6ff6f64dc"
-    },
-    {
-      "tx_hash": "0x8b1d6ab21dec2aca0ad3fdffe6f6ac6aa316389cf5a180df6ab07cc8580796ed",
-      "firm_id": "fxify",
-      "amount": 1902.6,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T14:31:24.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x507c40c4048f6530a83eb184caa1981621bfa0ac"
-    },
-    {
-      "tx_hash": "0xeb52ae089d02f85e951bb849fe35b318e654384f80bb6096253687bdc3319714",
-      "firm_id": "fxify",
-      "amount": 1166.35,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T14:28:13.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x61dd1156a3b288d274b562f1718f2ae8427451fe"
-    },
-    {
-      "tx_hash": "0xe62f22695b9740e0897bc38bc2d4f07c5e5610710d293a793dacfb53081179a6",
-      "firm_id": "fxify",
-      "amount": 373.83,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T14:25:07.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x59bf4f59c95bb81c7c961cb9f50b05a4286b16be"
-    },
-    {
-      "tx_hash": "0xa5032cffecab29276ed141b33203ef3122e9784f19c237c687cbf7612d8ea936",
-      "firm_id": "fxify",
-      "amount": 430.34,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T12:04:21.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x83be9b64cc94bcc153e38cb2de86c6ce69f07a65"
-    },
-    {
-      "tx_hash": "0x304e87f5ac0ca0fe4debc61145b5ff0c49be7beb327d683594c5a841f8f27502",
-      "firm_id": "fxify",
-      "amount": 366.44,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T12:02:25.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x25da0395f4d792a01c5b13da1e45c96d697190c0"
-    },
-    {
-      "tx_hash": "0x4dd80fb7e75c25bfb8e3569809a2bffaaf1972c422c9aa94aa194c84b4cb49d4",
-      "firm_id": "fxify",
-      "amount": 981.72,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T12:00:31.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xaac1ecf5794050a2d790b70025afe8b5a3113159"
-    },
-    {
-      "tx_hash": "0xbc6d941729eda674852b5621f29441e523652e552af5a970f9cc6f1aa8042e0c",
-      "firm_id": "fxify",
-      "amount": 360.55,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T11:58:04.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x21cc56132c668896b6b349ca205a13d723165804"
-    },
-    {
-      "tx_hash": "0x7a4195d46c4557b0879bae28e68f1e8a7b45ff0e9cea0b10074a4afdff0e8071",
-      "firm_id": "fxify",
-      "amount": 852.18,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T11:56:22.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x65e999e190f678664d69c58ae3661d9846625d87"
-    },
-    {
-      "tx_hash": "0x1a59ad66e9a9fcf4d23ba4abd4ea35bb8e194d925eef8e584097277254559c56",
-      "firm_id": "fxify",
-      "amount": 644.95,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T11:47:18.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xe89969acaf00d5e43894c67216ca9c569949296f"
-    },
-    {
-      "tx_hash": "0xe0e7469d6a592d0c9424ce7020b1d72a124be664dbb566a2183ce13a4fa92065",
-      "firm_id": "fxify",
-      "amount": 2398.4,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T11:44:56.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xb2034a9f28d3903470d5b541b6f039a1a22e4c5d"
-    },
-    {
-      "tx_hash": "0xec0fe97d971294e962dd459ed503eba811712c010c22eb7e45eeb4aefd723241",
-      "firm_id": "fxify",
-      "amount": 5936.39,
-      "payment_method": "rise",
-      "timestamp": "2025-03-11T11:42:44.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x948ac8fed95b666356e56fde7d15faa5de53f395"
-    },
-    {
-      "tx_hash": "0x6154ca90c1553176ad0a3f15f89dbeb0bddb45013eaa304cf956d2a78ee5b701",
-      "firm_id": "fxify",
-      "amount": 100.8,
-      "payment_method": "rise",
-      "timestamp": "2025-03-10T21:37:43.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xe0c8f39dfacc58a1d1eb97fb7d7ee6e776e8cab1"
-    },
-    {
-      "tx_hash": "0xe00675f899af243c6734d1512d31403df8fb5be0ee884eaec26f285628be7cf4",
-      "firm_id": "fxify",
-      "amount": 3603.96,
-      "payment_method": "rise",
-      "timestamp": "2025-03-10T16:08:45.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x4851dfbbb054c5748544e22be2d9144a249b195b"
-    },
-    {
-      "tx_hash": "0xb3c097b8f764d2e4821862cca26c6148b0bb224cfd141d76a82e934365971269",
-      "firm_id": "fxify",
-      "amount": 1972.09,
-      "payment_method": "rise",
-      "timestamp": "2025-03-10T15:50:15.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xdaeb8990b0126489a1dbcef6bd24ff2a44db0487"
-    },
-    {
-      "tx_hash": "0x88f5d0a1576df8c24e12f513e4afa952092a6327fce6da6670cdb4ec90252c63",
-      "firm_id": "fxify",
-      "amount": 42.62,
-      "payment_method": "rise",
-      "timestamp": "2025-03-07T17:07:24.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xe67bb012febe0257f31d8229752d2781811d09ef"
-    },
-    {
-      "tx_hash": "0xec1b1d610558adacbebf32d2ddcfb2a1d5e8e257e8809828291a419eac78d453",
-      "firm_id": "fxify",
-      "amount": 272.82,
-      "payment_method": "rise",
-      "timestamp": "2025-03-07T16:37:33.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xe8dea8168421c88f17a736013422f188f3c94130"
-    },
-    {
-      "tx_hash": "0x1a8a296a02328336489bbd23c7e62a00ec8d967ef30486fe46aa1d4109718f26",
-      "firm_id": "fxify",
-      "amount": 512.56,
-      "payment_method": "rise",
-      "timestamp": "2025-03-07T16:29:06.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x9ccd1347ab45f5b2ee9c3cd75b35a6c02cd502ae"
-    },
-    {
-      "tx_hash": "0x19d22be80cd132f8d6920cd898385a3b143a0c81320aad52a9266344a5a673ae",
-      "firm_id": "fxify",
-      "amount": 1103.75,
-      "payment_method": "rise",
-      "timestamp": "2025-03-07T16:26:49.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xcdbff1ef9da39aa16dbd6591ccb270b180cdb533"
-    },
-    {
-      "tx_hash": "0xb6e30af911229ea196b4c9092a60109c3b8ed0e1de419a958330f38f36ecb315",
-      "firm_id": "fxify",
-      "amount": 267.43,
-      "payment_method": "rise",
-      "timestamp": "2025-03-07T16:09:28.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x88bde14d551f89edfe1413fa3580ca5ee57907f2"
-    },
-    {
-      "tx_hash": "0xbb4782ecf7b8bba34125b913e1ac75374d5315fdbd779fd45b766268b9e396ee",
-      "firm_id": "fxify",
-      "amount": 281.79,
-      "payment_method": "rise",
-      "timestamp": "2025-03-07T16:05:07.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x400e7c2f0ec6aebdd4644dad1b11ba37e98b0911"
-    },
-    {
-      "tx_hash": "0xe2b9d6a689acbb3deb7a832b3b53cc43c703c9b902d130b023e23e6366d3fc8f",
-      "firm_id": "fxify",
-      "amount": 17059.29,
-      "payment_method": "rise",
-      "timestamp": "2025-03-07T14:07:46.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x4069b2a594bf6c6e4f790587015b38675857d769"
-    },
-    {
-      "tx_hash": "0x3a78404fca6aa3f7ff2029ffe8320a42a6f83a0e245f648a95a0ec9c4294b1d8",
-      "firm_id": "fxify",
-      "amount": 10843.92,
-      "payment_method": "rise",
-      "timestamp": "2025-03-07T14:04:41.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x25b1a81399000f443dfadd71b731c852ee6a4957"
-    },
-    {
-      "tx_hash": "0xe52c7b4c0bdf8c26fef1d0c2400a229334ad962f320e3909d2dcab6f55697436",
-      "firm_id": "fxify",
-      "amount": 115.65,
-      "payment_method": "rise",
-      "timestamp": "2025-03-06T17:07:15.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xd6a109e433fb2a7be29badb1f2aeeac62a245ac2"
-    },
-    {
-      "tx_hash": "0x9b8bbdbec8c7094807f288aedf5bb5249a1d413d88e0adb2d69a7e625f11a7c7",
-      "firm_id": "fxify",
-      "amount": 512.01,
-      "payment_method": "rise",
-      "timestamp": "2025-03-06T16:13:54.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x9c75e18f80e7361538e520f0039a86bf728c989a"
-    },
-    {
-      "tx_hash": "0xd36fc216d954f56acb716257f93e1fddecf482c667af2cea98fce76d011a944f",
-      "firm_id": "fxify",
-      "amount": 158.4,
-      "payment_method": "rise",
-      "timestamp": "2025-03-06T16:11:14.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xf949bfdd799b8764c514a77592b2e9c231ad56be"
-    },
-    {
-      "tx_hash": "0x3eacb41d40aae4fb18b5e696a4bc0df520ae895fc05d6abdac1115a2e66dc8a4",
-      "firm_id": "fxify",
-      "amount": 4900.22,
-      "payment_method": "rise",
-      "timestamp": "2025-03-06T16:08:03.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x4d1652dc21e83d80227bc682280ebacb234765b4"
-    },
-    {
-      "tx_hash": "0x9551828f986063f99b7329a31f37d395d6d4fc90383705e589e51a8056854792",
-      "firm_id": "fxify",
-      "amount": 611.54,
-      "payment_method": "rise",
-      "timestamp": "2025-03-06T16:05:30.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xd4ca6d515e05fdb001bb2851017b4c85c42cdf42"
-    },
-    {
-      "tx_hash": "0xc176f5e68c5d27103c51bf6395f30de495bfe1084b45c76640e3720f7e24d4f8",
-      "firm_id": "fxify",
-      "amount": 2339.68,
-      "payment_method": "rise",
-      "timestamp": "2025-03-06T14:41:16.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x1b5afb9e8a201fad155ffaf71c71246467a3cdf6"
-    },
-    {
-      "tx_hash": "0x6579c7b876bb7846619f51fd3cb47a9511ce06e58d0efcd9d13ddc7e2ee96950",
-      "firm_id": "fxify",
-      "amount": 8070.3,
-      "payment_method": "rise",
-      "timestamp": "2025-03-06T14:28:56.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x87d29e59301707372fac8e9899eead19b5490865"
-    },
-    {
-      "tx_hash": "0xc2f251e7aa4069ca99cc3d107216f168d28d7ca09dc194ab794ea1917dd0fddd",
-      "firm_id": "fxify",
-      "amount": 63.83,
-      "payment_method": "rise",
-      "timestamp": "2025-03-05T18:16:46.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xc49c75ad43828222f6171e18b91c9f473a40ca78"
-    },
-    {
-      "tx_hash": "0x0c973982442df5177354d7767897dafa09f4dd28f38ff176934f517f2b1308ed",
-      "firm_id": "fxify",
-      "amount": 14550,
-      "payment_method": "rise",
-      "timestamp": "2025-03-05T12:48:05.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x0000000000000000000000000000000000000000"
-    },
-    {
-      "tx_hash": "0x65fb9f29bb41297020a11ede3acb9676a1a9fe5092093aec955665cc783739b6",
-      "firm_id": "fxify",
-      "amount": 10220.8,
-      "payment_method": "rise",
-      "timestamp": "2025-03-04T16:13:04.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x7ba6c2a33f93ab9a3b3275a79e4bfd4579aa8084"
-    },
-    {
-      "tx_hash": "0xee49191b24faf6d7f8bb6d4d2027cce600f6e7e6bc3c2129e6613a9e129ce564",
-      "firm_id": "fxify",
-      "amount": 416.26,
-      "payment_method": "rise",
-      "timestamp": "2025-03-04T15:57:18.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xbb6bbb6d0c506ec29638a4ad5e0f32f64ddd5010"
-    },
-    {
-      "tx_hash": "0xcbdf5a1f9524c360d0824aeec54836dfac1ab6fc4864881eed819965e4f0c3b9",
-      "firm_id": "fxify",
-      "amount": 6493.6,
-      "payment_method": "rise",
-      "timestamp": "2025-03-04T15:14:28.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xc1fc7548e58025655b2b0f95b3a50f60272f03ae"
-    },
-    {
-      "tx_hash": "0xf0a9693045359f40468fe4ce7a52133a8df6e9eb3961ce669382d99a998e5eba",
-      "firm_id": "fxify",
-      "amount": 58.61,
-      "payment_method": "rise",
-      "timestamp": "2025-03-04T15:05:48.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x5aac88642b25cb8b4e2d36e3010d76af7d605279"
-    },
-    {
-      "tx_hash": "0xfc612cb247f14df13ea33870770be6297978dbe897850db963cc6c62b3f93540",
-      "firm_id": "fxify",
-      "amount": 2230.62,
-      "payment_method": "rise",
-      "timestamp": "2025-03-04T15:03:48.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xde87f4ac78675d2784a4bc3f62a13da51e64bcd4"
-    },
-    {
-      "tx_hash": "0x94d8666a20042015b5e0f2323ecd1589a355b4a5c3dbce9d2a2067d94c22e88a",
-      "firm_id": "fxify",
-      "amount": 452.06,
-      "payment_method": "rise",
-      "timestamp": "2025-03-04T14:45:59.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x400e7c2f0ec6aebdd4644dad1b11ba37e98b0911"
-    },
-    {
-      "tx_hash": "0x2b820b2462175a585706f3a4c0ef3a867169ecd348b049c8e92699e56856142f",
-      "firm_id": "fxify",
-      "amount": 296.8,
-      "payment_method": "rise",
-      "timestamp": "2025-03-04T14:39:13.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xa57767a6c2a650c747a8b3fdd9e6b7fa70ab0d97"
-    },
-    {
-      "tx_hash": "0x0529b4141aca77d8eeeaf6b66b070cc9cb0962b83c8f1dfb9fddf12d814d892d",
-      "firm_id": "fxify",
-      "amount": 2170.11,
-      "payment_method": "rise",
-      "timestamp": "2025-03-04T14:35:32.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xe481bcc5f89a07c12f48e015e8cb4d34e6f8a603"
-    },
-    {
-      "tx_hash": "0x55138e2ecde108b5eb5dbe80eec662f560af2bb164a8c3c711c01d47fb5d2470",
-      "firm_id": "fxify",
-      "amount": 173.53,
-      "payment_method": "rise",
-      "timestamp": "2025-03-04T14:32:10.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xd0e76ef8e2931583afdd36d4d7c0d2631dab5eb5"
-    },
-    {
-      "tx_hash": "0x527bb221f395393352b0ab96744e9593c7ce86de4dae57f8f8832a40981422bf",
-      "firm_id": "fxify",
-      "amount": 260.35,
-      "payment_method": "rise",
-      "timestamp": "2025-03-04T12:47:43.000Z",
-      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x0968d320a4ab4e030f31e798a49e2044d410eb77"
+      "to_address": "0xfd93242f3d8e77f50fc2f1f6fd4afe193d17ba8d"
     },
     {
       "tx_hash": "0xc744a491a7eb2cf946473549c1d975c16512aa5d814b2acab2a6cb638d638b8b",
@@ -927,13 +171,769 @@
       "to_address": "0x326e7acbc84a660262d6418c243da166db756b45"
     },
     {
-      "tx_hash": "0x7d21e3e3ec984764c232808d61180cb09f44bdc670f362678d0dab3ed50b7c60",
+      "tx_hash": "0x527bb221f395393352b0ab96744e9593c7ce86de4dae57f8f8832a40981422bf",
       "firm_id": "fxify",
-      "amount": 1034.95,
+      "amount": 260.35,
       "payment_method": "rise",
-      "timestamp": "2025-03-04T10:40:56.000Z",
+      "timestamp": "2025-03-04T12:47:43.000Z",
       "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0xfd93242f3d8e77f50fc2f1f6fd4afe193d17ba8d"
+      "to_address": "0x0968d320a4ab4e030f31e798a49e2044d410eb77"
+    },
+    {
+      "tx_hash": "0x55138e2ecde108b5eb5dbe80eec662f560af2bb164a8c3c711c01d47fb5d2470",
+      "firm_id": "fxify",
+      "amount": 173.53,
+      "payment_method": "rise",
+      "timestamp": "2025-03-04T14:32:10.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xd0e76ef8e2931583afdd36d4d7c0d2631dab5eb5"
+    },
+    {
+      "tx_hash": "0x0529b4141aca77d8eeeaf6b66b070cc9cb0962b83c8f1dfb9fddf12d814d892d",
+      "firm_id": "fxify",
+      "amount": 2170.11,
+      "payment_method": "rise",
+      "timestamp": "2025-03-04T14:35:32.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xe481bcc5f89a07c12f48e015e8cb4d34e6f8a603"
+    },
+    {
+      "tx_hash": "0x2b820b2462175a585706f3a4c0ef3a867169ecd348b049c8e92699e56856142f",
+      "firm_id": "fxify",
+      "amount": 296.8,
+      "payment_method": "rise",
+      "timestamp": "2025-03-04T14:39:13.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xa57767a6c2a650c747a8b3fdd9e6b7fa70ab0d97"
+    },
+    {
+      "tx_hash": "0x94d8666a20042015b5e0f2323ecd1589a355b4a5c3dbce9d2a2067d94c22e88a",
+      "firm_id": "fxify",
+      "amount": 452.06,
+      "payment_method": "rise",
+      "timestamp": "2025-03-04T14:45:59.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x400e7c2f0ec6aebdd4644dad1b11ba37e98b0911"
+    },
+    {
+      "tx_hash": "0xfc612cb247f14df13ea33870770be6297978dbe897850db963cc6c62b3f93540",
+      "firm_id": "fxify",
+      "amount": 2230.62,
+      "payment_method": "rise",
+      "timestamp": "2025-03-04T15:03:48.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xde87f4ac78675d2784a4bc3f62a13da51e64bcd4"
+    },
+    {
+      "tx_hash": "0xf0a9693045359f40468fe4ce7a52133a8df6e9eb3961ce669382d99a998e5eba",
+      "firm_id": "fxify",
+      "amount": 58.61,
+      "payment_method": "rise",
+      "timestamp": "2025-03-04T15:05:48.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x5aac88642b25cb8b4e2d36e3010d76af7d605279"
+    },
+    {
+      "tx_hash": "0xcbdf5a1f9524c360d0824aeec54836dfac1ab6fc4864881eed819965e4f0c3b9",
+      "firm_id": "fxify",
+      "amount": 6493.6,
+      "payment_method": "rise",
+      "timestamp": "2025-03-04T15:14:28.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xc1fc7548e58025655b2b0f95b3a50f60272f03ae"
+    },
+    {
+      "tx_hash": "0xee49191b24faf6d7f8bb6d4d2027cce600f6e7e6bc3c2129e6613a9e129ce564",
+      "firm_id": "fxify",
+      "amount": 416.26,
+      "payment_method": "rise",
+      "timestamp": "2025-03-04T15:57:18.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xbb6bbb6d0c506ec29638a4ad5e0f32f64ddd5010"
+    },
+    {
+      "tx_hash": "0x65fb9f29bb41297020a11ede3acb9676a1a9fe5092093aec955665cc783739b6",
+      "firm_id": "fxify",
+      "amount": 10220.8,
+      "payment_method": "rise",
+      "timestamp": "2025-03-04T16:13:04.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x7ba6c2a33f93ab9a3b3275a79e4bfd4579aa8084"
+    },
+    {
+      "tx_hash": "0x0c973982442df5177354d7767897dafa09f4dd28f38ff176934f517f2b1308ed",
+      "firm_id": "fxify",
+      "amount": 14550,
+      "payment_method": "rise",
+      "timestamp": "2025-03-05T12:48:05.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x0000000000000000000000000000000000000000"
+    },
+    {
+      "tx_hash": "0xc2f251e7aa4069ca99cc3d107216f168d28d7ca09dc194ab794ea1917dd0fddd",
+      "firm_id": "fxify",
+      "amount": 63.83,
+      "payment_method": "rise",
+      "timestamp": "2025-03-05T18:16:46.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xc49c75ad43828222f6171e18b91c9f473a40ca78"
+    },
+    {
+      "tx_hash": "0x6579c7b876bb7846619f51fd3cb47a9511ce06e58d0efcd9d13ddc7e2ee96950",
+      "firm_id": "fxify",
+      "amount": 8070.3,
+      "payment_method": "rise",
+      "timestamp": "2025-03-06T14:28:56.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x87d29e59301707372fac8e9899eead19b5490865"
+    },
+    {
+      "tx_hash": "0xc176f5e68c5d27103c51bf6395f30de495bfe1084b45c76640e3720f7e24d4f8",
+      "firm_id": "fxify",
+      "amount": 2339.68,
+      "payment_method": "rise",
+      "timestamp": "2025-03-06T14:41:16.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x1b5afb9e8a201fad155ffaf71c71246467a3cdf6"
+    },
+    {
+      "tx_hash": "0x9551828f986063f99b7329a31f37d395d6d4fc90383705e589e51a8056854792",
+      "firm_id": "fxify",
+      "amount": 611.54,
+      "payment_method": "rise",
+      "timestamp": "2025-03-06T16:05:30.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xd4ca6d515e05fdb001bb2851017b4c85c42cdf42"
+    },
+    {
+      "tx_hash": "0x3eacb41d40aae4fb18b5e696a4bc0df520ae895fc05d6abdac1115a2e66dc8a4",
+      "firm_id": "fxify",
+      "amount": 4900.22,
+      "payment_method": "rise",
+      "timestamp": "2025-03-06T16:08:03.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x4d1652dc21e83d80227bc682280ebacb234765b4"
+    },
+    {
+      "tx_hash": "0xd36fc216d954f56acb716257f93e1fddecf482c667af2cea98fce76d011a944f",
+      "firm_id": "fxify",
+      "amount": 158.4,
+      "payment_method": "rise",
+      "timestamp": "2025-03-06T16:11:14.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xf949bfdd799b8764c514a77592b2e9c231ad56be"
+    },
+    {
+      "tx_hash": "0x9b8bbdbec8c7094807f288aedf5bb5249a1d413d88e0adb2d69a7e625f11a7c7",
+      "firm_id": "fxify",
+      "amount": 512.01,
+      "payment_method": "rise",
+      "timestamp": "2025-03-06T16:13:54.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x9c75e18f80e7361538e520f0039a86bf728c989a"
+    },
+    {
+      "tx_hash": "0xe52c7b4c0bdf8c26fef1d0c2400a229334ad962f320e3909d2dcab6f55697436",
+      "firm_id": "fxify",
+      "amount": 115.65,
+      "payment_method": "rise",
+      "timestamp": "2025-03-06T17:07:15.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xd6a109e433fb2a7be29badb1f2aeeac62a245ac2"
+    },
+    {
+      "tx_hash": "0x3a78404fca6aa3f7ff2029ffe8320a42a6f83a0e245f648a95a0ec9c4294b1d8",
+      "firm_id": "fxify",
+      "amount": 10843.92,
+      "payment_method": "rise",
+      "timestamp": "2025-03-07T14:04:41.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x25b1a81399000f443dfadd71b731c852ee6a4957"
+    },
+    {
+      "tx_hash": "0xe2b9d6a689acbb3deb7a832b3b53cc43c703c9b902d130b023e23e6366d3fc8f",
+      "firm_id": "fxify",
+      "amount": 17059.29,
+      "payment_method": "rise",
+      "timestamp": "2025-03-07T14:07:46.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x4069b2a594bf6c6e4f790587015b38675857d769"
+    },
+    {
+      "tx_hash": "0xbb4782ecf7b8bba34125b913e1ac75374d5315fdbd779fd45b766268b9e396ee",
+      "firm_id": "fxify",
+      "amount": 281.79,
+      "payment_method": "rise",
+      "timestamp": "2025-03-07T16:05:07.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x400e7c2f0ec6aebdd4644dad1b11ba37e98b0911"
+    },
+    {
+      "tx_hash": "0xb6e30af911229ea196b4c9092a60109c3b8ed0e1de419a958330f38f36ecb315",
+      "firm_id": "fxify",
+      "amount": 267.43,
+      "payment_method": "rise",
+      "timestamp": "2025-03-07T16:09:28.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x88bde14d551f89edfe1413fa3580ca5ee57907f2"
+    },
+    {
+      "tx_hash": "0x19d22be80cd132f8d6920cd898385a3b143a0c81320aad52a9266344a5a673ae",
+      "firm_id": "fxify",
+      "amount": 1103.75,
+      "payment_method": "rise",
+      "timestamp": "2025-03-07T16:26:49.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xcdbff1ef9da39aa16dbd6591ccb270b180cdb533"
+    },
+    {
+      "tx_hash": "0x1a8a296a02328336489bbd23c7e62a00ec8d967ef30486fe46aa1d4109718f26",
+      "firm_id": "fxify",
+      "amount": 512.56,
+      "payment_method": "rise",
+      "timestamp": "2025-03-07T16:29:06.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x9ccd1347ab45f5b2ee9c3cd75b35a6c02cd502ae"
+    },
+    {
+      "tx_hash": "0xec1b1d610558adacbebf32d2ddcfb2a1d5e8e257e8809828291a419eac78d453",
+      "firm_id": "fxify",
+      "amount": 272.82,
+      "payment_method": "rise",
+      "timestamp": "2025-03-07T16:37:33.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xe8dea8168421c88f17a736013422f188f3c94130"
+    },
+    {
+      "tx_hash": "0x88f5d0a1576df8c24e12f513e4afa952092a6327fce6da6670cdb4ec90252c63",
+      "firm_id": "fxify",
+      "amount": 42.62,
+      "payment_method": "rise",
+      "timestamp": "2025-03-07T17:07:24.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xe67bb012febe0257f31d8229752d2781811d09ef"
+    },
+    {
+      "tx_hash": "0xb3c097b8f764d2e4821862cca26c6148b0bb224cfd141d76a82e934365971269",
+      "firm_id": "fxify",
+      "amount": 1972.09,
+      "payment_method": "rise",
+      "timestamp": "2025-03-10T15:50:15.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xdaeb8990b0126489a1dbcef6bd24ff2a44db0487"
+    },
+    {
+      "tx_hash": "0xe00675f899af243c6734d1512d31403df8fb5be0ee884eaec26f285628be7cf4",
+      "firm_id": "fxify",
+      "amount": 3603.96,
+      "payment_method": "rise",
+      "timestamp": "2025-03-10T16:08:45.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x4851dfbbb054c5748544e22be2d9144a249b195b"
+    },
+    {
+      "tx_hash": "0x6154ca90c1553176ad0a3f15f89dbeb0bddb45013eaa304cf956d2a78ee5b701",
+      "firm_id": "fxify",
+      "amount": 100.8,
+      "payment_method": "rise",
+      "timestamp": "2025-03-10T21:37:43.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xe0c8f39dfacc58a1d1eb97fb7d7ee6e776e8cab1"
+    },
+    {
+      "tx_hash": "0xec0fe97d971294e962dd459ed503eba811712c010c22eb7e45eeb4aefd723241",
+      "firm_id": "fxify",
+      "amount": 5936.39,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T11:42:44.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x948ac8fed95b666356e56fde7d15faa5de53f395"
+    },
+    {
+      "tx_hash": "0xe0e7469d6a592d0c9424ce7020b1d72a124be664dbb566a2183ce13a4fa92065",
+      "firm_id": "fxify",
+      "amount": 2398.4,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T11:44:56.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xb2034a9f28d3903470d5b541b6f039a1a22e4c5d"
+    },
+    {
+      "tx_hash": "0x1a59ad66e9a9fcf4d23ba4abd4ea35bb8e194d925eef8e584097277254559c56",
+      "firm_id": "fxify",
+      "amount": 644.95,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T11:47:18.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xe89969acaf00d5e43894c67216ca9c569949296f"
+    },
+    {
+      "tx_hash": "0x7a4195d46c4557b0879bae28e68f1e8a7b45ff0e9cea0b10074a4afdff0e8071",
+      "firm_id": "fxify",
+      "amount": 852.18,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T11:56:22.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x65e999e190f678664d69c58ae3661d9846625d87"
+    },
+    {
+      "tx_hash": "0xbc6d941729eda674852b5621f29441e523652e552af5a970f9cc6f1aa8042e0c",
+      "firm_id": "fxify",
+      "amount": 360.55,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T11:58:04.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x21cc56132c668896b6b349ca205a13d723165804"
+    },
+    {
+      "tx_hash": "0x4dd80fb7e75c25bfb8e3569809a2bffaaf1972c422c9aa94aa194c84b4cb49d4",
+      "firm_id": "fxify",
+      "amount": 981.72,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T12:00:31.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xaac1ecf5794050a2d790b70025afe8b5a3113159"
+    },
+    {
+      "tx_hash": "0x304e87f5ac0ca0fe4debc61145b5ff0c49be7beb327d683594c5a841f8f27502",
+      "firm_id": "fxify",
+      "amount": 366.44,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T12:02:25.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x25da0395f4d792a01c5b13da1e45c96d697190c0"
+    },
+    {
+      "tx_hash": "0xa5032cffecab29276ed141b33203ef3122e9784f19c237c687cbf7612d8ea936",
+      "firm_id": "fxify",
+      "amount": 430.34,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T12:04:21.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x83be9b64cc94bcc153e38cb2de86c6ce69f07a65"
+    },
+    {
+      "tx_hash": "0xe62f22695b9740e0897bc38bc2d4f07c5e5610710d293a793dacfb53081179a6",
+      "firm_id": "fxify",
+      "amount": 373.83,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T14:25:07.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x59bf4f59c95bb81c7c961cb9f50b05a4286b16be"
+    },
+    {
+      "tx_hash": "0xeb52ae089d02f85e951bb849fe35b318e654384f80bb6096253687bdc3319714",
+      "firm_id": "fxify",
+      "amount": 1166.35,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T14:28:13.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x61dd1156a3b288d274b562f1718f2ae8427451fe"
+    },
+    {
+      "tx_hash": "0x8b1d6ab21dec2aca0ad3fdffe6f6ac6aa316389cf5a180df6ab07cc8580796ed",
+      "firm_id": "fxify",
+      "amount": 1902.6,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T14:31:24.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x507c40c4048f6530a83eb184caa1981621bfa0ac"
+    },
+    {
+      "tx_hash": "0x5c5c7869fbd8cfd1aefeb74d3ad343f41e2d2e61f5a3bbee262f2c4634c65f44",
+      "firm_id": "fxify",
+      "amount": 40,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T16:34:56.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x8bfe144a9a6686ee2c83760a3c5b6ce6ff6f64dc"
+    },
+    {
+      "tx_hash": "0x8b5030c0d6186ae4ce8fc3dd8f12495b47b3d0a8fa20321c19047199e035712f",
+      "firm_id": "fxify",
+      "amount": 3869.1,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T16:49:21.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x428882830ae69dabe6be14c776db1d45722c8cea"
+    },
+    {
+      "tx_hash": "0x6d6103ede0caceaa4efc030be99b4ddeea3bf21afd3ef1949be3de4796bdb9ee",
+      "firm_id": "fxify",
+      "amount": 4341.55,
+      "payment_method": "rise",
+      "timestamp": "2025-03-11T16:57:40.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xcbe3dc055c5733e7fa9612d777b692ef85980b9b"
+    },
+    {
+      "tx_hash": "0x49d7efb75bb10d6f77347c8e82f48b89cbc7e8cff7093c182c7e6fd5cf8efcd7",
+      "firm_id": "fxify",
+      "amount": 5686.42,
+      "payment_method": "rise",
+      "timestamp": "2025-03-13T15:28:36.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x0fa4eb5ea2447c8a6737bc7d0e92ecd00b56197c"
+    },
+    {
+      "tx_hash": "0x97454998476b84dce7171f10bdb019b5f10a26604704e73937b9de78d683c36e",
+      "firm_id": "fxify",
+      "amount": 206.78,
+      "payment_method": "rise",
+      "timestamp": "2025-03-13T18:11:41.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xf1a26b2c1e50fa719974f809eaa44caf60c394c9"
+    },
+    {
+      "tx_hash": "0xead53e1d5b619ef83015d46888134cb22523c309d7f0f75d37944ad1c611d08d",
+      "firm_id": "fxify",
+      "amount": 77.66,
+      "payment_method": "rise",
+      "timestamp": "2025-03-14T08:41:59.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xa614801b0b7dee8e06eec420c812c0280c147072"
+    },
+    {
+      "tx_hash": "0x0500a30d130dd0c5e9fd85eeb6135d74cc848cee9a918ea31a443059e71a4d2f",
+      "firm_id": "fxify",
+      "amount": 188.71,
+      "payment_method": "rise",
+      "timestamp": "2025-03-15T18:22:05.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x2b43adc857678f9c7b6593f936acdc151e18293a"
+    },
+    {
+      "tx_hash": "0x131206c69ecbd1284dcf93263e5eb7f1c49989aa4f5fc471934457e0f06534d4",
+      "firm_id": "fxify",
+      "amount": 703.77,
+      "payment_method": "rise",
+      "timestamp": "2025-03-17T10:19:58.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x159ecddce5585ec8d439ec3ec4afd98d8cd9930d"
+    },
+    {
+      "tx_hash": "0xa1794d993d6d3f1216a624bbeff817dc7d9ade5085a07b0d5c741968cef60a8c",
+      "firm_id": "fxify",
+      "amount": 47.3,
+      "payment_method": "rise",
+      "timestamp": "2025-03-17T10:23:19.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xdb500388ddb5cfe5e154cfb1b2ed27c87b7249cc"
+    },
+    {
+      "tx_hash": "0x3b8f403e15eb94a3c05fee821aa34c7a694a1bf37b764b755b5476ff12b37ce9",
+      "firm_id": "fxify",
+      "amount": 2849.2,
+      "payment_method": "rise",
+      "timestamp": "2025-03-17T10:28:03.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x4133f39ee9173ee1580ddd339d83be46ef0b8f96"
+    },
+    {
+      "tx_hash": "0x355fba2e7fcb41ba3d16b1af7ab1a25a636f08457400b7c3d9b7ea9e14d02bfb",
+      "firm_id": "fxify",
+      "amount": 18712.05,
+      "payment_method": "rise",
+      "timestamp": "2025-03-17T15:00:11.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xe719be48e27d347e465ff3d950dfb3480f614930"
+    },
+    {
+      "tx_hash": "0x56de9eb1c877d3936b87415ac4ef8021a847a250a27ba500e700a5e8455c37fb",
+      "firm_id": "fxify",
+      "amount": 2150.59,
+      "payment_method": "rise",
+      "timestamp": "2025-03-17T17:20:32.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x0e81021b29ef6a3dc86a4e7f57b7bfe8e5f15c3b"
+    },
+    {
+      "tx_hash": "0xd1141b1f148741523a4fbc34c1b280edc56562e0f7891935087bd898e6c5aec0",
+      "firm_id": "fxify",
+      "amount": 501.98,
+      "payment_method": "rise",
+      "timestamp": "2025-03-18T09:08:32.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x99227a3f6933d97046bb529f41d48538589f8a02"
+    },
+    {
+      "tx_hash": "0x235c510b9da5ee07cc851d87802898baa7d264489128251591d7852e2a25c12a",
+      "firm_id": "fxify",
+      "amount": 2338.11,
+      "payment_method": "rise",
+      "timestamp": "2025-03-18T09:12:06.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xba1809ec60d9c164dac3b476273273bdf0f8ccf8"
+    },
+    {
+      "tx_hash": "0x4c24da80c43eaaccc9516ebbba121b7402ef07adeceafe185b3129168c076b38",
+      "firm_id": "fxify",
+      "amount": 443.32,
+      "payment_method": "rise",
+      "timestamp": "2025-03-18T09:14:03.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xa6e76f1e6341b22b03b0d1386eed408239a984d9"
+    },
+    {
+      "tx_hash": "0xacdf2b2d500298aad3681f58a6f97ae3cfc524239fc4e3cbef6a01b357f57302",
+      "firm_id": "fxify",
+      "amount": 749.36,
+      "payment_method": "rise",
+      "timestamp": "2025-03-18T11:59:42.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x4b277285ee69ec0f53eb8ceeb0d1a203760ba69e"
+    },
+    {
+      "tx_hash": "0xf19af33f1f4892cfa2c4f3a4fc1154e35e56f4b6648bc5d9e6f8088f06e01873",
+      "firm_id": "fxify",
+      "amount": 649.72,
+      "payment_method": "rise",
+      "timestamp": "2025-03-18T12:01:17.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x30c001a3bbebddb7f06beda607609538cee02123"
+    },
+    {
+      "tx_hash": "0x2d15af2e42ab6a252f7e5c41d30fa06bc9fc8db4d1aa108046a8215d9d5f81bf",
+      "firm_id": "fxify",
+      "amount": 1905.75,
+      "payment_method": "rise",
+      "timestamp": "2025-03-18T12:13:00.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xf82981b48620feb972a452ce6ae55f4bd7fffabe"
+    },
+    {
+      "tx_hash": "0x6195e65bc0d1c2d007111e547270ea427c66f75041c0f69de378044843e9936e",
+      "firm_id": "fxify",
+      "amount": 1200,
+      "payment_method": "rise",
+      "timestamp": "2025-03-18T12:15:58.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xb98b8829083457f6e7e78dba37fdb9ac21eb4715"
+    },
+    {
+      "tx_hash": "0x31fa38cffc1b098845763533ac961cb6651ac2f5c759b55e3dcc40baa3279e8a",
+      "firm_id": "fxify",
+      "amount": 557.82,
+      "payment_method": "rise",
+      "timestamp": "2025-03-18T12:21:16.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x6317880238a665f711580afc41af30fb2e440fd4"
+    },
+    {
+      "tx_hash": "0xde8972d34c075b82d24189f842db3f2034bc4c559af3ea34ae2c8753fa99ec47",
+      "firm_id": "fxify",
+      "amount": 97.5,
+      "payment_method": "rise",
+      "timestamp": "2025-03-18T12:23:01.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x1e13ee4418906690e92fb984b0c893a84f90b903"
+    },
+    {
+      "tx_hash": "0xc76d6efad17fea778c93bf08cae2cdb2e0839c0809913e309351749b1ca91722",
+      "firm_id": "fxify",
+      "amount": 1969.6,
+      "payment_method": "rise",
+      "timestamp": "2025-03-19T16:06:15.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x6ef63e590393904af8a0ffd9069d7d8920b74e82"
+    },
+    {
+      "tx_hash": "0x31af81514d245ead28c47b0bc7443c0bb1239956d4658f4eaee046b2107d86b2",
+      "firm_id": "fxify",
+      "amount": 4773.86,
+      "payment_method": "rise",
+      "timestamp": "2025-03-20T09:22:13.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x68a2a88b1cc30cfa2d373373900780e762e93887"
+    },
+    {
+      "tx_hash": "0x7f0350bbd3f7ad6db0bb08e2d534773b2589d8d47a9c4bd594d6c3321b8cfc32",
+      "firm_id": "fxify",
+      "amount": 4708.54,
+      "payment_method": "rise",
+      "timestamp": "2025-03-20T16:23:24.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x56d185b96449c0fc57cc20f98c720cceab221fe3"
+    },
+    {
+      "tx_hash": "0x8f518de5173ed68f815ffcd079217027b06d9c45f5a74b60a217bed1b795ee70",
+      "firm_id": "fxify",
+      "amount": 2037.6,
+      "payment_method": "rise",
+      "timestamp": "2025-03-21T09:08:35.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x7359ba9d6acc19d3235c29b06d1ca94102303e30"
+    },
+    {
+      "tx_hash": "0x9f67c398f3ba9a178ed1ca39147570ed738106f5731d08a2a9e87cb245e36331",
+      "firm_id": "fxify",
+      "amount": 2664.15,
+      "payment_method": "rise",
+      "timestamp": "2025-03-21T09:20:39.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xf5dc25657d7524568fdfae4756a84b5d03f17419"
+    },
+    {
+      "tx_hash": "0x02e423b73490c8c278d1111593be0da0159ef880bdf304711529ae3fab21db8c",
+      "firm_id": "fxify",
+      "amount": 5310,
+      "payment_method": "rise",
+      "timestamp": "2025-03-21T09:22:10.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xf357817abfc6f59d1fa9893cecca3a1b8f681222"
+    },
+    {
+      "tx_hash": "0xfcf9f5e0e10273c0a9746b558fc7c129d452515e79129d9d4be73edd73c2e3b1",
+      "firm_id": "fxify",
+      "amount": 5689.63,
+      "payment_method": "rise",
+      "timestamp": "2025-03-21T09:39:50.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xec7972a903a0d69fed38bd4edcfb78aeea6b0a6d"
+    },
+    {
+      "tx_hash": "0xe970496ebccc7868d1225e1792f68ac0e48b06ca5bd21e2bd1033355d7155c76",
+      "firm_id": "fxify",
+      "amount": 1052.86,
+      "payment_method": "rise",
+      "timestamp": "2025-03-21T15:45:07.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xcd4fe72a5bc7354c78f34d9d3891e129fd218571"
+    },
+    {
+      "tx_hash": "0x463b06a6e87e9e57106d5e475c45d0726086983121bd5004a8a5e7566838131f",
+      "firm_id": "fxify",
+      "amount": 1667.15,
+      "payment_method": "rise",
+      "timestamp": "2025-03-21T18:55:39.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xddfb4d2508890790dee1584acc2c446d0c790272"
+    },
+    {
+      "tx_hash": "0x59750e118d7d146c8c704badbf80a8ef14319a24dc010e66926fcc1acafd5772",
+      "firm_id": "fxify",
+      "amount": 1040.2,
+      "payment_method": "rise",
+      "timestamp": "2025-03-24T10:44:09.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xd560d44dd873c44852bb052bf9bea1655af3beb2"
+    },
+    {
+      "tx_hash": "0x71e6444565f780f689894cae185fb9d0fe6f13684765219b0af5ccb6a995f370",
+      "firm_id": "fxify",
+      "amount": 790.1,
+      "payment_method": "rise",
+      "timestamp": "2025-03-24T10:49:15.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x72fb2c1c396432fec419b4502e1a94cc68fab903"
+    },
+    {
+      "tx_hash": "0x7185fc2b2f19196876dfb75e9170572956db0952a1ca1f5f8963525fb329147e",
+      "firm_id": "fxify",
+      "amount": 2278.54,
+      "payment_method": "rise",
+      "timestamp": "2025-03-24T14:36:12.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x6b233865bc65d0ee2ad19f73050c3a22a87a982f"
+    },
+    {
+      "tx_hash": "0xc7e342aef33d69273364bf7ba10f7e76a6ca34ead2e4fb892c381dcc86f799eb",
+      "firm_id": "fxify",
+      "amount": 6993.83,
+      "payment_method": "rise",
+      "timestamp": "2025-03-24T16:45:17.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xcb74a5746f17c1285cb85a6c80801c6ace95d747"
+    },
+    {
+      "tx_hash": "0x1e922781f4a03c5a4373638042866b0d83c699434baf85775c8e162886d53bfb",
+      "firm_id": "fxify",
+      "amount": 10192.67,
+      "payment_method": "rise",
+      "timestamp": "2025-03-25T14:54:28.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x4446fe7fb5692bab04ce6d925c24c3539f160fe4"
+    },
+    {
+      "tx_hash": "0x6c44adc7f4c09e0b1fd26642f14a6a978d6c070340037d7fb79488bb7ccd6990",
+      "firm_id": "fxify",
+      "amount": 39600,
+      "payment_method": "rise",
+      "timestamp": "2025-03-25T14:57:43.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xd3860838379761874e6660e89de6c1e933853cbf"
+    },
+    {
+      "tx_hash": "0x9b49240a7d524d6f1e911cbe782441ca7aa88a641b29b543d08038a778223e27",
+      "firm_id": "fxify",
+      "amount": 6523.96,
+      "payment_method": "rise",
+      "timestamp": "2025-03-25T17:22:01.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x84fe7a6d697cb6c511d3c96ee240ba995a343f32"
+    },
+    {
+      "tx_hash": "0x7b4ace8bd182eab2bbb0b6fd5c13180ec4cd9caa674459786ec7cd644345be47",
+      "firm_id": "fxify",
+      "amount": 7369.08,
+      "payment_method": "rise",
+      "timestamp": "2025-03-26T16:44:54.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xacc48945fc50b1d5f0b3b5ada171376cb5ff45b3"
+    },
+    {
+      "tx_hash": "0xbe244020ca39bf474c22e0a90b97e03ade7ae4b73b20fee89b814e53589092af",
+      "firm_id": "fxify",
+      "amount": 7543.63,
+      "payment_method": "rise",
+      "timestamp": "2025-03-27T15:21:40.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x349140a66443ca104fb592c962ab99482da29344"
+    },
+    {
+      "tx_hash": "0x15a5dc9cccc0e8aaf2c7ea47b67270cf26200801c13e8985b0f6f2b8339067d7",
+      "firm_id": "fxify",
+      "amount": 66.64,
+      "payment_method": "rise",
+      "timestamp": "2025-03-27T15:27:43.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x8b25247c439b99d05b9c96a359f0d39821622b1e"
+    },
+    {
+      "tx_hash": "0xf629b1fe689c8aa6c064443ff6dbc700991a754819a9b1d88af0a61621d94adf",
+      "firm_id": "fxify",
+      "amount": 15290.77,
+      "payment_method": "rise",
+      "timestamp": "2025-03-28T11:34:13.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x32ad99806c58d0cef246431a66a83e8bb5ba865f"
+    },
+    {
+      "tx_hash": "0x742e976a786a882f04ab2057278c2b7c3aa6a1ff65713b7bf557f0fd79e0d090",
+      "firm_id": "fxify",
+      "amount": 3535.84,
+      "payment_method": "rise",
+      "timestamp": "2025-03-28T16:13:45.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x6db4f4c4c53e82b2dbab46f7675668dcac2e3f31"
+    },
+    {
+      "tx_hash": "0xeef47c17ea0f530c62972d2823def59a5ef9cf9f9efbfef70e1033463b4cec7c",
+      "firm_id": "fxify",
+      "amount": 12150,
+      "payment_method": "rise",
+      "timestamp": "2025-03-31T14:27:51.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x9094d67cb664d2db0ec185a08238a32024c036b3"
+    },
+    {
+      "tx_hash": "0x51e590721d9c52890f31805921dc2cbbfef5956117f43ebb12bb7255de96ae1d",
+      "firm_id": "fxify",
+      "amount": 1938.11,
+      "payment_method": "rise",
+      "timestamp": "2025-03-31T15:49:16.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xa7664e9aa17257769a6b2147212f7fc9b957fe83"
     }
   ]
 }

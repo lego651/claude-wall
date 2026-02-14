@@ -222,6 +222,7 @@ Use Conventional Commits:
 - [ ] All async functions properly awaited
 - [ ] No ESLint warnings
 - [ ] Build passes (`npm run build`)
+- [ ] **Test coverage ≥80% for newly added code** (enforced by pre-commit for `lib/`, `app/api/`, `components/`)
 - [ ] All environment variables checked
 - [ ] Proper error handling in API routes
 - [ ] Server/client components used correctly
