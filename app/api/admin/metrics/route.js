@@ -118,10 +118,22 @@ export async function GET() {
   const arbiscanStatus = arbiscanPct >= 95 ? 'critical' : arbiscanPct >= 80 ? 'warning' : 'ok';
   const supabaseStatus = dbResult.ok ? 'ok' : 'critical';
 
+  const alertTo = process.env.ALERT_EMAIL || process.env.ALERTS_TO || '';
+  const resendSet = !!process.env.RESEND_API_KEY;
+  const alertsEnabled = !!alertTo.trim() && resendSet;
+  const maskedRecipient = alertTo.trim()
+    ? (() => {
+        const e = alertTo.trim();
+        const at = e.indexOf('@');
+        if (at <= 0) return e.slice(0, 2) + '***';
+        return e.slice(0, 1) + '***@' + e.slice(at + 1);
+      })()
+    : null;
+
   const checks = {
     config: {
-      alertEmail: { set: !!(process.env.ALERT_EMAIL || process.env.ALERTS_TO), label: 'Alert email' },
-      resend: { set: !!process.env.RESEND_API_KEY, label: 'Resend (emails)' },
+      alertEmail: { set: !!alertTo.trim(), label: 'Alert email' },
+      resend: { set: resendSet, label: 'Resend (emails)' },
       sentry: { set: !!process.env.SENTRY_DSN, label: 'Sentry' },
       cache: { set: !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN), label: 'Vercel KV (cache)' },
     },
@@ -159,6 +171,11 @@ export async function GET() {
 
   const payload = {
     checks,
+    alerts: {
+      status: alertsEnabled ? 'enabled' : 'disabled',
+      recipient: maskedRecipient,
+      resendConfigured: resendSet,
+    },
     arbiscan: {
       calls: arbiscan.calls ?? 0,
       limit: arbiscan.limit ?? 0,

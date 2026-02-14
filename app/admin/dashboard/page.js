@@ -39,6 +39,8 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [testAlertLoading, setTestAlertLoading] = useState(false);
+  const [testAlertResult, setTestAlertResult] = useState(null);
 
   const fetchMetrics = useCallback(async () => {
     try {
@@ -86,11 +88,29 @@ export default function AdminDashboardPage() {
     );
   }
 
+  const sendTestAlert = async () => {
+    setTestAlertResult(null);
+    setTestAlertLoading(true);
+    try {
+      const res = await fetch("/api/admin/test-alert", { method: "POST" });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok) setTestAlertResult("sent");
+      else setTestAlertResult(json.error || `HTTP ${res.status}`);
+    } catch (e) {
+      setTestAlertResult(e.message || "Request failed");
+    } finally {
+      setTestAlertLoading(false);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          <h1 className="text-2xl font-bold text-base-content">System health</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-base-content">Dashboard</h1>
+            <p className="text-sm text-base-content/60 mt-1">Monitoring &amp; alerts in one place</p>
+          </div>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -119,12 +139,60 @@ export default function AdminDashboardPage() {
           <div className="text-base-content/70">No metrics available.</div>
         )}
 
+        {data?.alerts && (
+          <section className="mb-8">
+            <h2 className="text-lg font-semibold mb-4">Critical email alerts</h2>
+            <div className="card card-border bg-base-100 shadow">
+              <div className="card-body">
+                <div className="flex flex-wrap items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-base-content/70">Status</span>
+                    <span
+                      className={`badge ${data.alerts.status === "enabled" ? "badge-success" : "badge-warning"}`}
+                    >
+                      {data.alerts.status === "enabled" ? "Enabled" : "Disabled"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-base-content/70">Recipient</span>
+                    <span className="font-mono text-sm">
+                      {data.alerts.recipient ?? "Not set"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-base-content/70">Resend</span>
+                    <span className={`badge ${data.alerts.resendConfigured ? "badge-success" : "badge-ghost"}`}>
+                      {data.alerts.resendConfigured ? "Configured" : "Not set"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={sendTestAlert}
+                      disabled={testAlertLoading || data.alerts.status !== "enabled"}
+                      className="btn btn-sm btn-outline"
+                    >
+                      {testAlertLoading ? "Sending…" : "Send test alert"}
+                    </button>
+                    {testAlertResult === "sent" && (
+                      <span className="text-sm text-success">Test email sent.</span>
+                    )}
+                    {testAlertResult && testAlertResult !== "sent" && (
+                      <span className="text-sm text-error">{testAlertResult}</span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-base-content/50 mt-3">
+                  Critical checks (file ≥10 MB, Arbiscan ≥95%, DB failure) send an email here (throttled 1h). Set ALERT_EMAIL or ALERTS_TO and RESEND_API_KEY to enable.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
         {data?.checks && (
           <section className="mb-8">
             <h2 className="text-lg font-semibold mb-4">Verification checks</h2>
-            <p className="text-sm text-base-content/60 mb-4">
-              Critical checks (file ≥10 MB, Arbiscan ≥95%, DB failure) send an email to the alert address (throttled 1h).
-            </p>
             <div className="card card-border bg-base-100 shadow">
               <div className="card-body">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

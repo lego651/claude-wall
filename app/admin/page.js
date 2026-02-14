@@ -47,8 +47,8 @@ export default function AdminPage() {
           {/* Primary Cards Row - Dashboard, Trading Reports, Portfolio */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             <MenuCard
-              title="System health"
-              description="API latency, Arbiscan usage, file sizes, database stats, cache hit rates."
+              title="Dashboard"
+              description="Monitoring & alerts in one place: critical emails, verification checks, Arbiscan, files, database, cache."
               icon="📈"
               href="/admin/dashboard"
               color="bg-white"
