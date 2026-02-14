@@ -19,9 +19,11 @@ module.exports = {
   collectCoverageFrom: [
     'lib/**/*.{js,ts}',
     'app/api/**/*.{js,ts}',
+    'components/**/*.{js,jsx}',
     '!**/*.d.ts',
     '!**/node_modules/**',
     '!**/.next/**',
+    '!**/__tests__/**',
   ],
 
   // Coverage thresholds: > 0% now; aim for > 90% later
