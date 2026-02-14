@@ -89,7 +89,9 @@ const supabase = createClient();
 
 ### Key Configuration
 
-**Environment Variables Required:**
+**Environment variables:** Use keys from **`.env`** at project root. Do not instruct users to `export VAR=value` in the shell; document that required vars go in `.env`. Standalone scripts (e.g. in `scripts/`) must load `.env` (e.g. `import 'dotenv/config'` at the top) so they read the same keys.
+
+**Required in `.env`:**
 - `NEXT_PUBLIC_SUPABASE_URL` & `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `STRIPE_SECRET_KEY` & `STRIPE_WEBHOOK_SECRET`
 - `RESEND_API_KEY`

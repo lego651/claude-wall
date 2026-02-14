@@ -53,20 +53,41 @@ const DEFAULT_CONFIG: ScraperConfig = {
   timeout: 30000, // 30 second timeout
 };
 
-// Trustpilot URL mappings for supported firms (FTMO and TopStep not supported yet)
-const TRUSTPILOT_URLS: Record<string, string> = {
-  fundednext: 'https://www.trustpilot.com/review/fundednext.com',
-  the5ers: 'https://www.trustpilot.com/review/the5ers.com',
-  fundingpips: 'https://www.trustpilot.com/review/fundingpips.com',
-  alphacapitalgroup: 'https://www.trustpilot.com/review/alphacapitalgroup.com',
-  blueguardian: 'https://www.trustpilot.com/review/blueguardian.com',
-  aquafunded: 'https://www.trustpilot.com/review/aquafunded.com',
-  instantfunding: 'https://www.trustpilot.com/review/instantfunding.com',
-  fxify: 'https://www.trustpilot.com/review/fxify.com',
-};
+// ============================================================================
+// FIRM URLS FROM SUPABASE (single source of truth)
+// ============================================================================
+// Trustpilot URLs live in firms.trustpilot_url. Edit in Supabase or run
+// migrations/18_seed-firms-trustpilot-urls.sql. Scraper only runs for firms
+// where trustpilot_url IS NOT NULL.
 
-/** Firm IDs we scrape (all firms with Trustpilot URLs). Use for backfill and daily sync. */
-export const TRUSTPILOT_FIRM_IDS = Object.keys(TRUSTPILOT_URLS) as string[];
+export interface FirmWithTrustpilot {
+  id: string;
+  trustpilot_url: string;
+}
+
+/**
+ * Fetch all firms that have a Trustpilot URL (single source of truth from DB).
+ */
+export async function getFirmsWithTrustpilot(): Promise<FirmWithTrustpilot[]> {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from('firms')
+    .select('id, trustpilot_url')
+    .not('trustpilot_url', 'is', null);
+  if (error) throw new Error(`Failed to fetch firms with Trustpilot: ${error.message}`);
+  return (data ?? []) as FirmWithTrustpilot[];
+}
+
+async function getTrustpilotUrlForFirm(firmId: string): Promise<string | null> {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from('firms')
+    .select('trustpilot_url')
+    .eq('id', firmId)
+    .single();
+  if (error || !data?.trustpilot_url) return null;
+  return data.trustpilot_url as string;
+}
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -118,13 +139,15 @@ function parseTrustpilotDate(dateString: string): Date {
 /**
  * Scrape Trustpilot reviews for a specific firm
  *
- * @param firmId - Firm ID (must exist in TRUSTPILOT_URLS)
+ * @param firmId - Firm ID (must have trustpilot_url in DB or pass trustpilotUrl)
  * @param config - Optional scraper configuration
+ * @param trustpilotUrl - Optional URL (if not set, fetched from Supabase firms.trustpilot_url)
  * @returns ScraperResult with reviews and metadata
  */
 export async function scrapeTrustpilot(
   firmId: string,
-  config: ScraperConfig = {}
+  config: ScraperConfig = {},
+  trustpilotUrl?: string
 ): Promise<ScraperResult> {
   const cfg = { ...DEFAULT_CONFIG, ...config };
   const result: ScraperResult = {
@@ -140,14 +163,14 @@ export async function scrapeTrustpilot(
   let browser: Browser | null = null;
 
   try {
-    // Validate firm ID
-    const trustpilotUrl = TRUSTPILOT_URLS[firmId];
-    if (!trustpilotUrl) {
-      throw new Error(`No Trustpilot URL configured for firm: ${firmId}`);
+    const url = trustpilotUrl ?? (await getTrustpilotUrlForFirm(firmId));
+    if (!url) {
+      throw new Error(`No Trustpilot URL for firm: ${firmId}. Set firms.trustpilot_url in Supabase.`);
     }
+    const trustpilotUrlResolved = url;
 
     console.log(`[Trustpilot Scraper] Starting scrape for ${firmId}`);
-    console.log(`[Trustpilot Scraper] URL: ${trustpilotUrl}`);
+    console.log(`[Trustpilot Scraper] URL: ${trustpilotUrlResolved}`);
 
     // Launch browser
     browser = await chromium.launch({
@@ -181,8 +204,8 @@ export async function scrapeTrustpilot(
 
     for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
       const pageUrl = pageNum === 1
-        ? trustpilotUrl
-        : `${trustpilotUrl}${trustpilotUrl.includes('?') ? '&' : '?'}page=${pageNum}`;
+        ? trustpilotUrlResolved
+        : `${trustpilotUrlResolved}${trustpilotUrlResolved.includes('?') ? '&' : '?'}page=${pageNum}`;
 
       console.log(`[Trustpilot Scraper] Navigating to page ${pageNum}/${maxPages}: ${pageUrl}`);
       await page.goto(pageUrl, { waitUntil: 'networkidle' });
@@ -194,6 +217,7 @@ export async function scrapeTrustpilot(
         break;
       }
 
+      /* istanbul ignore next - callback runs in browser context, not in Node */
       const reviews = await page.$$eval('[data-service-review-card-paper]', (elements) => {
         return elements.map((card) => {
           const ratingElement = card.querySelector('[data-service-review-rating]');
@@ -351,14 +375,16 @@ export async function storeReviews(
  *
  * @param firmId - Firm ID to scrape
  * @param config - Optional scraper configuration
+ * @param trustpilotUrl - Optional URL (if not set, fetched from Supabase firms.trustpilot_url)
  * @returns ScraperResult with storage metrics
  */
 export async function scrapeAndStoreReviews(
   firmId: string,
-  config: ScraperConfig = {}
+  config: ScraperConfig = {},
+  trustpilotUrl?: string
 ): Promise<ScraperResult> {
   // Scrape reviews
-  const result = await scrapeTrustpilot(firmId, config);
+  const result = await scrapeTrustpilot(firmId, config, trustpilotUrl);
 
   // If scraping succeeded, store reviews
   if (result.success && result.reviews.length > 0) {

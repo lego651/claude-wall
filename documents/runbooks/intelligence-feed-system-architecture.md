@@ -364,6 +364,8 @@ Workflows:
 
 ## Environment Variables
 
+**Local runs:** Put keys in **`.env`** at project root. Scripts (e.g. `backfill-trustpilot.ts`) load `.env` via `dotenv/config`—do not `export` vars in the shell.
+
 ### Production (Vercel)
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co

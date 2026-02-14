@@ -37,7 +37,7 @@ psql "postgresql://postgres:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:54
 \i /path/to/migration-file.sql
 ```
 
-## Migration Files (run in order 01 → 17)
+## Migration Files (run in order 01 → 18)
 
 ### Core Schema
 - `01_schema.sql` - Original profiles table and auth setup
@@ -61,6 +61,7 @@ psql "postgresql://postgres:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:54
 - `15_fix-existing-users.sql` - Fix existing user data
 - `16_verify-alpha-schema.sql` - Alpha schema verification
 - `17_verify-policies.sql` - RLS policy verification
+- `18_seed-firms-trustpilot-urls.sql` - Seed `firms.trustpilot_url` (single source of truth for Trustpilot scraper)
 
 ## Alpha Intelligence Schema
 
