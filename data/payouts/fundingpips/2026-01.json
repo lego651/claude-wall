@@ -2,10 +2,10 @@
   "firmId": "fundingpips",
   "period": "2026-01",
   "timezone": "UTC",
-  "generatedAt": "2026-01-31T11:15:09.930Z",
+  "generatedAt": "2026-02-14T00:56:29.448Z",
   "summary": {
-    "totalPayouts": 3676382,
-    "payoutCount": 1889,
+    "totalPayouts": 3677002,
+    "payoutCount": 1890,
     "largestPayout": 30075,
     "avgPayout": 1946
   },
@@ -212,9 +212,25 @@
       "rise": 178793,
       "crypto": 0,
       "wire": 0
+    },
+    {
+      "date": "2026-01-31",
+      "total": 620,
+      "rise": 620,
+      "crypto": 0,
+      "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0x7142493faf52918e46a938db4bdb6c2b87d5f9b53c8ac92a720d43932bd0f15d",
+      "firm_id": "fundingpips",
+      "amount": 620,
+      "payment_method": "rise",
+      "timestamp": "2026-01-31T15:29:06.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0xe3e5824372a2ae879d4d48610abeb40b9618919a"
+    },
     {
       "tx_hash": "0x330e00c359ef1921d2849c5a06d84f1b602cb20ad6bc2a638bec058ef6222b17",
       "firm_id": "fundingpips",
