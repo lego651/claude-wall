@@ -140,6 +140,32 @@ export default function PropFirmsListPage() {
     }
   };
 
+  const SortableTh = ({ field, label, className = '' }) => {
+    const isActive = sort === field;
+    const alignRight = className.includes('text-right');
+    return (
+      <th
+        className={`px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-600 ${className}`}
+        onClick={() => handleSort(field)}
+      >
+        <div className={`flex items-center gap-1 ${alignRight ? 'justify-end' : ''}`}>
+          {label}
+          {isActive && (
+            order === 'desc' ? (
+              <svg className="w-3 h-3 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            ) : (
+              <svg className="w-3 h-3 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            )
+          )}
+        </div>
+      </th>
+    );
+  };
+
   // Get max payout count for progress bar calculation
   const maxPayoutCount = useMemo(() => {
     if (firms.length === 0) return 600;
@@ -353,20 +379,10 @@ export default function PropFirmsListPage() {
                 <thead>
                   <tr className="border-b border-slate-50">
                     <th className="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Firm</th>
-                    <th
-                      className="px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-600"
-                      onClick={() => handleSort('totalPayouts')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Total Payouts
-                        <svg className="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </th>
-                    <th className="px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Average Payout Size</th>
-                    <th className="px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Largest Single Payout</th>
-                    <th className="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-right">Latest Payout</th>
+                    <SortableTh field="totalPayouts" label="Total Payouts" />
+                    <SortableTh field="avgPayout" label="Average Payout Size" />
+                    <SortableTh field="largestPayout" label="Largest Single Payout" />
+                    <SortableTh field="latestPayout" label="Latest Payout" className="px-8 text-right" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
