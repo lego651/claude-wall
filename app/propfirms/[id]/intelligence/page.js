@@ -135,7 +135,7 @@ export default function PropFirmIntelligencePage() {
     if (!firmId) return;
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/v2/propfirms/${firmId}/incidents?days=90`)
+    fetch(`/api/v2/propfirms/${firmId}/incidents?days=30`)
       .then((r) => (r.ok ? r.json() : { incidents: [] }))
       .then((data) => {
         if (!cancelled) setIncidents(data.incidents || []);
@@ -165,7 +165,7 @@ export default function PropFirmIntelligencePage() {
             Firm Intelligence Feed
           </h2>
           <p className="text-slate-500 text-sm mt-1">
-            Curated, summarized, and classified signals from the last 90 days.
+            Curated, summarized, and classified signals from the last 30 days.
           </p>
         </div>
 
@@ -210,7 +210,7 @@ export default function PropFirmIntelligencePage() {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
           <p className="text-slate-500">
             {incidents.length === 0
-              ? "No intelligence signals in the last 90 days."
+              ? "No intelligence signals in the last 30 days."
               : "No incidents match the selected type."}
           </p>
         </div>

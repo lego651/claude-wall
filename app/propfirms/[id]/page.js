@@ -80,7 +80,7 @@ export default function PropFirmOverviewPage() {
     if (!firmId) return;
     let cancelled = false;
     setIncidentsLoading(true);
-    fetch(`/api/v2/propfirms/${firmId}/incidents?days=90`)
+    fetch(`/api/v2/propfirms/${firmId}/incidents?days=30`)
       .then((r) => (r.ok ? r.json() : { incidents: [] }))
       .then((data) => {
         if (!cancelled) setIncidents(data.incidents || []);
@@ -433,7 +433,7 @@ export default function PropFirmOverviewPage() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-slate-500 py-4">No recent incidents in the last 90 days.</p>
+          <p className="text-sm text-slate-500 py-4">No recent incidents in the last 30 days.</p>
         )}
       </div>
     </div>
