@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import PropProofLayout from "@/components/PropProofLayout";
+import PropProofLayout from "@/components/common/PropProofLayout";
 
 const OnboardingPage = () => {
   const [step, setStep] = useState(1);

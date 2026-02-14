@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from "next/link";
 import { reports, reportTypes } from "@/data/reports/reports-data";
-import AdminLayout from "@/components/AdminLayout";
+import AdminLayout from "@/components/common/AdminLayout";
 
 const WeeklyReportItem = ({ report, isLast }) => {
   const totalR = report.summary.totalR > 0 ? `+${report.summary.totalR}R` : `${report.summary.totalR}R`;

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import PropProofLayout from '@/components/PropProofLayout';
+import PropProofLayout from '@/components/common/PropProofLayout';
 import { TIMELINE_DATA, STUDY_SUMMARY } from '@/lib/studyConstants';
 
 const WeeklyReportItem = ({ event, isLast }) => {

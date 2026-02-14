@@ -11,7 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import AdminLayout from "@/components/AdminLayout";
+import AdminLayout from "@/components/common/AdminLayout";
 import { THEME, themeStyles } from "@/lib/theme";
 
 const STRATEGIES = {

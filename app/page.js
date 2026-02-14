@@ -1,5 +1,5 @@
 import Link from "next/link";
-import PropProofLayout from "@/components/PropProofLayout";
+import PropProofLayout from "@/components/common/PropProofLayout";
 import { THEME, themeStyles } from "@/lib/theme";
 
 const MenuCard = ({ title, description, icon, badge, href, color = "bg-white" }) => (

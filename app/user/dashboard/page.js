@@ -5,13 +5,13 @@ import { createClient } from "@/lib/supabase/client";
 import config from "@/config";
 import { useTransactions } from "@/lib/hooks/useTransactions";
 import propfirmsData from "@/data/propfirms.json";
-import PropProofLayout from "@/components/PropProofLayout";
-import UserProfileCard from "@/components/UserProfileCard";
-import ActiveLinksCard from "@/components/ActiveLinksCard";
-import MetricsCards from "@/components/MetricsCards";
-import MonthlyPayoutChart from "@/components/MonthlyPayoutChart";
-import AccountSettingsModal from "@/components/AccountSettingsModal";
-import ConnectWalletModal from "@/components/ConnectWalletModal";
+import PropProofLayout from "@/components/common/PropProofLayout";
+import UserProfileCard from "@/components/common/UserProfileCard";
+import ActiveLinksCard from "@/components/common/ActiveLinksCard";
+import MetricsCards from "@/components/common/MetricsCards";
+import MonthlyPayoutChart from "@/components/common/MonthlyPayoutChart";
+import AccountSettingsModal from "@/components/user/dashboard/AccountSettingsModal";
+import ConnectWalletModal from "@/components/user/dashboard/ConnectWalletModal";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);

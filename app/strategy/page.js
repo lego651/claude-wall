@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { strategies, getFeaturedStrategies, getAllTags } from "@/data/strategies/strategies";
 import { getSEOTags } from "@/lib/seo";
-import PropProofLayout from "@/components/PropProofLayout";
+import PropProofLayout from "@/components/common/PropProofLayout";
 
 export const metadata = getSEOTags({
   title: "Trading Strategies | Proven Prop Firm Systems",

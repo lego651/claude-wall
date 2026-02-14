@@ -3,9 +3,9 @@ import { getStrategyBySlug } from "@/data/strategies/strategies";
 import { getSEOTags } from "@/lib/seo";
 import { promises as fs } from "fs";
 import path from "path";
-import MarkdownRenderer from "@/components/MarkdownRenderer";
+import MarkdownRenderer from "@/components/admin/strategies/public/MarkdownRenderer";
 import Link from "next/link";
-import PropProofLayout from "@/components/PropProofLayout";
+import PropProofLayout from "@/components/common/PropProofLayout";
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }) {

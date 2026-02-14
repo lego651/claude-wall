@@ -1,6 +1,6 @@
 import { Inter } from "next/font/google";
 import { getSEOTags } from "@/lib/seo";
-import ClientLayout from "@/components/LayoutClient";
+import ClientLayout from "@/components/root/LayoutClient";
 import config from "@/config";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";

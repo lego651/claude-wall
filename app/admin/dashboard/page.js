@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import AdminLayout from "@/components/AdminLayout";
+import AdminLayout from "@/components/common/AdminLayout";
 
 const REFRESH_MS = 30_000;
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import PropProofLayout from '@/components/PropProofLayout';
+import PropProofLayout from '@/components/common/PropProofLayout';
 import { timeSince } from '@/lib/utils/timeSince';
 
 const PERIODS = [

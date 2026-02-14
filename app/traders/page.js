@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import PropProofLayout from "@/components/PropProofLayout";
+import PropProofLayout from "@/components/common/PropProofLayout";
 
 const LeaderboardPage = () => {
   const [searchTerm, setSearchTerm] = useState("");

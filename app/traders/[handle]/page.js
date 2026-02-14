@@ -2,13 +2,13 @@
 
 import { use, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
-import PropProofLayout from "@/components/PropProofLayout";
+import PropProofLayout from "@/components/common/PropProofLayout";
 import { useTransactions } from "@/lib/hooks/useTransactions";
 import propfirmsData from "@/data/propfirms.json";
-import UserProfileCard from "@/components/UserProfileCard";
-import ActiveLinksCard from "@/components/ActiveLinksCard";
-import MetricsCards from "@/components/MetricsCards";
-import MonthlyPayoutChart from "@/components/MonthlyPayoutChart";
+import UserProfileCard from "@/components/common/UserProfileCard";
+import ActiveLinksCard from "@/components/common/ActiveLinksCard";
+import MetricsCards from "@/components/common/MetricsCards";
+import MonthlyPayoutChart from "@/components/common/MonthlyPayoutChart";
 
 const ProfilePage = ({ params }) => {
   const { handle } = use(params);

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import apiClient from "@/lib/api";
 import config from "@/config";
-import SubscriptionSettings from "@/components/SubscriptionSettings";
+import SubscriptionSettings from "@/components/user/settings/SubscriptionSettings";
 
 export default function SettingsPage() {
   const supabase = createClient();

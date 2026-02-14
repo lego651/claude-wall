@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { THEME } from "@/lib/theme";
-import IntelligenceCard from "./components/IntelligenceCard";
-import IntelligenceCardSkeleton from "./components/IntelligenceCardSkeleton";
+import IntelligenceCard from "@/components/propfirms/intelligence/IntelligenceCard";
+import IntelligenceCardSkeleton from "@/components/propfirms/intelligence/IntelligenceCardSkeleton";
 import { IntelligenceCategory, ConfidenceLevel } from "./types";
 
 // Map incident_type to display category (OPERATIONAL vs REPUTATION)

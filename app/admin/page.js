@@ -1,5 +1,5 @@
 import Link from "next/link";
-import AdminLayout from "@/components/AdminLayout";
+import AdminLayout from "@/components/common/AdminLayout";
 import { THEME, themeStyles } from "@/lib/theme";
 
 const MenuCard = ({ title, description, icon, badge, href, color = "bg-white" }) => (

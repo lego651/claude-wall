@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { reports, getReportBySlug } from "@/data/reports/reports";
 import { getSEOTags } from "@/lib/seo";
-import AdminLayout from "@/components/AdminLayout";
+import AdminLayout from "@/components/common/AdminLayout";
 import ReportContent from "./ReportContent";
 
 export async function generateMetadata({ params }) {

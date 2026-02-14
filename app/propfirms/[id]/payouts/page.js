@@ -11,7 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import FirmWeeklyReportCard from "@/components/FirmWeeklyReportCard";
+import FirmWeeklyReportCard from "@/components/propfirms/payouts/FirmWeeklyReportCard";
 import { THEME } from "@/lib/theme";
 import { timeSince } from "@/lib/utils/timeSince";
 

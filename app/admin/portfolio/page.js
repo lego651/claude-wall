@@ -12,7 +12,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
-import AdminLayout from "@/components/AdminLayout";
+import AdminLayout from "@/components/common/AdminLayout";
 
 const STRATEGIES = [
   { id: 'AS_1', name: 'AS 1', description: 'Asian Session Strategy 1', color: 'primary' },
