@@ -93,6 +93,7 @@ export async function GET(request, { params }) {
       name: firmRow.name,
       logo: firmRow.logo_url ?? null,
       website: firmRow.website,
+      last_payout_at: firmRow.last_payout_at ?? null,
     };
 
     const chartCacheKey = `chart:${firmId}:${period}`;

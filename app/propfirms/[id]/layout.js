@@ -4,22 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import PropProofLayout from "@/components/common/PropProofLayout";
+import PropFirmSidebar from "@/components/propfirms/PropFirmSidebar";
 import { THEME } from "@/lib/theme";
-import { getFirmLogoUrl, DEFAULT_LOGO_URL } from "@/lib/logoUtils";
-
-// Format firm id to display name (e.g. fundednext -> Funded Next)
-function firmIdToName(id) {
-  if (!id) return "";
-  return id
-    .split(/[-_]/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(" ");
-}
 
 const TABS = [
-  { label: "Overview", path: "", icon: "overview" },
-  { label: "Payout Evidence", path: "/payouts", icon: "payout" },
-  { label: "Intelligence Layer", path: "/intelligence", icon: "intelligence" },
+  { label: "OVERVIEW", path: "", icon: "overview" },
+  { label: "PAYOUT EVIDENCE", path: "/payouts", icon: "payout" },
+  { label: "INTELLIGENCE", path: "/intelligence", icon: "intelligence" },
 ];
 
 export default function PropFirmIdLayout({ children }) {
@@ -29,9 +20,7 @@ export default function PropFirmIdLayout({ children }) {
   const [firm, setFirm] = useState(null);
 
   const basePath = `/propfirms/${firmId}`;
-  const displayName = firm?.name || firmIdToName(firmId);
-  const website =
-    firm?.website || `https://${(firmId || "").replace(/-/g, "")}.com`;
+  const firmIdUpper = (firmId || "").toUpperCase().replace(/-/g, " ");
 
   useEffect(() => {
     if (!firmId) return;
@@ -47,197 +36,71 @@ export default function PropFirmIdLayout({ children }) {
     };
   }, [firmId]);
 
-  const logoUrl = firm ? getFirmLogoUrl(firm) : DEFAULT_LOGO_URL;
-
   return (
     <PropProofLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Back link */}
-        <Link
-          href="/propfirms"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 mb-6 transition-colors hover:text-slate-700"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <Link
+            href="/propfirms"
+            className="text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Back to Signal Board
-        </Link>
-
-        {/* Firm header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-md bg-white flex-shrink-0 flex items-center justify-center">
-              <img
-                src={logoUrl}
-                alt={displayName}
-                className="w-full h-full object-contain absolute inset-0 bg-white"
-                onError={(e) => {
-                  e.target.src = DEFAULT_LOGO_URL;
-                }}
-              />
-              <div className="hidden absolute inset-0 w-full h-full bg-slate-900 items-center justify-center">
-                <span className="text-white text-xl font-black">
-                  {displayName.substring(0, 2).toUpperCase()}
-                </span>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-2xl font-bold text-slate-900">
-                  {displayName}
-                </h1>
-                <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
-                  VERIFIED PAYOUTS
-                </span>
-              </div>
-              <a
-                href={website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-sm font-medium hover:underline"
-                style={{ color: THEME.primary }}
-              >
-                {website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                <svg
-                  className="w-3 h-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </a>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
-            >
-              Track Signals
-            </button>
-            <button
-              type="button"
-              className="px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-sm flex items-center gap-2"
-            >
-              <svg
-                className="w-4 h-4 text-yellow-400 fill-yellow-400"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-              Start Evaluation
-            </button>
-          </div>
+            &lt; PROP INTELLIGENCE / {firmIdUpper}
+          </Link>
         </div>
 
-        {/* Tabs: Overview | Payout Evidence | Intelligence Layer — on top, active = purple + underline */}
-        <nav
-          className="flex items-center gap-0 border-b border-slate-200 mb-8"
-          aria-label="Firm sections"
-        >
-          {TABS.map((tab) => {
-            const href = `${basePath}${tab.path}`;
-            const isActive =
-              pathname === href ||
-              (tab.path === "" && pathname === basePath) ||
-              (tab.path !== "" && pathname?.startsWith(href));
-            return (
-              <Link
-                key={tab.path || "overview"}
-                href={href}
-                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all border-b-2 -mb-px ${
-                  isActive
-                    ? ""
-                    : "border-transparent text-slate-600 hover:text-slate-900"
-                }`}
-                style={isActive ? { borderColor: THEME.primary, color: THEME.primary } : {}}
-              >
-                {tab.icon === "overview" && (
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4"
-                    />
-                  </svg>
-                )}
-                {tab.icon === "payout" && (
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden
-                  >
-                    <rect x="4" y="14" width="4" height="6" rx="1" />
-                    <rect x="10" y="9" width="4" height="11" rx="1" />
-                    <rect x="16" y="5" width="4" height="15" rx="1" />
-                  </svg>
-                )}
-                {tab.icon === "intelligence" && (
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                )}
-                {tab.label}
-                {tab.icon === "intelligence" && (
-                  <span
-                    className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white"
-                    style={{ backgroundColor: THEME.primary }}
-                  >
-                    NEW
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+        {/* Layout: Sidebar (left) | Tabs + Content (right) */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          <PropFirmSidebar firmId={firmId} firm={firm} />
 
-        {children}
+          <div className="flex-1 min-w-0">
+            {/* Content Tabs - in the right column only */}
+            <nav
+              className="flex items-center gap-8 border-b border-slate-200 mb-6"
+              aria-label="Firm sections"
+            >
+              {TABS.map((tab) => {
+                const href = `${basePath}${tab.path}`;
+                const isActive =
+                  pathname === href ||
+                  (tab.path === "" && pathname === basePath) ||
+                  (tab.path !== "" && pathname?.startsWith(href));
+                return (
+                  <Link
+                    key={tab.path || "overview"}
+                    href={href}
+                    className={`pb-4 text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all relative ${
+                      isActive ? "" : "text-slate-400 hover:text-slate-600"
+                    }`}
+                    style={isActive ? { color: THEME.primary } : {}}
+                  >
+                    {tab.icon === "overview" && (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="4" y="14" width="4" height="6" rx="1" />
+                        <rect x="10" y="9" width="4" height="11" rx="1" />
+                        <rect x="16" y="5" width="4" height="15" rx="1" />
+                      </svg>
+                    )}
+                    {tab.icon === "payout" && (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    )}
+                    {tab.icon === "intelligence" && (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    )}
+                    {tab.label}
+                    {isActive && <div className="absolute bottom-0 left-0 w-full h-0.5 rounded-full" style={{ backgroundColor: THEME.primary }} />}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {children}
+          </div>
+        </div>
       </div>
     </PropProofLayout>
   );
