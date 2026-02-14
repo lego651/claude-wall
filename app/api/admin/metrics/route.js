@@ -82,6 +82,52 @@ async function getDbStats(supabase) {
   return { counts, latencyMs, ok };
 }
 
+/** Payout counts for 24h, 7d, 30d and erratic detection (vs usual). */
+async function getPropfirmsPayoutCounts(supabase) {
+  const now = Date.now();
+  const ms24h = 24 * 60 * 60 * 1000;
+  const ms7d = 7 * 24 * ms24h;
+  const ms30d = 30 * 24 * ms24h;
+  const cutoffs = {
+    '24h': new Date(now - ms24h).toISOString(),
+    '7d': new Date(now - ms7d).toISOString(),
+    '30d': new Date(now - ms30d).toISOString(),
+  };
+
+  const counts = { '24h': null, '7d': null, '30d': null };
+  for (const [label, cutoff] of Object.entries(cutoffs)) {
+    try {
+      const { count, error } = await supabase
+        .from('recent_payouts')
+        .select('*', { count: 'exact', head: true })
+        .gte('timestamp', cutoff);
+      counts[label] = error ? null : count;
+    } catch {
+      counts[label] = null;
+    }
+  }
+
+  const c24 = counts['24h'] ?? 0;
+  const c7 = counts['7d'] ?? 0;
+  const c30 = counts['30d'] ?? 0;
+  const expected24h = c7 >= 7 ? c7 / 7 : null;
+  const expected7d = c30 >= 10 ? (c30 * 7) / 30 : null;
+
+  const flags = [];
+  if (expected24h != null && expected24h >= 1) {
+    if (c24 === 0) flags.push({ period: '24h', type: 'zero', message: 'Payout count is 0 (7d had data)' });
+    else if (c24 < 0.2 * expected24h) flags.push({ period: '24h', type: 'low', message: `24h count ${c24} is much lower than usual (~${Math.round(expected24h)}/day)` });
+    else if (c24 > 3 * expected24h) flags.push({ period: '24h', type: 'high', message: `24h count ${c24} is much higher than usual (~${Math.round(expected24h)}/day)` });
+  }
+  if (expected7d != null && expected7d >= 1) {
+    if (c7 < 0.2 * expected7d) flags.push({ period: '7d', type: 'low', message: `7d count ${c7} is much lower than usual (~${Math.round(expected7d)} for 7d)` });
+    else if (c7 > 3 * expected7d) flags.push({ period: '7d', type: 'high', message: `7d count ${c7} is much higher than usual (~${Math.round(expected7d)} for 7d)` });
+  }
+
+  const status = flags.some((f) => f.type === 'zero') ? 'critical' : flags.length > 0 ? 'warning' : 'ok';
+  return { counts: { '24h': c24, '7d': c7, '30d': c30 }, erratic: { status, flags } };
+}
+
 export async function GET() {
   const supabase = await createClient();
   const {
@@ -102,9 +148,10 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const [fileStats, dbResult] = await Promise.all([
+  const [fileStats, dbResult, propfirmsData] = await Promise.all([
     getFileStats(),
     getDbStats(supabase),
+    getPropfirmsPayoutCounts(supabase),
   ]);
 
   const arbiscan = usageTracker?.getUsage ? usageTracker.getUsage() : { calls: 0, limit: 0, percentage: 0, day: null };
@@ -141,6 +188,12 @@ export async function GET() {
     arbiscan: { status: arbiscanStatus, percentage: arbiscanPct, label: 'Arbiscan usage' },
     supabase: { status: supabaseStatus, latencyMs: dbResult.latencyMs, label: 'Database' },
     cacheConfigured: { set: !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN), label: 'Cache configured' },
+    propfirmsData: {
+      status: propfirmsData.erratic.status,
+      label: 'Prop firms payout data',
+      counts: propfirmsData.counts,
+      flags: propfirmsData.erratic.flags,
+    },
   };
 
   // Send email for critical checks (throttled)
@@ -168,6 +221,15 @@ export async function GET() {
       { latencyMs: dbResult.latencyMs }
     ).catch(() => {});
   }
+  if (propfirmsData.erratic.status === 'critical' && shouldSendAlert('propfirms_data_critical')) {
+    const msg = propfirmsData.erratic.flags.find((f) => f.type === 'zero')
+      ? 'Prop firms payout count dropped to 0 in last 24h (7d had data).'
+      : 'Prop firms data erratic: ' + propfirmsData.erratic.flags.map((f) => f.message).join('; ');
+    sendAlert('Admin dashboard', msg, 'CRITICAL', {
+      counts: propfirmsData.counts,
+      flags: propfirmsData.erratic.flags,
+    }).catch(() => {});
+  }
 
   const payload = {
     checks,
@@ -194,6 +256,10 @@ export async function GET() {
       hits: cache.hits,
       misses: cache.misses,
       hitRate: cache.hitRate,
+    },
+    propfirmsData: {
+      counts: propfirmsData.counts,
+      erratic: propfirmsData.erratic,
     },
     apiLatency: { note: 'See Vercel Analytics for P50/P95/P99 by route' },
     errorRates: { note: 'See Vercel Analytics or logs for error rates by endpoint' },

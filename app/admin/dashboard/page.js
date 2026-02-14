@@ -18,6 +18,12 @@ function metricsToCSV(data) {
     rows.push(`check_fileSize,${data.checks.fileSize?.status ?? ""}`);
     rows.push(`check_arbiscan,${data.checks.arbiscan?.status ?? ""}`);
     rows.push(`check_supabase,${data.checks.supabase?.status ?? ""}`);
+    rows.push(`check_propfirmsData,${data.checks.propfirmsData?.status ?? ""}`);
+  }
+  if (data?.propfirmsData?.counts) {
+    rows.push(`propfirms_count_24h,${data.propfirmsData.counts["24h"] ?? ""}`);
+    rows.push(`propfirms_count_7d,${data.propfirmsData.counts["7d"] ?? ""}`);
+    rows.push(`propfirms_count_30d,${data.propfirmsData.counts["30d"] ?? ""}`);
   }
   rows.push(`arbiscan_calls,${data?.arbiscan?.calls ?? ""}`);
   rows.push(`arbiscan_limit,${data?.arbiscan?.limit ?? ""}`);
@@ -262,6 +268,27 @@ export default function AdminDashboardPage() {
                       {data.checks.cacheConfigured?.set ? "Configured" : "Not set"}
                     </span>
                   </div>
+                  {data.checks.propfirmsData && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{data.checks.propfirmsData.label ?? "Prop firms data"}</span>
+                      <span
+                        className={`badge ${
+                          data.checks.propfirmsData.status === "critical"
+                            ? "badge-error"
+                            : data.checks.propfirmsData.status === "warning"
+                              ? "badge-warning"
+                              : "badge-success"
+                        }`}
+                      >
+                        {data.checks.propfirmsData.status ?? "—"}
+                      </span>
+                      {data.checks.propfirmsData.counts && (
+                        <span className="text-xs text-base-content/60">
+                          {data.checks.propfirmsData.counts["24h"] ?? 0} / {data.checks.propfirmsData.counts["7d"] ?? 0} / {data.checks.propfirmsData.counts["30d"] ?? 0}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -270,6 +297,57 @@ export default function AdminDashboardPage() {
 
         {data && (
           <div className="space-y-8">
+            {/* Prop firms data (24h, 7d, 30d + erratic) */}
+            {data.propfirmsData && (
+              <section>
+                <h2 className="text-lg font-semibold mb-4">Prop firms payout data</h2>
+                <div className="card card-border bg-base-100 shadow">
+                  <div className="card-body">
+                    <div className="flex flex-wrap items-center gap-6 mb-3">
+                      <div className="stat padding-0">
+                        <div className="stat-title text-xs">Last 24h</div>
+                        <div className="stat-value text-lg">{data.propfirmsData.counts?.["24h"] ?? "—"}</div>
+                      </div>
+                      <div className="stat padding-0">
+                        <div className="stat-title text-xs">Last 7d</div>
+                        <div className="stat-value text-lg">{data.propfirmsData.counts?.["7d"] ?? "—"}</div>
+                      </div>
+                      <div className="stat padding-0">
+                        <div className="stat-title text-xs">Last 30d</div>
+                        <div className="stat-value text-lg">{data.propfirmsData.counts?.["30d"] ?? "—"}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-base-content/70">Erratic check</span>
+                        <span
+                          className={`badge ${
+                            data.propfirmsData.erratic?.status === "critical"
+                              ? "badge-error"
+                              : data.propfirmsData.erratic?.status === "warning"
+                                ? "badge-warning"
+                                : "badge-success"
+                          }`}
+                        >
+                          {data.propfirmsData.erratic?.status ?? "ok"}
+                        </span>
+                      </div>
+                    </div>
+                    {data.propfirmsData.erratic?.flags?.length > 0 && (
+                      <ul className="list-disc list-inside text-sm text-base-content/80 space-y-1">
+                        {data.propfirmsData.erratic.flags.map((f, i) => (
+                          <li key={i}>
+                            <span className={f.type === "zero" ? "text-error" : "text-warning"}>{f.message}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <p className="text-xs text-base-content/50 mt-2">
+                      Payout row counts from recent_payouts. Erratic = 24h or 7d significantly lower or higher than usual (vs 7d/30d baseline). Zero in 24h when 7d had data triggers a critical alert.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* Arbiscan */}
             <section>
               <h2 className="text-lg font-semibold mb-4">Arbiscan API</h2>
