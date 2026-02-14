@@ -22,7 +22,7 @@ Recruit beta testers and gather structured feedback before scaling.
   - Would you open this every week?
   - What other data sources do you want? (Reddit, Twitter, etc.)
 - [ ] **Collect feedback** in a spreadsheet (link survey results, tag by source).
-- [ ] **Prioritize top 3 requests** for Beta roadmap (e.g. in `roadmap/alpha_follow_tickets.md` or a Beta backlog).
+- [ ] **Prioritize top 3 requests** for Beta roadmap (e.g. in a Beta backlog).
 
 ## Success Criteria
 

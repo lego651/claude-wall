@@ -116,7 +116,7 @@ After successful migration:
 
 ## Next Ticket
 
-Proceed to **[TICKET-002: Trustpilot Scraper Implementation](../roadmap/alpha_tickets.md#ticket-002-trustpilot-scraper-implementation)**
+Proceed to **TICKET-002: Trustpilot Scraper Implementation** (see project docs).
 
 ---
 
