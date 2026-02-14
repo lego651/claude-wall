@@ -92,6 +92,21 @@ function countByFirm(rows) {
   return map;
 }
 
+/** Firms with Trustpilot URL and their last scraper run status (for admin dashboard). */
+async function getTrustpilotScraperStatus(supabase) {
+  try {
+    const { data, error } = await supabase
+      .from('firms')
+      .select('id, name, last_scraper_run_at, last_scraper_reviews_scraped, last_scraper_reviews_stored, last_scraper_duplicates_skipped, last_scraper_error')
+      .not('trustpilot_url', 'is', null)
+      .order('id');
+    if (error) return [];
+    return data || [];
+  } catch {
+    return [];
+  }
+}
+
 /** Per-firm payout counts (24h, 7d, 30d) and erratic detection. Returns only firms with warning or critical. */
 async function getPropfirmsPayoutCounts(supabase) {
   const now = Date.now();
@@ -196,10 +211,11 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const [fileStats, dbResult, propfirmsData] = await Promise.all([
+  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms] = await Promise.all([
     getFileStats(),
     getDbStats(supabase),
     getPropfirmsPayoutCounts(supabase),
+    getTrustpilotScraperStatus(supabase),
   ]);
 
   const arbiscan = usageTracker?.getUsage ? usageTracker.getUsage() : { calls: 0, limit: 0, percentage: 0, day: null };
@@ -305,6 +321,10 @@ export async function GET() {
     propfirmsData: {
       firmsWithIssues: propfirmsData.firmsWithIssues,
       overallStatus: propfirmsData.overallStatus,
+    },
+    trustpilotScraper: {
+      firms: trustpilotScraperFirms,
+      note: 'Updated by daily GitHub Actions (sync-trustpilot-reviews). Refresh to see latest run.',
     },
     apiLatency: { note: 'See Vercel Analytics for P50/P95/P99 by route' },
     errorRates: { note: 'See Vercel Analytics or logs for error rates by endpoint' },

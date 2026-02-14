@@ -79,6 +79,23 @@ async function runRetentionCleanup() {
   console.log(`[Trustpilot Backfill] weekly_reports: deleted ${deletedReports?.length ?? 0} rows`);
 }
 
+async function updateFirmScraperStatus(
+  firmId: string,
+  result: { success: boolean; reviewsScraped: number; reviewsStored?: number; duplicatesSkipped?: number; error?: string }
+) {
+  const supabase = createServiceClient();
+  await supabase
+    .from('firms')
+    .update({
+      last_scraper_run_at: new Date().toISOString(),
+      last_scraper_reviews_scraped: result.reviewsScraped,
+      last_scraper_reviews_stored: result.reviewsStored ?? 0,
+      last_scraper_duplicates_skipped: result.duplicatesSkipped ?? 0,
+      last_scraper_error: result.success ? null : (result.error ?? 'Unknown error'),
+    })
+    .eq('id', firmId);
+}
+
 async function main() {
   const firms = await getFirmsWithTrustpilot();
   if (firms.length === 0) {
@@ -100,6 +117,14 @@ async function main() {
     );
 
     const result = await scrapeAndStoreReviews(firm.id, config, firm.trustpilot_url);
+
+    await updateFirmScraperStatus(firm.id, {
+      success: result.success,
+      reviewsScraped: result.reviewsScraped,
+      reviewsStored: result.reviewsStored,
+      duplicatesSkipped: result.duplicatesSkipped,
+      error: result.error,
+    });
 
     if (!result.success) {
       console.error(`[${firm.id}] Failed: ${result.error}`);

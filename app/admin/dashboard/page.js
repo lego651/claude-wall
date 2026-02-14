@@ -39,6 +39,14 @@ function metricsToCSV(data) {
   if (data?.database) {
     Object.entries(data.database).forEach(([k, v]) => rows.push(`db_${k},${v ?? ""}`));
   }
+  if (data?.trustpilotScraper?.firms?.length) {
+    data.trustpilotScraper.firms.forEach((f) => {
+      rows.push(`trustpilot_${f.id}_lastRun,${f.last_scraper_run_at ?? ""}`);
+      rows.push(`trustpilot_${f.id}_scraped,${f.last_scraper_reviews_scraped ?? ""}`);
+      rows.push(`trustpilot_${f.id}_stored,${f.last_scraper_reviews_stored ?? ""}`);
+      rows.push(`trustpilot_${f.id}_error,${f.last_scraper_error ?? ""}`);
+    });
+  }
   rows.push(`fetchedAt,${data?.fetchedAt ?? ""}`);
   return rows.join("\n");
 }
@@ -428,6 +436,75 @@ export default function AdminDashboardPage() {
                       </>
                     )}
                   </div>
+                </div>
+              </section>
+            )}
+
+            {/* Trustpilot scraping (daily GitHub Actions) */}
+            {data.trustpilotScraper?.firms?.length > 0 && (
+              <section>
+                <h2 className="text-lg font-semibold mb-4">Trustpilot scraping</h2>
+                <p className="text-sm text-base-content/60 mb-3">
+                  Daily run via GitHub Actions (sync-trustpilot-reviews). Last run per firm below.
+                </p>
+                <div className="card card-border bg-base-100 shadow overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="table table-sm w-full">
+                      <thead>
+                        <tr>
+                          <th className="font-medium">Firm</th>
+                          <th className="text-right">Last run</th>
+                          <th className="text-right">Scraped</th>
+                          <th className="text-right">Stored</th>
+                          <th className="text-right">Duplicates</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.trustpilotScraper.firms.map((f) => (
+                          <tr key={f.id}>
+                            <td className="font-medium">{f.name ?? f.id}</td>
+                            <td className="text-right text-base-content/70 tabular-nums">
+                              {f.last_scraper_run_at
+                                ? new Date(f.last_scraper_run_at).toLocaleString(undefined, {
+                                    dateStyle: "short",
+                                    timeStyle: "short",
+                                  })
+                                : "—"}
+                            </td>
+                            <td className="text-right tabular-nums">{f.last_scraper_reviews_scraped ?? "—"}</td>
+                            <td className="text-right tabular-nums">{f.last_scraper_reviews_stored ?? "—"}</td>
+                            <td className="text-right tabular-nums">{f.last_scraper_duplicates_skipped ?? "—"}</td>
+                            <td>
+                              {f.last_scraper_error ? (
+                                <span className="badge badge-error badge-sm" title={f.last_scraper_error}>
+                                  Error
+                                </span>
+                              ) : f.last_scraper_run_at ? (
+                                <span className="badge badge-success badge-sm">OK</span>
+                              ) : (
+                                <span className="text-base-content/50">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {data.trustpilotScraper.firms.some((f) => f.last_scraper_error) && (
+                    <div className="px-4 pb-3 pt-1 border-t border-base-200">
+                      <p className="text-xs font-medium text-base-content/70 mb-1">Errors (hover badge for message):</p>
+                      <ul className="text-xs text-base-content/60 space-y-0.5">
+                        {data.trustpilotScraper.firms
+                          .filter((f) => f.last_scraper_error)
+                          .map((f) => (
+                            <li key={f.id}>
+                              <span className="font-medium">{f.name ?? f.id}:</span> {f.last_scraper_error}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </section>
             )}
