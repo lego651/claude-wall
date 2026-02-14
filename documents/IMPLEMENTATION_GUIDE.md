@@ -936,7 +936,7 @@ supabase login
 supabase link --project-ref your-project-ref
 ```
 
-**File: `/supabase/migrations/001_initial_schema.sql`**
+**File: `/migrations/01_schema.sql`** (use the single `migrations/` folder at project root for all SQL migrations)
 
 ```sql
 -- Firms table

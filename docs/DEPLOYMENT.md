@@ -32,7 +32,7 @@ Set in Vercel (Project → Settings → Environment Variables) for **Production*
 
 ## 2. Database
 
-- [ ] **Indexes:** Migration `supabase/migrations/002_add_indexes.sql` applied (see [DATABASE-OPTIMIZATION.md](./DATABASE-OPTIMIZATION.md)). In Supabase Dashboard → SQL Editor, run the migration if not using Supabase CLI.
+- [ ] **Indexes:** Migration `migrations/12_add-indexes.sql` applied (see [DATABASE-OPTIMIZATION.md](./DATABASE-OPTIMIZATION.md)). In Supabase Dashboard → SQL Editor, run the migration if not using Supabase CLI.
 - [ ] **RLS:** Row Level Security policies configured as required for your tables (e.g. `profiles`, `recent_payouts` access).
 - [ ] **Backup:** Supabase project has Point-in-Time Recovery / backups enabled (Supabase Dashboard → Project Settings → Database).
 

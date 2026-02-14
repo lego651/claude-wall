@@ -4,7 +4,7 @@ Indexes added in **PROP-014** to speed up Supabase queries used by the propfirms
 
 ## Migration
 
-- **File:** `supabase/migrations/002_add_indexes.sql`
+- **File:** `migrations/12_add-indexes.sql`
 - **Apply:** Run against your Supabase project (staging/production) when the tables exist.
 
 ### Using Supabase CLI
@@ -18,7 +18,7 @@ supabase db push
 
 ### Manual run
 
-In Supabase Dashboard → SQL Editor, paste and run the contents of `supabase/migrations/002_add_indexes.sql`.
+In Supabase Dashboard → SQL Editor, paste and run the contents of `migrations/12_add-indexes.sql`.
 
 ## Indexes added
 
@@ -29,7 +29,7 @@ In Supabase Dashboard → SQL Editor, paste and run the contents of `supabase/mi
 | `trustpilot_reviews`| `idx_trustpilot_firm_date`            | `(firm_id, review_date DESC)`                | Signals, digest, incidents source links |
 | `weekly_incidents`  | `idx_weekly_incidents_firm_year_week` | `(firm_id, year DESC, week_number DESC)`     | GET incidents by firm, incident-aggregator |
 
-**Note:** If you applied `database/alpha-intelligence-schema.sql` earlier, `trustpilot_reviews` and `weekly_incidents` may already have equivalent indexes (`idx_trustpilot_firm_date`, `idx_incidents_firm_week`). The migration uses `CREATE INDEX IF NOT EXISTS`, so re-running is safe.
+**Note:** If you applied `migrations/11_alpha-intelligence-schema.sql` earlier, `trustpilot_reviews` and `weekly_incidents` may already have equivalent indexes (`idx_trustpilot_firm_date`, `idx_incidents_firm_week`). The migration uses `CREATE INDEX IF NOT EXISTS`, so re-running is safe.
 
 ## Expected speedups
 

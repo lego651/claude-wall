@@ -108,6 +108,10 @@ export async function POST(req) {
 
 ## 📁 File Structure & Naming
 
+### Database migrations
+- **Only use the `migrations/` folder** at project root for SQL migrations. Numbered files (01_, 02_, …) define run order.
+- **Do NOT** create new migration folders (e.g. `supabase/migrations`, `database/`, or feature-specific migration dirs). Add new migrations as next number in `migrations/` (e.g. `18_description.sql`).
+
 ### API Routes (App Router)
 ```
 app/api/[endpoint]/route.js
@@ -195,13 +199,14 @@ export default function InteractiveComponent() {
 
 ## 🚫 Common Mistakes to Avoid
 
-1. **DON'T** use synchronous `headers()` or `cookies()` in Next.js 15
-2. **DON'T** import unused dependencies
-3. **DON'T** use old Tailwind v3 `@tailwind` directives with v4
-4. **DON'T** use old DaisyUI v4 theme import paths
-5. **DON'T** use `createClient()` without await in server components
-6. **DON'T** mix server and client component patterns
-7. **DON'T** use deprecated `domains` in next.config.js (use `remotePatterns`)
+1. **DON'T** create separate migration folders (e.g. `supabase/migrations`, `database/`) — use only `migrations/` at project root.
+2. **DON'T** use synchronous `headers()` or `cookies()` in Next.js 15
+3. **DON'T** import unused dependencies
+4. **DON'T** use old Tailwind v3 `@tailwind` directives with v4
+5. **DON'T** use old DaisyUI v4 theme import paths
+6. **DON'T** use `createClient()` without await in server components
+7. **DON'T** mix server and client component patterns
+8. **DON'T** use deprecated `domains` in next.config.js (use `remotePatterns`)
 
 ## 🎯 Commit Message Format
 Use Conventional Commits:

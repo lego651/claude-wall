@@ -32,11 +32,11 @@
 | [lib/ai/classifier.ts](lib/ai/classifier.ts) | New prompt + categories; validate and store canonical category |
 | [lib/digest/incident-aggregator.ts](lib/digest/incident-aggregator.ts) | Spike (>=3) + severity override (>=1); query includes legacy categories; group by normalized category |
 | [lib/digest/generator.ts](lib/digest/generator.ts) | Sentiment from POSITIVE_SENTIMENT_CATEGORY, NEUTRAL_SENTIMENT_CATEGORY, isNegativeSentiment() |
-| [database/update-classifier-taxonomy.sql](database/update-classifier-taxonomy.sql) | New: expand valid_category and incident_type CHECKs |
+| [migrations/14_update-classifier-taxonomy.sql](migrations/14_update-classifier-taxonomy.sql) | New: expand valid_category and incident_type CHECKs |
 
 ### 5. Deployment
 
-1. Run migration: `psql` or Supabase SQL editor on [database/update-classifier-taxonomy.sql](database/update-classifier-taxonomy.sql).
+1. Run migration: `psql` or Supabase SQL editor on [migrations/14_update-classifier-taxonomy.sql](migrations/14_update-classifier-taxonomy.sql).
 2. Deploy app; classifier and batch job will write new taxonomy; existing rows keep legacy values until reclassified (optional).
 3. Incident aggregator and digest already support both old and new values via normalization and legacy category list in queries.
 

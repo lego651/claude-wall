@@ -16,7 +16,7 @@ Instead of calling Arbiscan API directly for each trader wallet, we now:
 Run the migration script in Supabase SQL Editor:
 
 ```sql
--- See: database/create-trader-records-table.sql
+-- See: migrations/06_create-trader-records-table.sql
 ```
 
 This creates:

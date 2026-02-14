@@ -608,7 +608,7 @@ Optimize Supabase queries with missing indexes.
 **Dependencies**: None
 
 **Files to Create**:
-- `supabase/migrations/002_add_indexes.sql`
+- `migrations/12_add-indexes.sql`
 - `docs/DATABASE-OPTIMIZATION.md`
 
 **Expected Speedup**:

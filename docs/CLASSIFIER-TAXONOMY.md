@@ -105,6 +105,6 @@ This doc will be updated when Phase 2 is implemented.
 
 Run once to allow new (and keep legacy) category/incident_type values:
 
-- **[database/update-classifier-taxonomy.sql](../database/update-classifier-taxonomy.sql)**  
+- **[migrations/14_update-classifier-taxonomy.sql](../migrations/14_update-classifier-taxonomy.sql)**  
   - Expands `trustpilot_reviews.valid_category` to allow all new + legacy categories.  
   - Expands `weekly_incidents.incident_type` CHECK to allow new + legacy incident types.

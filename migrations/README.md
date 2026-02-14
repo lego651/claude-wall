@@ -1,6 +1,6 @@
 # Database Migrations
 
-This directory contains SQL migration files for the PropProof database.
+This directory is the **single source** for all SQL migrations. Do not create other migration folders (e.g. `supabase/migrations`, `database/`). Files are prefixed with a number (01_, 02_, …) to indicate run order.
 
 ## Running Migrations
 
@@ -37,22 +37,30 @@ psql "postgresql://postgres:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:54
 \i /path/to/migration-file.sql
 ```
 
-## Migration Files
+## Migration Files (run in order 01 → 17)
 
 ### Core Schema
-- `schema.sql` - Original profiles table and auth setup
-- `add-profile-fields.sql` - Additional profile fields
-- `add-isadmin-field.sql` - Admin user support
-- `add-public-profile-policy.sql` - Public profile visibility
+- `01_schema.sql` - Original profiles table and auth setup
+- `02_create-profile-for-existing-user.sql` - Ensure existing users get profiles
+- `03_add-profile-fields.sql` - Additional profile fields
+- `04_add-isadmin-field.sql` - Admin user support
+- `05_add-public-profile-policy.sql` - Public profile visibility
 
 ### Trading Features
-- `create-trader-records-table.sql` - Trader verification system
-- `create-pending-wallets-table.sql` - Wallet connection queue
-- `create-recent-trader-payouts-table.sql` - Recent payout tracking
-- `create-trader-payout-history-table.sql` - Historical payout data
+- `06_create-trader-records-table.sql` - Trader verification system
+- `07_create-pending-wallets-table.sql` - Wallet connection queue
+- `08_create-recent-trader-payouts-table.sql` - Recent payout tracking
+- `09_create-trader-payout-history-table.sql` - Historical payout data
+- `10_add-backfilled-at-column.sql` - Backfill tracking column
 
-### Alpha Intelligence Engine (NEW)
-- `alpha-intelligence-schema.sql` - **TICKET-001** - Trustpilot reviews, subscriptions, weekly reports
+### Alpha Intelligence Engine
+- `11_alpha-intelligence-schema.sql` - **TICKET-001** - Trustpilot reviews, subscriptions, weekly reports
+- `12_add-indexes.sql` - Indexes for API and sync performance
+- `13_add-ftmo-topstep.sql` - FTMO/Topstep firm data
+- `14_update-classifier-taxonomy.sql` - Classifier taxonomy updates
+- `15_fix-existing-users.sql` - Fix existing user data
+- `16_verify-alpha-schema.sql` - Alpha schema verification
+- `17_verify-policies.sql` - RLS policy verification
 
 ## Alpha Intelligence Schema
 
@@ -157,7 +165,7 @@ All tables have RLS enabled with appropriate policies:
 
 ## Next Steps
 
-After running `alpha-intelligence-schema.sql`:
+After running `11_alpha-intelligence-schema.sql`:
 
 1. ✅ Verify all tables created
 2. ✅ Verify RLS policies applied

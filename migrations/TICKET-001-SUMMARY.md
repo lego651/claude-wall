@@ -79,7 +79,7 @@ https://supabase.com/dashboard/project/YOUR_PROJECT_ID/sql/new
 ### Step 2: Copy SQL
 ```bash
 # Copy the entire contents of:
-database/alpha-intelligence-schema.sql
+migrations/11_alpha-intelligence-schema.sql
 ```
 
 ### Step 3: Paste & Run

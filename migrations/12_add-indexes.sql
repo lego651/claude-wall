@@ -12,11 +12,11 @@ CREATE INDEX IF NOT EXISTS idx_recent_payouts_timestamp
   ON recent_payouts(timestamp DESC);
 
 -- trustpilot_reviews: used by signals, incidents (resolve review_ids), digest, classifier
--- May already exist from database/alpha-intelligence-schema.sql
+-- May already exist from migrations/11_alpha-intelligence-schema.sql
 CREATE INDEX IF NOT EXISTS idx_trustpilot_firm_date
   ON trustpilot_reviews(firm_id, review_date DESC);
 
 -- weekly_incidents: used by GET /api/v2/propfirms/[id]/incidents, incident-aggregator
--- May already exist as idx_incidents_firm_week from alpha-intelligence-schema.sql
+-- May already exist as idx_incidents_firm_week from migrations/11_alpha-intelligence-schema.sql
 CREATE INDEX IF NOT EXISTS idx_weekly_incidents_firm_year_week
   ON weekly_incidents(firm_id, year DESC, week_number DESC);

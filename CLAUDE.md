@@ -64,6 +64,7 @@ const supabase = createClient();
  - `lib/stripe.ts` - Payment processing
  - `lib/seo.js` - SEO tag generation
  - `lib/resend.ts` - Email service
+- **`migrations/`** - **Single source for all SQL migrations.** Numbered files (01_, 02_, …) define run order. Run via Supabase SQL Editor or `psql`. Do not create other migration folders (e.g. `supabase/migrations`, `database/`).
 - **`config.js`** - Central configuration (app settings, Stripe plans, colors, auth URLs)
 
 ### Tech Stack Integration
@@ -181,6 +182,11 @@ export async function POST(req) {
 
 ### Warning Suppression
 The `next.config.js` includes webpack configuration to suppress known Supabase realtime warnings that are harmless but noisy during development.
+
+## Database migrations
+
+- **Use only the `migrations/` folder** at the project root for SQL schema and data migrations.
+- Do not create or use separate migration folders (e.g. `supabase/migrations`, `database/`, or per-feature migration dirs). Add new migrations as numbered files (e.g. `18_my_change.sql`) and update `migrations/README.md` if needed.
 
 ## Key Integration Points
 

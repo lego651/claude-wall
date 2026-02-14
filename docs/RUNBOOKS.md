@@ -110,7 +110,7 @@ See [ARBISCAN-USAGE.md](./ARBISCAN-USAGE.md).
 **Symptoms:** Slow API responses; logs show "Query timeout" or slow-query warnings (≥1s).
 
 **Steps:**
-1. **Indexes:** Ensure [DATABASE-OPTIMIZATION.md](./DATABASE-OPTIMIZATION.md) indexes are applied: `supabase/migrations/002_add_indexes.sql` (recent_payouts, trustpilot_reviews, weekly_incidents).
+1. **Indexes:** Ensure [DATABASE-OPTIMIZATION.md](./DATABASE-OPTIMIZATION.md) indexes are applied: `migrations/12_add-indexes.sql` (recent_payouts, trustpilot_reviews, weekly_incidents).
 2. **Audit:** In Supabase SQL Editor, run the index audit query in that doc to confirm indexes exist.
 3. **Query optimization:** Use Supabase Dashboard → Logs or slow-query logs from `withQueryGuard` to find slow queries; add indexes or narrow filters (e.g. time range, firm_id).
 4. **Pooling and timeouts:** We use Supabase’s managed pooler. Timeouts are 5s in `withQueryGuard`; increase only if needed and after optimizing queries.
