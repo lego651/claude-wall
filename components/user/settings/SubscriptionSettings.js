@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { getFirmLogoUrl, DEFAULT_LOGO_URL } from "@/lib/logoUtils";
 
 /**
  * TICKET-014: Settings section to manage which firms the user follows for the weekly digest.
@@ -68,9 +69,11 @@ export default function SubscriptionSettings() {
     }
   }
 
-  // Try .webp first (the5ers, fundingpips), then .png, .jpeg (files in public/logos/firms/)
   function getLogoUrl(sub) {
-    return `/logos/firms/${sub.firm_id}.webp`;
+    return getFirmLogoUrl({
+      firm_id: sub.firm_id,
+      logo_url: sub.firm?.logo_url ?? sub.logo_url,
+    });
   }
 
   if (loading) {
@@ -138,13 +141,7 @@ export default function SubscriptionSettings() {
                     alt=""
                     className="w-10 h-10 rounded-lg object-cover bg-white shrink-0"
                     onError={(e) => {
-                      const next = e.target.src?.includes(".webp")
-                        ? `/logos/firms/${sub.firm_id}.png`
-                        : `/logos/firms/${sub.firm_id}.jpeg`;
-                      e.target.src = next;
-                      e.target.onerror = () => {
-                        e.target.style.display = "none";
-                      };
+                      e.target.src = DEFAULT_LOGO_URL;
                     }}
                   />
                   <div className="min-w-0">

@@ -17,6 +17,10 @@ jest.mock('@/middleware/requestId', () => ({
   getRequestId: () => 'test-req-id',
   setRequestIdHeader: jest.fn(),
 }));
+jest.mock('@/lib/cache', () => ({ cache: { get: jest.fn(), set: jest.fn() } }));
+jest.mock('@/lib/supabaseQuery', () => ({
+  withQueryGuard: (promise) => promise,
+}));
 
 function createRequest(url = 'https://x.com/api/v2/propfirms/f1/chart') {
   return new Request(url, { headers: { Origin: 'http://localhost:3000' } });
@@ -36,7 +40,7 @@ describe('GET /api/v2/propfirms/[id]/chart', () => {
     isRateLimited.mockReturnValue({ limited: false, retryAfterMs: 60_000 });
 
     mockSingle = jest.fn().mockResolvedValue({
-      data: { id: 'f1', name: 'Firm One', logo: null, website: null, last_payout_at: null },
+      data: { id: 'f1', name: 'Firm One', logo_url: null, website: null, last_payout_at: null },
       error: null,
     });
     mockEq = jest.fn().mockReturnValue({ single: mockSingle });
@@ -138,5 +142,45 @@ describe('GET /api/v2/propfirms/[id]/chart', () => {
       largestPayout: 1000,
       avgPayout: 500,
     });
+  });
+
+  it('returns 403 when validateOrigin fails', async () => {
+    validateOrigin.mockReturnValue({ ok: false, headers: {} });
+    const req = createRequest();
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+    expect(res.status).toBe(403);
+    expect(body.error).toBe('Forbidden origin');
+  });
+
+  it('returns 429 when rate limited', async () => {
+    isRateLimited.mockReturnValue({ limited: true, retryAfterMs: 5000 });
+    const req = createRequest();
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+    expect(res.status).toBe(429);
+    expect(body.error).toBe('Rate limit exceeded');
+    expect(res.headers.get('Retry-After')).toBe('5');
+  });
+
+  it('returns cached response on cache hit', async () => {
+    const { cache } = require('@/lib/cache');
+    const cached = { firm: { id: 'f1', name: 'F1', logo: null }, summary: {}, chart: { period: '30d', bucketType: 'daily', data: [] } };
+    cache.get.mockResolvedValue(cached);
+    const req = createRequest();
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body).toEqual(cached);
+    expect(loadPeriodData).not.toHaveBeenCalled();
+  });
+
+  it('returns 500 when loadPeriodData throws', async () => {
+    loadPeriodData.mockRejectedValue(new Error('load failed'));
+    const req = createRequest();
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+    expect(res.status).toBe(500);
+    expect(body.error).toBe('load failed');
   });
 });

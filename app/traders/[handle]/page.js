@@ -9,6 +9,7 @@ import UserProfileCard from "@/components/common/UserProfileCard";
 import ActiveLinksCard from "@/components/common/ActiveLinksCard";
 import MetricsCards from "@/components/common/MetricsCards";
 import MonthlyPayoutChart from "@/components/common/MonthlyPayoutChart";
+import { getFirmLogoUrl } from "@/lib/logoUtils";
 
 const ProfilePage = ({ params }) => {
   const { handle } = use(params);
@@ -74,19 +75,8 @@ const ProfilePage = ({ params }) => {
       );
     });
 
-    // Logo file extension mapping based on actual files
-    const logoExtensions = {
-      'fundednext': 'jpeg',
-      'fundingpips': 'webp',
-      'the5ers': 'webp',
-      // All others use .png
-    };
-
-    // Map to include logo path
     return matchedFirms.map(firm => {
-      const extension = logoExtensions[firm.id] || 'png';
-      const logoPath = `/logos/firms/${firm.id}.${extension}`;
-
+      const logoPath = getFirmLogoUrl(firm);
       return {
         ...firm,
         logoPath,

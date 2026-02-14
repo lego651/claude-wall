@@ -1,6 +1,7 @@
 "use client";
 
 import config from "@/config";
+import { getFirmLogoUrl, DEFAULT_LOGO_URL } from "@/lib/logoUtils";
 
 /**
  * Verified Firm Payouts Card
@@ -44,7 +45,7 @@ export default function ActiveLinksCard({ verifiedFirms = [], loading = false })
         ) : (
           verifiedFirms.map((firm, index) => {
             const colorIndex = index % fallbackColors.length;
-            const logoPath = firm.logoPath || `/logos/firms/${firm.id}.png`;
+            const logoPath = getFirmLogoUrl(firm);
             const totalPayout = firm.totalPayout || 0;
             const barWidth = maxPayout > 0 ? Math.max(8, (totalPayout / maxPayout) * 100) : 0;
 
@@ -62,18 +63,7 @@ export default function ActiveLinksCard({ verifiedFirms = [], loading = false })
                         alt={firm.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          const currentSrc = e.target.src;
-                          if (currentSrc.endsWith(".webp")) {
-                            e.target.src = `/logos/firms/${firm.id}.png`;
-                          } else if (currentSrc.endsWith(".png")) {
-                            e.target.src = `/logos/firms/${firm.id}.jpeg`;
-                          } else if (currentSrc.endsWith(".jpeg")) {
-                            e.target.src = `/logos/firms/${firm.id}.jpg`;
-                          } else {
-                            e.target.style.display = "none";
-                            const fallback = e.target.nextElementSibling;
-                            if (fallback) fallback.style.display = "flex";
-                          }
+                          e.target.src = DEFAULT_LOGO_URL;
                         }}
                       />
                       <div

@@ -8,6 +8,7 @@ import propfirmsData from "@/data/propfirms.json";
 import PropProofLayout from "@/components/common/PropProofLayout";
 import UserProfileCard from "@/components/common/UserProfileCard";
 import ActiveLinksCard from "@/components/common/ActiveLinksCard";
+import { getFirmLogoUrl } from "@/lib/logoUtils";
 import MetricsCards from "@/components/common/MetricsCards";
 import MonthlyPayoutChart from "@/components/common/MonthlyPayoutChart";
 import AccountSettingsModal from "@/components/user/dashboard/AccountSettingsModal";
@@ -121,12 +122,6 @@ export default function Dashboard() {
       return [];
     }
 
-    const logoExtensions = {
-      fundednext: "jpeg",
-      fundingpips: "webp",
-      the5ers: "webp",
-    };
-
     const firmsWithPayouts = propfirmsData.firms.map((firm) => {
       const firmAddressesLower = new Set(
         firm.addresses.map((addr) => addr.toLowerCase())
@@ -135,8 +130,7 @@ export default function Dashboard() {
         firmAddressesLower.has((tx.from || "").toLowerCase())
       );
       const totalPayout = firmTxs.reduce((sum, tx) => sum + (tx.amountUSD || 0), 0);
-      const extension = logoExtensions[firm.id] || "png";
-      const logoPath = `/logos/firms/${firm.id}.${extension}`;
+      const logoPath = getFirmLogoUrl({ ...firm, logo: firm.logo_url });
       return {
         ...firm,
         logoPath,

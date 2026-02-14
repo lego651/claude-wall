@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import PropProofLayout from '@/components/common/PropProofLayout';
 import { timeSince } from '@/lib/utils/timeSince';
+import { getFirmLogoUrl, DEFAULT_LOGO_URL } from '@/lib/logoUtils';
 
 const PERIODS = [
   { label: '24 Hours', value: '1d' },
@@ -113,10 +114,7 @@ export default function PropFirmsListPage() {
     return name.substring(0, 2).toUpperCase();
   };
 
-  // Try .webp first (matches public/logos/firms: the5ers.webp, fundingpips.webp, etc.)
-  const getLogoUrl = (firm) => {
-    return `/logos/firms/${firm.id}.webp`;
-  };
+  const getLogoUrl = (firm) => getFirmLogoUrl(firm);
 
   // Check if we should show logo - try to show for all firms
   const shouldShowLogo = (firm) => {
@@ -250,20 +248,7 @@ export default function PropFirmsListPage() {
                           alt={firm.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            // Try different formats in order: webp -> png -> jpeg -> jpg
-                            const currentSrc = e.target.src;
-                            if (currentSrc.endsWith('.webp')) {
-                              e.target.src = `/logos/firms/${firm.id}.png`;
-                            } else if (currentSrc.endsWith('.png')) {
-                              e.target.src = `/logos/firms/${firm.id}.jpeg`;
-                            } else if (currentSrc.endsWith('.jpeg')) {
-                              e.target.src = `/logos/firms/${firm.id}.jpg`;
-                            } else {
-                              // If all formats fail, hide image and show initials fallback
-                              e.target.style.display = 'none';
-                              const fallback = e.target.nextElementSibling;
-                              if (fallback) fallback.style.display = 'flex';
-                            }
+                            e.target.src = DEFAULT_LOGO_URL;
                           }}
                         />
                         <div className={`hidden w-16 h-16 ${colorClass} rounded-2xl items-center justify-center text-white font-black text-xl shadow-xl`} style={!colorClass ? { backgroundColor: '#635BFF' } : {}}>
@@ -402,18 +387,7 @@ export default function PropFirmsListPage() {
                                 alt={firm.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                  const currentSrc = e.target.src;
-                                  if (currentSrc.endsWith('.webp')) {
-                                    e.target.src = `/logos/firms/${firm.id}.png`;
-                                  } else if (currentSrc.endsWith('.png')) {
-                                    e.target.src = `/logos/firms/${firm.id}.jpeg`;
-                                  } else if (currentSrc.endsWith('.jpeg')) {
-                                    e.target.src = `/logos/firms/${firm.id}.jpg`;
-                                  } else {
-                                    e.target.style.display = 'none';
-                                    const fallback = e.target.nextElementSibling;
-                                    if (fallback) fallback.style.display = 'flex';
-                                  }
+                                  e.target.src = DEFAULT_LOGO_URL;
                                 }}
                               />
                               <div className={`hidden w-10 h-10 ${colorClass} rounded-xl items-center justify-center text-white font-bold text-sm`} style={!colorClass ? { backgroundColor: '#4f46e5' } : {}}>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import PropProofLayout from "@/components/common/PropProofLayout";
 import { THEME } from "@/lib/theme";
+import { getFirmLogoUrl, DEFAULT_LOGO_URL } from "@/lib/logoUtils";
 
 // Format firm id to display name (e.g. fundednext -> Funded Next)
 function firmIdToName(id) {
@@ -46,9 +47,7 @@ export default function PropFirmIdLayout({ children }) {
     };
   }, [firmId]);
 
-  // Try jpeg first (fundednext.jpeg exists); then webp, png, jpg
-  const getLogoUrl = (ext = "jpeg") =>
-    `/logos/firms/${firmId}.${ext}`;
+  const logoUrl = firm ? getFirmLogoUrl(firm) : DEFAULT_LOGO_URL;
 
   return (
     <PropProofLayout>
@@ -79,19 +78,11 @@ export default function PropFirmIdLayout({ children }) {
           <div className="flex items-center gap-4">
             <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-md bg-white flex-shrink-0 flex items-center justify-center">
               <img
-                src={getLogoUrl("jpeg")}
+                src={logoUrl}
                 alt={displayName}
                 className="w-full h-full object-contain absolute inset-0 bg-white"
                 onError={(e) => {
-                  const t = e.target;
-                  if (t.src.endsWith(".jpeg")) t.src = getLogoUrl("webp");
-                  else if (t.src.endsWith(".webp")) t.src = getLogoUrl("png");
-                  else if (t.src.endsWith(".png")) t.src = getLogoUrl("jpg");
-                  else {
-                    t.style.display = "none";
-                    const fallback = t.nextElementSibling;
-                    if (fallback) fallback.classList.remove("hidden");
-                  }
+                  e.target.src = DEFAULT_LOGO_URL;
                 }}
               />
               <div className="hidden absolute inset-0 w-full h-full bg-slate-900 items-center justify-center">

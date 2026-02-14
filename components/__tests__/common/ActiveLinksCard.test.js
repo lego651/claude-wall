@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import ActiveLinksCard from "@/components/common/ActiveLinksCard";
 
 jest.mock("@/config", () => ({
@@ -43,5 +43,13 @@ describe("ActiveLinksCard", () => {
     render(<ActiveLinksCard verifiedFirms={firms} />);
     const link = screen.getByRole("link", { name: /Firm One/i });
     expect(link).toHaveAttribute("href", "/propfirms/f1");
+  });
+
+  it("sets img src to default logo on error", () => {
+    const firms = [{ id: "f1", name: "Firm One", totalPayout: 1000, logo: "https://example.com/bad.png" }];
+    render(<ActiveLinksCard verifiedFirms={firms} />);
+    const img = screen.getByRole("img", { name: "Firm One" });
+    fireEvent.error(img);
+    expect(img.getAttribute("src")).toBe("/icon.png");
   });
 });

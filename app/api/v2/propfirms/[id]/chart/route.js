@@ -72,21 +72,28 @@ export async function GET(request, { params }) {
   try {
     const supabase = createSupabaseClient();
 
-    const { data: firm, error: firmError } = await withQueryGuard(
+    const { data: firmRow, error: firmError } = await withQueryGuard(
       supabase
         .from('firms')
-        .select('id, name, logo, website, last_payout_at')
+        .select('id, name, logo_url, website, last_payout_at')
         .eq('id', firmId)
         .single(),
       { context: 'chart firms' }
     );
 
-    if (firmError || !firm) {
+    if (firmError || !firmRow) {
       return NextResponse.json(
         { error: 'Firm not found' },
         { status: 404, headers }
       );
     }
+
+    const firm = {
+      id: firmRow.id,
+      name: firmRow.name,
+      logo: firmRow.logo_url ?? null,
+      website: firmRow.website,
+    };
 
     const chartCacheKey = `chart:${firmId}:${period}`;
     const cached = await cache.get(chartCacheKey);
@@ -112,7 +119,7 @@ export async function GET(request, { params }) {
       summary = historicalData.summary || {};
     }
 
-    summary.latestPayoutAt = firm.last_payout_at;
+    summary.latestPayoutAt = firmRow.last_payout_at;
     summary.totalPayouts = Math.round(summary.totalPayouts || 0);
     summary.largestPayout = Math.round(summary.largestPayout || 0);
     summary.payoutCount = summary.payoutCount ?? 0;
@@ -126,12 +133,7 @@ export async function GET(request, { params }) {
     summary.avgPayout = Math.round(avgPayout);
 
     const body = {
-      firm: {
-        id: firm.id,
-        name: firm.name,
-        logo: firm.logo,
-        website: firm.website,
-      },
+      firm,
       summary,
       chart: {
         period,
