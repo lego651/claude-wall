@@ -152,12 +152,23 @@ async function getPropfirmsPayoutCounts(supabase) {
 
     if (flags.length === 0) continue;
     const status = flags.some((f) => f.type === 'zero') ? 'critical' : 'warning';
+    const statusByPeriod = { '24h': 'ok', '7d': 'ok', '30d': 'ok' };
+    const messagesByPeriod = { '24h': [], '7d': [], '30d': [] };
+    for (const f of flags) {
+      const p = f.period;
+      if (p && statusByPeriod[p] !== undefined) {
+        messagesByPeriod[p].push(f.message);
+        statusByPeriod[p] = f.type === 'zero' ? 'critical' : 'warning';
+      }
+    }
     firmsWithIssues.push({
       firmId,
       firmName: firm.name || firmId,
       counts: { '24h': c24, '7d': c7, '30d': c30 },
       status,
       flags,
+      statusByPeriod,
+      messagesByPeriod,
     });
   }
 

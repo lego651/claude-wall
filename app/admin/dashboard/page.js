@@ -299,7 +299,7 @@ export default function AdminDashboardPage() {
 
         {data && (
           <div className="space-y-8">
-            {/* Prop firms payout data – only firms with warning or critical */}
+            {/* Prop firms payout data – chart table: cols = firms, rows = time ranges */}
             {data.propfirmsData && (
               <section>
                 <h2 className="text-lg font-semibold mb-4">Prop firms payout data</h2>
@@ -308,46 +308,76 @@ export default function AdminDashboardPage() {
                     {!data.propfirmsData.firmsWithIssues?.length ? (
                       <p className="text-base-content/70">No prop firms with payout data issues.</p>
                     ) : (
-                      <div className="overflow-x-auto">
-                        <table className="table table-sm">
-                          <thead>
-                            <tr>
-                              <th>Firm</th>
-                              <th>Status</th>
-                              <th>24h / 7d / 30d</th>
-                              <th>Issues</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {data.propfirmsData.firmsWithIssues.map((f) => (
-                              <tr key={f.firmId}>
-                                <td className="font-medium">{f.firmName ?? f.firmId}</td>
-                                <td>
-                                  <span className={`badge ${f.status === "critical" ? "badge-error" : "badge-warning"}`}>
-                                    {f.status}
-                                  </span>
-                                </td>
-                                <td className="text-sm text-base-content/70">
-                                  {f.counts?.["24h"] ?? 0} / {f.counts?.["7d"] ?? 0} / {f.counts?.["30d"] ?? 0}
-                                </td>
-                                <td>
-                                  <ul className="list-disc list-inside text-xs space-y-0.5">
-                                    {f.flags?.map((flag, i) => (
-                                      <li key={i} className={flag.type === "zero" ? "text-error" : "text-warning"}>
-                                        {flag.message}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </td>
+                      <>
+                        {/* Summary */}
+                        {(() => {
+                          const critical = data.propfirmsData.firmsWithIssues.filter((f) => f.status === "critical").length;
+                          const warning = data.propfirmsData.firmsWithIssues.filter((f) => f.status === "warning").length;
+                          return (
+                            <div className="flex flex-wrap items-center gap-4 mb-4 p-3 rounded-lg bg-base-200/60">
+                              <span className="font-medium">
+                                {data.propfirmsData.firmsWithIssues.length} firm(s) with issues
+                              </span>
+                              {critical > 0 && (
+                                <span className="badge badge-error badge-sm">{critical} critical</span>
+                              )}
+                              {warning > 0 && (
+                                <span className="badge badge-warning badge-sm">{warning} warning</span>
+                              )}
+                            </div>
+                          );
+                        })()}
+                        {/* Table: rows = 24h, 7d, 30d; columns = firms */}
+                        <div className="overflow-x-auto">
+                          <table className="table table-sm w-full">
+                            <thead>
+                              <tr>
+                                <th className="w-20 sticky left-0 bg-base-100 z-10">Period</th>
+                                {data.propfirmsData.firmsWithIssues.map((f) => (
+                                  <th key={f.firmId} className="text-center min-w-[100px] font-medium">
+                                    {f.firmName ?? f.firmId}
+                                  </th>
+                                ))}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                            </thead>
+                            <tbody>
+                              {["24h", "7d", "30d"].map((period) => (
+                                <tr key={period}>
+                                  <td className="sticky left-0 bg-base-100 z-10 font-medium">{period}</td>
+                                  {data.propfirmsData.firmsWithIssues.map((f) => {
+                                    const cellStatus = f.statusByPeriod?.[period] ?? "ok";
+                                    const messages = f.messagesByPeriod?.[period] ?? [];
+                                    const tip = messages.length
+                                      ? `${f.firmName ?? f.firmId} (${period}): ${messages.join("; ")}`
+                                      : null;
+                                    const count = f.counts?.[period];
+                                    return (
+                                      <td key={f.firmId} className="p-1 text-center align-middle">
+                                        <div
+                                          className={`inline-flex items-center justify-center min-w-[72px] min-h-[32px] rounded cursor-default ${
+                                            cellStatus === "critical"
+                                              ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-300 dark:border-red-700"
+                                              : cellStatus === "warning"
+                                                ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-300 dark:border-amber-700"
+                                                : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border border-green-300 dark:border-green-700"
+                                          }`}
+                                          title={tip ?? (count != null ? `Count: ${count}` : "")}
+                                        >
+                                          {cellStatus === "ok" ? "ok" : cellStatus}
+                                        </div>
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <p className="text-xs text-base-content/50 mt-3">
+                          Each column is a firm; rows are time ranges. Green = ok, yellow = warning, red = critical. Hover a cell for details.
+                        </p>
+                      </>
                     )}
-                    <p className="text-xs text-base-content/50 mt-3">
-                      Per-firm payout counts from recent_payouts. Only firms with erratic data (24h/7d much lower or higher than usual, or 0 in 24h when 7d had data) are listed.
-                    </p>
                   </div>
                 </div>
               </section>
