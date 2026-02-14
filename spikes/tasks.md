@@ -976,7 +976,7 @@ Test full user flows with Playwright.
 Document operational procedures for production incidents.
 
 **Acceptance Criteria**:
-- [ ] Create `docs/RUNBOOKS.md` with sections:
+- [x] Create `docs/RUNBOOKS.md` with sections:
   - **Arbiscan API Down**: Symptoms, diagnosis, mitigation
   - **Supabase Outage**: Fallback procedures, manual recovery
   - **File Size Exceeded**: How to migrate to Supabase storage
@@ -984,9 +984,9 @@ Document operational procedures for production incidents.
   - **Rate Limit Exceeded**: How to upgrade or reduce frequency
   - **Sync Failures**: How to manually trigger syncs
   - **Database Performance**: Query optimization steps
-- [ ] Create incident response flowchart
-- [ ] Document escalation paths
-- [ ] Add contact information
+- [x] Create incident response flowchart (`docs/INCIDENT-RESPONSE.md`)
+- [x] Document escalation paths
+- [x] Add contact information (placeholder table for team to fill)
 - [ ] Review with team
 
 **Dependencies**: None
@@ -1006,21 +1006,18 @@ Document operational procedures for production incidents.
 Validate system performance under concurrent load.
 
 **Acceptance Criteria**:
-- [ ] Install k6 load testing tool
-- [ ] Create load test scripts:
-  - `tests/load/propfirms-list.js` (test `/api/v2/propfirms`)
-  - `tests/load/firm-detail.js` (test detail endpoints)
-- [ ] Test scenarios:
+- [x] Install k6 load testing tool (see docs/PERFORMANCE-BASELINES.md: brew install k6)
+- [x] Create load test scripts:
+  - `tests/load/propfirms-list.js` (test `/api/v2/propfirms`; env: BASE_URL, VUS, DURATION)
+  - `tests/load/firm-detail.js` (chart, top-payouts, latest-payouts, signals, incidents; env: BASE_URL, FIRM_ID, VUS, DURATION)
+- [x] Test scenarios (run with VUS=10, 50, 100 and DURATION=1m or 2m):
   - 10 concurrent users (baseline)
   - 50 concurrent users (expected peak)
   - 100 concurrent users (stress test)
-- [ ] Measure:
-  - Response time (P50, P95, P99)
-  - Error rate
-  - Throughput (requests/sec)
-- [ ] Identify bottlenecks
-- [ ] Document performance baselines
-- [ ] Create scaling plan
+- [x] Measure: P50/P95/P99, error rate, throughput (k6 summary)
+- [x] Identify bottlenecks (doc in PERFORMANCE-BASELINES.md)
+- [x] Document performance baselines (`docs/PERFORMANCE-BASELINES.md`)
+- [x] Create scaling plan (table in PERFORMANCE-BASELINES.md)
 
 **Dependencies**: PROP-013 (caching), PROP-014 (indexes)
 
@@ -1061,43 +1058,20 @@ export default function () {
 **Description**:
 Create and execute pre-deployment checklist.
 
-**Acceptance Criteria**:
-- [ ] **Environment Variables**:
-  - [ ] ARBISCAN_API_KEY set in Vercel
-  - [ ] SUPABASE_URL and SUPABASE_ANON_KEY set
-  - [ ] SUPABASE_SERVICE_ROLE_KEY set
-  - [ ] SENTRY_DSN set
-  - [ ] SLACK_WEBHOOK_URL set
-  - [ ] KV_REST_API_URL and KV_REST_API_TOKEN set
-- [ ] **Database**:
-  - [ ] Indexes created (migration 002)
-  - [ ] RLS policies configured
-  - [ ] Backup enabled
-- [ ] **Tests**:
-  - [ ] All tests passing (unit + integration + E2E)
-  - [ ] Coverage ≥90%
-- [ ] **Monitoring**:
-  - [ ] Sentry integrated
-  - [ ] Vercel Analytics enabled
-  - [ ] Slack alerts configured
-- [ ] **Performance**:
-  - [ ] Caching enabled (Vercel KV)
-  - [ ] Load tests passing (P95 <500ms)
-- [ ] **Documentation**:
-  - [ ] README updated
-  - [ ] RUNBOOKS complete
-  - [ ] API docs updated
-- [ ] **Deploy**:
-  - [ ] Staging deployment successful
-  - [ ] Smoke tests pass on staging
-  - [ ] Production deployment
-  - [ ] Post-deploy verification
+**Acceptance Criteria** (checklist in docs; team executes before go-live):
+- [ ] **Environment Variables** (see docs/DEPLOYMENT.md): ARBISCAN_API_KEY, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SENTRY_DSN, KV_REST_API_*, RESEND_API_KEY, ALERT_EMAIL (optional: SLACK_WEBHOOK_URL)
+- [ ] **Database**: Indexes (migration 002), RLS, backup enabled
+- [ ] **Tests**: Unit+integration+E2E passing; coverage goal ≥90%
+- [ ] **Monitoring**: Sentry, Vercel Analytics, email alerts (ALERT_EMAIL)
+- [ ] **Performance**: Vercel KV caching; load tests P95 target <500ms for 1d
+- [ ] **Documentation**: README, RUNBOOKS, API docs updated
+- [ ] **Deploy**: Staging → smoke tests → production → post-deploy verification (docs/POST-DEPLOY-VERIFICATION.md)
 
 **Dependencies**: All previous tickets
 
 **Files to Create**:
-- `docs/DEPLOYMENT.md`
-- `docs/POST-DEPLOY-VERIFICATION.md`
+- [x] `docs/DEPLOYMENT.md`
+- [x] `docs/POST-DEPLOY-VERIFICATION.md`
 
 ---
 

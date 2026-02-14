@@ -13,6 +13,8 @@
     "test:coverage": "jest --coverage",
     "test:e2e": "node node_modules/@playwright/test/cli.js test",
     "test:e2e:ui": "node node_modules/@playwright/test/cli.js test --ui",
+    "load:list": "k6 run tests/load/propfirms-list.js",
+    "load:detail": "k6 run tests/load/firm-detail.js",
     "prepare": "husky"
   },
   "dependencies": {

@@ -14,6 +14,11 @@ function formatBytes(n) {
 function metricsToCSV(data) {
   const rows = [];
   rows.push("metric,value");
+  if (data?.checks) {
+    rows.push(`check_fileSize,${data.checks.fileSize?.status ?? ""}`);
+    rows.push(`check_arbiscan,${data.checks.arbiscan?.status ?? ""}`);
+    rows.push(`check_supabase,${data.checks.supabase?.status ?? ""}`);
+  }
   rows.push(`arbiscan_calls,${data?.arbiscan?.calls ?? ""}`);
   rows.push(`arbiscan_limit,${data?.arbiscan?.limit ?? ""}`);
   rows.push(`arbiscan_percentage,${data?.arbiscan?.percentage ?? ""}`);
@@ -112,6 +117,87 @@ export default function AdminDashboardPage() {
 
         {!data && !loading && (
           <div className="text-base-content/70">No metrics available.</div>
+        )}
+
+        {data?.checks && (
+          <section className="mb-8">
+            <h2 className="text-lg font-semibold mb-4">Verification checks</h2>
+            <p className="text-sm text-base-content/60 mb-4">
+              Critical checks (file ≥10 MB, Arbiscan ≥95%, DB failure) send an email to the alert address (throttled 1h).
+            </p>
+            <div className="card card-border bg-base-100 shadow">
+              <div className="card-body">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {Object.entries(data.checks.config || {}).map(([key, c]) => (
+                    <div key={key} className="flex items-center justify-between gap-2">
+                      <span className="text-sm">{c.label}</span>
+                      <span className={`badge ${c.set ? "badge-success" : "badge-ghost"}`}>
+                        {c.set ? "Set" : "Not set"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="divider my-2" />
+                <div className="flex flex-wrap gap-4 items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{data.checks.fileSize?.label ?? "File size"}</span>
+                    <span
+                      className={`badge ${
+                        data.checks.fileSize?.status === "critical"
+                          ? "badge-error"
+                          : data.checks.fileSize?.status === "warning"
+                            ? "badge-warning"
+                            : "badge-success"
+                      }`}
+                    >
+                      {data.checks.fileSize?.status ?? "—"}
+                    </span>
+                    {data.checks.fileSize?.maxFileBytes != null && data.checks.fileSize.maxFileBytes > 0 && (
+                      <span className="text-xs text-base-content/60">
+                        max {formatBytes(data.checks.fileSize.maxFileBytes)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{data.checks.arbiscan?.label ?? "Arbiscan"}</span>
+                    <span
+                      className={`badge ${
+                        data.checks.arbiscan?.status === "critical"
+                          ? "badge-error"
+                          : data.checks.arbiscan?.status === "warning"
+                            ? "badge-warning"
+                            : "badge-success"
+                      }`}
+                    >
+                      {data.checks.arbiscan?.status ?? "—"}
+                    </span>
+                    {data.checks.arbiscan?.percentage != null && (
+                      <span className="text-xs text-base-content/60">{data.checks.arbiscan.percentage}%</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{data.checks.supabase?.label ?? "Database"}</span>
+                    <span
+                      className={`badge ${
+                        data.checks.supabase?.status === "critical" ? "badge-error" : "badge-success"
+                      }`}
+                    >
+                      {data.checks.supabase?.status ?? "—"}
+                    </span>
+                    {data.checks.supabase?.latencyMs != null && (
+                      <span className="text-xs text-base-content/60">{data.checks.supabase.latencyMs} ms</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{data.checks.cacheConfigured?.label ?? "Cache"}</span>
+                    <span className={`badge ${data.checks.cacheConfigured?.set ? "badge-success" : "badge-ghost"}`}>
+                      {data.checks.cacheConfigured?.set ? "Configured" : "Not set"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         )}
 
         {data && (
