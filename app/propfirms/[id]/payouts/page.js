@@ -135,6 +135,10 @@ export default function PropFirmPayoutsPage() {
 
   const summary = chartData?.summary;
   const chart = chartData?.chart;
+  const chartBuckets = chart?.data || [];
+  const hasRise = chartBuckets.some((b) => (b.rise || 0) > 0);
+  const hasCrypto = chartBuckets.some((b) => (b.crypto || 0) > 0);
+  const hasWire = chartBuckets.some((b) => (b.wire || 0) > 0);
 
   return (
     <div className="space-y-8">
@@ -331,20 +335,28 @@ export default function PropFirmPayoutsPage() {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-5 pt-1">
-            <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-              Crypto
-            </span>
-            <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-              Rise
-            </span>
-            <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              Wire
-            </span>
-          </div>
+          {(hasRise || hasCrypto || hasWire) && (
+            <div className="flex items-center gap-5 pt-1">
+              {hasCrypto && (
+                <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                  Crypto
+                </span>
+              )}
+              {hasRise && (
+                <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                  Rise
+                </span>
+              )}
+              {hasWire && (
+                <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  Wire
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {chartLoading && (
@@ -403,27 +415,33 @@ export default function PropFirmPayoutsPage() {
                 }}
                 cursor={{ fill: "#f1f5f9" }}
               />
-              <Bar
-                dataKey="rise"
-                stackId="a"
-                fill="#3b82f6"
-                radius={[6, 6, 0, 0]}
-                name="Rise"
-              />
-              <Bar
-                dataKey="crypto"
-                stackId="a"
-                fill="#f59e0b"
-                radius={[6, 6, 0, 0]}
-                name="Crypto"
-              />
-              <Bar
-                dataKey="wire"
-                stackId="a"
-                fill="#10b981"
-                radius={[6, 6, 0, 0]}
-                name="Wire"
-              />
+              {hasRise && (
+                <Bar
+                  dataKey="rise"
+                  stackId="a"
+                  fill="#3b82f6"
+                  radius={[6, 6, 0, 0]}
+                  name="Rise"
+                />
+              )}
+              {hasCrypto && (
+                <Bar
+                  dataKey="crypto"
+                  stackId="a"
+                  fill="#f59e0b"
+                  radius={[6, 6, 0, 0]}
+                  name="Crypto"
+                />
+              )}
+              {hasWire && (
+                <Bar
+                  dataKey="wire"
+                  stackId="a"
+                  fill="#10b981"
+                  radius={[6, 6, 0, 0]}
+                  name="Wire"
+                />
+              )}
             </BarChart>
           </ResponsiveContainer>
         )}
