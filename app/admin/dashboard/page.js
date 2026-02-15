@@ -65,6 +65,10 @@ export default function AdminDashboardPage() {
   const [testAlertLoading, setTestAlertLoading] = useState(false);
   const [testAlertResult, setTestAlertResult] = useState(null);
   const [propfirmsTooltip, setPropfirmsTooltip] = useState(null);
+  const [classifyStatus, setClassifyStatus] = useState(null);
+  const [classifyRunResult, setClassifyRunResult] = useState(null);
+  const [classifyRunLoading, setClassifyRunLoading] = useState(false);
+  const [classifyLimit, setClassifyLimit] = useState(40);
 
   const fetchMetrics = useCallback(async () => {
     try {
@@ -89,6 +93,45 @@ export default function AdminDashboardPage() {
     const id = setInterval(fetchMetrics, REFRESH_MS);
     return () => clearInterval(id);
   }, [fetchMetrics]);
+
+  const fetchClassifyStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/classify-reviews/status");
+      if (res.ok) {
+        const json = await res.json();
+        setClassifyStatus(json);
+      }
+    } catch {
+      setClassifyStatus(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (data && !loading) fetchClassifyStatus();
+  }, [data, loading, fetchClassifyStatus]);
+
+  const runClassify = async () => {
+    setClassifyRunResult(null);
+    setClassifyRunLoading(true);
+    try {
+      const res = await fetch("/api/admin/classify-reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ limit: classifyLimit }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setClassifyRunResult({ error: json.error || `HTTP ${res.status}` });
+      } else {
+        setClassifyRunResult(json);
+        fetchClassifyStatus();
+      }
+    } catch (e) {
+      setClassifyRunResult({ error: e.message });
+    } finally {
+      setClassifyRunLoading(false);
+    }
+  };
 
   const exportCSV = () => {
     if (!data) return;
@@ -446,6 +489,89 @@ export default function AdminDashboardPage() {
                 </div>
               </section>
             )}
+
+            {/* Review classification (Trustpilot) */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Review classification</h2>
+              <p className="text-sm text-base-content/60 mb-3">
+                Classify unclassified Trustpilot reviews via OpenAI (batch of 20 per API call). Run a limited batch here or use the cron script.
+              </p>
+              <div className="card card-border bg-base-100 shadow overflow-hidden">
+                <div className="card-body">
+                  <div className="flex flex-wrap items-end gap-4 mb-4">
+                    <div>
+                      <span className="text-base-content/60 text-sm block">Total reviews</span>
+                      <p className="font-semibold text-lg">{classifyStatus?.totalReviews ?? "—"}</p>
+                    </div>
+                    <div>
+                      <span className="text-base-content/60 text-sm block">Classified</span>
+                      <p className="font-semibold text-lg text-success">{classifyStatus?.classifiedCount ?? "—"}</p>
+                    </div>
+                    <div>
+                      <span className="text-base-content/60 text-sm block">Unclassified</span>
+                      <p className="font-semibold text-lg">{classifyStatus?.unclassifiedCount ?? "—"}</p>
+                    </div>
+                    <div className="flex items-center gap-2 ml-auto">
+                      <label className="label gap-2">
+                        <span className="label-text text-sm">Limit</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={1000}
+                          value={classifyLimit}
+                          onChange={(e) => setClassifyLimit(Math.max(1, Math.min(1000, parseInt(e.target.value, 10) || 40)))}
+                          className="input input-bordered input-sm w-20"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={runClassify}
+                        disabled={classifyRunLoading || (classifyStatus?.unclassifiedCount === 0)}
+                        className="btn btn-primary btn-sm"
+                      >
+                        {classifyRunLoading ? "Running…" : `Classify next ${classifyLimit}`}
+                      </button>
+                    </div>
+                  </div>
+                  {classifyRunResult && (
+                    <div className="border-t border-base-200 pt-4 mt-2">
+                      {classifyRunResult.error ? (
+                        <p className="text-error text-sm">{classifyRunResult.error}</p>
+                      ) : (
+                        <>
+                          <p className="font-medium text-base-content mb-2">Last run result</p>
+                          <div className="flex flex-wrap gap-4 text-sm mb-2">
+                            <span><strong>Processed:</strong> {classifyRunResult.totalProcessed ?? 0} (limit {classifyRunResult.limit ?? 0})</span>
+                            <span className="text-success"><strong>Classified:</strong> {classifyRunResult.classified ?? 0}</span>
+                            <span className={classifyRunResult.failed > 0 ? "text-warning" : ""}><strong>Failed:</strong> {classifyRunResult.failed ?? 0}</span>
+                            <span className="text-base-content/70"><strong>Unclassified remaining:</strong> {classifyRunResult.unclassifiedRemaining ?? "—"}</span>
+                            {classifyRunResult.durationMs != null && (
+                              <span className="text-base-content/60">({(classifyRunResult.durationMs / 1000).toFixed(1)}s)</span>
+                            )}
+                          </div>
+                          <p className="text-base-content/70 text-sm">
+                            {classifyRunResult.classified ?? 0} classified; {(classifyRunResult.unclassifiedRemaining ?? 0)} not run; {classifyRunResult.failed ?? 0} failed.
+                          </p>
+                          {classifyRunResult.errors?.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-xs font-medium text-base-content/70 mb-1">Failure reasons:</p>
+                              <ul className="list-disc list-inside text-xs text-warning space-y-0.5">
+                                {classifyRunResult.errors.slice(0, 10).map((msg, i) => (
+                                  <li key={i}>{msg}</li>
+                                ))}
+                                {classifyRunResult.errors.length > 10 && (
+                                  <li>… and {classifyRunResult.errors.length - 10} more</li>
+                                )}
+                              </ul>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
 
             {/* Intelligence feed (weekly reports + digest) */}
             {data.intelligenceFeed && (

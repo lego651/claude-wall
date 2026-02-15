@@ -41,9 +41,10 @@
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ STEP 2: CLASSIFY                                                         │
-│ scripts/classify-unclassified-reviews.ts (MISSING ❌)                   │
+│ scripts/classify-unclassified-reviews.ts                                │
 │ ├─ Query: WHERE classified_at IS NULL                                   │
-│ ├─ OpenAI GPT-4: review_text → category                                 │
+│ ├─ OpenAI (gpt-4o-mini): batch of 20 reviews per API call (cost)        │
+│ ├─ Env CLASSIFY_AI_BATCH_SIZE: default 20, max 25                       │
 │ ├─ 20+ categories (operational, reputation, positive, etc.)             │
 │ └─ Update: SET category = X, classified_at = NOW()                      │
 └──────┬───────────────────────────────────────────────────────────────────┘
@@ -345,6 +346,18 @@ Runs: npx tsx scripts/classify-unclassified-reviews.ts
 Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 
+**Classifier batch size (API cost):** Reviews are sent to OpenAI in batches of **20 per API call** (default). Env `CLASSIFY_AI_BATCH_SIZE` can override; max 25 to keep response accuracy. See `lib/ai/classifier.ts` (`CLASSIFY_AI_BATCH_SIZE_DEFAULT`, `classifyReviewBatch`).
+
+**Classification scope and policy:** This step **only** processes unclassified reviews (`WHERE classified_at IS NULL`). Already-classified rows are never re-sent. All classification paths use the **batch API** (20 reviews per OpenAI call); the script and `lib/ai/batch-classify.ts` both call `classifyReviewBatch()`.
+
+**Related files (no duplication):**
+| File | Purpose | Batch size |
+|------|---------|------------|
+| `lib/ai/classification-taxonomy.ts` | Single source of truth: category list, incident rules, legacy mapping. Used by classifier, incident-aggregator, generator. | — |
+| `lib/ai/classifier.ts` | Single- and batch OpenAI calls (`classifyReview`, `classifyReviewBatch`), DB helpers. | 20 per API call (max 25) |
+| `lib/ai/batch-classify.ts` | Library: `runBatchClassification()` — fetch unclassified, call `classifyReviewBatch`, write DB. Same batch size as script. | 20 (env override) |
+| `scripts/classify-unclassified-reviews.ts` | Cron entry point (sync-classify-reviews.yml). Uses `classifyReviewBatch`; supports MAX_PER_RUN, delay. | 20 (env override) |
+
 ### 3. run-daily-incidents.yml
 ```yaml
 Cron: 0 13 * * *  (5 AM PST / 13:00 UTC)
@@ -388,7 +401,7 @@ Used by: GitHub Actions weekly workflow
 Code:
 ├── lib/scrapers/trustpilot.ts           ✅ EXISTS
 ├── scripts/backfill-trustpilot.ts       ❌ MISSING
-├── scripts/classify-unclassified-reviews.ts  ❌ MISSING
+├── scripts/classify-unclassified-reviews.ts  ✅ EXISTS (batch size 20)
 ├── scripts/run-daily-incidents.ts       ❌ MISSING
 ├── app/api/cron/send-weekly-reports/route.js  ❌ MISSING
 ├── app/propfirms/[id]/page.js           ✅ EXISTS (intelligence section)

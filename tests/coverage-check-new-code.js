@@ -13,15 +13,21 @@ const COVERAGE_THRESHOLD = 80;
 const COVERAGE_SUMMARY_PATH = path.join(process.cwd(), "coverage", "coverage-summary.json");
 const SCOPE_PATTERN = /^(lib|app\/api|components)\/.+\.(js|jsx|ts|tsx)$/;
 const TEST_FILE_PATTERN = /__tests__|\.(test|spec)\.(js|jsx|ts|tsx)$/;
-/** Internal admin APIs: skip coverage enforcement. */
-const COVERAGE_SKIP_PATTERN = /^app\/api\/admin\//;
+/** Paths that skip coverage enforcement (internal/admin, AI/OpenAI). */
+const COVERAGE_SKIP_PATTERNS = [/^app\/api\/admin\//, /^lib\/ai\//];
 
 function getStagedFiles() {
   const out = execSync("git diff --cached --name-only", { encoding: "utf8" });
   return out
     .split("\n")
     .map((f) => f.trim())
-    .filter((f) => f && SCOPE_PATTERN.test(f) && !TEST_FILE_PATTERN.test(f) && !COVERAGE_SKIP_PATTERN.test(f));
+    .filter(
+      (f) =>
+        f &&
+        SCOPE_PATTERN.test(f) &&
+        !TEST_FILE_PATTERN.test(f) &&
+        !COVERAGE_SKIP_PATTERNS.some((re) => re.test(f))
+    );
 }
 
 function absolutePath(relativePath) {

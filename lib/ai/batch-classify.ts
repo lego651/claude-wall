@@ -1,15 +1,21 @@
 /**
- * TICKET-008: Batch Classification
- * Fetches unclassified reviews, runs classifier on each, writes to DB in batches.
- * - OpenAI: one call per review (sequential, to avoid rate limits).
- * - Supabase: one upsert per BATCH_SIZE reviews (reduces round-trips).
+ * Batch classification of unclassified reviews (library).
+ * Uses classifyReviewBatch() — 20 reviews per OpenAI call (same as script).
+ * Canonical entry point for cron: scripts/classify-unclassified-reviews.ts
  */
 
 import { createServiceClient } from '@/lib/supabase/service';
-import { classifyReview, updateReviewClassificationsBulk } from './classifier';
+import {
+  classifyReviewBatch,
+  updateReviewClassificationsBulk,
+  CLASSIFY_AI_BATCH_SIZE_DEFAULT,
+  CLASSIFY_AI_BATCH_SIZE_MAX,
+} from './classifier';
 
-const BATCH_SIZE = 50; // Flush to Supabase every N classified reviews
-const LOG_INTERVAL = 100; // Log progress every N classified reviews
+const AI_BATCH_SIZE = Math.min(
+  Math.max(1, parseInt(process.env.CLASSIFY_AI_BATCH_SIZE || String(CLASSIFY_AI_BATCH_SIZE_DEFAULT), 10)),
+  CLASSIFY_AI_BATCH_SIZE_MAX
+);
 
 export interface BatchClassificationResult {
   classified: number;
@@ -19,24 +25,36 @@ export interface BatchClassificationResult {
 
 interface TrustpilotReviewRow {
   id: number;
+  firm_id: string;
   rating: number;
   title: string | null;
   review_text: string | null;
+  review_date: string;
+  trustpilot_url: string;
+}
+
+export interface RunBatchOptions {
+  /** Max number of unclassified reviews to process this run. Omit = no limit. */
+  limit?: number;
 }
 
 /**
- * Fetch all reviews where classified_at IS NULL, run classifyReview() on each,
- * update DB. Log failures and continue. Returns counts and error messages.
+ * Fetch reviews where classified_at IS NULL, classify in batches of 20 per API call,
+ * update DB. Returns counts and error messages. Use limit (e.g. 40) for admin/small runs.
  */
-export async function runBatchClassification(): Promise<BatchClassificationResult> {
+export async function runBatchClassification(options?: RunBatchOptions): Promise<BatchClassificationResult> {
   const supabase = createServiceClient();
   const result: BatchClassificationResult = { classified: 0, failed: 0, errors: [] };
+  const limit = options?.limit;
 
-  const { data: rows, error: fetchError } = await supabase
+  let query = supabase
     .from('trustpilot_reviews')
-    .select('id, rating, title, review_text')
+    .select('id, firm_id, rating, title, review_text, review_date, trustpilot_url')
     .is('classified_at', null)
     .order('created_at', { ascending: true });
+  if (limit != null && limit > 0) query = query.limit(limit);
+
+  const { data: rows, error: fetchError } = await query;
 
   if (fetchError) {
     result.errors.push(`Fetch failed: ${fetchError.message}`);
@@ -48,37 +66,41 @@ export async function runBatchClassification(): Promise<BatchClassificationResul
   }
 
   const typedRows = rows as TrustpilotReviewRow[];
-  console.log(`[Batch Classify] Found ${typedRows.length} unclassified review(s) (batch write size: ${BATCH_SIZE})`);
+  console.log(`[Batch Classify] Found ${typedRows.length} unclassified review(s), AI batch size: ${AI_BATCH_SIZE}`);
 
-  const pending: Array<{ id: number; result: Awaited<ReturnType<typeof classifyReview>> }> = [];
+  for (let i = 0; i < typedRows.length; i += AI_BATCH_SIZE) {
+    const batch = typedRows.slice(i, i + AI_BATCH_SIZE);
+    const inputs = batch.map((r) => ({
+      rating: r.rating,
+      title: r.title ?? undefined,
+      text: r.review_text ?? '',
+    }));
 
-  const flush = async () => {
-    if (pending.length === 0) return;
-    await updateReviewClassificationsBulk(pending);
-    pending.length = 0;
-  };
-
-  for (const row of typedRows) {
     try {
-      const classification = await classifyReview({
-        rating: row.rating,
-        title: row.title ?? undefined,
-        text: row.review_text ?? '',
-      });
-      pending.push({ id: row.id, result: classification });
-      result.classified++;
-      if (pending.length >= BATCH_SIZE) await flush();
-      if (result.classified % LOG_INTERVAL === 0) {
-        console.log(`[Batch Classify] Classified ${result.classified}/${typedRows.length}`);
-      }
+      const results = await classifyReviewBatch(inputs);
+      const items = batch.map((row, idx) => ({
+      id: row.id,
+      firm_id: row.firm_id,
+      rating: row.rating,
+      review_text: row.review_text ?? '',
+      review_date: row.review_date,
+      trustpilot_url: row.trustpilot_url,
+      title: row.title,
+      result: results[idx],
+    }));
+      await updateReviewClassificationsBulk(items);
+      result.classified += batch.length;
     } catch (err) {
-      result.failed++;
       const msg = err instanceof Error ? err.message : String(err);
-      result.errors.push(`Review ${row.id}: ${msg}`);
-      console.error(`[Batch Classify] Review ${row.id} failed:`, msg);
+      result.failed += batch.length;
+      result.errors.push(`Batch at ${i}: ${msg}`);
+      console.error(`[Batch Classify] Batch failed:`, msg);
+    }
+
+    if ((i + AI_BATCH_SIZE) % (AI_BATCH_SIZE * 5) === 0 || i + AI_BATCH_SIZE >= typedRows.length) {
+      console.log(`[Batch Classify] Progress: ${Math.min(i + AI_BATCH_SIZE, typedRows.length)}/${typedRows.length}`);
     }
   }
 
-  await flush();
   return result;
 }
