@@ -11,7 +11,10 @@ jest.mock('@/lib/arbiscan', () => ({
   usageTracker: { getUsage: jest.fn() },
 }));
 jest.mock('@/lib/cache');
-jest.mock('@/lib/alerts', () => ({ sendAlert: jest.fn().mockResolvedValue(undefined) }));
+jest.mock('@/lib/alerts', () => ({
+  sendAlert: jest.fn().mockResolvedValue(undefined),
+  checkIntelligenceFeedAlerts: jest.fn().mockResolvedValue(undefined),
+}));
 jest.mock('@/lib/digest/week-utils', () => ({
   getWeekNumber: () => 6,
   getYear: () => 2025,
@@ -173,7 +176,15 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (['recent_payouts', 'trustpilot_reviews', 'weekly_reports', 'user_subscriptions'].includes(table)) {
+      if (table === 'trustpilot_reviews') {
+        return {
+          select: jest.fn()
+            .mockResolvedValueOnce({ count: 0, error: null })
+            .mockResolvedValueOnce({ count: 0, error: null })
+            .mockReturnValueOnce({ not: jest.fn().mockResolvedValue({ count: 0, error: null }) }),
+        };
+      }
+      if (['recent_payouts', 'weekly_reports', 'user_subscriptions'].includes(table)) {
         return {
           select: jest.fn().mockResolvedValue({ count: 0, error: null }),
         };
@@ -196,6 +207,9 @@ describe('GET /api/admin/metrics', () => {
     expect(body.incidentDetection.firms).toHaveLength(1);
     expect(body.incidentDetection.firms[0]).toEqual({ firmId: 'fundingpips', firmName: 'FundingPips', incidentCount: 0 });
     expect(body.incidentDetection.note).toContain('5 AM PST');
+    expect(body.classifyReviews).toBeDefined();
+    expect(body.classifyReviews).toHaveProperty('unclassified');
+    expect(body.classifyReviews.unclassified === null || typeof body.classifyReviews.unclassified === 'number').toBe(true);
     expect(body.trustpilotScraper).toEqual({
       firms: [
         {
@@ -445,7 +459,12 @@ describe('GET /api/admin/metrics', () => {
         };
       }
       if (table === 'trustpilot_reviews') {
-        return { select: jest.fn().mockRejectedValue(new Error('timeout')) };
+        return {
+          select: jest.fn()
+            .mockResolvedValueOnce({ count: null, error: { message: 'timeout' } })
+            .mockResolvedValueOnce({ count: 10, error: null })
+            .mockResolvedValueOnce({ count: 4, error: null }),
+        };
       }
       if (table === 'firms') {
         return {
@@ -458,7 +477,19 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'recent_payouts' || table === 'weekly_incidents') {
+      if (table === 'weekly_incidents') {
+        return {
+          select: jest.fn().mockImplementation((cols, opts) => {
+            if (opts && opts.head === true) return Promise.resolve({ count: 0, error: null });
+            return {
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            };
+          }),
+        };
+      }
+      if (table === 'recent_payouts') {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {

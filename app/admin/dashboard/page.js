@@ -257,6 +257,76 @@ export default function AdminDashboardPage() {
           </section>
         )}
 
+        {/* Intelligence pipeline alerts (TICKET-014) — green OK, yellow warning, red critical */}
+        {data && (data.trustpilotScraper?.firms?.length > 0 || data.classifyReviews != null) && (
+          <section className="mb-8">
+            <h2 className="text-lg font-semibold mb-4">Intelligence pipeline alerts</h2>
+            <div className="card card-border bg-base-100 shadow">
+              <div className="card-body">
+                <p className="text-sm text-base-content/60 mb-3">
+                  When a condition is triggered, an email is sent to the alert recipient (throttled 4h per condition).
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {data.trustpilotScraper?.firms?.length > 0 && (() => {
+                    const timestamps = data.trustpilotScraper.firms.map((f) => f.last_scraper_run_at).filter(Boolean);
+                    const lastRun = timestamps.length ? new Date(Math.max(...timestamps.map((t) => new Date(t).getTime()))) : null;
+                    const hoursSince = lastRun ? (Date.now() - lastRun.getTime()) / (1000 * 60 * 60) : Infinity;
+                    const critical = !lastRun;
+                    const warning = lastRun && hoursSince > 25;
+                    const status = critical ? "critical" : warning ? "warning" : "ok";
+                    const bgClass =
+                      status === "ok"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                        : status === "warning"
+                          ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+                    const label =
+                      status === "ok"
+                        ? `Scraper: OK (last run ${hoursSince.toFixed(0)}h ago)`
+                        : status === "warning"
+                          ? `Scraper: stale (last run ${hoursSince.toFixed(0)}h ago)`
+                          : "Scraper: critical (never run)";
+                    return (
+                      <span
+                        key="scraper"
+                        className={`inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium ${bgClass}`}
+                      >
+                        {label}
+                      </span>
+                    );
+                  })()}
+                  {data.classifyReviews != null && (() => {
+                    const u = data.classifyReviews.unclassified ?? 0;
+                    const critical = u > 1000;
+                    const warning = u > 500 && u <= 1000;
+                    const status = critical ? "critical" : warning ? "warning" : "ok";
+                    const bgClass =
+                      status === "ok"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                        : status === "warning"
+                          ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+                    const label =
+                      status === "ok"
+                        ? `Classifier: OK (${u} unclassified)`
+                        : status === "warning"
+                          ? `Classifier: backlog (${u} unclassified, threshold 500)`
+                          : `Classifier: critical (${u} unclassified)`;
+                    return (
+                      <span
+                        key="classifier"
+                        className={`inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium ${bgClass}`}
+                      >
+                        {label}
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {data?.checks && (
           <section className="mb-8">
             <h2 className="text-lg font-semibold mb-4">Verification checks</h2>

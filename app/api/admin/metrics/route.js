@@ -12,7 +12,7 @@ import path from 'path';
 import { createClient } from '@/lib/supabase/server';
 import { usageTracker } from '@/lib/arbiscan';
 import { getCacheStats } from '@/lib/cache';
-import { sendAlert } from '@/lib/alerts';
+import { sendAlert, checkIntelligenceFeedAlerts } from '@/lib/alerts';
 import { getWeekNumber, getYear, getWeekBounds } from '@/lib/digest/week-utils';
 
 /** Incident detection: current week and per-firm incident counts (for admin dashboard). */
@@ -49,6 +49,23 @@ async function getIncidentDetectionStatus(supabase, trustpilotFirms) {
   }));
 
   return { currentWeek: { weekNumber, year, weekLabel }, firms };
+}
+
+/** Unclassified review count for classifier backlog alert (TICKET-014). */
+async function getClassifyUnclassifiedCount(supabase) {
+  try {
+    const [
+      { count: total },
+      { count: classified },
+    ] = await Promise.all([
+      supabase.from('trustpilot_reviews').select('*', { count: 'exact', head: true }),
+      supabase.from('trustpilot_reviews').select('*', { count: 'exact', head: true }).not('classified_at', 'is', null),
+    ]);
+    const unclassified = total != null && classified != null ? total - classified : 0;
+    return { unclassified: Math.max(0, unclassified) };
+  } catch {
+    return { unclassified: null };
+  }
 }
 
 const PAYOUTS_DIR = path.join(process.cwd(), 'data', 'propfirms');
@@ -319,6 +336,7 @@ export async function GET() {
   ]);
 
   const incidentDetection = await getIncidentDetectionStatus(supabase, trustpilotScraperFirms);
+  const classifyReviews = await getClassifyUnclassifiedCount(supabase);
 
   const arbiscan = usageTracker?.getUsage ? usageTracker.getUsage() : { calls: 0, limit: 0, percentage: 0, day: null };
   const cache = getCacheStats();
@@ -439,10 +457,18 @@ export async function GET() {
       firms: incidentDetection.firms,
       note: 'Run daily at 5 AM PST (13:00 UTC), 1 hour after classifier. Pipeline: scrape → classify → incidents.',
     },
+    classifyReviews: {
+      unclassified: classifyReviews.unclassified,
+    },
     apiLatency: { note: 'See Vercel Analytics for P50/P95/P99 by route' },
     errorRates: { note: 'See Vercel Analytics or logs for error rates by endpoint' },
     fetchedAt: new Date().toISOString(),
   };
+
+  const alertPromise = checkIntelligenceFeedAlerts(payload);
+  if (alertPromise && typeof alertPromise.catch === 'function') {
+    alertPromise.catch(() => {});
+  }
 
   return NextResponse.json(payload);
 }
