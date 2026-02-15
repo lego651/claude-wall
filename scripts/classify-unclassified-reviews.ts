@@ -26,7 +26,6 @@ import {
   CLASSIFY_AI_BATCH_SIZE_DEFAULT,
   CLASSIFY_AI_BATCH_SIZE_MAX,
 } from '@/lib/ai/classifier';
-import type { ClassificationResult } from '@/lib/ai/classifier';
 
 const MAX_PER_RUN = parseInt(process.env.CLASSIFY_MAX_PER_RUN || '1000', 10);
 const AI_BATCH_SIZE = Math.min(
