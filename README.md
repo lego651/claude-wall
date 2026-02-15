@@ -48,6 +48,9 @@ Compare up to 5 firms on:
 ### ✔ Payout Transparency (v2)
 Leaderboard + verified payout data.
 
+### ✔ Intelligence Feed (Alpha)
+Curated signals from Trustpilot reviews: scraped daily, classified with AI, aggregated into weekly incidents, and optional email digests. Pipeline: **scrape → classify → incidents → weekly email**. See [Intelligence Feed runbook](documents/runbooks/intelligence-feed-system-architecture.md) and [Daily scraper + weekly incidents & reports](documents/runbooks/daily-scraper-weekly-incidents-reports-operations.md).
+
 ### ✔ Discount Aggregator (v2)
 Track all current prop firm discounts.
 
@@ -82,9 +85,49 @@ Risk calculators, challenge simulators, dashboards, jobs, etc.
 
 ---
 
+## Intelligence Feed (Alpha)
+
+The Intelligence Feed ingests Trustpilot reviews for prop firms, classifies them with OpenAI, detects incidents (e.g. payout delays, support issues), and optionally sends weekly email digests to subscribers.
+
+**Pipeline (daily):** Scrape reviews → Classify with AI → Detect incidents. **Weekly (Monday):** Send digest emails.
+
+### GitHub Actions workflows
+
+| Workflow | Schedule | Purpose |
+|----------|----------|---------|
+| `sync-trustpilot-reviews.yml` | Daily 3 AM PST | Scrape Trustpilot for all firms with `trustpilot_url` |
+| `sync-classify-reviews.yml` | Daily 4 AM PST | Classify unclassified reviews (OpenAI batch) |
+| `run-daily-incidents.yml` | Daily 5 AM PST | Aggregate reviews into weekly incidents |
+| `send-weekly-reports.yml` | Monday 2 PM UTC | Send weekly digest emails to subscribers |
+
+### Environment variables (Intelligence Feed)
+
+Required for the pipeline and admin dashboard:
+
+```env
+# Supabase (required for all)
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+
+# Intelligence pipeline
+OPENAI_API_KEY=...          # Classification + incident summaries
+RESEND_API_KEY=...          # Weekly digest emails
+CRON_SECRET=...             # Auth for cron API (e.g. send-weekly-reports)
+ALERT_EMAIL=...             # Optional: critical pipeline alerts (throttled)
+```
+
+See [daily-scraper-weekly-incidents-reports-operations.md](documents/runbooks/daily-scraper-weekly-incidents-reports-operations.md) for manual triggers, debugging, and adding new firms.
+
+---
+
 ## 📚 Documentation
 
 ### Technical Design Documents
+
+**Intelligence Feed:**
+- [intelligence-feed-system-architecture.md](documents/runbooks/intelligence-feed-system-architecture.md) - Pipeline, data flow, monitoring
+- [daily-scraper-weekly-incidents-reports-operations.md](documents/runbooks/daily-scraper-weekly-incidents-reports-operations.md) - Daily scraper, weekly incidents & reports: manual triggers, debugging, email logs, adding firms
 
 **Database Schema & Architecture:**
 - [EXECUTIVE_SUMMARY.md](documents/EXECUTIVE_SUMMARY.md) - High-level overview and key decisions

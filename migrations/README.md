@@ -74,9 +74,10 @@ Reference table for prop firms (migrated from `data/propfirms.json`)
 
 ### 2. `trustpilot_reviews`
 Stores scraped Trustpilot reviews with AI classification:
-- Review data (rating, title, text, date, author)
-- AI classification (category, severity, confidence)
-- Indexes for fast firm/date queries
+- Review data: `firm_id`, `rating`, `title`, `review_text`, `review_date`, `trustpilot_url` (unique), `reviewer_name`
+- AI classification: `category`, `classified_at` (nullable until classified by sync-classify-reviews)
+- Optional: `severity`, `confidence`, `ai_summary` (taxonomy in `lib/ai/classification-taxonomy.ts`)
+- Indexes for firm/date and unclassified queries (`classified_at IS NULL`)
 
 ### 3. `user_subscriptions`
 Tracks user subscriptions to weekly reports (table created in 11 as `firm_subscriptions`, renamed in 20):
@@ -91,10 +92,10 @@ Cached weekly intelligence reports:
 - Public archive (no auth required)
 
 ### 5. `weekly_incidents`
-Aggregated incidents from multiple reviews:
-- AI-generated summaries
-- Severity levels
-- Source review references
+Aggregated incidents from classified reviews (per firm, per week):
+- Columns: `firm_id`, `year`, `week_number`, `incident_type`, `severity`, `title`, `summary`, `review_count`, `review_ids`
+- Unique on `(firm_id, year, week_number, incident_type)`
+- Populated by `run-daily-incidents` workflow (script: `scripts/run-daily-incidents.ts`)
 
 ## Verification
 

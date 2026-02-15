@@ -1129,7 +1129,7 @@ Update project documentation to reflect the new intelligence feed system.
   - [ ] Add environment variables required
 - [ ] Update `migrations/README.md`:
   - [ ] Document new tables: `user_subscriptions`, `weekly_incidents`, `trustpilot_reviews` schema changes
-- [ ] Create `documents/runbooks/intelligence-feed-operations.md`:
+- [ ] Create `documents/runbooks/daily-scraper-weekly-incidents-reports-operations.md`:
   - [ ] How to manually trigger workflows
   - [ ] How to debug scraper failures
   - [ ] How to check email delivery logs
@@ -1139,7 +1139,7 @@ Update project documentation to reflect the new intelligence feed system.
 
 - `README.md` (update)
 - `migrations/README.md` (update)
-- `documents/runbooks/intelligence-feed-operations.md` (new)
+- `documents/runbooks/daily-scraper-weekly-incidents-reports-operations.md` (new)
 
 ---
 
