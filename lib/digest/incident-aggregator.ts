@@ -1,13 +1,13 @@
 /**
  * TICKET-009: Incident Aggregator
- * Groups related reviews by category, generates AI incident summary, stores in weekly_incidents.
+ * Groups related reviews by category, generates AI incident summary, stores in firm_daily_incidents.
  * Phase 1 (Option B): spike-based (>=3 in 7d) + severity override (high_risk_allegation >=1 in 7d).
  * See docs/CLASSIFIER-TAXONOMY.md and lib/ai/classification-taxonomy.ts.
  */
 
 import { createServiceClient } from '@/lib/supabase/service';
 import { getOpenAIClient } from '@/lib/ai/openai-client';
-import { getWeekNumber, getYear } from './week-utils';
+import { getWeekNumberUtc, getYearUtc } from './week-utils';
 import {
   NEGATIVE_SPIKE_CATEGORIES,
   SEVERITY_OVERRIDE_CATEGORIES,
@@ -68,8 +68,8 @@ export async function detectIncidents(
   weekEnd: Date
 ): Promise<DetectedIncident[]> {
   const supabase = createServiceClient();
-  const weekNumber = getWeekNumber(weekStart);
-  const year = getYear(weekStart);
+  const weekNumber = getWeekNumberUtc(weekStart);
+  const year = getYearUtc(weekStart);
 
   const startStr = weekStart.toISOString().slice(0, 10);
   const endStr = weekEnd.toISOString().slice(0, 10);
@@ -230,7 +230,7 @@ async function storeIncidents(incidents: DetectedIncident[]): Promise<void> {
   const supabase = createServiceClient();
   const first = incidents[0];
   await supabase
-    .from('weekly_incidents')
+    .from('firm_daily_incidents')
     .delete()
     .eq('firm_id', first.firm_id)
     .eq('week_number', first.week_number)
@@ -247,6 +247,6 @@ async function storeIncidents(incidents: DetectedIncident[]): Promise<void> {
     affected_users: i.affected_users,
     review_ids: i.review_ids,
   }));
-  const { error } = await supabase.from('weekly_incidents').insert(rows);
+  const { error } = await supabase.from('firm_daily_incidents').insert(rows);
   if (error) throw new Error(`Failed to store incidents: ${error.message}`);
 }

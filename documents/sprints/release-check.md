@@ -28,27 +28,27 @@ Daily 3 AM PST (11:00 UTC)
 Daily 4 AM PST (12:00 UTC)
 ┌─────────────────────┐
 │ 2. Classify Reviews │ → OpenAI GPT-4 → category field updated
-│    (Unclassified)   │    (scripts/classify-unclassified-reviews.ts - NOT FOUND)
+│    (Unclassified)   │    (scripts/classify-unclassified-reviews.ts)
 └──────────┬──────────┘
            │ 1 hour delay
            ↓
 Daily 5 AM PST (13:00 UTC)
 ┌─────────────────────┐
 │ 3. Detect Incidents │ → Aggregate by week → weekly_incidents table
-│    (Current Week)   │    (scripts/run-daily-incidents.ts - NOT FOUND)
+│    (Current Week)   │    (scripts/run-daily-incidents.ts)
 └──────────┬──────────┘
            │ 9 hours
            ↓
 Weekly Mon 2 PM UTC (14:00 UTC)
 ┌─────────────────────┐
 │ 4. Send Reports     │ → Query subscribers → Email via Resend
-│    (Weekly Digest)  │    (app/api/cron/send-weekly-reports - EMPTY DIR)
+│    (Weekly Digest)  │    (app/api/cron/send-weekly-reports)
 └─────────────────────┘
 
 UI Consumption:
 ┌─────────────────────────────────────────────────────────────────┐
-│ /propfirms/[id]          → Intelligence Feed (last 3, 90d data) │
-│ /propfirms/[id]/intelligence → Full feed (30d filter, 90d data) │
+│ /propfirms/[id]          → Intelligence Feed (last 3, 30d data)  │
+│ /propfirms/[id]/intelligence → Full feed (30d filter, 30d data) │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -69,7 +69,7 @@ UI Consumption:
 - [ ] Verify section shows:
   - [ ] Title: "Intelligence Feed"
   - [ ] Link: "Live Reports" → navigates to `/propfirms/fundingpips/intelligence`
-  - [ ] Last 3 incidents displayed (from 90-day data)
+  - [ ] Last 3 incidents displayed (from 30-day data)
   - [ ] Each incident shows:
     - [ ] Severity badge (high/medium/low with color coding)
     - [ ] Incident type (e.g., "PAYOUT DELAY")
@@ -77,7 +77,7 @@ UI Consumption:
     - [ ] Title and summary text
     - [ ] Hover effect on card
 
-**API Endpoint:** `GET /api/v2/propfirms/[id]/incidents?days=90`
+**API Endpoint:** `GET /api/v2/propfirms/[id]/incidents?days=30`
 
 - [ ] Returns incidents from `weekly_incidents` table
 - [ ] Includes `source_links` (up to 3 Trustpilot URLs per incident)
@@ -91,7 +91,7 @@ UI Consumption:
 
 **Edge Cases:**
 
-- [ ] No incidents in 90 days → Shows "No recent incidents in the last 90 days"
+- [ ] No incidents in 30 days → Shows "No recent incidents in the last 30 days"
 - [ ] Loading state → Shows spinner
 - [ ] API failure → Graceful error (currently no error UI shown)
 
@@ -101,17 +101,13 @@ UI Consumption:
 
 **File:** [app/propfirms/[id]/intelligence/page.js](../../app/propfirms/[id]/intelligence/page.js)
 
-**Status:** ⚠️ DISCREPANCY - UI shows 90 days, requirement is 30 days
+**Status:** ✅ IMPLEMENTED (30 days)
 
 **Current Implementation:**
 
-- Line 138: `fetch(/api/v2/propfirms/${firmId}/incidents?days=90)`
-- Displays last 90 days of data
-
-**Required Change:**
-
-- [ ] Update to `?days=30` to match requirement
-- [ ] Update description text (line 168) to "last 30 days" instead of "last 90 days"
+- Line 138: `fetch(/api/v2/propfirms/${firmId}/incidents?days=30)`
+- Displays last 30 days of data
+- Description text: "last 30 days"
 
 **Verification Steps:**
 
@@ -571,7 +567,7 @@ Add new monitoring panel after "Prop firms payout data" section (around line 433
 
 **API Response Times (P95):**
 
-- [ ] `GET /api/v2/propfirms/[id]/incidents?days=90` < 500ms
+- [ ] `GET /api/v2/propfirms/[id]/incidents?days=30` < 500ms
 - [ ] `GET /api/v2/propfirms/[id]/signals?days=30` < 300ms
 
 **Workflow Execution Times:**
@@ -606,19 +602,18 @@ Add new monitoring panel after "Prop firms payout data" section (around line 433
    - [ ] Verify `weekly_incidents` table structure
    - [ ] Verify `trustpilot_reviews` has `category` and `classified_at` fields
 
-4. ⚠️ **UI Discrepancy:**
-   - [ ] Change intelligence page from 90 days to 30 days (line 138 in `app/propfirms/[id]/intelligence/page.js`)
+4. ✅ **UI Data Range:** Intelligence page uses 30 days (done).
 
 ### MEDIUM PRIORITY (Should Fix)
 
-5. ❌ **Test Coverage:**
-   - [ ] `lib/scrapers/trustpilot.ts` unit tests
-   - [ ] E2E test for intelligence feed pages
-   - [ ] API route tests for new cron endpoint
+5. ✅ **Test Coverage:** (done)
+   - [x] `lib/scrapers/trustpilot.ts` unit tests
+   - [x] E2E test for intelligence feed pages (`tests/e2e/intelligence-feed.spec.js`)
+   - [x] API route tests for send-weekly-reports
 
-6. ❌ **Monitoring:**
-   - [ ] Add intelligence feed metrics to admin dashboard
-   - [ ] Configure error alerts for pipeline failures
+6. ✅ **Monitoring:** (done)
+   - [x] Intelligence feed metrics in admin dashboard (`intelligenceFeed` in `/api/admin/metrics`)
+   - [x] Error alerts for pipeline (`lib/alerts.js` checkIntelligenceFeedAlerts)
 
 ### LOW PRIORITY (Nice to Have)
 

@@ -64,6 +64,8 @@ psql "postgresql://postgres:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:54
 - `18_seed-firms-trustpilot-urls.sql` - Seed `firms.trustpilot_url` (single source of truth for Trustpilot scraper)
 - `19_firms_trustpilot_scraper_status.sql` - Add `last_scraper_*` columns to `firms` for admin dashboard monitoring
 - `20_rename_firm_subscriptions_to_user_subscriptions.sql` - Rename `firm_subscriptions` → `user_subscriptions` (user-centric naming)
+- `21_cron_last_run.sql` - `cron_last_run` table for admin dashboard (last run per job)
+- `22_rename_weekly_tables_and_firm_weekly_reports_dates.sql` - Rename `weekly_incidents` → `firm_daily_incidents`; replace `weekly_reports` with `firm_weekly_reports` (week_from_date, week_to_date). All UTC; digest Sunday 8:00 UTC.
 
 ## Alpha Intelligence Schema
 
@@ -85,14 +87,14 @@ Tracks user subscriptions to weekly reports (table created in 11 as `firm_subscr
 - Email preferences
 - Last sent timestamp
 
-### 4. `weekly_reports`
-Cached weekly intelligence reports:
-- Stored as JSONB for flexibility
-- Email delivery metrics
-- Public archive (no auth required)
+### 4. `firm_weekly_reports` (was `weekly_reports`; migration 22)
+Cached weekly intelligence reports per firm (UTC week Mon–Sun):
+- Columns: `firm_id`, `week_from_date` (DATE), `week_to_date` (DATE), `report_json` (JSONB), `generated_at`
+- Unique on `(firm_id, week_from_date)`
+- Populated by Weekly 1 (Sunday 7:00 UTC); read by Weekly 2 digest (Sunday 8:00 UTC)
 
-### 5. `weekly_incidents`
-Aggregated incidents from classified reviews (per firm, per week):
+### 5. `firm_daily_incidents` (was `weekly_incidents`; migration 22)
+Aggregated incidents from classified reviews (per firm, per week); data updated daily:
 - Columns: `firm_id`, `year`, `week_number`, `incident_type`, `severity`, `title`, `summary`, `review_count`, `review_ids`
 - Unique on `(firm_id, year, week_number, incident_type)`
 - Populated by step3-run-daily-incidents-daily workflow (script: `scripts/run-daily-incidents.ts`)
@@ -109,13 +111,13 @@ SELECT id, name FROM firms;
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'
-  AND table_name IN ('trustpilot_reviews', 'user_subscriptions', 'weekly_reports', 'weekly_incidents');
+  AND table_name IN ('trustpilot_reviews', 'user_subscriptions', 'firm_weekly_reports', 'firm_daily_incidents');
 
 -- Check RLS policies
 SELECT tablename, policyname
 FROM pg_policies
 WHERE schemaname = 'public'
-  AND tablename IN ('firms', 'trustpilot_reviews', 'user_subscriptions', 'weekly_reports', 'weekly_incidents');
+  AND tablename IN ('firms', 'trustpilot_reviews', 'user_subscriptions', 'firm_weekly_reports', 'firm_daily_incidents');
 ```
 
 ## Rollback
@@ -123,8 +125,8 @@ WHERE schemaname = 'public'
 To rollback the alpha intelligence schema:
 
 ```sql
-DROP TABLE IF EXISTS weekly_incidents CASCADE;
-DROP TABLE IF EXISTS weekly_reports CASCADE;
+DROP TABLE IF EXISTS firm_daily_incidents CASCADE;
+DROP TABLE IF EXISTS firm_weekly_reports CASCADE;
 DROP TABLE IF EXISTS user_subscriptions CASCADE;
 DROP TABLE IF EXISTS trustpilot_reviews CASCADE;
 DROP TABLE IF EXISTS firms CASCADE;

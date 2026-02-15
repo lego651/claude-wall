@@ -2,7 +2,7 @@
 
 How to run and debug the **daily Trustpilot scraper**, **weekly incidents** (incident detection), and **weekly email reports**: manual triggers, debugging failures, email delivery logs, and adding new firms.
 
-**See also:** [Intelligence Feed System Architecture](./intelligence-feed-system-architecture.md) for pipeline overview and data flow.
+**See also:** [Intelligence Feed System Architecture](./intelligence-feed-system-architecture.md) for pipeline overview and data flow. **To test Step 4 (digest) end-to-end:** [Test Step 4 – Weekly Digest](./test-step4-weekly-digest.md).
 
 ---
 
@@ -64,10 +64,9 @@ All intelligence workflows support **workflow_dispatch** (manual trigger) in Git
 
 2. **Weekly reports API**  
    - Trigger **Send Weekly Reports** workflow and check its logs for the `curl` response (e.g. `{ "sent": N, "failed": M }`).  
-   - Or call the API directly and inspect response:
+   - Or call the API directly (GET) and inspect response:
      ```bash
-     curl -X POST "https://<your-app>/api/cron/send-weekly-reports" \
-       -H "Authorization: Bearer $CRON_SECRET"
+     curl -s -H "Authorization: Bearer $CRON_SECRET" "https://<your-app>/api/cron/send-weekly-reports"
      ```
 
 3. **Admin dashboard**  

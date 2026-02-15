@@ -13,14 +13,14 @@ import { createClient } from '@/lib/supabase/server';
 import { usageTracker } from '@/lib/arbiscan';
 import { getCacheStats } from '@/lib/cache';
 import { sendAlert, checkIntelligenceFeedAlerts } from '@/lib/alerts';
-import { getWeekNumber, getYear, getWeekBounds } from '@/lib/digest/week-utils';
+import { getWeekNumberUtc, getYearUtc, getWeekBoundsUtc } from '@/lib/digest/week-utils';
 
-/** Incident detection: current week and per-firm incident counts (for admin dashboard). */
+/** Incident detection: current week (UTC) and per-firm incident counts (for admin dashboard). */
 async function getIncidentDetectionStatus(supabase, trustpilotFirms) {
   const now = new Date();
-  const { weekStart } = getWeekBounds(now);
-  const weekNumber = getWeekNumber(weekStart);
-  const year = getYear(weekStart);
+  const { weekStart } = getWeekBoundsUtc(now);
+  const weekNumber = getWeekNumberUtc(weekStart);
+  const year = getYearUtc(weekStart);
   const weekLabel = `${year}-W${String(weekNumber).padStart(2, '0')}`;
 
   let rows = [];
@@ -28,12 +28,12 @@ async function getIncidentDetectionStatus(supabase, trustpilotFirms) {
   try {
     const [{ data, error }, { data: latestRow }] = await Promise.all([
       supabase
-        .from('weekly_incidents')
+        .from('firm_daily_incidents')
         .select('firm_id')
         .eq('week_number', weekNumber)
         .eq('year', year),
       supabase
-        .from('weekly_incidents')
+        .from('firm_daily_incidents')
         .select('created_at')
         .order('created_at', { ascending: false })
         .limit(1)
@@ -128,7 +128,7 @@ async function getFileStats() {
 }
 
 async function getDbStats(supabase) {
-  const tables = ['firms', 'recent_payouts', 'trustpilot_reviews', 'weekly_incidents', 'weekly_reports', 'user_subscriptions'];
+  const tables = ['firms', 'recent_payouts', 'trustpilot_reviews', 'firm_daily_incidents', 'firm_weekly_reports', 'user_subscriptions'];
   const counts = {};
   const start = Date.now();
   let ok = true;
@@ -156,14 +156,15 @@ function countByFirm(rows) {
   return map;
 }
 
-/** Intelligence feed: last week report coverage, subscription counts. */
+/** Intelligence feed: current week (UTC) report coverage, subscription counts. */
 async function getIntelligenceFeedStatus(supabase) {
   const now = new Date();
-  const lastWeekDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 7));
-  const { weekStart } = getWeekBounds(lastWeekDate);
-  const weekNumber = getWeekNumber(weekStart);
-  const year = getYear(weekStart);
+  const { weekStart, weekEnd } = getWeekBoundsUtc(now);
+  const weekNumber = getWeekNumberUtc(weekStart);
+  const year = getYearUtc(weekStart);
   const weekLabel = `W${String(weekNumber).padStart(2, '0')} ${year}`;
+  const weekFromIso = weekStart.toISOString().slice(0, 10);
+  const weekToIso = weekEnd.toISOString().slice(0, 10);
 
   let firmsWithReport = [];
   let firmsExpected = [];
@@ -172,10 +173,10 @@ async function getIntelligenceFeedStatus(supabase) {
 
   try {
     const { data: reportRows } = await supabase
-      .from('weekly_reports')
+      .from('firm_weekly_reports')
       .select('firm_id')
-      .eq('week_number', weekNumber)
-      .eq('year', year);
+      .eq('week_from_date', weekFromIso)
+      .eq('week_to_date', weekToIso);
     firmsWithReport = (reportRows || []).map((r) => r.firm_id);
 
     const { data: firmRows } = await supabase
@@ -216,6 +217,32 @@ async function getIntelligenceFeedStatus(supabase) {
     subscriptionsEmailEnabled,
     weekLabel,
   };
+}
+
+/** Last run of generate-weekly-reports script (from cron_last_run). */
+async function getGenerateWeeklyReportsLastRun(supabase) {
+  try {
+    const { data, error } = await supabase
+      .from('cron_last_run')
+      .select('last_run_at, result_json')
+      .eq('job_name', 'generate_weekly_reports')
+      .maybeSingle();
+    if (error || !data) return null;
+    const r = data.result_json || {};
+    return {
+      lastRunAt: data.last_run_at,
+      firmsProcessed: r.firmsProcessed ?? null,
+      successCount: r.successCount ?? null,
+      errorCount: r.errorCount ?? null,
+      errors: Array.isArray(r.errors) ? r.errors : [],
+      weekLabel: r.weekLabel ?? null,
+      weekStart: r.weekStartIso ?? r.weekStart ?? null,
+      weekEnd: r.weekEndIso ?? r.weekEnd ?? null,
+      durationMs: r.durationMs ?? null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 /** Last run of send-weekly-reports cron (from cron_last_run). */
@@ -361,12 +388,13 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed, weeklyEmailLastRun] = await Promise.all([
+  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed, generateWeeklyReportsRun, weeklyEmailLastRun] = await Promise.all([
     getFileStats(),
     getDbStats(supabase),
     getPropfirmsPayoutCounts(supabase),
     getTrustpilotScraperStatus(supabase),
     getIntelligenceFeedStatus(supabase),
+    getGenerateWeeklyReportsLastRun(supabase),
     getWeeklyEmailLastRun(supabase),
   ]);
 
@@ -487,6 +515,20 @@ export async function GET() {
       subscriptionsEmailEnabled: intelligenceFeed.subscriptionsEmailEnabled,
       weekLabel: intelligenceFeed.weekLabel,
     },
+    generateWeeklyReportsRun: generateWeeklyReportsRun
+      ? {
+          lastRunAt: generateWeeklyReportsRun.lastRunAt,
+          firmsProcessed: generateWeeklyReportsRun.firmsProcessed,
+          successCount: generateWeeklyReportsRun.successCount,
+          errorCount: generateWeeklyReportsRun.errorCount,
+          errors: generateWeeklyReportsRun.errors,
+          weekLabel: generateWeeklyReportsRun.weekLabel,
+          weekStart: generateWeeklyReportsRun.weekStart,
+          weekEnd: generateWeeklyReportsRun.weekEnd,
+          durationMs: generateWeeklyReportsRun.durationMs,
+          note: 'Runs Sunday 7:00 UTC via step3b-generate-weekly-reports-weekly. Populates firm_weekly_reports for current week (Mon–Sun UTC) before Weekly 2 send.',
+        }
+      : null,
     weeklyEmailReport: {
       lastRunAt: weeklyEmailLastRun.lastRunAt,
       sent: weeklyEmailLastRun.sent,
@@ -495,7 +537,7 @@ export async function GET() {
       weekStart: weeklyEmailLastRun.weekStart,
       weekEnd: weeklyEmailLastRun.weekEnd,
       errors: weeklyEmailLastRun.errors,
-      note: 'Send runs Monday 14:00 UTC via step4-send-weekly-reports-weekly workflow.',
+      note: 'Weekly 2: Send runs Sunday 8:00 UTC via step4-send-weekly-reports-weekly workflow.',
     },
     incidentDetection: {
       currentWeek: incidentDetection.currentWeek,

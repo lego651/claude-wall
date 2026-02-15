@@ -1,0 +1,40 @@
+# Step 3b — Generate Weekly Reports (Weekly)
+#
+# Pipeline order: step1 → step2 → step3 → step3b (weekly) → step4.
+# Runs every Sunday at 7:00 UTC (1 hour before step4 send at 8:00 UTC).
+# Populates firm_weekly_reports for current week (Mon–Sun UTC) so step4 has content to send.
+#
+# Requires repo secrets: OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+
+name: Step 3b – Generate Weekly Reports (Weekly)
+
+on:
+  schedule:
+    # Sunday 7:00 UTC (1 hour before step4 at 8:00 UTC)
+    - cron: "0 7 * * 0"
+  workflow_dispatch:
+
+jobs:
+  generate-weekly-reports:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Generate weekly reports (last week)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/generate-weekly-reports-last-week.ts

@@ -6,9 +6,7 @@ import { GET } from './route';
 jest.mock('@/lib/supabase/service');
 jest.mock('@/lib/email/send-digest');
 jest.mock('@/lib/digest/week-utils', () => ({
-  getWeekNumber: () => 6,
-  getYear: () => 2025,
-  getWeekBounds: () => ({
+  getCurrentWeekUtc: () => ({
     weekStart: new Date('2025-02-03T00:00:00.000Z'),
     weekEnd: new Date('2025-02-09T23:59:59.999Z'),
   }),
@@ -281,7 +279,7 @@ describe('GET /api/cron/send-weekly-reports', () => {
     expect(body.error).toBe('Failed to fetch profiles');
   });
 
-  it('returns 500 when weekly_reports query fails', async () => {
+  it('returns 500 when firm_weekly_reports query fails', async () => {
     const userId = 'user-1';
     const mockFrom = jest.fn();
     mockFrom

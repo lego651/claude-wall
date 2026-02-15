@@ -2,7 +2,7 @@
  * TICKET-003: Incident detection (daily).
  * For each firm with Trustpilot, fetches classified reviews for the current ISO week,
  * groups by category, detects incidents (spike ≥3 or high_risk ≥1), generates title/summary
- * via OpenAI (batched), upserts to weekly_incidents.
+ * via OpenAI (batched), upserts to firm_daily_incidents.
  * Called by GitHub Actions (step3-run-daily-incidents-daily.yml).
  *
  * Usage:
@@ -17,7 +17,7 @@
 
 import 'dotenv/config';
 import { getFirmsWithTrustpilot } from '@/lib/scrapers/trustpilot';
-import { getWeekBounds, getWeekNumber } from '@/lib/digest/week-utils';
+import { getWeekBoundsUtc, getWeekNumberUtc, getYearUtc } from '@/lib/digest/week-utils';
 import { detectIncidents } from '@/lib/digest/incident-aggregator';
 
 const WEEK_OFFSET = parseInt(process.env.INCIDENT_WEEK_OFFSET || '0', 10);
@@ -36,9 +36,9 @@ async function main(): Promise<void> {
 
   const now = new Date();
   const refDate = new Date(now.getTime() + WEEK_OFFSET * 7 * 24 * 60 * 60 * 1000);
-  const { weekStart, weekEnd } = getWeekBounds(refDate);
-  const weekNum = getWeekNumber(weekStart);
-  const year = weekStart.getUTCFullYear();
+  const { weekStart, weekEnd } = getWeekBoundsUtc(refDate);
+  const weekNum = getWeekNumberUtc(weekStart);
+  const year = getYearUtc(weekStart);
   const weekLabel = `${year}-W${String(weekNum).padStart(2, '0')}`;
 
   console.log(`[Incidents] Processing week ${weekLabel} (${weekStart.toISOString().slice(0, 10)} – ${weekEnd.toISOString().slice(0, 10)}) for ${firms.length} firm(s).`);

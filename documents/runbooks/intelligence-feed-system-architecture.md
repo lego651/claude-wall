@@ -81,9 +81,8 @@
 │  └────────────────────────────────────────────┘     │
 └──────┬──────────────────────────────────────────────┘
        │
-       │ 9 hours delay
-       │ Weekly Monday 2 PM UTC (14:00 UTC)
-       │ GitHub Actions: step4-send-weekly-reports-weekly.yml (weekly)
+       │ Weekly Monday 13:30 UTC
+       │ GitHub Actions: step3b-generate-weekly-reports-weekly.yml (weekly)
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -169,11 +168,23 @@ trustpilot_reviews (current week, grouped by category)
   → UPSERT weekly_incidents
 ```
 
-### 4. EMAIL (Weekly Monday 2 PM UTC)
+### 3b. GENERATE REPORTS (Weekly Monday 13:30 UTC)
 ```
-user_subscriptions (email_enabled)
-  → weekly_reports (report_json, last week, user's firms)
-  → sendWeeklyDigest → HTML + Resend → User inbox
+scripts/generate-weekly-reports-last-week.ts
+  → For each firm: generateWeeklyReport(firmId, lastWeekStart, lastWeekEnd)
+  → payouts + trustpilot_reviews + weekly_incidents + AI "Our Take"
+  → UPSERT weekly_reports (one row per firm/week)
+  → Persist run to cron_last_run (admin dashboard monitoring)
+```
+
+### 4. EMAIL (Weekly Monday 14:00 UTC)
+```
+user_subscriptions (email_enabled = true)
+  → Group by user_id → list of firm_ids per user
+  → weekly_reports (report_json, last week, for those firm_ids)
+  → For each user: only reports for firms they subscribe to
+  → sendWeeklyDigest(user, reports[], options) → HTML + Resend → User inbox
+  → Persist run to cron_last_run (admin dashboard monitoring)
 ```
 
 ### 5. RENDER (Real-time)
@@ -208,7 +219,44 @@ weekly_incidents (last 30 days)
 ```
 
 - **weekly_incidents**: written by incident-detection step; each row = one incident (type, severity, title, summary). APIs and UI query this for “last 30d incidents.”
-- **weekly_reports**: written by `lib/digest/generator.ts` (when a report is generated). Holds a full week snapshot per firm. The **weekly email** uses `weekly_reports.report_json` (not a direct query to `weekly_incidents`) so each user gets one email with payouts + Trustpilot + incidents + ourTake for their subscribed firms.
+- **weekly_reports**: written by **Step 3b** (`scripts/generate-weekly-reports-last-week.ts` → `lib/digest/generator.ts` → `generateWeeklyReport()`). Runs every Monday 13:30 UTC. Holds a full week snapshot per firm. The **weekly email (Step 4)** uses `weekly_reports.report_json` so each user gets one email with payouts + Trustpilot + incidents + ourTake for **their subscribed firms only** (see [Weekly email flow and per-user customization](#weekly-email-flow-and-per-user-customization) below).
+
+### Weekly email flow and per-user customization
+
+Step 4 (send-weekly-reports) runs every **Monday 14:00 UTC**. It sends **one digest email per user**; the **content of each email is customized** to only include weekly reports for the firms that user is subscribed to.
+
+**Flow:**
+
+```
+1. Compute "last week" (Mon–Sun UTC) — same week Step 3b wrote to weekly_reports.
+
+2. Load user_subscriptions WHERE email_enabled = true
+   → List of (user_id, firm_id). Group by user_id → each user has a set of firm_ids.
+
+3. Load profiles (id, email) for those user_ids
+   → Map user_id → email (skip users with no email).
+
+4. Load weekly_reports for last week for ALL firm_ids that appear in any subscription
+   → One query: (firm_id IN (...), week_number = X, year = Y). Map firm_id → report_json.
+
+5. For each user:
+   - Get their firm_ids from step 2.
+   - Collect report_json for those firm_ids from step 4 (only firms they subscribe to).
+   - If reports.length === 0 → skip (no email; user is "skipped").
+   - If reports.length >= 1 → build one HTML digest with those reports only, send via Resend.
+```
+
+**How users get customized emails:**
+
+| User  | Subscriptions (firm_id)     | Email content                                      |
+|-------|------------------------------|----------------------------------------------------|
+| Alice | fundingpips, the5ers        | One email: 2 sections (FundingPips + The5ers).    |
+| Bob   | fundingpips                  | One email: 1 section (FundingPips only).          |
+| Carol | fundingpips, the5ers, fxify | One email: up to 3 sections (only firms that have a report for last week). |
+
+- **Filtering:** The digest API never sends a report for a firm the user is not subscribed to. It looks up `user_subscriptions` for that user and only includes `report_json` for those `firm_id`s.
+- **Skipped:** If a user has email enabled but none of their subscribed firms have a row in `weekly_reports` for last week (e.g. Step 3b failed or didn’t run), that user gets **no email** and is counted as "skipped".
+- **Monitoring:** Last run time, `sent`, `failed`, `skipped`, and sample `errors` are stored in `cron_last_run` (job_name: `send_weekly_reports`) and shown on the admin dashboard (Step 4 tab).
 
 ## Database Schema
 
@@ -254,8 +302,8 @@ Populated by `lib/digest/generator.ts` → `generateWeeklyReport()`. Read by `GE
 
 #### How weekly report is generated and how email is sent
 
-- **Report generation:** `lib/digest/generator.ts` exposes `generateWeeklyReport(firmId, weekStart, weekEnd)`. It loads payout data (from JSON), Trustpilot reviews, and incidents for that firm/week, builds payouts summary, Trustpilot summary, incidents list, and an AI “Our Take” section, then upserts one row per (firm, week) into `weekly_reports`. There is no workflow in this repo that calls it; a script or separate job should run it for “last week” before the send cron (e.g. Monday morning).
-- **Email send:** Every Monday 14:00 UTC, GitHub Actions runs `step4-send-weekly-reports-weekly.yml`, which calls `GET /api/cron/send-weekly-reports` (auth: `Authorization: Bearer CRON_SECRET`). The route: (1) computes last week (Mon–Sun) in UTC; (2) loads `user_subscriptions` with `email_enabled = true` and groups by `user_id` → list of `firm_id`s; (3) loads user emails from `profiles`; (4) loads `weekly_reports` for last week for those firms; (5) for each user with email and at least one report, calls `sendWeeklyDigest(user, reports, { weekStart, weekEnd, baseUrl })` in `lib/email/send-digest.ts`, which builds HTML and sends via Resend (`lib/resend.ts`). Response includes `sent`, `failed`, `skipped`, `errors[]`, `weekStart`, `weekEnd`, `durationMs`.
+- **Report generation:** `lib/digest/generator.ts` exposes `generateWeeklyReport(firmId, weekStart, weekEnd)`. It loads payout data (from JSON), Trustpilot reviews, and incidents for that firm/week, builds payouts summary, Trustpilot summary, incidents list, and an AI “Our Take” section, then upserts one row per (firm, week) into `weekly_reports`. Step 3b (step3b-generate-weekly-reports-weekly.yml, Monday 13:30 UTC) runs it for “last week” before the send cron (e.g. Monday morning).
+- **Email send:** Every Monday 14:00 UTC, GitHub Actions runs `step4-send-weekly-reports-weekly.yml`, which calls `GET /api/cron/send-weekly-reports` (auth: `Authorization: Bearer CRON_SECRET`). The route: (1) computes last week (Mon–Sun) in UTC; (2) loads `user_subscriptions` with `email_enabled = true` and groups by `user_id` → list of `firm_id`s; (3) loads user emails from `profiles`; (4) loads `weekly_reports` for last week for those firms; (5) for each user with email and at least one report, calls `sendWeeklyDigest(user, reports, { weekStart, weekEnd, baseUrl })` in `lib/email/send-digest.ts`, which builds HTML and sends via Resend (`lib/resend.ts`). Response and run summary are stored in `cron_last_run` for admin dashboard monitoring. See [Weekly email flow and per-user customization](#weekly-email-flow-and-per-user-customization) below.
 - **Testing:** `app/api/cron/send-weekly-reports/route.test.js` covers auth, no subscribers, with subscribers + mock `sendWeeklyDigest`, and error paths. `lib/email/__tests__/send-digest.test.ts` mocks Resend and asserts `sendWeeklyDigest` success/failure and call args.
 
 ### weekly_incidents
@@ -372,12 +420,21 @@ Runs: npx tsx scripts/run-daily-incidents.ts
 Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 
+### 3b. step3b-generate-weekly-reports-weekly.yml (weekly)
+```yaml
+Cron: 30 13 * * 1  (Monday 13:30 UTC)
+Runs: npx tsx scripts/generate-weekly-reports-last-week.ts
+Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+```
+Populates `weekly_reports` for last week. Results stored in `cron_last_run` (job: generate_weekly_reports). Admin dashboard shows last run, firms processed, success/error counts.
+
 ### 4. step4-send-weekly-reports-weekly.yml (weekly)
 ```yaml
-Cron: 0 14 * * 1  (Monday 2 PM UTC)
+Cron: 0 14 * * 1  (Monday 14:00 UTC)
 Runs: curl -H "Authorization: Bearer $CRON_SECRET" $SITE_URL/api/cron/send-weekly-reports
 Env:  CRON_SECRET, SITE_URL
 ```
+Sends digest emails via Resend. Results stored in `cron_last_run` (job: send_weekly_reports). Admin dashboard shows last run, sent/failed/skipped, errors.
 
 ## API Endpoints
 
@@ -395,11 +452,11 @@ Returns: Payout summary + Trustpilot sentiment
 Used by: Overview page (currently)
 ```
 
-### POST /api/cron/send-weekly-reports
+### GET /api/cron/send-weekly-reports
 ```
 Auth: Bearer $CRON_SECRET
-Returns: { sent: N, failed: M, errors: [...] }
-Used by: GitHub Actions weekly workflow
+Returns: { sent: N, failed: M, skipped: K, errors: [...], weekStart, weekEnd, durationMs }
+Used by: GitHub Actions step4-send-weekly-reports-weekly (weekly)
 ```
 
 ## File Locations
@@ -410,7 +467,8 @@ Code:
 ├── scripts/backfill-trustpilot.ts       ❌ MISSING
 ├── scripts/classify-unclassified-reviews.ts  ✅ EXISTS (batch size 20)
 ├── scripts/run-daily-incidents.ts       ✅ EXISTS (batch 10 incidents/call)
-├── app/api/cron/send-weekly-reports/route.js  ❌ MISSING
+├── scripts/generate-weekly-reports-last-week.ts  ✅ EXISTS (Step 3b, weekly)
+├── app/api/cron/send-weekly-reports/route.js    ✅ EXISTS (Step 4, GET)
 ├── app/propfirms/[id]/page.js           ✅ EXISTS (intelligence section)
 ├── app/propfirms/[id]/intelligence/page.js    ✅ EXISTS
 └── components/propfirms/intelligence/

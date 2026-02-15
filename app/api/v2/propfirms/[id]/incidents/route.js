@@ -1,7 +1,7 @@
 /**
  * GET /api/v2/propfirms/[id]/incidents
  *
- * Returns incidents for the firm from weekly_incidents, filtered to the last N days.
+ * Returns incidents for the firm from firm_daily_incidents, filtered to the last N days.
  * Query: days (default 90). Response includes week_start (YYYY-MM-DD) for display.
  */
 
@@ -19,8 +19,8 @@ function createSupabaseClient() {
   );
 }
 
-/** Monday of ISO week (year, week_number) in YYYY-MM-DD */
-function getWeekStartDate(year, weekNumber) {
+/** Monday of ISO week (year, week_number) in YYYY-MM-DD. Exported for tests. */
+export function getWeekStartDate(year, weekNumber) {
   const jan4 = new Date(Date.UTC(year, 0, 4));
   const dow = jan4.getUTCDay();
   const mondayOffset = dow === 0 ? 6 : dow - 1;
@@ -69,12 +69,12 @@ export async function GET(request, { params }) {
   try {
     const result = await withQueryGuard(
       supabase
-        .from('weekly_incidents')
+        .from('firm_daily_incidents')
         .select('id, firm_id, week_number, year, incident_type, severity, title, summary, review_count, affected_users, review_ids, created_at')
         .eq('firm_id', firmId)
         .order('year', { ascending: false })
         .order('week_number', { ascending: false }),
-      { context: 'incidents weekly_incidents' }
+      { context: 'incidents firm_daily_incidents' }
     );
     rows = result.data;
     err = result.error;

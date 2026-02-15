@@ -48,34 +48,34 @@ function getSummaryStatus(data) {
     issues.push("Prop firms payout data warning");
   }
 
-  // Step 1: Scraper
+  // Daily 1: Scraper
   const firms = data.trustpilotScraper?.firms ?? [];
   const scraperTimestamps = firms.map((f) => f.last_scraper_run_at).filter(Boolean);
   const lastScraperRun = scraperTimestamps.length ? Math.max(...scraperTimestamps.map((t) => new Date(t).getTime())) : null;
   const hoursSinceScraper = lastScraperRun ? (Date.now() - lastScraperRun) / (1000 * 60 * 60) : Infinity;
   if (!lastScraperRun) {
     hasCritical = true;
-    issues.push("Step 1: Scraper never run");
+    issues.push("Daily 1: Scraper never run");
   } else if (hoursSinceScraper > 25) {
     hasWarning = true;
-    issues.push(`Step 1: Scraper stale (${Math.round(hoursSinceScraper)}h ago)`);
+    issues.push(`Daily 1: Scraper stale (${Math.round(hoursSinceScraper)}h ago)`);
   }
 
-  // Step 2: Classifier backlog
+  // Daily 2: Classifier backlog
   const unclassified = data.classifyReviews?.unclassified ?? 0;
   if (unclassified > 1000) {
     hasCritical = true;
-    issues.push(`Step 2: Classifier backlog critical (${unclassified} unclassified)`);
+    issues.push(`Daily 2: Classifier backlog critical (${unclassified} unclassified)`);
   } else if (unclassified > 500) {
     hasWarning = true;
-    issues.push(`Step 2: Classifier backlog (${unclassified} unclassified)`);
+    issues.push(`Daily 2: Classifier backlog (${unclassified} unclassified)`);
   }
 
-  // Step 4: Weekly email failures
+  // Weekly 2: Email failures
   const failed = data.weeklyEmailReport?.failed ?? 0;
   if (failed > 0 && data.weeklyEmailReport?.lastRunAt) {
     hasWarning = true;
-    issues.push(`Step 4: Last email run had ${failed} failed`);
+    issues.push(`Weekly 2: Last email run had ${failed} failed`);
   }
 
   const status = hasCritical ? "critical" : hasWarning ? "warning" : "ok";
@@ -126,6 +126,14 @@ function metricsToCSV(data) {
     rows.push(`intelligence_lastWeek_firmsWithReport,${data.intelligenceFeed.lastWeek?.firmsWithReport ?? ""}`);
     rows.push(`intelligence_lastWeek_firmsExpected,${data.intelligenceFeed.lastWeek?.firmsExpected ?? ""}`);
   }
+  if (data?.generateWeeklyReportsRun) {
+    rows.push(`generateWeeklyReports_lastRunAt,${data.generateWeeklyReportsRun.lastRunAt ?? ""}`);
+    rows.push(`generateWeeklyReports_firmsProcessed,${data.generateWeeklyReportsRun.firmsProcessed ?? ""}`);
+    rows.push(`generateWeeklyReports_successCount,${data.generateWeeklyReportsRun.successCount ?? ""}`);
+    rows.push(`generateWeeklyReports_errorCount,${data.generateWeeklyReportsRun.errorCount ?? ""}`);
+    rows.push(`generateWeeklyReports_weekLabel,${data.generateWeeklyReportsRun.weekLabel ?? ""}`);
+    rows.push(`generateWeeklyReports_durationMs,${data.generateWeeklyReportsRun.durationMs ?? ""}`);
+  }
   if (data?.weeklyEmailReport) {
     rows.push(`weeklyEmail_lastRunAt,${data.weeklyEmailReport.lastRunAt ?? ""}`);
     rows.push(`weeklyEmail_sent,${data.weeklyEmailReport.sent ?? ""}`);
@@ -152,26 +160,30 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState("system");
 
   const summary = getSummaryStatus(data);
-  const TAB_IDS = ["system", "step1", "step2", "step3", "step4", "payouts"];
+  const TAB_IDS = ["system", "daily1", "daily2", "daily3", "weekly1", "weekly2", "payouts"];
   /** Map summary issue text to tab id for "go to" links. */
   const getTabForIssue = (msg) => {
     if (!msg) return null;
-    if (msg.startsWith("Step 1") || msg.includes("Scraper")) return "step1";
-    if (msg.startsWith("Step 2") || msg.includes("Classifier")) return "step2";
-    if (msg.startsWith("Step 3")) return "step3";
-    if (msg.startsWith("Step 4") || msg.includes("email")) return "step4";
+    if (msg.startsWith("Daily 1") || msg.includes("Scraper")) return "daily1";
+    if (msg.startsWith("Daily 2") || msg.includes("Classifier")) return "daily2";
+    if (msg.startsWith("Daily 3")) return "daily3";
+    if (msg.startsWith("Weekly 1")) return "weekly1";
+    if (msg.startsWith("Weekly 2") || msg.includes("email")) return "weekly2";
     if (msg.includes("Prop firms") || msg.includes("Arbiscan") || msg.includes("File size")) return "payouts";
     if (msg.includes("Database")) return "system";
     return null;
   };
   const TAB_LABELS = {
     system: "System",
-    step1: "Step 1 – Scrape",
-    step2: "Step 2 – Classify",
-    step3: "Step 3 – Incidents",
-    step4: "Step 4 – Digest",
+    daily1: "Daily 1 – Scrape",
+    daily2: "Daily 2 – Classify",
+    daily3: "Daily 3 – Incidents",
+    weekly1: "Weekly 1 – Reports",
+    weekly2: "Weekly 2 – Digest",
     payouts: "Payouts & data",
   };
+  /** Tab ids that show "Last run" under the tab label. */
+  const STEP_TAB_IDS = ["daily1", "daily2", "daily3", "weekly1", "weekly2"];
 
   /** Format last run for tab: relative (e.g. "2h ago") or short date if older. */
   const formatLastRun = (iso) => {
@@ -190,14 +202,15 @@ export default function AdminDashboardPage() {
   /** Last run per step for nav tabs (system/payouts have no single "run"). */
   const getTabLastRun = (tabId) => {
     if (!data) return null;
-    if (tabId === "step1") {
+    if (tabId === "daily1") {
       const times = data.trustpilotScraper?.firms?.map((f) => f.last_scraper_run_at).filter(Boolean) || [];
       if (!times.length) return null;
       return new Date(Math.max(...times.map((t) => new Date(t).getTime()))).toISOString();
     }
-    if (tabId === "step2") return classifyStatus?.lastClassifiedAt ?? null;
-    if (tabId === "step3") return data.incidentDetection?.lastRunAt ?? null;
-    if (tabId === "step4") return data.weeklyEmailReport?.lastRunAt ?? null;
+    if (tabId === "daily2") return classifyStatus?.lastClassifiedAt ?? null;
+    if (tabId === "daily3") return data.incidentDetection?.lastRunAt ?? null;
+    if (tabId === "weekly1") return data.generateWeeklyReportsRun?.lastRunAt ?? null;
+    if (tabId === "weekly2") return data.weeklyEmailReport?.lastRunAt ?? null;
     return null;
   };
 
@@ -407,7 +420,7 @@ export default function AdminDashboardPage() {
                     onClick={() => setActiveTab(id)}
                   >
                     <span>{TAB_LABELS[id]}</span>
-                    {(id.startsWith("step") && (lastRun != null ? (
+                    {(STEP_TAB_IDS.includes(id) && (lastRun != null ? (
                       <span className={`text-[10px] font-normal ${activeTab === id ? "opacity-90" : "text-base-content/50"}`} title={lastRun ? new Date(lastRun).toLocaleString() : ""}>
                         Last: {formatLastRun(lastRun)}
                       </span>
@@ -879,11 +892,11 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {data && activeTab === "step2" && (
+        {data && activeTab === "daily2" && (
           <div className="space-y-8">
-            {/* Review classification (Trustpilot) */}
+            {/* Daily 2: Classify */}
             <section>
-              <h2 className="text-lg font-semibold mb-4">Review classification</h2>
+              <h2 className="text-lg font-semibold mb-4">Daily 2 – Classify</h2>
               <p className="text-sm text-base-content/60 mb-3">
                 Classify unclassified Trustpilot reviews via OpenAI (batch of 20 per API call). Run a limited batch here or use the cron script.
               </p>
@@ -974,11 +987,11 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {data && activeTab === "step3" && (
+        {data && activeTab === "daily3" && (
           <div className="space-y-8">
             {data.incidentDetection ? (
             <section>
-                <h2 className="text-lg font-semibold mb-4">Incident detection</h2>
+                <h2 className="text-lg font-semibold mb-4">Daily 3 – Incidents</h2>
                 <p className="text-sm text-base-content/60 mb-3">
                   {data.incidentDetection.note ?? 'Run daily at 5 AM PST (13:00 UTC), 1 hour after classifier. Pipeline: scrape → classify → incidents.'}
                 </p>
@@ -1031,31 +1044,95 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {data && activeTab === "step4" && (
+        {data && activeTab === "weekly1" && (
           <div className="space-y-8">
-            {/* Step 4 last run summary */}
-            <div className="flex flex-wrap items-end gap-6 p-3 rounded-lg bg-base-200/60">
-              <div>
-                <span className="text-base-content/60 text-sm block">Last run</span>
-                <p className="font-mono text-sm">
-                  {data.weeklyEmailReport?.lastRunAt
-                    ? new Date(data.weeklyEmailReport.lastRunAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
-                    : "—"}
-                </p>
-              </div>
-              {data.weeklyEmailReport?.weekStart && data.weeklyEmailReport?.weekEnd && (
-                <div>
-                  <span className="text-base-content/60 text-sm block">Week</span>
-                  <p className="font-mono text-sm">{data.weeklyEmailReport.weekStart} → {data.weeklyEmailReport.weekEnd}</p>
+            {/* Weekly 1: Generate weekly reports – monitoring */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Weekly 1 – Generate reports</h2>
+              <p className="text-sm text-base-content/60 mb-3">
+                Populates <code className="text-xs bg-base-200 px-1 rounded">firm_weekly_reports</code> for current week (Mon–Sun UTC). Runs Sunday 7:00 UTC (step3b-generate-weekly-reports-weekly). Weekly 2 (digest send) uses this data.
+              </p>
+              <div className="card card-border bg-base-100 shadow overflow-hidden">
+                <div className="card-body">
+                  {data.generateWeeklyReportsRun ? (
+                    <>
+                      <p className="text-xs text-base-content/60 mb-3">{data.generateWeeklyReportsRun.note}</p>
+                      <div className="flex flex-wrap gap-4 items-baseline">
+                        {data.generateWeeklyReportsRun.lastRunAt ? (
+                          <>
+                            <div>
+                              <span className="text-base-content/60 text-sm">Last run</span>
+                              <p className="font-mono text-sm">
+                                {new Date(data.generateWeeklyReportsRun.lastRunAt).toLocaleString(undefined, {
+                                  dateStyle: "short",
+                                  timeStyle: "short",
+                                })}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-base-content/60 text-sm">Week</span>
+                              <p className="font-mono text-sm">{data.generateWeeklyReportsRun.weekLabel ?? "—"}</p>
+                            </div>
+                            {data.generateWeeklyReportsRun.weekStart && (
+                              <div>
+                                <span className="text-base-content/60 text-sm">Range</span>
+                                <p className="font-mono text-sm">{data.generateWeeklyReportsRun.weekStart} → {data.generateWeeklyReportsRun.weekEnd}</p>
+                              </div>
+                            )}
+                            <div>
+                              <span className="text-base-content/60 text-sm">Firms processed</span>
+                              <p className="font-semibold">{data.generateWeeklyReportsRun.firmsProcessed ?? "—"}</p>
+                            </div>
+                            <div>
+                              <span className="text-base-content/60 text-sm">Success</span>
+                              <p className="font-semibold text-success">{data.generateWeeklyReportsRun.successCount ?? "—"}</p>
+                            </div>
+                            <div>
+                              <span className="text-base-content/60 text-sm">Errors</span>
+                              <p className="font-semibold text-error">{data.generateWeeklyReportsRun.errorCount ?? "—"}</p>
+                            </div>
+                            {data.generateWeeklyReportsRun.durationMs != null && (
+                              <div>
+                                <span className="text-base-content/60 text-sm">Duration</span>
+                                <p className="font-mono text-sm">{Math.round(data.generateWeeklyReportsRun.durationMs / 1000)}s</p>
+                              </div>
+                            )}
+                            {Array.isArray(data.generateWeeklyReportsRun.errors) && data.generateWeeklyReportsRun.errors.length > 0 && (
+                              <div className="w-full">
+                                <span className="text-base-content/60 text-sm">Errors (sample)</span>
+                                <ul className="list-disc list-inside text-xs text-error/90 mt-0.5 max-h-24 overflow-y-auto">
+                                  {data.generateWeeklyReportsRun.errors.slice(0, 5).map((msg, i) => (
+                                    <li key={i}>{String(msg)}</li>
+                                  ))}
+                                  {data.generateWeeklyReportsRun.errors.length > 5 && (
+                                    <li>… and {data.generateWeeklyReportsRun.errors.length - 5} more</li>
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-base-content/60 text-sm">No run recorded yet. Trigger step3b-generate-weekly-reports-weekly to populate.</p>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-base-content/60 text-sm">No run recorded yet. Trigger step3b-generate-weekly-reports-weekly to populate.</p>
+                  )}
                 </div>
-              )}
-            </div>
-            {/* Intelligence feed (weekly reports + digest) */}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {data && activeTab === "weekly2" && (
+          <div className="space-y-8">
+            {/* Intelligence feed (weekly reports + digest readiness) */}
             {data.intelligenceFeed && (
               <section>
                 <h2 className="text-lg font-semibold mb-4">Intelligence feed</h2>
                 <p className="text-sm text-base-content/60 mb-3">
-                  Weekly reports and digest readiness. Digest uses <code className="text-xs bg-base-200 px-1 rounded">weekly_reports</code> for last week; missing reports = gaps in emails.
+                  Weekly reports and digest readiness. Digest uses <code className="text-xs bg-base-200 px-1 rounded">firm_weekly_reports</code> for current week (Mon–Sun UTC); missing reports = gaps in emails.
                 </p>
                 <div className="card card-border bg-base-100 shadow overflow-hidden">
                   <div className="card-body">
@@ -1114,11 +1191,11 @@ export default function AdminDashboardPage() {
               </section>
             )}
 
-            {/* Weekly email send – last run from step4-send-weekly-reports-weekly */}
+            {/* Weekly 2: Email send – last run from step4-send-weekly-reports-weekly */}
             <section>
-                <h2 className="text-lg font-semibold mb-4">Weekly email send</h2>
+                <h2 className="text-lg font-semibold mb-4">Weekly 2 – Email send</h2>
                 <p className="text-sm text-base-content/60 mb-3">
-                  Last run of the digest cron (step4-send-weekly-reports-weekly). Runs Monday 14:00 UTC.
+                  Sends digest emails to subscribers via Resend. Runs Sunday 8:00 UTC (step4-send-weekly-reports-weekly). Uses <code className="text-xs bg-base-200 px-1 rounded">firm_weekly_reports</code> from Weekly 1.
                 </p>
                 <div className="card card-border bg-base-100 shadow overflow-hidden">
                   <div className="card-body">
@@ -1185,13 +1262,13 @@ export default function AdminDashboardPage() {
             </div>
         )}
 
-        {data && activeTab === "step1" && (
+        {data && activeTab === "daily1" && (
           <div className="space-y-8">
             {data.trustpilotScraper?.firms?.length > 0 ? (
             <section>
-                <h2 className="text-lg font-semibold mb-4">Trustpilot scraping</h2>
+                <h2 className="text-lg font-semibold mb-4">Daily 1 – Scrape</h2>
                 <p className="text-sm text-base-content/60 mb-3">
-                  Daily run via GitHub Actions (step1-sync-trustpilot-reviews-daily). Last run per firm below.
+                  Trustpilot scraping. Daily run via GitHub Actions (step1-sync-trustpilot-reviews-daily). Last run per firm below.
                 </p>
                 <div className="card card-border bg-base-100 shadow overflow-hidden">
                   <div className="overflow-x-auto">

@@ -6,11 +6,24 @@
 
 ---
 
+## Sprint Closed (Feb 2025)
+
+**Status:** ✅ Alpha scope implemented. Ready for production env config and deploy.
+
+**Production check (final):**
+- ✅ `npm run build` — passed
+- ✅ `npm run test` — 437 tests passed
+- ⚠️ `npm run lint` — next lint has project-dir config issue (separate from this sprint)
+
+**Done this sprint:** TICKET-001 through TICKET-015 implemented (scripts, migrations, API, UI 30d fix, tests, admin metrics, alerts, runbooks, README). **Remaining:** TICKET-016 (configure env vars in Vercel/GitHub), TICKET-017 (deploy and 48h monitor).
+
+---
+
 ## Epic 1: Async Data Pipeline (Backend)
 
 ### TICKET-001: Create Trustpilot Backfill Script 🔴 CRITICAL
 
-**Status:** Not Started
+**Status:** ✅ Done
 **Priority:** P0 (Blocker)
 **Story Points:** 3
 **Assignee:** Backend Engineer
@@ -93,7 +106,7 @@ main().catch(err => {
 
 ### TICKET-002: Create Review Classification Script 🔴 CRITICAL
 
-**Status:** Not Started
+**Status:** ✅ Done
 **Priority:** P0 (Blocker)
 **Story Points:** 8
 **Assignee:** Backend Engineer + ML Engineer
@@ -248,7 +261,7 @@ async function main() {
 
 ### TICKET-003: Create Incident Detection Script 🔴 CRITICAL
 
-**Status:** Not Started
+**Status:** ✅ Done
 **Priority:** P0 (Blocker)
 **Story Points:** 13
 **Assignee:** Backend Engineer + Data Engineer
@@ -354,7 +367,7 @@ Focus on the main issue, impact on users, and frequency. Professional tone.`;
 
 ### TICKET-004: Create Weekly Email Reports API Route 🔴 CRITICAL
 
-**Status:** Not Started
+**Status:** ✅ Done
 **Priority:** P0 (Blocker)
 **Story Points:** 13
 **Assignee:** Full-stack Engineer
@@ -466,7 +479,7 @@ Create `app/api/cron/send-weekly-reports/route.js` to query subscribed users and
 
 ### TICKET-005: Create user_subscriptions Table 🔴 CRITICAL
 
-**Status:** Not Started
+**Status:** ✅ Done (migration 20_rename_firm_subscriptions_to_user_subscriptions.sql)
 **Priority:** P0 (Blocker)
 **Story Points:** 2
 **Assignee:** Backend Engineer
@@ -525,7 +538,7 @@ Create the `user_subscriptions` table to store user preferences for which firms 
 
 ### TICKET-006: Verify weekly_incidents Table Schema
 
-**Status:** Not Started
+**Status:** ✅ Done (11_alpha-intelligence-schema.sql, 12_add-indexes.sql, 14_update-classifier-taxonomy.sql)
 **Priority:** P0 (Blocker)
 **Story Points:** 1
 **Assignee:** Backend Engineer
@@ -579,7 +592,7 @@ Verify that the `weekly_incidents` table exists in the database and has the corr
 
 ### TICKET-007: Verify trustpilot_reviews Schema
 
-**Status:** Not Started
+**Status:** ✅ Done (11_alpha-intelligence-schema.sql includes category, classified_at)
 **Priority:** P0 (Blocker)
 **Story Points:** 1
 **Assignee:** Backend Engineer
@@ -625,7 +638,7 @@ Verify that `trustpilot_reviews` table has the required `category` and `classifi
 
 ### TICKET-008: Add last_scraper_run_at to firms Table
 
-**Status:** Not Started
+**Status:** ✅ Done (19_firms_trustpilot_scraper_status.sql; 21_cron_last_run.sql for cron job tracking)
 **Priority:** P1 (High)
 **Story Points:** 1
 **Assignee:** Backend Engineer
@@ -660,7 +673,7 @@ Add `last_scraper_run_at` field to the `firms` table to track when the Trustpilo
 
 ### TICKET-009: Fix Intelligence Page Data Range (90d → 30d) ⚠️ BUG
 
-**Status:** Not Started
+**Status:** ✅ Done
 **Priority:** P1 (High)
 **Story Points:** 1
 **Assignee:** Frontend Engineer
@@ -693,7 +706,7 @@ The intelligence feed page currently shows 90 days of data, but the requirement 
 
 ### TICKET-010: Add E2E Tests for Intelligence Feed Pages
 
-**Status:** Not Started
+**Status:** ✅ Done (tests/e2e/intelligence-feed.spec.js)
 **Priority:** P1 (High)
 **Story Points:** 5
 **Assignee:** QA Engineer / Frontend Engineer
@@ -791,7 +804,7 @@ test.describe('Intelligence Feed', () => {
 
 ### TICKET-011: Add Unit Tests for Trustpilot Scraper
 
-**Status:** Not Started
+**Status:** ✅ Done (lib/__tests__/scrapers/trustpilot.test.ts)
 **Priority:** P1 (High)
 **Story Points:** 5
 **Assignee:** Backend Engineer
@@ -861,7 +874,7 @@ jest.mock('playwright', () => ({
 
 ### TICKET-012: Add API Route Tests for send-weekly-reports
 
-**Status:** Not Started
+**Status:** ✅ Done (app/api/cron/send-weekly-reports/route.test.js)
 **Priority:** P1 (High)
 **Story Points:** 3
 **Assignee:** Backend Engineer
@@ -943,7 +956,7 @@ describe('POST /api/cron/send-weekly-reports', () => {
 
 ### TICKET-013: Add Intelligence Feed Metrics to Admin Dashboard
 
-**Status:** Not Started
+**Status:** ✅ Done (intelligenceFeed in /api/admin/metrics, admin dashboard page)
 **Priority:** P1 (High)
 **Story Points:** 8
 **Assignee:** Full-stack Engineer
@@ -1042,7 +1055,7 @@ Extend the admin dashboard to display intelligence feed pipeline metrics for mon
 
 ### TICKET-014: Configure Error Alerts for Intelligence Pipeline
 
-**Status:** Not Started
+**Status:** ✅ Done (lib/alerts.js checkIntelligenceFeedAlerts)
 **Priority:** P2 (Medium)
 **Story Points:** 5
 **Assignee:** DevOps / Backend Engineer
@@ -1112,7 +1125,7 @@ export async function checkIntelligenceFeedAlerts(metrics) {
 
 ### TICKET-015: Update Documentation
 
-**Status:** Not Started
+**Status:** ✅ Done (README Intelligence Feed section; documents/runbooks/daily-scraper-weekly-incidents-reports-operations.md and related)
 **Priority:** P2 (Medium)
 **Story Points:** 2
 **Assignee:** Tech Lead
@@ -1145,7 +1158,7 @@ Update project documentation to reflect the new intelligence feed system.
 
 ### TICKET-016: Configure Production Environment Variables
 
-**Status:** Not Started
+**Status:** 🔲 Pending (manual: Vercel + GitHub Secrets)
 **Priority:** P0 (Blocker - before deploy)
 **Story Points:** 1
 **Assignee:** DevOps
@@ -1188,7 +1201,7 @@ Set up all required environment variables in Vercel and GitHub Secrets for produ
 
 ### TICKET-017: Deploy to Production
 
-**Status:** Not Started
+**Status:** 🔲 Pending (after TICKET-016; merge to main, deploy, 48h monitor)
 **Priority:** P0 (Final step)
 **Story Points:** 3
 **Assignee:** Tech Lead + DevOps
@@ -1314,18 +1327,16 @@ All files in `lib/`, `app/api/`, `components/` must have ≥80% test coverage.
 - `app/api/v2/propfirms/[id]/incidents/route.js` → HAS TEST
 - `app/api/v2/propfirms/[id]/signals/route.js` → HAS TEST
 
-❌ **Missing Tests (Will fail pre-commit):**
-- `lib/scrapers/trustpilot.ts` → TICKET-011
-- `app/api/cron/send-weekly-reports/route.js` → TICKET-012
-- `scripts/backfill-trustpilot.ts` (scripts folder not covered by hook ✅)
-- `scripts/classify-unclassified-reviews.ts` (scripts folder not covered ✅)
-- `scripts/run-daily-incidents.ts` (scripts folder not covered ✅)
+✅ **Covered:**
+- `lib/scrapers/trustpilot.ts` → TICKET-011 done
+- `app/api/cron/send-weekly-reports/route.js` → TICKET-012 done
+- `scripts/*` not in pre-commit coverage scope
 
 **Action Items:**
 
-- [ ] Complete TICKET-011 (scraper tests) before merging to main
-- [ ] Complete TICKET-012 (email route tests) before merging to main
-- [ ] Scripts in `scripts/` folder are not enforced by hook, but should have tests for quality
+- [x] Complete TICKET-011 (scraper tests) — done
+- [x] Complete TICKET-012 (email route tests) — done
+- [ ] Scripts in `scripts/` folder are not enforced by hook, but should have tests for quality (optional)
 
 ---
 
@@ -1382,6 +1393,6 @@ All files in `lib/`, `app/api/`, `components/` must have ≥80% test coverage.
 ---
 
 **Sprint Start Date:** TBD
-**Sprint End Date:** TBD (2-3 weeks estimated)
+**Sprint End Date:** Feb 2025 (sprint closed)
 **Scrum Master:** TBD
 **Product Owner:** TBD

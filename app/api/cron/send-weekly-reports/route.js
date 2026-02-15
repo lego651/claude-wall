@@ -1,13 +1,13 @@
 /**
  * TICKET-004: Weekly Email Reports API Route
  * Cron endpoint invoked by GitHub Actions (step4-send-weekly-reports-weekly.yml) every Monday 14:00 UTC.
- * Queries user_subscriptions, fetches weekly_reports for each user's firms, sends one digest email per user.
+ * Queries user_subscriptions, fetches firm_weekly_reports for each user's firms, sends one digest email per user.
  */
 
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { sendWeeklyDigest } from '@/lib/email/send-digest';
-import { getWeekNumber, getYear, getWeekBounds } from '@/lib/digest/week-utils';
+import { getCurrentWeekUtc } from '@/lib/digest/week-utils';
 
 const CRON_JOB_NAME = 'send_weekly_reports';
 
@@ -38,18 +38,10 @@ async function persistCronLastRun(supabase, result) {
 export const maxDuration = 300; // 5 min for many users
 export const dynamic = 'force-dynamic';
 
-/** Last week (Mon–Sun) in UTC. Cron runs Monday 14:00 UTC so "last week" is the week that just ended. */
-function getLastWeekUtc() {
-  const now = new Date();
-  const lastWeekDate = new Date(Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate() - 7
-  ));
-  const { weekStart, weekEnd } = getWeekBounds(lastWeekDate);
+/** Current week (Mon–Sun) in UTC. Cron runs Sunday 8:00 UTC; we send the report for this week. */
+function getCurrentWeekUtcIso() {
+  const { weekStart, weekEnd } = getCurrentWeekUtc();
   return {
-    weekNumber: getWeekNumber(weekStart),
-    year: getYear(weekStart),
     weekStartIso: weekStart.toISOString().slice(0, 10),
     weekEndIso: weekEnd.toISOString().slice(0, 10),
   };
@@ -75,7 +67,7 @@ export async function GET(request) {
 
   try {
     const supabase = createServiceClient();
-    const { weekNumber, year, weekStartIso, weekEndIso } = getLastWeekUtc();
+    const { weekStartIso, weekEndIso } = getCurrentWeekUtcIso();
 
     // Active subscriptions: user_id, firm_id (email_enabled = true)
     const { data: rows, error: subsError } = await supabase
@@ -122,17 +114,17 @@ export async function GET(request) {
 
     const emailByUser = new Map((profiles || []).map((p) => [p.id, p.email?.trim()]).filter(([, e]) => e));
 
-    // Fetch weekly_reports for (firm_id, week_number, year) for all firms we need
+    // Fetch firm_weekly_reports for current week (week_from_date / week_to_date) for all firms we need
     const firmIds = [...new Set(rows.map((r) => r.firm_id))];
     const { data: reportsRows, error: reportsError } = await supabase
-      .from('weekly_reports')
+      .from('firm_weekly_reports')
       .select('firm_id, report_json')
       .in('firm_id', firmIds)
-      .eq('week_number', weekNumber)
-      .eq('year', year);
+      .eq('week_from_date', weekStartIso)
+      .eq('week_to_date', weekEndIso);
 
     if (reportsError) {
-      console.error('[send-weekly-reports] weekly_reports', reportsError);
+      console.error('[send-weekly-reports] firm_weekly_reports', reportsError);
       return NextResponse.json(
         { error: 'Failed to fetch weekly reports', detail: reportsError.message },
         { status: 500 }

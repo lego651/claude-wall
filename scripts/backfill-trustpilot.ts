@@ -61,22 +61,22 @@ async function runRetentionCleanup() {
   const incidentsCutoff = new Date();
   incidentsCutoff.setUTCDate(incidentsCutoff.getUTCDate() - INCIDENTS_RETENTION_DAYS);
   const { data: deletedIncidents, error: errIncidents } = await supabase
-    .from('weekly_incidents')
+    .from('firm_daily_incidents')
     .delete()
     .lt('created_at', incidentsCutoff.toISOString())
     .select('id');
-  if (errIncidents) throw new Error(`weekly_incidents cleanup: ${errIncidents.message}`);
-  console.log(`[Trustpilot Backfill] weekly_incidents: deleted ${deletedIncidents?.length ?? 0} rows`);
+  if (errIncidents) throw new Error(`firm_daily_incidents cleanup: ${errIncidents.message}`);
+  console.log(`[Trustpilot Backfill] firm_daily_incidents: deleted ${deletedIncidents?.length ?? 0} rows`);
 
   const reportsCutoff = new Date();
   reportsCutoff.setUTCDate(reportsCutoff.getUTCDate() - REPORTS_RETENTION_DAYS);
   const { data: deletedReports, error: errReports } = await supabase
-    .from('weekly_reports')
+    .from('firm_weekly_reports')
     .delete()
     .lt('generated_at', reportsCutoff.toISOString())
     .select('id');
-  if (errReports) throw new Error(`weekly_reports cleanup: ${errReports.message}`);
-  console.log(`[Trustpilot Backfill] weekly_reports: deleted ${deletedReports?.length ?? 0} rows`);
+  if (errReports) throw new Error(`firm_weekly_reports cleanup: ${errReports.message}`);
+  console.log(`[Trustpilot Backfill] firm_weekly_reports: deleted ${deletedReports?.length ?? 0} rows`);
 }
 
 async function updateFirmScraperStatus(

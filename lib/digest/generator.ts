@@ -1,12 +1,12 @@
 /**
  * TICKET-010: Weekly Report Generator
- * Compiles payout summary, Trustpilot summary, incidents, and AI "Our Take"; stores in weekly_reports.
+ * Compiles payout summary, Trustpilot summary, incidents, and AI "Our Take"; stores in firm_weekly_reports.
  */
 
 import { createServiceClient } from '@/lib/supabase/service';
 import { getOpenAIClient } from '@/lib/ai/openai-client';
 import { detectIncidents, type DetectedIncident } from './incident-aggregator';
-import { getWeekNumber, getYear, getWeekBounds } from './week-utils';
+import { getWeekNumberUtc, getYearUtc, getWeekBoundsUtc } from './week-utils';
 import { loadMonthlyData } from '@/lib/services/payoutDataLoader';
 import {
   NEGATIVE_SENTIMENT_CATEGORIES,
@@ -179,11 +179,11 @@ export async function generateWeeklyReport(
   weekStart: Date,
   weekEnd: Date
 ): Promise<WeeklyReportJson> {
-  const weekNumber = getWeekNumber(weekStart);
-  const year = getYear(weekStart);
+  const weekNumber = getWeekNumberUtc(weekStart);
+  const year = getYearUtc(weekStart);
 
   const payoutThis = await getPayoutSummaryForRange(firmId, weekStart, weekEnd);
-  const prevBounds = getWeekBounds(new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000));
+  const prevBounds = getWeekBoundsUtc(new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000));
   const payoutPrev = await getPayoutSummaryForRange(firmId, prevBounds.weekStart, prevBounds.weekEnd);
   const changeVsLastWeek =
     payoutPrev.total > 0
@@ -232,15 +232,17 @@ export async function generateWeeklyReport(
     generatedAt: new Date().toISOString(),
   };
 
+  const weekFromDate = weekStart.toISOString().slice(0, 10);
+  const weekToDate = weekEnd.toISOString().slice(0, 10);
   const supabase = createServiceClient();
-  await supabase.from('weekly_reports').upsert(
+  await supabase.from('firm_weekly_reports').upsert(
     {
       firm_id: firmId,
-      week_number: weekNumber,
-      year,
+      week_from_date: weekFromDate,
+      week_to_date: weekToDate,
       report_json: reportJson,
     },
-    { onConflict: 'firm_id,week_number,year' }
+    { onConflict: 'firm_id,week_from_date' }
   );
 
   return reportJson;
