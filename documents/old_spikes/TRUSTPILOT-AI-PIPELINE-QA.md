@@ -52,5 +52,5 @@ So: one cron job, many reviews, but each review is classified and written back i
 **Done.** The backfill and daily sync now use **all firms** that have a Trustpilot URL in the scraper (including ftmo and topstep). See:
 
 - `lib/scrapers/trustpilot.ts`: `TRUSTPILOT_URLS` includes all 10 firms; `TRUSTPILOT_FIRM_IDS` is exported for backfill/sync.
-- `scripts/backfill-trustpilot.ts`: uses `TRUSTPILOT_FIRM_IDS` (all firms). Default 6 pages; set `TRUSTPILOT_BACKFILL_PAGES=3` for lighter runs.
+- `scripts/backfill-firm-trustpilot-reviews.ts`: uses `TRUSTPILOT_FIRM_IDS` (all firms). Default 6 pages; set `TRUSTPILOT_BACKFILL_PAGES=3` for lighter runs.
 - `.github/workflows/sync-trustpilot-reviews.yml`: runs the same script with `TRUSTPILOT_BACKFILL_PAGES=3`, so daily sync runs all firms at 3 pages per firm.

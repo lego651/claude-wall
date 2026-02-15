@@ -24,7 +24,7 @@ We track daily API call count to Arbiscan (Etherscan V2 API) to avoid hitting th
 ## Usage patterns
 
 - **Payout sync** (cron or manual): For each firm we call `fetchNativeTransactions` and `fetchTokenTransactions` per address. So **2 × (number of addresses)** calls per firm per run. With many firms and multiple addresses each, a full sync can be hundreds of calls.
-- **Historical sync** (e.g. update-monthly-json): Similar pattern; each firm/address pair = 2 calls.
+- **Historical sync** (e.g. update-firm-monthly-json): Similar pattern; each firm/address pair = 2 calls.
 - **Rate limits**: Arbiscan may return rate limit errors; we retry with backoff. Each attempt is counted, so a rate-limited run can add many “calls” to the counter even if some requests fail.
 
 ## Configuration

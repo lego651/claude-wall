@@ -46,7 +46,7 @@ All intelligence workflows support **workflow_dispatch** (manual trigger) in Git
 4. **Run scraper locally (optional)**  
    From repo root, with `.env` set (Supabase + optional scraper env):
    ```bash
-   npx tsx scripts/backfill-trustpilot.ts
+   npx tsx scripts/backfill-firm-trustpilot-reviews.ts
    ```
    Or use the script that the workflow runs (see workflow `run` step). Local runs use the same `lib/scrapers/trustpilot.ts` and update `firms` and `trustpilot_reviews`.
 

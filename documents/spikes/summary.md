@@ -171,7 +171,7 @@ const cutoff24h = now - (24 * 60 * 60);
 
 **Process** (daily at 3 AM PST via GitHub Actions):
 ```javascript
-// scripts/update-monthly-json.js
+// scripts/update-firm-monthly-json.js
 1. Fetch ALL transactions from Arbiscan (no time filter)
 2. Filter to CURRENT MONTH in firm's local timezone
 3. Group by day (local timezone)

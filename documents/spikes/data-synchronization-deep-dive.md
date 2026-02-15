@@ -367,7 +367,7 @@ In different timezones:
 **Key Difference from Real-time**: Historical sync uses **calendar month boundaries**, not rolling windows.
 
 ```javascript
-// scripts/update-monthly-json.js:83-92
+// scripts/update-firm-monthly-json.js:83-92
 function getCurrentYearMonthInTimezone(timezone) {
   const now = new Date();
   const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -412,7 +412,7 @@ Mar 1:  Sync runs, creates 2025-03.json
 **Step 1: Determine Current Month (Timezone-Aware)**
 
 ```javascript
-// scripts/update-monthly-json.js:307-309
+// scripts/update-firm-monthly-json.js:307-309
 const timezone = firm.timezone || 'UTC';
 const yearMonth = getCurrentYearMonthInTimezone(timezone);
 
@@ -425,7 +425,7 @@ const yearMonth = getCurrentYearMonthInTimezone(timezone);
 **Step 2: Fetch ALL Transactions from Arbiscan**
 
 ```javascript
-// scripts/update-monthly-json.js:317-322
+// scripts/update-firm-monthly-json.js:317-322
 for (const address of firm.addresses) {
   const { native, tokens } = await fetchAllTransactions(address, apiKey);
   allNative = [...allNative, ...native];
@@ -446,7 +446,7 @@ Arbiscan API doesn't support efficient time-range filtering:
 **Step 3: Filter to Current Month (Timezone-Aware)**
 
 ```javascript
-// scripts/update-monthly-json.js:155-218
+// scripts/update-firm-monthly-json.js:155-218
 function processTransactionsForMonth(native, tokens, addresses, firmId, yearMonth, timezone) {
   const payouts = [];
 
@@ -489,7 +489,7 @@ Local month: "2025-02" ✅ ALSO INCLUDED (different from real-time!)
 **Step 4: Build Daily Buckets (Timezone-Aware)**
 
 ```javascript
-// scripts/update-monthly-json.js:239-247
+// scripts/update-firm-monthly-json.js:239-247
 for (const t of transactions) {
   const day = getLocalDate(t.timestamp, timezone); // Converts to YYYY-MM-DD in local TZ
 
@@ -519,7 +519,7 @@ for (const t of transactions) {
 **Step 5: Compare with Existing File**
 
 ```javascript
-// scripts/update-monthly-json.js:344-354
+// scripts/update-firm-monthly-json.js:344-354
 const existing = loadExistingMonthData(firm.id, yearMonth);
 const existingCount = existing?.summary?.payoutCount || 0;
 
@@ -1154,7 +1154,7 @@ Resolution:
   1. Wait for next historical sync (runs daily at 3 AM PST)
   2. If urgent, trigger manual sync:
 
-     node scripts/update-monthly-json.js --firm fundingpips
+     node scripts/update-firm-monthly-json.js --firm fundingpips
      git add data/payouts/fundingpips/2025-02.json
      git commit -m "fix: manual sync for fundingpips"
      git push
@@ -1309,7 +1309,7 @@ export async function POST(request) {
 **Add to historical sync**:
 
 ```javascript
-// scripts/update-monthly-json.js
+// scripts/update-firm-monthly-json.js
 const crypto = require('crypto');
 
 function calculateChecksum(data) {

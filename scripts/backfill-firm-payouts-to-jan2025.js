@@ -3,7 +3,7 @@
  * Backfill Prop Firm Payouts to January 2025
  *
  * Usage:
- *   ARBISCAN_API_KEY=xxx npx tsx scripts/backfill-payouts-to-jan2025.js [--firm firmId] [--month YYYY-MM] [--dry-run]
+ *   ARBISCAN_API_KEY=xxx npx tsx scripts/backfill-firm-payouts-to-jan2025.js [--firm firmId] [--month YYYY-MM] [--dry-run]
  *
  * Fetches ALL historical transactions via paginated Arbiscan API and generates
  * monthly JSON files for missing months from 2025-01 onwards.

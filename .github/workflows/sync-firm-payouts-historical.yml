@@ -42,7 +42,7 @@ jobs:
       - name: Update prop firm monthly JSON files
         env:
           ARBISCAN_API_KEY: ${{ secrets.ARBISCAN_API_KEY }}
-        run: npx tsx scripts/update-monthly-json.js
+        run: npx tsx scripts/update-firm-monthly-json.js
 
       - name: Check for changes
         id: git-check

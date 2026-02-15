@@ -4,7 +4,7 @@ This folder contains scripts for fetching and backfilling prop firm payout data 
 
 ## Scripts Overview
 
-### 1. `update-monthly-json.js` (Arbiscan - Daily Updates)
+### 1. `update-firm-monthly-json.js` (Arbiscan - Daily Updates)
 
 **Purpose**: Update the current month's data daily (automated via GitHub Actions)
 
@@ -16,8 +16,8 @@ This folder contains scripts for fetching and backfilling prop firm payout data 
 
 **Usage**:
 ```bash
-npx tsx scripts/update-monthly-json.js
-npx tsx scripts/update-monthly-json.js --firm fundingpips
+npx tsx scripts/update-firm-monthly-json.js
+npx tsx scripts/update-firm-monthly-json.js --firm fundingpips
 ```
 API key: set `ARBISCAN_API_KEY` in `.env`.
 
@@ -82,7 +82,7 @@ API key: set `ALCHEMY_API_KEY` in `.env`.
 ## Which Script Should I Use?
 
 ### For Current Month Updates (Automated)
-✅ **Use**: `update-monthly-json.js` (Arbiscan)
+✅ **Use**: `update-firm-monthly-json.js` (Arbiscan)
 - Runs daily via GitHub Actions
 - Fast and efficient for recent data
 - No setup needed (already configured)
@@ -112,8 +112,8 @@ All scripts are run with **`npx tsx scripts/<script>.js`**.
 
 ```bash
 # Current month update (all firms or one firm)
-npx tsx scripts/update-monthly-json.js
-npx tsx scripts/update-monthly-json.js --firm fundingpips
+npx tsx scripts/update-firm-monthly-json.js
+npx tsx scripts/update-firm-monthly-json.js --firm fundingpips
 
 # Historical backfill (Alchemy)
 npx tsx scripts/backfill-payouts-alchemy.js --firm fundingpips

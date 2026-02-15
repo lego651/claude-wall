@@ -4,7 +4,7 @@
 
 **There is no per-row “expiry date” column.** Retention is enforced by **deleting old rows** at the end of the same run that does the scrape.
 
-- **Where:** The daily scrape workflow (`.github/workflows/step1-sync-trustpilot-reviews-daily.yml`) runs `scripts/backfill-trustpilot.ts`. That script (1) scrapes all firms, (2) then runs **retention cleanup** in the same process:
+- **Where:** The daily scrape workflow (`.github/workflows/step1-sync-trustpilot-reviews-daily.yml`) runs `scripts/backfill-firm-trustpilot-reviews.ts`. That script (1) scrapes all firms, (2) then runs **retention cleanup** in the same process:
   - **trustpilot_reviews** where `review_date` &lt; today − 30 days (env `TRUSTPILOT_REVIEWS_RETENTION_DAYS`, default 30).
   - **weekly_incidents** where `created_at` &lt; now − 30 days.
   - **weekly_reports** where `generated_at` &lt; now − 30 days.

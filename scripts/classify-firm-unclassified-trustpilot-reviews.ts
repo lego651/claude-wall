@@ -7,7 +7,7 @@
  * Called by GitHub Actions (step2-sync-classify-reviews-daily.yml).
  *
  * Usage:
- *   npx tsx scripts/classify-unclassified-reviews.ts
+ *   npx tsx scripts/classify-firm-unclassified-trustpilot-reviews.ts
  *
  * Env (from .env at project root):
  *   OPENAI_API_KEY                    - required

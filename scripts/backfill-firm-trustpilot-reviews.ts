@@ -7,7 +7,7 @@
  * Called daily by GitHub Actions (step1-sync-trustpilot-reviews-daily.yml).
  *
  * Usage:
- *   npx tsx scripts/backfill-trustpilot.ts
+ *   npx tsx scripts/backfill-firm-trustpilot-reviews.ts
  *
  * Env (from .env at project root; do not export in shell):
  *   NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY - required for DB

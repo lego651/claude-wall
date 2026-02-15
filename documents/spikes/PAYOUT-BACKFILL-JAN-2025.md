@@ -43,7 +43,7 @@ Etherscan supports `page` and `offset` (max 10000 per page). Example:
 
 ### 2. One-time backfill script
 
-**Location**: `scripts/backfill-payouts-to-jan2025.js` (or similar)
+**Location**: `scripts/backfill-firm-payouts-to-jan2025.js` (or similar)
 
 **Logic**:
 
@@ -65,7 +65,7 @@ The daily job only updates the **current month**; it runs once a day and is fine
 
 ### 4. Run the backfill
 
-- **Locally**: `ARBISCAN_API_KEY=... node scripts/backfill-payouts-to-jan2025.js`  
+- **Locally**: `ARBISCAN_API_KEY=... node scripts/backfill-firm-payouts-to-jan2025.js`  
   (Optionally `--firm fundingpips` to run for one firm only.)
 - **CI**: Add a one-off or manual-dispatch job that runs the script and commits `data/propfirms/`, or run locally and push.
 
@@ -144,5 +144,5 @@ Payout processing rules (from `payoutSyncService.js`): filter outgoing from firm
 
 - [x] **Plan document** (this file).
 - [x] **`lib/arbiscan.js`**: Optional `page`/`offset` on `fetchNativeTransactions` and `fetchTokenTransactions`; new `fetchAllNativeTransactions(address, apiKey, { cutoffTimestamp })` and `fetchAllTokenTransactions(address, apiKey, { cutoffTimestamp })` that paginate in 10k chunks and optionally stop at `cutoffTimestamp` (Unix seconds). Existing callers unchanged (two-arg calls behave as before).
-- [x] **Backfill script** `scripts/backfill-payouts-to-jan2025.js`: runs one firm at a time; use `--firm fundingpips` to test first. Uses paginated Arbiscan fetch and same payout logic as sync service.
-- [ ] **Run backfill** (local or CI), then commit `data/propfirms/`. Test with one firm first: `ARBISCAN_API_KEY=... node scripts/backfill-payouts-to-jan2025.js --firm fundingpips`.
+- [x] **Backfill script** `scripts/backfill-firm-payouts-to-jan2025.js`: runs one firm at a time; use `--firm fundingpips` to test first. Uses paginated Arbiscan fetch and same payout logic as sync service.
+- [ ] **Run backfill** (local or CI), then commit `data/propfirms/`. Test with one firm first: `ARBISCAN_API_KEY=... node scripts/backfill-firm-payouts-to-jan2025.js --firm fundingpips`.

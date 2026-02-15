@@ -61,7 +61,7 @@ Inngest (Every 5 min) + GitHub Actions (Daily)
 ### B. Historical Sync (Daily at 3 AM PST)
 
 **Workflow:** `.github/workflows/sync-firm-payouts-historical.yml`
-**Script:** `scripts/update-monthly-json.js`
+**Script:** `scripts/update-firm-monthly-json.js`
 
 ```javascript
 // Runs: Daily at 11:00 UTC (3 AM PST)
@@ -309,7 +309,7 @@ for (const address of firm.addresses) {
 
 #### **Historical Sync (Daily at 3 AM PST)**
 
-**Current Implementation:** `scripts/update-monthly-json.js:317`
+**Current Implementation:** `scripts/update-firm-monthly-json.js:317`
 
 For each firm:
 ```javascript

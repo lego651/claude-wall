@@ -28,14 +28,14 @@ Daily 3 AM PST (11:00 UTC)
 Daily 4 AM PST (12:00 UTC)
 ┌─────────────────────┐
 │ 2. Classify Reviews │ → OpenAI GPT-4 → category field updated
-│    (Unclassified)   │    (scripts/classify-unclassified-reviews.ts)
+│    (Unclassified)   │    (scripts/classify-firm-unclassified-trustpilot-reviews.ts)
 └──────────┬──────────┘
            │ 1 hour delay
            ↓
 Daily 5 AM PST (13:00 UTC)
 ┌─────────────────────┐
 │ 3. Detect Incidents │ → Aggregate by week → weekly_incidents table
-│    (Current Week)   │    (scripts/run-daily-incidents.ts)
+│    (Current Week)   │    (scripts/run-firm-daily-incidents.ts)
 └──────────┬──────────┘
            │ 9 hours
            ↓
@@ -223,7 +223,7 @@ UI Consumption:
 
 **Workflow:** [.github/workflows/step1-sync-trustpilot-reviews-daily.yml](../../.github/workflows/step1-sync-trustpilot-reviews-daily.yml)
 
-**Script:** `scripts/backfill-trustpilot.ts` ❌ NOT FOUND
+**Script:** `scripts/backfill-firm-trustpilot-reviews.ts` ❌ NOT FOUND
 
 **Status:** ⚠️ SCRIPT MISSING but scraper lib exists
 
@@ -233,10 +233,10 @@ UI Consumption:
 
 **Verification Steps:**
 
-- [ ] Create `scripts/backfill-trustpilot.ts` to call `scrapeAndStoreReviews()` for all firms
+- [ ] Create `scripts/backfill-firm-trustpilot-reviews.ts` to call `scrapeAndStoreReviews()` for all firms
 - [ ] Test scraper locally:
   ```bash
-  npx tsx scripts/backfill-trustpilot.ts
+  npx tsx scripts/backfill-firm-trustpilot-reviews.ts
   ```
 - [ ] Verify it scrapes 3 pages × ~20 reviews/page = ~60 reviews per firm
 - [ ] Check `trustpilot_reviews` table for new rows
@@ -270,7 +270,7 @@ aquafunded, instantfunding, fxify
 
 **Workflow:** [.github/workflows/sync-classify-reviews.yml](../../.github/workflows/sync-classify-reviews.yml)
 
-**Script:** `scripts/classify-unclassified-reviews.ts` ❌ NOT FOUND
+**Script:** `scripts/classify-firm-unclassified-trustpilot-reviews.ts` ❌ NOT FOUND
 
 **Status:** ❌ CRITICAL - Missing implementation
 
@@ -278,7 +278,7 @@ aquafunded, instantfunding, fxify
 
 **Required Implementation:**
 
-- [ ] Create `scripts/classify-unclassified-reviews.ts`
+- [ ] Create `scripts/classify-firm-unclassified-trustpilot-reviews.ts`
 - [ ] Query `trustpilot_reviews` WHERE `classified_at IS NULL`
 - [ ] Batch process (e.g., 50 reviews at a time to respect OpenAI rate limits)
 - [ ] Call OpenAI GPT-4 with classification prompt:
@@ -322,7 +322,7 @@ Neutral: neutral_mixed, neutral
 
 **Workflow:** [.github/workflows/step3-run-daily-incidents-daily.yml](../../.github/workflows/step3-run-daily-incidents-daily.yml)
 
-**Script:** `scripts/run-daily-incidents.ts` ❌ NOT FOUND
+**Script:** `scripts/run-firm-daily-incidents.ts` ❌ NOT FOUND
 
 **Status:** ❌ CRITICAL - Missing implementation
 
@@ -330,7 +330,7 @@ Neutral: neutral_mixed, neutral
 
 **Required Implementation:**
 
-- [ ] Create `scripts/run-daily-incidents.ts`
+- [ ] Create `scripts/run-firm-daily-incidents.ts`
 - [ ] For each firm in `TRUSTPILOT_FIRM_IDS`:
   1. Get current ISO week number and year
   2. Query `trustpilot_reviews` for current week, grouped by `category`
@@ -463,9 +463,9 @@ Add new monitoring panel after "Prop firms payout data" section (around line 433
 - [ ] `app/api/v2/propfirms/[id]/incidents/route.js` ✅ HAS TEST
 - [ ] `app/api/v2/propfirms/[id]/signals/route.js` ✅ HAS TEST
 - [ ] `lib/scrapers/trustpilot.ts` ❌ NO TEST (create `lib/__tests__/scrapers/trustpilot.test.ts`)
-- [ ] `scripts/classify-unclassified-reviews.ts` ❌ SCRIPT MISSING
-- [ ] `scripts/run-daily-incidents.ts` ❌ SCRIPT MISSING
-- [ ] `scripts/backfill-trustpilot.ts` ❌ SCRIPT MISSING
+- [ ] `scripts/classify-firm-unclassified-trustpilot-reviews.ts` ❌ SCRIPT MISSING
+- [ ] `scripts/run-firm-daily-incidents.ts` ❌ SCRIPT MISSING
+- [ ] `scripts/backfill-firm-trustpilot-reviews.ts` ❌ SCRIPT MISSING
 - [ ] `app/api/cron/send-weekly-reports/route.js` ❌ ROUTE MISSING
 
 **Component Tests:**
@@ -590,9 +590,9 @@ Add new monitoring panel after "Prop firms payout data" section (around line 433
 ### HIGH PRIORITY (Must Fix)
 
 1. ❌ **Missing Scripts:**
-   - [ ] `scripts/backfill-trustpilot.ts`
-   - [ ] `scripts/classify-unclassified-reviews.ts`
-   - [ ] `scripts/run-daily-incidents.ts`
+   - [ ] `scripts/backfill-firm-trustpilot-reviews.ts`
+   - [ ] `scripts/classify-firm-unclassified-trustpilot-reviews.ts`
+   - [ ] `scripts/run-firm-daily-incidents.ts`
 
 2. ❌ **Missing API Route:**
    - [ ] `app/api/cron/send-weekly-reports/route.js`

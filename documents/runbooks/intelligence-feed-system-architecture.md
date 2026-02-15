@@ -18,7 +18,7 @@
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ STEP 1: SCRAPE                                                           │
-│ scripts/backfill-trustpilot.ts (MISSING ❌)                             │
+│ scripts/backfill-firm-trustpilot-reviews.ts (MISSING ❌)                             │
 │ ├─ Playwright headless browser                                          │
 │ ├─ 8 firms × 3 pages × ~20 reviews = ~480 reviews/day                   │
 │ └─ Dedupe by trustpilot_url                                             │
@@ -41,7 +41,7 @@
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ STEP 2: CLASSIFY                                                         │
-│ scripts/classify-unclassified-reviews.ts                                │
+│ scripts/classify-firm-unclassified-trustpilot-reviews.ts                                │
 │ ├─ Query: WHERE classified_at IS NULL                                   │
 │ ├─ OpenAI (gpt-4o-mini): batch of 20 reviews per API call (cost)        │
 │ ├─ Env CLASSIFY_AI_BATCH_SIZE: default 20, max 25                       │
@@ -62,7 +62,7 @@
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ STEP 3: DETECT INCIDENTS                                                 │
-│ scripts/run-daily-incidents.ts                                          │
+│ scripts/run-firm-daily-incidents.ts                                          │
 │ ├─ OpenAI: batch of 10 incidents per API call (lib/digest/incident-aggregator) │
 │ ├─ Group reviews by: firm_id, current_week, category                    │
 │ ├─ Threshold: ≥3 reviews = incident                                     │
@@ -170,7 +170,7 @@ trustpilot_reviews (current week, grouped by category)
 
 ### 3b. GENERATE REPORTS (Weekly Monday 13:30 UTC)
 ```
-scripts/generate-weekly-reports-last-week.ts
+scripts/generate-firm-weekly-reports.ts
   → For each firm: generateWeeklyReport(firmId, lastWeekStart, lastWeekEnd)
   → payouts + trustpilot_reviews + weekly_incidents + AI "Our Take"
   → UPSERT weekly_reports (one row per firm/week)
@@ -219,7 +219,7 @@ weekly_incidents (last 30 days)
 ```
 
 - **weekly_incidents**: written by incident-detection step; each row = one incident (type, severity, title, summary). APIs and UI query this for “last 30d incidents.”
-- **weekly_reports**: written by **Step 3b** (`scripts/generate-weekly-reports-last-week.ts` → `lib/digest/generator.ts` → `generateWeeklyReport()`). Runs every Monday 13:30 UTC. Holds a full week snapshot per firm. The **weekly email (Step 4)** uses `weekly_reports.report_json` so each user gets one email with payouts + Trustpilot + incidents + ourTake for **their subscribed firms only** (see [Weekly email flow and per-user customization](#weekly-email-flow-and-per-user-customization) below).
+- **firm_weekly_reports**: written by **Step 3b** (`scripts/generate-firm-weekly-reports.ts` → `lib/digest/generator.ts` → `generateWeeklyReport()`). Runs every Sunday 7:00 UTC. Holds the current week (Mon–Sun UTC) snapshot per firm. The **weekly email (Step 4)** uses `firm_weekly_reports.report_json` so each user gets one email with payouts + Trustpilot + incidents + ourTake for **their subscribed firms only** (see [Weekly email flow and per-user customization](#weekly-email-flow-and-per-user-customization) below).
 
 ### Weekly email flow and per-user customization
 
@@ -390,14 +390,14 @@ LOW     → ≥3 reviews in category
 ### 1. step1-sync-trustpilot-reviews-daily.yml (daily)
 ```yaml
 Cron: 0 11 * * *  (3 AM PST / 11:00 UTC)
-Runs: npx tsx scripts/backfill-trustpilot.ts
+Runs: npx tsx scripts/backfill-firm-trustpilot-reviews.ts
 Env:  NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 
 ### 2. step2-sync-classify-reviews-daily.yml (daily)
 ```yaml
 Cron: 0 12 * * *  (4 AM PST / 12:00 UTC)
-Runs: npx tsx scripts/classify-unclassified-reviews.ts
+Runs: npx tsx scripts/classify-firm-unclassified-trustpilot-reviews.ts
 Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 
@@ -411,19 +411,19 @@ Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 | `lib/ai/classification-taxonomy.ts` | Single source of truth: category list, incident rules, legacy mapping. Used by classifier, incident-aggregator, generator. | — |
 | `lib/ai/classifier.ts` | Single- and batch OpenAI calls (`classifyReview`, `classifyReviewBatch`), DB helpers. | 20 per API call (max 25) |
 | `lib/ai/batch-classify.ts` | Library: `runBatchClassification()` — fetch unclassified, call `classifyReviewBatch`, write DB. Same batch size as script. | 20 (env override) |
-| `scripts/classify-unclassified-reviews.ts` | Cron entry point (step2-sync-classify-reviews-daily.yml). Uses `classifyReviewBatch`; supports MAX_PER_RUN, delay. | 20 (env override) |
+| `scripts/classify-firm-unclassified-trustpilot-reviews.ts` | Cron entry point (step2-sync-classify-reviews-daily.yml). Uses `classifyReviewBatch`; supports MAX_PER_RUN, delay. | 20 (env override) |
 
 ### 3. run-daily-incidents.yml
 ```yaml
 Cron: 0 13 * * *  (5 AM PST / 13:00 UTC)
-Runs: npx tsx scripts/run-daily-incidents.ts
+Runs: npx tsx scripts/run-firm-daily-incidents.ts
 Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 
 ### 3b. step3b-generate-weekly-reports-weekly.yml (weekly)
 ```yaml
 Cron: 30 13 * * 1  (Monday 13:30 UTC)
-Runs: npx tsx scripts/generate-weekly-reports-last-week.ts
+Runs: npx tsx scripts/generate-firm-weekly-reports.ts
 Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 Populates `weekly_reports` for last week. Results stored in `cron_last_run` (job: generate_weekly_reports). Admin dashboard shows last run, firms processed, success/error counts.
@@ -464,10 +464,10 @@ Used by: GitHub Actions step4-send-weekly-reports-weekly (weekly)
 ```
 Code:
 ├── lib/scrapers/trustpilot.ts           ✅ EXISTS
-├── scripts/backfill-trustpilot.ts       ❌ MISSING
-├── scripts/classify-unclassified-reviews.ts  ✅ EXISTS (batch size 20)
-├── scripts/run-daily-incidents.ts       ✅ EXISTS (batch 10 incidents/call)
-├── scripts/generate-weekly-reports-last-week.ts  ✅ EXISTS (Step 3b, weekly)
+├── scripts/backfill-firm-trustpilot-reviews.ts       ❌ MISSING
+├── scripts/classify-firm-unclassified-trustpilot-reviews.ts  ✅ EXISTS (batch size 20)
+├── scripts/run-firm-daily-incidents.ts       ✅ EXISTS (batch 10 incidents/call)
+├── scripts/generate-firm-weekly-reports.ts  ✅ EXISTS (Step 3b, weekly)
 ├── app/api/cron/send-weekly-reports/route.js    ✅ EXISTS (Step 4, GET)
 ├── app/propfirms/[id]/page.js           ✅ EXISTS (intelligence section)
 ├── app/propfirms/[id]/intelligence/page.js    ✅ EXISTS
@@ -489,7 +489,7 @@ Workflows:
 
 ## Environment Variables
 
-**Local runs:** Put keys in **`.env`** at project root. Scripts (e.g. `backfill-trustpilot.ts`) load `.env` via `dotenv/config`—do not `export` vars in the shell.
+**Local runs:** Put keys in **`.env`** at project root. Scripts (e.g. `backfill-firm-trustpilot-reviews.ts`) load `.env` via `dotenv/config`—do not `export` vars in the shell.
 
 ### Production (Vercel)
 ```bash
@@ -546,9 +546,9 @@ Storage: Minimal (text only, ~10 MB/month)
 ## Critical Issues Before Alpha
 
 ### ❌ MISSING IMPLEMENTATIONS (P0 Blockers)
-1. `scripts/backfill-trustpilot.ts` → Scraper won't run
-2. `scripts/classify-unclassified-reviews.ts` → Classifier won't run
-3. `scripts/run-daily-incidents.ts` → Detector won't run
+1. `scripts/backfill-firm-trustpilot-reviews.ts` → Scraper won't run
+2. `scripts/classify-firm-unclassified-trustpilot-reviews.ts` → Classifier won't run
+3. `scripts/run-firm-daily-incidents.ts` → Detector won't run
 4. `app/api/cron/send-weekly-reports/route.js` → Emails won't send
 
 ### ⚠️ SCHEMA VERIFICATION NEEDED

@@ -652,7 +652,7 @@ schedule:
 ```bash
 1. Checkout repo (full git history)
 2. Install Node.js 20 + dependencies
-3. Run: node scripts/update-monthly-json.js
+3. Run: node scripts/update-firm-monthly-json.js
 4. Check for file changes in data/payouts/
 5. If changed:
    - Git commit
@@ -662,11 +662,11 @@ schedule:
 
 ### 3.2 Data Processing Pipeline
 
-**Script**: [`scripts/update-monthly-json.js`](scripts/update-monthly-json.js)
+**Script**: [`scripts/update-firm-monthly-json.js`](scripts/update-firm-monthly-json.js)
 
 **Step 1: Determine Current Month (Timezone-Aware)**
 ```javascript
-// scripts/update-monthly-json.js:83-92
+// scripts/update-firm-monthly-json.js:83-92
 function getCurrentYearMonthInTimezone(timezone) {
   const now = new Date();
   const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -703,7 +703,7 @@ But if a transaction occurred at:
 
 **Step 2: Fetch ALL Transactions from Arbiscan**
 ```javascript
-// scripts/update-monthly-json.js:127-138
+// scripts/update-firm-monthly-json.js:127-138
 async function fetchAllTransactions(address, apiKey) {
   const nativeUrl = `${ARBISCAN_API_BASE}?...&address=${address}&sort=desc&apikey=${apiKey}`;
   const native = await fetchWithRetry(nativeUrl);
@@ -746,7 +746,7 @@ const url = `...&startblock=${monthStartBlock}&endblock=99999999`;
 
 **Step 3: Filter to Current Month (Timezone-Aware)**
 ```javascript
-// scripts/update-monthly-json.js:155-218
+// scripts/update-firm-monthly-json.js:155-218
 function processTransactionsForMonth(native, tokens, addresses, firmId, yearMonth, timezone) {
   const payouts = [];
 
@@ -774,7 +774,7 @@ function processTransactionsForMonth(native, tokens, addresses, firmId, yearMont
 
 **Step 4: Build Daily Buckets (Timezone-Aware)**
 ```javascript
-// scripts/update-monthly-json.js:228-268
+// scripts/update-firm-monthly-json.js:228-268
 function buildMonthData(firmId, yearMonth, transactions, timezone) {
   const dailyMap = {};
 
@@ -802,7 +802,7 @@ function buildMonthData(firmId, yearMonth, transactions, timezone) {
 
 **Step 5: Compare & Save**
 ```javascript
-// scripts/update-monthly-json.js:344-367
+// scripts/update-firm-monthly-json.js:344-367
 async function updateFirmMonth(firm, apiKey) {
   // ... fetch & process ...
 
@@ -2033,7 +2033,7 @@ try {
   with:
     timeout_minutes: 10
     max_attempts: 3
-    command: node scripts/update-monthly-json.js
+    command: node scripts/update-firm-monthly-json.js
 ```
 
 **3. Fallback to Manual Trigger**

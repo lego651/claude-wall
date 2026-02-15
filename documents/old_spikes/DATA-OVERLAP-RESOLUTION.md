@@ -40,7 +40,7 @@ npx tsx scripts/validate-data-overlap.js --month 2025-02
 
 2. **Re-run historical sync**  
    Ensure the JSON for that firm/month is up to date:
-   - Trigger **Sync Firm Payouts (Historical)** (or run `node scripts/update-monthly-json.js` locally with the same env as CI).
+   - Trigger **Sync Firm Payouts (Historical)** (or run `node scripts/update-firm-monthly-json.js` locally with the same env as CI).
    - Wait for it to finish, then re-run **Validate Data Overlap**.
 
 3. **Check timing**  
@@ -51,7 +51,7 @@ npx tsx scripts/validate-data-overlap.js --month 2025-02
 
 5. **Manual backfill (if needed)**  
    If a specific tx is known to be correct in Supabase but missing from JSON, you can:
-   - Re-run the historical sync for that firm (e.g. `node scripts/update-monthly-json.js --firm <firmId>` if supported), or
+   - Re-run the historical sync for that firm (e.g. `node scripts/update-firm-monthly-json.js --firm <firmId>` if supported), or
    - Manually add the transaction to the JSON file (same shape as other entries) and commit. Prefer re-sync over manual edits when possible.
 
 6. **Adjust threshold (last resort)**  

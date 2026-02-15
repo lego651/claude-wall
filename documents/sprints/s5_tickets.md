@@ -30,11 +30,11 @@
 
 **Description:**
 
-Create the missing `scripts/backfill-trustpilot.ts` script that the GitHub Actions workflow calls daily to scrape Trustpilot reviews for all supported prop firms.
+Create the missing `scripts/backfill-firm-trustpilot-reviews.ts` script that the GitHub Actions workflow calls daily to scrape Trustpilot reviews for all supported prop firms.
 
 **Acceptance Criteria:**
 
-- [ ] File created at `scripts/backfill-trustpilot.ts`
+- [ ] File created at `scripts/backfill-firm-trustpilot-reviews.ts`
 - [ ] Script imports `scrapeAndStoreReviews` from `lib/scrapers/trustpilot.ts`
 - [ ] Script imports `TRUSTPILOT_FIRM_IDS` constant (or defines list)
 - [ ] Loops through all 8 supported firms: `fundednext, the5ers, fundingpips, alphacapitalgroup, blueguardian, aquafunded, instantfunding, fxify`
@@ -49,7 +49,7 @@ Create the missing `scripts/backfill-trustpilot.ts` script that the GitHub Actio
 **Implementation Notes:**
 
 ```typescript
-// scripts/backfill-trustpilot.ts
+// scripts/backfill-firm-trustpilot-reviews.ts
 import { scrapeAndStoreReviews, TRUSTPILOT_FIRM_IDS } from '@/lib/scrapers/trustpilot';
 
 const config = {
@@ -86,7 +86,7 @@ main().catch(err => {
 
 **Testing:**
 
-- [ ] Run locally: `TRUSTPILOT_BACKFILL_PAGES=1 npx tsx scripts/backfill-trustpilot.ts`
+- [ ] Run locally: `TRUSTPILOT_BACKFILL_PAGES=1 npx tsx scripts/backfill-firm-trustpilot-reviews.ts`
 - [ ] Verify reviews inserted into `trustpilot_reviews` table
 - [ ] Check duplicate handling: re-run should skip existing reviews
 - [ ] Manually trigger GitHub Actions workflow `sync-trustpilot-reviews.yml`
@@ -100,7 +100,7 @@ main().catch(err => {
 
 **Files Changed:**
 
-- `scripts/backfill-trustpilot.ts` (new)
+- `scripts/backfill-firm-trustpilot-reviews.ts` (new)
 
 ---
 
@@ -113,11 +113,11 @@ main().catch(err => {
 
 **Description:**
 
-Create `scripts/classify-unclassified-reviews.ts` to classify Trustpilot reviews using OpenAI GPT-4. This script queries unclassified reviews from the database and updates their `category` field based on sentiment and incident type.
+Create `scripts/classify-firm-unclassified-trustpilot-reviews.ts` to classify Trustpilot reviews using OpenAI GPT-4. This script queries unclassified reviews from the database and updates their `category` field based on sentiment and incident type.
 
 **Acceptance Criteria:**
 
-- [ ] File created at `scripts/classify-unclassified-reviews.ts`
+- [ ] File created at `scripts/classify-firm-unclassified-trustpilot-reviews.ts`
 - [ ] Query `trustpilot_reviews` WHERE `classified_at IS NULL`
 - [ ] Batch process reviews (e.g., 50 at a time) to respect OpenAI rate limits
 - [ ] For each review, call OpenAI GPT-4 (gpt-4-turbo-preview or gpt-4o):
@@ -235,7 +235,7 @@ async function main() {
 **Testing:**
 
 - [ ] Create test reviews in DB with `classified_at = NULL`
-- [ ] Run script: `OPENAI_API_KEY=xxx npx tsx scripts/classify-unclassified-reviews.ts`
+- [ ] Run script: `OPENAI_API_KEY=xxx npx tsx scripts/classify-firm-unclassified-trustpilot-reviews.ts`
 - [ ] Verify `category` field updated correctly
 - [ ] Test error handling: invalid OpenAI key → should log error and exit 1
 - [ ] Test rate limiting: Process 100+ reviews → should throttle requests
@@ -254,7 +254,7 @@ async function main() {
 
 **Files Changed:**
 
-- `scripts/classify-unclassified-reviews.ts` (new)
+- `scripts/classify-firm-unclassified-trustpilot-reviews.ts` (new)
 - `package.json` (add `openai` if missing)
 
 ---
@@ -268,11 +268,11 @@ async function main() {
 
 **Description:**
 
-Create `scripts/run-daily-incidents.ts` to aggregate classified reviews by week and detect incidents. This script runs daily to analyze the current week's reviews and create/update incident records.
+Create `scripts/run-firm-daily-incidents.ts` to aggregate classified reviews by week and detect incidents. This script runs daily to analyze the current week's reviews and create/update incident records.
 
 **Acceptance Criteria:**
 
-- [ ] File created at `scripts/run-daily-incidents.ts`
+- [ ] File created at `scripts/run-firm-daily-incidents.ts`
 - [ ] For each firm in `TRUSTPILOT_FIRM_IDS`:
   1. [ ] Calculate current ISO week number and year
   2. [ ] Query `trustpilot_reviews` for current week:
@@ -347,7 +347,7 @@ Focus on the main issue, impact on users, and frequency. Professional tone.`;
 **Testing:**
 
 - [ ] Manually insert test reviews for current week into DB
-- [ ] Run script: `OPENAI_API_KEY=xxx npx tsx scripts/run-daily-incidents.ts`
+- [ ] Run script: `OPENAI_API_KEY=xxx npx tsx scripts/run-firm-daily-incidents.ts`
 - [ ] Verify `weekly_incidents` table populated
 - [ ] Re-run script → should UPDATE existing incidents, not duplicate
 - [ ] Test edge case: No incidents for week → No inserts, log "No incidents detected"
@@ -355,13 +355,13 @@ Focus on the main issue, impact on users, and frequency. Professional tone.`;
 
 **Dependencies:**
 
-- `scripts/classify-unclassified-reviews.ts` must run first (reviews must be classified)
+- `scripts/classify-firm-unclassified-trustpilot-reviews.ts` must run first (reviews must be classified)
 - `weekly_incidents` table with unique constraint on `(firm_id, year, week_number, incident_type)`
 - `OPENAI_API_KEY` environment variable
 
 **Files Changed:**
 
-- `scripts/run-daily-incidents.ts` (new)
+- `scripts/run-firm-daily-incidents.ts` (new)
 
 ---
 
@@ -665,7 +665,7 @@ Add `last_scraper_run_at` field to the `firms` table to track when the Trustpilo
 **Files Changed:**
 
 - `migrations/XX_firms_scraper_timestamp.sql` (new)
-- `scripts/backfill-trustpilot.ts` (update)
+- `scripts/backfill-firm-trustpilot-reviews.ts` (update)
 
 ---
 

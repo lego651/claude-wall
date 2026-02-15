@@ -5,7 +5,7 @@
  * Persists last run and summary to cron_last_run for admin dashboard monitoring.
  *
  * Usage:
- *   npx tsx scripts/generate-weekly-reports-last-week.ts
+ *   npx tsx scripts/generate-firm-weekly-reports.ts
  *
  * Optional env:
  *   REPORT_FIRM_IDS  - comma-separated firm ids (default: all firms with Trustpilot)

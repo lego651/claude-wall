@@ -14,7 +14,7 @@ The digest reads from `weekly_reports` for the **previous** ISO week. Populate i
 
 ```bash
 # From repo root, with .env loaded (Supabase + OPENAI_API_KEY for "Our Take")
-npx tsx scripts/generate-weekly-reports-last-week.ts
+npx tsx scripts/generate-firm-weekly-reports.ts
 ```
 
 - Uses the same “last week” as the cron (Monday 14:00 UTC): the week that contains (today − 7 days).
@@ -114,7 +114,7 @@ To test the API path and DB updates without sending email, you can temporarily p
 
 ## 5. Checklist summary
 
-- [ ] Run `scripts/generate-weekly-reports-last-week.ts` (or ensure `weekly_reports` has last week for at least one firm).
+- [ ] Run `scripts/generate-firm-weekly-reports.ts` (or ensure `firm_weekly_reports` has current week for at least one firm).
 - [ ] At least one user has `profiles.email` and `user_subscriptions.email_enabled = true` for a firm with a report.
 - [ ] Call `GET /api/cron/send-weekly-reports` with `Authorization: Bearer $CRON_SECRET`.
 - [ ] Response 200, `sent` ≥ 1 (or `skipped`/`message` as expected).

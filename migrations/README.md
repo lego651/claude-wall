@@ -97,7 +97,7 @@ Cached weekly intelligence reports per firm (UTC week Mon–Sun):
 Aggregated incidents from classified reviews (per firm, per week); data updated daily:
 - Columns: `firm_id`, `year`, `week_number`, `incident_type`, `severity`, `title`, `summary`, `review_count`, `review_ids`
 - Unique on `(firm_id, year, week_number, incident_type)`
-- Populated by step3-run-daily-incidents-daily workflow (script: `scripts/run-daily-incidents.ts`)
+- Populated by step3-run-daily-incidents-daily workflow (script: `scripts/run-firm-daily-incidents.ts`)
 
 ## Verification
 

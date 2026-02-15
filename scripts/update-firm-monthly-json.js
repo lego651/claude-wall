@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Update Monthly JSON Files
+ * Update Firm Monthly JSON Files
  *
  * Fetches current month's payout data from Arbiscan and updates
  * the corresponding JSON files. Designed to run daily via GitHub Actions.
@@ -12,8 +12,8 @@
  * making it fast and efficient for daily runs.
  *
  * Usage:
- *   npx tsx scripts/update-monthly-json.js
- *   npx tsx scripts/update-monthly-json.js --firm fundingpips
+ *   npx tsx scripts/update-firm-monthly-json.js
+ *   npx tsx scripts/update-firm-monthly-json.js --firm fundingpips
  *
  * API key: set ARBISCAN_API_KEY in .env (no need to pass it on the command line).
  */
@@ -373,7 +373,7 @@ async function updateFirmMonth(firm, apiKey) {
 // ============================================================================
 
 async function main() {
-  console.log('🚀 Update Monthly JSON Files');
+  console.log('🚀 Update Firm Monthly JSON Files');
   console.log('============================\n');
   console.log('📝 Daily buckets use each firm\'s local timezone\n');
   

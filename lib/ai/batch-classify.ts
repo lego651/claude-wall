@@ -1,7 +1,7 @@
 /**
  * Batch classification of unclassified reviews (library).
  * Uses classifyReviewBatch() — 20 reviews per OpenAI call (same as script).
- * Canonical entry point for cron: scripts/classify-unclassified-reviews.ts
+ * Canonical entry point for cron: scripts/classify-firm-unclassified-trustpilot-reviews.ts
  */
 
 import { createServiceClient } from '@/lib/supabase/service';

@@ -27,7 +27,7 @@ Users may see **“Updated 5 minutes ago”**, but the chart does not include th
 
 ## 2. Timezone Inconsistency
 
-In `scripts/update-monthly-json.js:56`:
+In `scripts/update-firm-monthly-json.js:56`:
 
 ```ts
 function getLocalDate(utcTimestamp, timezone) {

@@ -6,7 +6,7 @@
  * Called by GitHub Actions (step3-run-daily-incidents-daily.yml).
  *
  * Usage:
- *   npx tsx scripts/run-daily-incidents.ts
+ *   npx tsx scripts/run-firm-daily-incidents.ts
  *
  * Env (from .env at project root):
  *   OPENAI_API_KEY                    - required

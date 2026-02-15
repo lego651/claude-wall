@@ -99,7 +99,7 @@ Sync at 10:05:  includes tx from 10:05 yesterday onwards
 
 **Trigger:** GitHub Actions cron `0 11 * * *` (3 AM PST / 11:00 UTC)
 **Workflow:** [.github/workflows/sync-firm-payouts-historical.yml](../../.github/workflows/sync-firm-payouts-historical.yml)
-**Script:** [scripts/update-monthly-json.js](../../scripts/update-monthly-json.js)
+**Script:** [scripts/update-firm-monthly-json.js](../../scripts/update-firm-monthly-json.js)
 
 ### Flow
 
@@ -346,7 +346,7 @@ Mar 1:  Creates 2025-03.json
 
 - [lib/services/payoutSyncService.js](../../lib/services/payoutSyncService.js) - Real-time sync service
 - [lib/inngest-payouts.ts](../../lib/inngest-payouts.ts) - Inngest cron job
-- [scripts/update-monthly-json.js](../../scripts/update-monthly-json.js) - Historical sync script
+- [scripts/update-firm-monthly-json.js](../../scripts/update-firm-monthly-json.js) - Historical sync script
 - [.github/workflows/sync-firm-payouts-historical.yml](../../.github/workflows/sync-firm-payouts-historical.yml) - Daily workflow
 - [data/propfirms.json](../../data/propfirms.json) - Firm configuration
 - [lib/arbiscan.js](../../lib/arbiscan.js) - Arbiscan API client

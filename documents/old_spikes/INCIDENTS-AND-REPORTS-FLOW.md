@@ -6,7 +6,7 @@
 - **How:** For each firm we call `detectIncidents(firmId, currentWeekStart, currentWeekEnd)`. That reads classified reviews in that window, groups by category (spike + severity override), generates AI summaries, **deletes** that firm+week’s rows in `weekly_incidents`, and **inserts** the new ones.
 - **Result:** `weekly_incidents` for the current week is updated every day so “Recent Intelligence” and APIs stay up to date.
 
-**Artifacts:** [scripts/run-daily-incidents.ts](scripts/run-daily-incidents.ts), [.github/workflows/run-daily-incidents.yml](.github/workflows/run-daily-incidents.yml).
+**Artifacts:** [scripts/run-firm-daily-incidents.ts](scripts/run-firm-daily-incidents.ts), [.github/workflows/run-daily-incidents.yml](.github/workflows/run-daily-incidents.yml).
 
 **Backfilling `weekly_incidents` (one-off):** After you have AI-classified data in `trustpilot_reviews`, run:
 
