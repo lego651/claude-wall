@@ -10,9 +10,10 @@ describe("IntelligenceCardSkeleton", () => {
     expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
   });
 
-  it("renders three source placeholders", () => {
+  it("renders three reference placeholders", () => {
     const { container } = render(<IntelligenceCardSkeleton />);
-    const placeholders = container.querySelectorAll(".grid .rounded-lg");
-    expect(placeholders.length).toBe(3);
+    const refPills = container.querySelector('[data-testid="skeleton-ref-pills"]');
+    expect(refPills).toBeInTheDocument();
+    expect(refPills.children.length).toBe(3);
   });
 });

@@ -68,7 +68,7 @@ describe('GET /api/v2/propfirms/[id]/incidents', () => {
         return {
           select: () => ({
             in: () => Promise.resolve({
-              data: [{ id: 'rev1', trustpilot_url: 'https://trustpilot.com/review/1' }],
+              data: [{ id: 'rev1', trustpilot_url: 'https://trustpilot.com/review/1', review_date: '2025-02-10' }],
             }),
           }),
         };
@@ -96,14 +96,18 @@ describe('GET /api/v2/propfirms/[id]/incidents', () => {
       week_start: expect.any(String),
       title: 'Delay',
       source_links: expect.any(Array),
+      evidence_date: '2025-02-10',
     });
+    expect(body.incidents[0].source_links[0]).toEqual({ url: 'https://trustpilot.com/review/1', date: '2025-02-10' });
   });
 
-  it('includes source links (Trustpilot URLs)', async () => {
+  it('includes source links with review date (Trustpilot)', async () => {
     const res = await GET(createRequest(), { params: Promise.resolve({ id: 'f1' }) });
     const body = await res.json();
 
-    expect(body.incidents[0].source_links).toContain('https://trustpilot.com/review/1');
+    const links = body.incidents[0].source_links;
+    expect(links.some((s) => s.url === 'https://trustpilot.com/review/1')).toBe(true);
+    expect(links[0].date).toBe('2025-02-10');
   });
 
   it('sorted by week (newest first) via API order', async () => {
@@ -213,5 +217,49 @@ describe('GET /api/v2/propfirms/[id]/incidents', () => {
     const body = await res.json();
     expect(res.status).toBe(200);
     expect(body.incidents[0].source_links).toEqual([]);
+  });
+
+  it('sorts incidents by evidence_date descending (mixed dates and null)', async () => {
+    const twoIncidents = [
+      {
+        id: 10,
+        firm_id: 'f1',
+        week_number: 7,
+        year: 2025,
+        incident_type: 'payout_delay',
+        severity: 'medium',
+        title: 'With date',
+        summary: 'S',
+        review_count: 1,
+        affected_users: 0,
+        review_ids: ['rev-a'],
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 11,
+        firm_id: 'f1',
+        week_number: 7,
+        year: 2025,
+        incident_type: 'other',
+        severity: 'low',
+        title: 'No date',
+        summary: 'S2',
+        review_count: 0,
+        affected_users: 0,
+        review_ids: null,
+        created_at: new Date().toISOString(),
+      },
+    ];
+    withQueryGuard
+      .mockResolvedValueOnce({ data: twoIncidents, error: null })
+      .mockResolvedValueOnce({
+        data: [{ id: 'rev-a', trustpilot_url: 'https://t.com/a', review_date: '2025-02-14' }],
+      });
+    const res = await GET(createRequest(), { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.incidents).toHaveLength(2);
+    expect(body.incidents[0].evidence_date).toBe('2025-02-14');
+    expect(body.incidents[1].evidence_date).toBeNull();
   });
 });

@@ -2,7 +2,8 @@
  * GET /api/v2/propfirms/[id]/incidents
  *
  * Returns incidents for the firm from firm_daily_incidents, filtered to the last N days.
- * Query: days (default 90). Response includes week_start (YYYY-MM-DD) for display.
+ * Query: days (default 90). Each incident includes source_links (url + review_date from Trustpilot)
+ * and evidence_date (latest review date among sources) for display.
  */
 
 import { NextResponse } from 'next/server';
@@ -100,28 +101,45 @@ export async function GET(request, { params }) {
     })
     .filter((r) => r.week_start >= cutoffStr);
 
-  // Resolve review_ids to source URLs (Trustpilot) for up to 3 links per incident
+  // Resolve review_ids to URL + review_date (date the review was posted on Trustpilot)
   const allReviewIds = [...new Set(incidents.flatMap((r) => r.review_ids || []))].filter(Boolean);
-  let idToUrl = {};
+  let idToInfo = {};
   if (allReviewIds.length > 0) {
     const { data: reviewRows } = await withQueryGuard(
-      supabase.from('trustpilot_reviews').select('id, trustpilot_url').in('id', allReviewIds),
+      supabase.from('trustpilot_reviews').select('id, trustpilot_url, review_date').in('id', allReviewIds),
       { context: 'incidents trustpilot_reviews' }
     );
     if (reviewRows?.length) {
-      idToUrl = Object.fromEntries(reviewRows.map((row) => [row.id, row.trustpilot_url]));
+      idToInfo = Object.fromEntries(
+        reviewRows.map((row) => [
+          row.id,
+          { url: row.trustpilot_url, review_date: row.review_date || null },
+        ])
+      );
     }
   }
 
-  const incidentsWithLinks = incidents.map((r) => {
-    const ids = Array.isArray(r.review_ids) ? r.review_ids : [];
-    const source_links = ids
-      .slice(0, 3)
-      .map((id) => idToUrl[id])
-      .filter(Boolean);
-    const { review_ids: _rid, ...rest } = r;
-    return { ...rest, source_links };
-  });
+  const incidentsWithLinks = incidents
+    .map((r) => {
+      const ids = Array.isArray(r.review_ids) ? r.review_ids : [];
+      const source_links = ids
+        .slice(0, 3)
+        .map((id) => {
+          const info = idToInfo[id];
+          if (!info?.url) return null;
+          return { url: info.url, date: info.review_date || null };
+        })
+        .filter(Boolean);
+      const dates = source_links.map((s) => s.date).filter(Boolean);
+      const evidence_date = dates.length > 0 ? dates.sort().pop() : null;
+      const { review_ids: _rid, ...rest } = r;
+      return { ...rest, source_links, evidence_date };
+    })
+    .sort((a, b) => {
+      const da = a.evidence_date || '';
+      const db = b.evidence_date || '';
+      return db.localeCompare(da);
+    });
 
   log.info({ duration: Date.now() - start, count: incidentsWithLinks.length }, 'API response');
   return NextResponse.json({ incidents: incidentsWithLinks }, { headers });

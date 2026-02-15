@@ -1,10 +1,26 @@
 # Intelligence Feed System Architecture
 
+This document describes the **intelligence feed pipeline**: daily jobs (scrape → classify → incidents) and weekly jobs (generate firm reports → send digest emails). All times are **UTC** unless noted.
+
+---
+
+## Schedule at a glance
+
+| Schedule | Workflow | Time (UTC) | What it does |
+|----------|----------|------------|--------------|
+| **Daily** | `daily-step1-sync-firm-trustpilot-reviews.yml` | 11:00 (3 AM PST) | Scrape Trustpilot → `trustpilot_reviews` |
+| **Daily** | `daily-step2-sync-firm-classify-reviews.yml` | 12:00 (4 AM PST) | Classify reviews (OpenAI) → update `trustpilot_reviews` |
+| **Daily** | `daily-step3-sync-firm-incidents.yml` | 13:00 (5 AM PST) | Detect incidents → `firm_daily_incidents` |
+| **Weekly** | `weekly-step1-generate-firm-weekly-reports.yml` | Sunday 07:00 | Generate reports → `firm_weekly_reports` (current week) |
+| **Weekly** | `weekly-step2-send-firm-weekly-reports.yml` | Sunday 08:00 | Send digest emails (Resend) |
+
+---
+
 ## System Flow Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          DAILY ASYNC PIPELINE                               │
+│                          DAILY PIPELINE (Mon–Sat, 11 / 12 / 13 UTC)         │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────┐
@@ -13,12 +29,12 @@
 └──────┬───────┘
        │
        │ Daily 3 AM PST (11:00 UTC)
-       │ GitHub Actions: daily-step1-sync-firm-trustpilot-reviews.yml (daily)
+       │ Workflow: daily-step1-sync-firm-trustpilot-reviews.yml
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ STEP 1: SCRAPE                                                           │
-│ scripts/backfill-firm-trustpilot-reviews.ts (MISSING ❌)                             │
+│ DAILY STEP 1: SCRAPE                                                     │
+│ scripts/backfill-firm-trustpilot-reviews.ts                              │
 │ ├─ Playwright headless browser                                          │
 │ ├─ 8 firms × 3 pages × ~20 reviews = ~480 reviews/day                   │
 │ └─ Dedupe by trustpilot_url                                             │
@@ -36,12 +52,12 @@
        │
        │ 1 hour delay
        │ Daily 4 AM PST (12:00 UTC)
-       │ GitHub Actions: daily-step2-sync-firm-classify-reviews.yml (daily)
+       │ Workflow: daily-step2-sync-firm-classify-reviews.yml
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ STEP 2: CLASSIFY                                                         │
-│ scripts/classify-firm-unclassified-trustpilot-reviews.ts                                │
+│ DAILY STEP 2: CLASSIFY                                                   │
+│ scripts/classify-firm-unclassified-trustpilot-reviews.ts                 │
 │ ├─ Query: WHERE classified_at IS NULL                                   │
 │ ├─ OpenAI (gpt-4o-mini): batch of 20 reviews per API call (cost)        │
 │ ├─ Env CLASSIFY_AI_BATCH_SIZE: default 20, max 25                       │
@@ -57,23 +73,23 @@
        │
        │ 1 hour delay
        │ Daily 5 AM PST (13:00 UTC)
-       │ GitHub Actions: daily-step3-sync-firm-incidents.yml (daily)
+       │ Workflow: daily-step3-sync-firm-incidents.yml
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ STEP 3: DETECT INCIDENTS                                                 │
-│ scripts/run-firm-daily-incidents.ts                                          │
+│ DAILY STEP 3: DETECT INCIDENTS                                           │
+│ scripts/run-firm-daily-incidents.ts                                      │
 │ ├─ OpenAI: batch of 10 incidents per API call (lib/digest/incident-aggregator) │
-│ ├─ Group reviews by: firm_id, current_week, category                    │
+│ ├─ Group reviews by: firm_id, current_week, category                     │
 │ ├─ Threshold: ≥3 reviews = incident                                     │
-│ ├─ OpenAI GPT-4: aggregate → title + summary                            │
-│ ├─ Severity: high (≥10 reviews), medium (≥5), low (≥3)                  │
-│ └─ Upsert to weekly_incidents (dedupe by firm+week+type)                │
+│ ├─ OpenAI GPT-4: aggregate → title + summary                             │
+│ ├─ Severity: high (≥10 reviews), medium (≥5), low (≥3)                   │
+│ └─ Upsert to firm_daily_incidents (dedupe by firm+week+type)             │
 └──────┬───────────────────────────────────────────────────────────────────┘
        │
        ▼
 ┌─────────────────────────────────────────────────────┐
-│  Supabase: weekly_incidents                         │
+│  Supabase: firm_daily_incidents                      │
 │  ┌────────────────────────────────────────────┐     │
 │  │ id | firm_id | year | week_number |        │     │
 │  │ incident_type | severity | title |         │     │
@@ -81,17 +97,33 @@
 │  └────────────────────────────────────────────┘     │
 └──────┬──────────────────────────────────────────────┘
        │
-       │ Weekly Monday 13:30 UTC
-       │ GitHub Actions: weekly-step1-generate-firm-weekly-reports.yml (weekly)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    WEEKLY PIPELINE (Sunday 07:00 & 08:00 UTC)                │
+└─────────────────────────────────────────────────────────────────────────────┘
+       │
+       │ Sunday 07:00 UTC
+       │ Workflow: weekly-step1-generate-firm-weekly-reports.yml
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ STEP 4: EMAIL DIGEST                                                     │
+│ WEEKLY STEP 1: GENERATE FIRM WEEKLY REPORTS                              │
+│ scripts/generate-firm-weekly-reports.ts                                  │
+│ ├─ Current week (Mon–Sun UTC) per firm                                  │
+│ ├─ payouts + trustpilot_reviews + firm_daily_incidents + AI "Our Take"   │
+│ └─ UPSERT firm_weekly_reports (week_from_date, week_to_date, report_json)│
+└──────┬───────────────────────────────────────────────────────────────────┘
+       │
+       │ Sunday 08:00 UTC
+       │ Workflow: weekly-step2-send-firm-weekly-reports.yml
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ WEEKLY STEP 2: SEND DIGEST EMAILS                                        │
 │ GET /api/cron/send-weekly-reports                                        │
-│ ├─ Query: user_subscriptions WHERE email_enabled = true                 │
-│ ├─ For each user: weekly_reports (report_json) for subscribed firms     │
-│ │   (last week’s week_number/year)                                      │
-│ ├─ sendWeeklyDigest(user, reports[], options) → HTML + Resend           │
+│ ├─ Query: user_subscriptions WHERE email_enabled = true                  │
+│ ├─ For each user: firm_weekly_reports (report_json) for subscribed firms │
+│ │   (current week: week_from_date / week_to_date)                        │
+│ ├─ sendWeeklyDigest(user, reports[], options) → HTML + Resend            │
 │ └─ One email per user (content = that user’s firms only)                  │
 └──────────────────────────────────────────────────────────────────────────┘
        │
@@ -109,8 +141,8 @@
                               ┌──────────────────────────┐
                               │  Supabase Database       │
                               │  ├─ trustpilot_reviews   │
-                              │  ├─ weekly_incidents     │
-                              │  ├─ weekly_reports       │
+                              │  ├─ firm_daily_incidents │
+                              │  ├─ firm_weekly_reports  │
                               │  └─ user_subscriptions   │
                               └────────┬─────────────────┘
                                        │
@@ -148,59 +180,65 @@
 
 ## Data Flow Summary
 
-### 1. SCRAPE (Daily 3 AM PST)
+### Daily jobs (3 AM, 4 AM, 5 AM PST = 11:00, 12:00, 13:00 UTC)
+
+**1. SCRAPE** — `daily-step1-sync-firm-trustpilot-reviews.yml`
 ```
 Trustpilot → Playwright → trustpilot_reviews (raw, unclassified)
 ```
 
-### 2. CLASSIFY (Daily 4 AM PST)
+**2. CLASSIFY** — `daily-step2-sync-firm-classify-reviews.yml`
 ```
 trustpilot_reviews (WHERE classified_at IS NULL)
   → OpenAI GPT-4
   → UPDATE category, classified_at
 ```
 
-### 3. DETECT (Daily 5 AM PST)
+**3. DETECT INCIDENTS** — `daily-step3-sync-firm-incidents.yml`
 ```
 trustpilot_reviews (current week, grouped by category)
   → Aggregate + threshold check (≥3 reviews)
   → OpenAI GPT-4 (generate title + summary)
-  → UPSERT weekly_incidents
+  → UPSERT firm_daily_incidents
 ```
 
-### 3b. GENERATE REPORTS (Weekly Monday 13:30 UTC)
+### Weekly jobs (Sunday 07:00 and 08:00 UTC)
+
+**4. GENERATE FIRM WEEKLY REPORTS** — `weekly-step1-generate-firm-weekly-reports.yml`
 ```
 scripts/generate-firm-weekly-reports.ts
-  → For each firm: generateWeeklyReport(firmId, lastWeekStart, lastWeekEnd)
-  → payouts + trustpilot_reviews + weekly_incidents + AI "Our Take"
-  → UPSERT weekly_reports (one row per firm/week)
+  → Current week (Mon–Sun UTC) per firm
+  → payouts + trustpilot_reviews + firm_daily_incidents + AI "Our Take"
+  → UPSERT firm_weekly_reports (week_from_date, week_to_date, report_json)
   → Persist run to cron_last_run (admin dashboard monitoring)
 ```
 
-### 4. EMAIL (Weekly Monday 14:00 UTC)
+**5. SEND DIGEST EMAILS** — `weekly-step2-send-firm-weekly-reports.yml`
 ```
 user_subscriptions (email_enabled = true)
   → Group by user_id → list of firm_ids per user
-  → weekly_reports (report_json, last week, for those firm_ids)
+  → firm_weekly_reports (report_json, current week, for those firm_ids)
   → For each user: only reports for firms they subscribe to
   → sendWeeklyDigest(user, reports[], options) → HTML + Resend → User inbox
   → Persist run to cron_last_run (admin dashboard monitoring)
 ```
 
-### 5. RENDER (Real-time)
+### Real-time (UI / API)
+
+**6. RENDER**
 ```
-weekly_incidents (last 30 days)
+firm_daily_incidents (last N days, default 90)
   → API: /api/v2/propfirms/[id]/incidents?days=30
   → UI: /propfirms/[id]/intelligence
   → User browser
 ```
 
-## weekly_reports vs weekly_incidents
+## firm_weekly_reports vs firm_daily_incidents
 
 | Table | Purpose | Grain | Used by |
 |-------|---------|--------|---------|
-| **weekly_incidents** | One row per detected incident (e.g. “payout delays” from ≥3 reviews). | Many rows per firm per week (0 to N incidents). | UI incidents API; also consumed by report generator. |
-| **weekly_reports** | One cached “full report” per firm per week (payouts + Trustpilot + incidents + “Our Take”). | One row per (firm_id, week_number, year). `report_json` holds the full snapshot. | Weekly digest cron: reads `report_json` to build each user’s email. |
+| **firm_daily_incidents** | One row per detected incident (e.g. “payout delays” from ≥3 reviews). Data is updated **daily**. | Many rows per firm per week (0 to N incidents). | UI incidents API; also consumed by report generator. |
+| **firm_weekly_reports** | One cached “full report” per firm per **week** (payouts + Trustpilot + incidents + “Our Take”). | One row per (firm_id, week_from_date). `report_json` holds the full snapshot. | Weekly Step 2: reads `report_json` to build each user’s digest email. |
 
 ```
                     trustpilot_reviews (classified)
@@ -213,22 +251,22 @@ weekly_incidents (last 30 days)
          │                    │  report_json = { payouts, trustpilot,
          │                    │                  incidents[], ourTake }
          ▼                    ▼
-  weekly_incidents       weekly_reports
+  firm_daily_incidents   firm_weekly_reports
   (many rows per         (one row per firm/week;
-   firm/week)             used by send-weekly-reports)
+   firm/week; daily)      weekly; used by weekly-step2-send)
 ```
 
-- **weekly_incidents**: written by incident-detection step; each row = one incident (type, severity, title, summary). APIs and UI query this for “last 30d incidents.”
-- **firm_weekly_reports**: written by **Step 3b** (`scripts/generate-firm-weekly-reports.ts` → `lib/digest/generator.ts` → `generateWeeklyReport()`). Runs every Sunday 7:00 UTC. Holds the current week (Mon–Sun UTC) snapshot per firm. The **weekly email (Step 4)** uses `firm_weekly_reports.report_json` so each user gets one email with payouts + Trustpilot + incidents + ourTake for **their subscribed firms only** (see [Weekly email flow and per-user customization](#weekly-email-flow-and-per-user-customization) below).
+- **firm_daily_incidents**: written by **daily** step 3 (`scripts/run-firm-daily-incidents.ts`); each row = one incident (type, severity, title, summary). APIs and UI query this for “last N days” incidents.
+- **firm_weekly_reports**: written by **weekly** step 1 (`scripts/generate-firm-weekly-reports.ts` → `lib/digest/generator.ts` → `generateWeeklyReport()`). Runs every **Sunday 7:00 UTC**. Holds the **current week** (Mon–Sun UTC) snapshot per firm. **Weekly Step 2** (Sunday 8:00 UTC) uses `firm_weekly_reports.report_json` to send one digest email per user with payouts + Trustpilot + incidents + ourTake for **their subscribed firms only** (see [Weekly email flow and per-user customization](#weekly-email-flow-and-per-user-customization) below).
 
 ### Weekly email flow and per-user customization
 
-Step 4 (send-weekly-reports) runs every **Monday 14:00 UTC**. It sends **one digest email per user**; the **content of each email is customized** to only include weekly reports for the firms that user is subscribed to.
+**Weekly Step 2** (`weekly-step2-send-firm-weekly-reports.yml`) runs every **Sunday 8:00 UTC**. It sends **one digest email per user**; the **content of each email is customized** to only include reports for the firms that user is subscribed to.
 
 **Flow:**
 
 ```
-1. Compute "last week" (Mon–Sun UTC) — same week Step 3b wrote to weekly_reports.
+1. Compute current week (Mon–Sun UTC) — same week Weekly Step 1 wrote to firm_weekly_reports.
 
 2. Load user_subscriptions WHERE email_enabled = true
    → List of (user_id, firm_id). Group by user_id → each user has a set of firm_ids.
@@ -236,8 +274,8 @@ Step 4 (send-weekly-reports) runs every **Monday 14:00 UTC**. It sends **one dig
 3. Load profiles (id, email) for those user_ids
    → Map user_id → email (skip users with no email).
 
-4. Load weekly_reports for last week for ALL firm_ids that appear in any subscription
-   → One query: (firm_id IN (...), week_number = X, year = Y). Map firm_id → report_json.
+4. Load firm_weekly_reports for current week for ALL firm_ids that appear in any subscription
+   → Query by (firm_id IN (...), week_from_date, week_to_date). Map firm_id → report_json.
 
 5. For each user:
    - Get their firm_ids from step 2.
@@ -252,11 +290,11 @@ Step 4 (send-weekly-reports) runs every **Monday 14:00 UTC**. It sends **one dig
 |-------|------------------------------|----------------------------------------------------|
 | Alice | fundingpips, the5ers        | One email: 2 sections (FundingPips + The5ers).    |
 | Bob   | fundingpips                  | One email: 1 section (FundingPips only).          |
-| Carol | fundingpips, the5ers, fxify | One email: up to 3 sections (only firms that have a report for last week). |
+| Carol | fundingpips, the5ers, fxify | One email: up to 3 sections (only firms that have a report for the current week). |
 
 - **Filtering:** The digest API never sends a report for a firm the user is not subscribed to. It looks up `user_subscriptions` for that user and only includes `report_json` for those `firm_id`s.
-- **Skipped:** If a user has email enabled but none of their subscribed firms have a row in `weekly_reports` for last week (e.g. Step 3b failed or didn’t run), that user gets **no email** and is counted as "skipped".
-- **Monitoring:** Last run time, `sent`, `failed`, `skipped`, and sample `errors` are stored in `cron_last_run` (job_name: `send_weekly_reports`) and shown on the admin dashboard (Step 4 tab).
+- **Skipped:** If a user has email enabled but none of their subscribed firms have a row in `firm_weekly_reports` for the current week (e.g. Weekly Step 1 failed or didn’t run), that user gets **no email** and is counted as "skipped".
+- **Monitoring:** Last run time, `sent`, `failed`, `skipped`, and sample `errors` are stored in `cron_last_run` (job_name: `send_weekly_reports`) and shown on the admin dashboard (Weekly Step 2 tab).
 
 ## Database Schema
 
@@ -279,35 +317,33 @@ Step 4 (send-weekly-reports) runs every **Monday 14:00 UTC**. It sends **one dig
 └─────────────────┴──────────────┴─────────────────────────┘
 ```
 
-### weekly_reports
-One row per (firm_id, week_number, year). Cached output of the report generator; used by the weekly digest cron.
+### firm_weekly_reports
+One row per (firm_id, week_from_date). Cached output of the report generator; used by **Weekly Step 2** (digest send). Week is stored as **dates** (Mon–Sun UTC), not week_number/year.
 ```sql
 ┌─────────────────┬──────────────┬─────────────────────────┐
 │ Field           │ Type         │ Description             │
 ├─────────────────┼──────────────┼─────────────────────────┤
 │ id              │ SERIAL       │ Primary key             │
 │ firm_id         │ TEXT         │ FK firms(id)            │
-│ week_number     │ INT          │ ISO week (1-53)        │
-│ year            │ INT          │ ISO year                │
+│ week_from_date  │ DATE         │ Monday (week start)     │
+│ week_to_date    │ DATE         │ Sunday (week end)       │
 │ report_json     │ JSONB        │ payouts, trustpilot,    │
-│                 │              │ incidents[], ourTake   │
-│ total_subscribers │ INT        │ Optional metric         │
-│ emails_sent     │ INT          │ Optional metric         │
+│                 │              │ incidents[], ourTake    │
 │ generated_at    │ TIMESTAMPTZ  │ When generated          │
 ├─────────────────┴──────────────┴─────────────────────────┤
-│ UNIQUE (firm_id, week_number, year)                       │
+│ UNIQUE (firm_id, week_from_date)                           │
 └───────────────────────────────────────────────────────────┘
 ```
 Populated by `lib/digest/generator.ts` → `generateWeeklyReport()`. Read by `GET /api/cron/send-weekly-reports` to build digest emails.
 
-#### How weekly report is generated and how email is sent
+#### How the weekly report is generated and how email is sent
 
-- **Report generation:** `lib/digest/generator.ts` exposes `generateWeeklyReport(firmId, weekStart, weekEnd)`. It loads payout data (from JSON), Trustpilot reviews, and incidents for that firm/week, builds payouts summary, Trustpilot summary, incidents list, and an AI “Our Take” section, then upserts one row per (firm, week) into `firm_weekly_reports`. Weekly Step 1 (weekly-step1-generate-firm-weekly-reports.yml, Sunday 7:00 UTC) runs it for “last week” before the send cron (Sunday 8:00 UTC).
-- **Email send:** Every Sunday 8:00 UTC, GitHub Actions runs `weekly-step2-send-firm-weekly-reports.yml`, which calls `GET /api/cron/send-weekly-reports` (auth: `Authorization: Bearer CRON_SECRET`). The route: (1) computes last week (Mon–Sun) in UTC; (2) loads `user_subscriptions` with `email_enabled = true` and groups by `user_id` → list of `firm_id`s; (3) loads user emails from `profiles`; (4) loads `firm_weekly_reports` for current week for those firms; (5) for each user with email and at least one report, calls `sendWeeklyDigest(user, reports, { weekStart, weekEnd, baseUrl })` in `lib/email/send-digest.ts`, which builds HTML and sends via Resend (`lib/resend.ts`). Response and run summary are stored in `cron_last_run` for admin dashboard monitoring. See [Weekly email flow and per-user customization](#weekly-email-flow-and-per-user-customization) below.
+- **Report generation:** `lib/digest/generator.ts` exposes `generateWeeklyReport(firmId, weekStart, weekEnd)`. It loads payout data (from JSON), Trustpilot reviews, and incidents for that firm/week, builds payouts summary, Trustpilot summary, incidents list, and an AI “Our Take” section, then upserts one row per (firm, week) into `firm_weekly_reports`. **Weekly Step 1** (`weekly-step1-generate-firm-weekly-reports.yml`) runs every **Sunday 7:00 UTC** for the **current week** (Mon–Sun UTC). Results are stored in `cron_last_run` for the admin dashboard.
+- **Email send:** Every **Sunday 8:00 UTC**, **Weekly Step 2** (`weekly-step2-send-firm-weekly-reports.yml`) calls `GET /api/cron/send-weekly-reports` (auth: `Authorization: Bearer CRON_SECRET`). The route: (1) computes current week (Mon–Sun) in UTC; (2) loads `user_subscriptions` with `email_enabled = true` and groups by `user_id` → list of `firm_id`s; (3) loads user emails from `profiles`; (4) loads `firm_weekly_reports` for the current week for those firms; (5) for each user with email and at least one report, calls `sendWeeklyDigest(user, reports, { weekStart, weekEnd, baseUrl })` in `lib/email/send-digest.ts`, which builds HTML and sends via Resend (`lib/resend.ts`). Response and run summary are stored in `cron_last_run` for admin dashboard monitoring. See [Weekly email flow and per-user customization](#weekly-email-flow-and-per-user-customization) above.
 - **Testing:** `app/api/cron/send-weekly-reports/route.test.js` covers auth, no subscribers, with subscribers + mock `sendWeeklyDigest`, and error paths. `lib/email/__tests__/send-digest.test.ts` mocks Resend and asserts `sendWeeklyDigest` success/failure and call args.
 
-### weekly_incidents
-Many rows per firm per week (0 or more). One row = one detected incident (e.g. “payout delays” from ≥3 reviews).
+### firm_daily_incidents
+Many rows per firm per week (0 or more). One row = one detected incident (e.g. “payout delays” from ≥3 reviews). **Updated daily** by Daily Step 3.
 ```sql
 ┌─────────────────┬──────────────┬─────────────────────────┐
 │ Field           │ Type         │ Description             │
@@ -327,7 +363,7 @@ Many rows per firm per week (0 or more). One row = one detected incident (e.g. �
 │ created_at      │ TIMESTAMPTZ  │ When detected           │
 └─────────────────┴──────────────┴─────────────────────────┘
 ```
-Written by incident-detection script. Read by UI/API (`/api/v2/propfirms/[id]/incidents`) and by the report generator (to embed in `weekly_reports.report_json`).
+Written by **Daily Step 3** (`scripts/run-firm-daily-incidents.ts`). Read by UI/API (`/api/v2/propfirms/[id]/incidents`) and by the report generator (to embed in `firm_weekly_reports.report_json`).
 
 ### user_subscriptions
 ```sql
@@ -387,15 +423,21 @@ LOW     → ≥3 reviews in category
 
 ## GitHub Actions Workflows
 
-### 1. daily-step1-sync-firm-trustpilot-reviews.yml (daily)
+All workflow **filenames** follow: **daily-stepN-…** for daily jobs, **weekly-stepN-…** for weekly jobs.
+
+### Daily workflows
+
+**1. daily-step1-sync-firm-trustpilot-reviews.yml**
 ```yaml
+Schedule: Daily
 Cron: 0 11 * * *  (3 AM PST / 11:00 UTC)
 Runs: npx tsx scripts/backfill-firm-trustpilot-reviews.ts
 Env:  NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 
-### 2. daily-step2-sync-firm-classify-reviews.yml (daily)
+**2. daily-step2-sync-firm-classify-reviews.yml**
 ```yaml
+Schedule: Daily
 Cron: 0 12 * * *  (4 AM PST / 12:00 UTC)
 Runs: npx tsx scripts/classify-firm-unclassified-trustpilot-reviews.ts
 Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
@@ -413,24 +455,29 @@ Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 | `lib/ai/batch-classify.ts` | Library: `runBatchClassification()` — fetch unclassified, call `classifyReviewBatch`, write DB. Same batch size as script. | 20 (env override) |
 | `scripts/classify-firm-unclassified-trustpilot-reviews.ts` | Cron entry point (daily-step2-sync-firm-classify-reviews.yml). Uses `classifyReviewBatch`; supports MAX_PER_RUN, delay. | 20 (env override) |
 
-### 3. daily-step3-sync-firm-incidents.yml (daily)
+**3. daily-step3-sync-firm-incidents.yml**
 ```yaml
+Schedule: Daily
 Cron: 0 13 * * *  (5 AM PST / 13:00 UTC)
 Runs: npx tsx scripts/run-firm-daily-incidents.ts
 Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 
-### 3b. weekly-step1-generate-firm-weekly-reports.yml (weekly)
+### Weekly workflows
+
+**4. weekly-step1-generate-firm-weekly-reports.yml**
 ```yaml
-Cron: 30 13 * * 1  (Monday 13:30 UTC)
+Schedule: Weekly (Sunday)
+Cron: 0 7 * * 0  (Sunday 07:00 UTC)
 Runs: npx tsx scripts/generate-firm-weekly-reports.ts
 Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
-Populates `weekly_reports` for last week. Results stored in `cron_last_run` (job: generate_weekly_reports). Admin dashboard shows last run, firms processed, success/error counts.
+Populates `firm_weekly_reports` for the **current week** (Mon–Sun UTC). Results stored in `cron_last_run` (job: generate_weekly_reports). Admin dashboard shows last run, firms processed, success/error counts.
 
-### 4. weekly-step2-send-firm-weekly-reports.yml (weekly)
+**5. weekly-step2-send-firm-weekly-reports.yml**
 ```yaml
-Cron: 0 14 * * 1  (Monday 14:00 UTC)
+Schedule: Weekly (Sunday)
+Cron: 0 8 * * 0  (Sunday 08:00 UTC)
 Runs: curl -H "Authorization: Bearer $CRON_SECRET" $SITE_URL/api/cron/send-weekly-reports
 Env:  CRON_SECRET, SITE_URL
 ```
@@ -463,29 +510,29 @@ Used by: GitHub Actions weekly-step2-send-firm-weekly-reports (weekly)
 
 ```
 Code:
-├── lib/scrapers/trustpilot.ts           ✅ EXISTS
-├── scripts/backfill-firm-trustpilot-reviews.ts       ❌ MISSING
-├── scripts/classify-firm-unclassified-trustpilot-reviews.ts  ✅ EXISTS (batch size 20)
-├── scripts/run-firm-daily-incidents.ts       ✅ EXISTS (batch 10 incidents/call)
-├── scripts/generate-firm-weekly-reports.ts  ✅ EXISTS (Step 3b, weekly)
-├── app/api/cron/send-weekly-reports/route.js    ✅ EXISTS (Step 4, GET)
-├── app/propfirms/[id]/page.js           ✅ EXISTS (intelligence section)
-├── app/propfirms/[id]/intelligence/page.js    ✅ EXISTS
+├── lib/scrapers/trustpilot.ts                           ✅ EXISTS
+├── scripts/backfill-firm-trustpilot-reviews.ts          ✅ EXISTS (daily step 1)
+├── scripts/classify-firm-unclassified-trustpilot-reviews.ts  ✅ EXISTS (daily step 2, batch 20)
+├── scripts/run-firm-daily-incidents.ts                  ✅ EXISTS (daily step 3, batch 10 incidents/call)
+├── scripts/generate-firm-weekly-reports.ts              ✅ EXISTS (weekly step 1)
+├── app/api/cron/send-weekly-reports/route.js            ✅ EXISTS (weekly step 2, GET)
+├── app/propfirms/[id]/page.js                           ✅ EXISTS (intelligence section)
+├── app/propfirms/[id]/intelligence/page.js              ✅ EXISTS
 └── components/propfirms/intelligence/
-    ├── IntelligenceCard.js              ✅ EXISTS
-    └── IntelligenceCardSkeleton.js      ✅ EXISTS
+    ├── IntelligenceCard.js                             ✅ EXISTS
+    └── IntelligenceCardSkeleton.js                      ✅ EXISTS
 
-Database:
-├── migrations/XX_user_subscriptions.sql      ❌ NEEDED
-├── migrations/XX_weekly_incidents.sql        ⚠️ VERIFY EXISTS
-└── migrations/XX_trustpilot_reviews_fields.sql  ⚠️ VERIFY category+classified_at
+Database (see migrations/README.md):
+├── trustpilot_reviews, user_subscriptions               ✅
+├── firm_daily_incidents (was weekly_incidents)           ✅ migration 22
+└── firm_weekly_reports (week_from_date, week_to_date)    ✅ migration 22
 
-Workflows:
-├── .github/workflows/daily-step1-sync-firm-trustpilot-reviews.yml   ✅ EXISTS
-├── .github/workflows/daily-step2-sync-firm-classify-reviews.yml     ✅ EXISTS
-├── .github/workflows/daily-step3-sync-firm-incidents.yml            ✅ EXISTS
-├── .github/workflows/weekly-step1-generate-firm-weekly-reports.yml  ✅ EXISTS
-└── .github/workflows/weekly-step2-send-firm-weekly-reports.yml      ✅ EXISTS
+Workflows (daily = 11/12/13 UTC; weekly = Sunday 07:00, 08:00 UTC):
+├── .github/workflows/daily-step1-sync-firm-trustpilot-reviews.yml   ✅
+├── .github/workflows/daily-step2-sync-firm-classify-reviews.yml     ✅
+├── .github/workflows/daily-step3-sync-firm-incidents.yml            ✅
+├── .github/workflows/weekly-step1-generate-firm-weekly-reports.yml  ✅
+└── .github/workflows/weekly-step2-send-firm-weekly-reports.yml      ✅
 ```
 
 ## Environment Variables
@@ -544,70 +591,58 @@ Total: ~15,000 writes/month (free tier ✅)
 Storage: Minimal (text only, ~10 MB/month)
 ```
 
-## Critical Issues Before Alpha
+## Verification checklist
 
-### ❌ MISSING IMPLEMENTATIONS (P0 Blockers)
-1. `scripts/backfill-firm-trustpilot-reviews.ts` → Scraper won't run
-2. `scripts/classify-firm-unclassified-trustpilot-reviews.ts` → Classifier won't run
-3. `scripts/run-firm-daily-incidents.ts` → Detector won't run
-4. `app/api/cron/send-weekly-reports/route.js` → Emails won't send
+- **Daily workflows:** step1 (scrape), step2 (classify), step3 (incidents) run at 11:00, 12:00, 13:00 UTC. Scripts and workflows exist.
+- **Weekly workflows:** step1 (generate reports) Sunday 07:00 UTC, step2 (send emails) Sunday 08:00 UTC. Scripts and API exist.
+- **Tables:** `trustpilot_reviews`, `firm_daily_incidents`, `firm_weekly_reports`, `user_subscriptions`. See `migrations/README.md` and migration 22 for firm_* schema.
+- **Optional:** Intelligence page default `days` (API allows 1–365; UI may show 90).
 
-### ⚠️ SCHEMA VERIFICATION NEEDED
-5. `user_subscriptions` table → Doesn't exist
-6. `weekly_incidents` table → Verify schema matches
-7. `trustpilot_reviews` → Verify has `category` + `classified_at` fields
+## Quick Start
 
-### 🐛 BUG
-8. Intelligence page shows 90 days (requirement is 30 days)
-
-## Quick Start (After Implementation)
-
-### Manual Trigger (Testing)
+### Manual trigger (testing)
 ```bash
-# Trigger scraper
+# Daily jobs
 gh workflow run daily-step1-sync-firm-trustpilot-reviews.yml
-
-# Trigger classifier
 gh workflow run daily-step2-sync-firm-classify-reviews.yml
-
-# Trigger incident detector
 gh workflow run daily-step3-sync-firm-incidents.yml
 
-# Trigger email send
+# Weekly jobs (run Step 1 before Step 2 so reports exist)
+gh workflow run weekly-step1-generate-firm-weekly-reports.yml
 gh workflow run weekly-step2-send-firm-weekly-reports.yml
 ```
 
-### Check Status
+### Check status
 ```bash
-# View workflows
+# View workflow runs
 gh run list
 
 # Check database
 psql $DATABASE_URL -c "SELECT COUNT(*) FROM trustpilot_reviews WHERE classified_at IS NULL;"
-psql $DATABASE_URL -c "SELECT COUNT(*) FROM weekly_incidents WHERE created_at > NOW() - INTERVAL '7 days';"
+psql $DATABASE_URL -c "SELECT COUNT(*) FROM firm_daily_incidents WHERE created_at > NOW() - INTERVAL '7 days';"
 
-# Monitor admin dashboard (includes: review classification, incident detection per-firm this week, Trustpilot scraper, intelligence feed)
+# Admin dashboard (pipeline metrics, last run per job)
 open https://your-app.vercel.app/admin/dashboard
 ```
 
-## Monitoring Checklist
+## Monitoring checklist
 
-Daily (Automated):
-- [ ] Scraper completed successfully (check GitHub Actions logs)
-- [ ] Reviews classified (unclassified count < 100)
-- [ ] Incidents detected (check admin dashboard)
+**Daily (automated):**
+- [ ] Scraper completed (daily-step1; GitHub Actions logs)
+- [ ] Reviews classified (unclassified count < 100; daily-step2)
+- [ ] Incidents detected (daily-step3; admin dashboard)
 
-Weekly (Monday):
-- [ ] Email reports sent (check Resend logs)
-- [ ] Delivery rate >95% (check admin dashboard)
+**Weekly (Sunday):**
+- [ ] Firm weekly reports generated (weekly-step1; cron_last_run)
+- [ ] Digest emails sent (weekly-step2; Resend logs, admin dashboard)
+- [ ] Delivery rate >95%
 
-Monthly:
+**Monthly:**
 - [ ] OpenAI costs within budget (~$155/month)
 - [ ] Review classification accuracy (manual spot check)
 - [ ] No error alerts triggered
 
 ---
 
-**Last Updated:** 2025-02-14
-**System Status:** ❌ NOT READY (4 critical files missing)
-**Estimated Completion:** 2-3 weeks
+**Last updated:** 2026-02-15  
+**Naming:** Daily jobs = `daily-step1-…`, `daily-step2-…`, `daily-step3-…`. Weekly jobs = `weekly-step1-…`, `weekly-step2-…`. Tables = `firm_daily_incidents`, `firm_weekly_reports`. All times UTC.

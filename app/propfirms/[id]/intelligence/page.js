@@ -56,27 +56,37 @@ function getLabelAndDomainFromUrl(url, index) {
   }
 }
 
-/** Map API incident to IntelligenceItem for the card. */
+/** Format YYYY-MM-DD for card/source display (e.g. "Feb 9, 2026"). */
+function formatDisplayDate(iso) {
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  const d = new Date(iso + "T12:00:00");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+/** Map API incident to IntelligenceItem for the card. Uses review dates from Trustpilot when present. */
 function incidentToItem(inc) {
   const tags = inc.review_count > 0 ? ["Trustpilot"] : ["Trustpilot"];
-  const sourceLinks = inc.source_links || [];
-  const weekDate = inc.week_start || "";
-  const sources = sourceLinks.slice(0, 3).map((url, i) => {
-    const { label, domain } = getLabelAndDomainFromUrl(url, i);
+  const rawLinks = inc.source_links || [];
+  const cardDateRaw = inc.evidence_date || inc.week_start || "";
+  const cardDate = cardDateRaw ? formatDisplayDate(cardDateRaw) : "";
+  const sources = rawLinks.slice(0, 3).map((item, i) => {
+    const url = typeof item === "string" ? item : item?.url;
+    const sourceDate = typeof item === "object" && item?.date ? item.date : cardDateRaw;
+    const { label, domain } = getLabelAndDomainFromUrl(url || "", i);
     return {
       id: `s${inc.id}-${i}`,
       label,
-      url,
+      url: url || "",
       type: "web",
       domain,
-      date: weekDate,
+      date: sourceDate,
     };
   });
 
   return {
     id: String(inc.id),
     category: getDisplayCategory(inc.incident_type),
-    date: weekDate,
+    date: cardDate,
     title: inc.title,
     summary: inc.summary,
     confidence: getConfidenceLevel(inc.severity),
@@ -197,9 +207,9 @@ export default function PropFirmIntelligencePage() {
 
       {/* Feed Timeline — skeleton when loading, IntelligenceCard per item when loaded */}
       {loading ? (
-        <div className="relative">
+        <div className="relative flex flex-col gap-4">
           <div
-            className="absolute left-[5px] top-4 bottom-4 w-0.5 bg-slate-200"
+            className="absolute left-[7px] top-3 bottom-3 w-0.5 bg-slate-200"
             aria-hidden
           />
           <IntelligenceCardSkeleton />
@@ -215,18 +225,14 @@ export default function PropFirmIntelligencePage() {
           </p>
         </div>
       ) : (
-        <div className="relative">
-          {/* Vertical timeline line — aligned with 8px dot center (dot column 12px) */}
+        <div className="relative flex flex-col gap-4">
+          {/* Vertical timeline line behind the dots */}
           <div
-            className="absolute left-[5px] top-4 bottom-4 w-0.5 bg-slate-200"
+            className="absolute left-[7px] top-3 bottom-3 w-0.5 bg-slate-200"
             aria-hidden
           />
-          {items.map((item, index) => (
-            <IntelligenceCard
-              key={item.id}
-              item={item}
-              isLast={index === items.length - 1}
-            />
+          {items.map((item) => (
+            <IntelligenceCard key={item.id} item={item} />
           ))}
         </div>
       )}
