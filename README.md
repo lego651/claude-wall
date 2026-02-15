@@ -95,10 +95,10 @@ The Intelligence Feed ingests Trustpilot reviews for prop firms, classifies them
 
 | Workflow | Schedule | Purpose |
 |----------|----------|---------|
-| `sync-trustpilot-reviews.yml` | Daily 3 AM PST | Scrape Trustpilot for all firms with `trustpilot_url` |
-| `sync-classify-reviews.yml` | Daily 4 AM PST | Classify unclassified reviews (OpenAI batch) |
-| `run-daily-incidents.yml` | Daily 5 AM PST | Aggregate reviews into weekly incidents |
-| `send-weekly-reports.yml` | Monday 2 PM UTC | Send weekly digest emails to subscribers |
+| `step1-sync-trustpilot-reviews-daily.yml` | Daily 3 AM PST | Scrape Trustpilot for all firms with `trustpilot_url` |
+| `step2-sync-classify-reviews-daily.yml` | Daily 4 AM PST | Classify unclassified reviews (OpenAI batch) |
+| `step3-run-daily-incidents-daily.yml` | Daily 5 AM PST | Aggregate reviews into weekly incidents |
+| `step4-send-weekly-reports-weekly.yml` | Weekly Monday 2 PM UTC | Send weekly digest emails to subscribers |
 
 ### Environment variables (Intelligence Feed)
 
@@ -113,7 +113,7 @@ SUPABASE_SERVICE_ROLE_KEY=...
 # Intelligence pipeline
 OPENAI_API_KEY=...          # Classification + incident summaries
 RESEND_API_KEY=...          # Weekly digest emails
-CRON_SECRET=...             # Auth for cron API (e.g. send-weekly-reports)
+CRON_SECRET=...             # Auth for cron API (e.g. step4-send-weekly-reports-weekly)
 ALERT_EMAIL=...             # Optional: critical pipeline alerts (throttled)
 ```
 

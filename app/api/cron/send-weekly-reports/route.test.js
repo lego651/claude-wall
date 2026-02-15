@@ -18,15 +18,19 @@ describe('GET /api/cron/send-weekly-reports', () => {
   const createClient = require('@/lib/supabase/service').createServiceClient;
   const sendWeeklyDigest = require('@/lib/email/send-digest').sendWeeklyDigest;
 
+  const cronLastRunUpsertMock = () => ({ upsert: jest.fn().mockResolvedValue({ error: null }) });
+
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.CRON_SECRET = 'test-secret';
     const mockFrom = jest.fn();
-    mockFrom.mockReturnValueOnce({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ data: [], error: null }),
-      }),
-    });
+    mockFrom
+      .mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      })
+      .mockReturnValueOnce(cronLastRunUpsertMock());
     createClient.mockReturnValue({ from: mockFrom });
   });
 
@@ -142,7 +146,8 @@ describe('GET /api/cron/send-weekly-reports', () => {
             }),
           }),
         }),
-      });
+      })
+      .mockReturnValueOnce(cronLastRunUpsertMock());
     createClient.mockReturnValue({ from: mockFrom });
     sendWeeklyDigest.mockResolvedValue({ ok: true });
 
@@ -189,7 +194,8 @@ describe('GET /api/cron/send-weekly-reports', () => {
             }),
           }),
         }),
-      });
+      })
+      .mockReturnValueOnce(cronLastRunUpsertMock());
     createClient.mockReturnValue({ from: mockFrom });
 
     const req = new Request('https://example.com/api/cron/send-weekly-reports', {
@@ -232,7 +238,8 @@ describe('GET /api/cron/send-weekly-reports', () => {
             }),
           }),
         }),
-      });
+      })
+      .mockReturnValueOnce(cronLastRunUpsertMock());
     createClient.mockReturnValue({ from: mockFrom });
 
     const req = new Request('https://example.com/api/cron/send-weekly-reports', {
@@ -346,7 +353,8 @@ describe('GET /api/cron/send-weekly-reports', () => {
             }),
           }),
         }),
-      });
+      })
+      .mockReturnValueOnce(cronLastRunUpsertMock());
     createClient.mockReturnValue({ from: mockFrom });
     sendWeeklyDigest.mockResolvedValue({ ok: false, error: 'Resend failed' });
 

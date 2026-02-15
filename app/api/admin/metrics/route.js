@@ -208,6 +208,30 @@ async function getIntelligenceFeedStatus(supabase) {
   };
 }
 
+/** Last run of send-weekly-reports cron (from cron_last_run). */
+async function getWeeklyEmailLastRun(supabase) {
+  try {
+    const { data, error } = await supabase
+      .from('cron_last_run')
+      .select('last_run_at, result_json')
+      .eq('job_name', 'send_weekly_reports')
+      .maybeSingle();
+    if (error || !data) return { lastRunAt: null, sent: null, failed: null, skipped: null, weekStart: null, weekEnd: null, errors: [] };
+    const r = data.result_json || {};
+    return {
+      lastRunAt: data.last_run_at,
+      sent: r.sent,
+      failed: r.failed,
+      skipped: r.skipped,
+      weekStart: r.weekStart,
+      weekEnd: r.weekEnd,
+      errors: Array.isArray(r.errors) ? r.errors : [],
+    };
+  } catch {
+    return { lastRunAt: null, sent: null, failed: null, skipped: null, weekStart: null, weekEnd: null, errors: [] };
+  }
+}
+
 /** Firms with Trustpilot URL and their last scraper run status (for admin dashboard). */
 async function getTrustpilotScraperStatus(supabase) {
   try {
@@ -327,12 +351,13 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed] = await Promise.all([
+  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed, weeklyEmailLastRun] = await Promise.all([
     getFileStats(),
     getDbStats(supabase),
     getPropfirmsPayoutCounts(supabase),
     getTrustpilotScraperStatus(supabase),
     getIntelligenceFeedStatus(supabase),
+    getWeeklyEmailLastRun(supabase),
   ]);
 
   const incidentDetection = await getIncidentDetectionStatus(supabase, trustpilotScraperFirms);
@@ -444,13 +469,23 @@ export async function GET() {
     },
     trustpilotScraper: {
       firms: trustpilotScraperFirms,
-      note: 'Updated by daily GitHub Actions (sync-trustpilot-reviews). Refresh to see latest run.',
+      note: 'Updated by daily GitHub Actions (step1-sync-trustpilot-reviews-daily). Refresh to see latest run.',
     },
     intelligenceFeed: {
       lastWeek: intelligenceFeed.lastWeek,
       subscriptionsTotal: intelligenceFeed.subscriptionsTotal,
       subscriptionsEmailEnabled: intelligenceFeed.subscriptionsEmailEnabled,
       weekLabel: intelligenceFeed.weekLabel,
+    },
+    weeklyEmailReport: {
+      lastRunAt: weeklyEmailLastRun.lastRunAt,
+      sent: weeklyEmailLastRun.sent,
+      failed: weeklyEmailLastRun.failed,
+      skipped: weeklyEmailLastRun.skipped,
+      weekStart: weeklyEmailLastRun.weekStart,
+      weekEnd: weeklyEmailLastRun.weekEnd,
+      errors: weeklyEmailLastRun.errors,
+      note: 'Send runs Monday 14:00 UTC via step4-send-weekly-reports-weekly workflow.',
     },
     incidentDetection: {
       currentWeek: incidentDetection.currentWeek,

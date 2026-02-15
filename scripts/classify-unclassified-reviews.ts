@@ -4,7 +4,7 @@
  * Queries trustpilot_reviews WHERE classified_at IS NULL, classifies in batches with OpenAI
  * (20 reviews per API call by default to reduce cost), updates category, severity, confidence,
  * ai_summary, classified_at. Uses lib/ai/classifier (Phase 1 taxonomy).
- * Called by GitHub Actions (sync-classify-reviews.yml).
+ * Called by GitHub Actions (step2-sync-classify-reviews-daily.yml).
  *
  * Usage:
  *   npx tsx scripts/classify-unclassified-reviews.ts

@@ -222,7 +222,7 @@ describe('GET /api/admin/metrics', () => {
           last_scraper_error: null,
         },
       ],
-      note: 'Updated by daily GitHub Actions (sync-trustpilot-reviews). Refresh to see latest run.',
+      note: 'Updated by daily GitHub Actions (step1-sync-trustpilot-reviews-daily). Refresh to see latest run.',
     });
     expect(body.intelligenceFeed).toBeDefined();
     expect(body.intelligenceFeed.lastWeek).toBeDefined();

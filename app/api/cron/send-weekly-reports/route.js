@@ -1,6 +1,6 @@
 /**
  * TICKET-004: Weekly Email Reports API Route
- * Cron endpoint invoked by GitHub Actions (send-weekly-reports.yml) every Monday 14:00 UTC.
+ * Cron endpoint invoked by GitHub Actions (step4-send-weekly-reports-weekly.yml) every Monday 14:00 UTC.
  * Queries user_subscriptions, fetches weekly_reports for each user's firms, sends one digest email per user.
  */
 
@@ -8,6 +8,32 @@ import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { sendWeeklyDigest } from '@/lib/email/send-digest';
 import { getWeekNumber, getYear, getWeekBounds } from '@/lib/digest/week-utils';
+
+const CRON_JOB_NAME = 'send_weekly_reports';
+
+/** Persist last run result for admin dashboard metrics. */
+async function persistCronLastRun(supabase, result) {
+  try {
+    await supabase.from('cron_last_run').upsert(
+      {
+        job_name: CRON_JOB_NAME,
+        last_run_at: new Date().toISOString(),
+        result_json: {
+          sent: result.sent,
+          failed: result.failed,
+          skipped: result.skipped,
+          errors: Array.isArray(result.errors) ? result.errors.slice(0, 20) : [],
+          weekStart: result.weekStart,
+          weekEnd: result.weekEnd,
+          durationMs: result.durationMs,
+        },
+      },
+      { onConflict: 'job_name' }
+    );
+  } catch (e) {
+    console.error('[send-weekly-reports] persistCronLastRun', e);
+  }
+}
 
 export const maxDuration = 300; // 5 min for many users
 export const dynamic = 'force-dynamic';
@@ -66,14 +92,9 @@ export async function GET(request) {
     }
 
     if (!rows?.length) {
-      return NextResponse.json({
-        sent: 0,
-        failed: 0,
-        skipped: 0,
-        errors: [],
-        message: 'No active subscribers',
-        durationMs: Date.now() - startTime,
-      });
+      const result = { sent: 0, failed: 0, skipped: 0, errors: [], message: 'No active subscribers', durationMs: Date.now() - startTime };
+      await persistCronLastRun(supabase, result);
+      return NextResponse.json(result);
     }
 
     // Group by user_id -> firm_ids[]
@@ -160,7 +181,7 @@ export async function GET(request) {
       }
     }
 
-    return NextResponse.json({
+    const result = {
       sent,
       failed,
       skipped,
@@ -168,7 +189,9 @@ export async function GET(request) {
       weekStart: weekStartIso,
       weekEnd: weekEndIso,
       durationMs: Date.now() - startTime,
-    });
+    };
+    await persistCronLastRun(supabase, result);
+    return NextResponse.json(result);
   } catch (err) {
     console.error('[send-weekly-reports]', err);
     return NextResponse.json(

@@ -1,4 +1,6 @@
-# Weekly Digest – send aggregated reports to subscribers
+# Step 4 — Send Weekly Reports (Weekly)
+#
+# Pipeline order: step1 → step2 → step3 → step4. Schedule: weekly (Monday 14:00 UTC).
 #
 # TICKET-016: Weekly Digest Cron Job (GitHub Actions)
 # Runs every Monday at 14:00 UTC (after daily incidents at 13:00 UTC) so the
@@ -9,7 +11,7 @@
 #   CRON_SECRET – must match CRON_SECRET in Vercel env (for Authorization: Bearer)
 #   SITE_URL – production base URL (e.g. https://your-app.vercel.app)
 
-name: Send Weekly Reports (Digest)
+name: Step 4 – Send Weekly Reports (Weekly)
 
 on:
   schedule:

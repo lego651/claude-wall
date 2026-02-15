@@ -54,6 +54,14 @@ function metricsToCSV(data) {
     rows.push(`intelligence_lastWeek_firmsWithReport,${data.intelligenceFeed.lastWeek?.firmsWithReport ?? ""}`);
     rows.push(`intelligence_lastWeek_firmsExpected,${data.intelligenceFeed.lastWeek?.firmsExpected ?? ""}`);
   }
+  if (data?.weeklyEmailReport) {
+    rows.push(`weeklyEmail_lastRunAt,${data.weeklyEmailReport.lastRunAt ?? ""}`);
+    rows.push(`weeklyEmail_sent,${data.weeklyEmailReport.sent ?? ""}`);
+    rows.push(`weeklyEmail_failed,${data.weeklyEmailReport.failed ?? ""}`);
+    rows.push(`weeklyEmail_skipped,${data.weeklyEmailReport.skipped ?? ""}`);
+    rows.push(`weeklyEmail_weekStart,${data.weeklyEmailReport.weekStart ?? ""}`);
+    rows.push(`weeklyEmail_weekEnd,${data.weeklyEmailReport.weekEnd ?? ""}`);
+  }
   rows.push(`fetchedAt,${data?.fetchedAt ?? ""}`);
   return rows.join("\n");
 }
@@ -749,12 +757,83 @@ export default function AdminDashboardPage() {
               </section>
             )}
 
+            {/* Weekly email send – last run from step4-send-weekly-reports-weekly */}
+            {data && (
+              <section>
+                <h2 className="text-lg font-semibold mb-4">Weekly email send</h2>
+                <p className="text-sm text-base-content/60 mb-3">
+                  Last run of the digest cron (step4-send-weekly-reports-weekly). Runs Monday 14:00 UTC.
+                </p>
+                <div className="card card-border bg-base-100 shadow overflow-hidden">
+                  <div className="card-body">
+                    {data.weeklyEmailReport ? (
+                      <>
+                        <p className="text-xs text-base-content/60 mb-3">{data.weeklyEmailReport.note}</p>
+                        <div className="flex flex-wrap gap-4 items-baseline">
+                          {data.weeklyEmailReport.lastRunAt ? (
+                            <>
+                              <div>
+                                <span className="text-base-content/60 text-sm">Last run</span>
+                                <p className="font-mono text-sm">
+                                  {new Date(data.weeklyEmailReport.lastRunAt).toLocaleString(undefined, {
+                                    dateStyle: "short",
+                                    timeStyle: "short",
+                                  })}
+                                </p>
+                              </div>
+                              {data.weeklyEmailReport.weekStart && (
+                                <div>
+                                  <span className="text-base-content/60 text-sm">Week</span>
+                                  <p className="font-mono text-sm">
+                                    {data.weeklyEmailReport.weekStart} → {data.weeklyEmailReport.weekEnd}
+                                  </p>
+                                </div>
+                              )}
+                              <div>
+                                <span className="text-base-content/60 text-sm">Sent</span>
+                                <p className="font-semibold text-success">{data.weeklyEmailReport.sent ?? "—"}</p>
+                              </div>
+                              <div>
+                                <span className="text-base-content/60 text-sm">Failed</span>
+                                <p className="font-semibold text-error">{data.weeklyEmailReport.failed ?? "—"}</p>
+                              </div>
+                              <div>
+                                <span className="text-base-content/60 text-sm">Skipped</span>
+                                <p className="font-semibold text-base-content/70">{data.weeklyEmailReport.skipped ?? "—"}</p>
+                              </div>
+                              {Array.isArray(data.weeklyEmailReport.errors) && data.weeklyEmailReport.errors.length > 0 && (
+                                <div className="w-full">
+                                  <span className="text-base-content/60 text-sm">Errors (sample)</span>
+                                  <ul className="list-disc list-inside text-xs text-error/90 mt-0.5 max-h-24 overflow-y-auto">
+                                    {data.weeklyEmailReport.errors.slice(0, 5).map((msg, i) => (
+                                      <li key={i}>{String(msg)}</li>
+                                    ))}
+                                    {data.weeklyEmailReport.errors.length > 5 && (
+                                      <li>… and {data.weeklyEmailReport.errors.length - 5} more</li>
+                                    )}
+                                  </ul>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <p className="text-base-content/60 text-sm">No run recorded yet. Trigger step4-send-weekly-reports-weekly to populate.</p>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-base-content/60 text-sm">Metrics loading… Refresh if this persists. Ensure migration 21_cron_last_run.sql is applied.</p>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* Trustpilot scraping (daily GitHub Actions) */}
             {data.trustpilotScraper?.firms?.length > 0 && (
               <section>
                 <h2 className="text-lg font-semibold mb-4">Trustpilot scraping</h2>
                 <p className="text-sm text-base-content/60 mb-3">
-                  Daily run via GitHub Actions (sync-trustpilot-reviews). Last run per firm below.
+                  Daily run via GitHub Actions (step1-sync-trustpilot-reviews-daily). Last run per firm below.
                 </p>
                 <div className="card card-border bg-base-100 shadow overflow-hidden">
                   <div className="overflow-x-auto">

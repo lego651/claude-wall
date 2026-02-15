@@ -13,7 +13,7 @@
 └──────┬───────┘
        │
        │ Daily 3 AM PST (11:00 UTC)
-       │ GitHub Actions: sync-trustpilot-reviews.yml
+       │ GitHub Actions: step1-sync-trustpilot-reviews-daily.yml (daily)
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -36,7 +36,7 @@
        │
        │ 1 hour delay
        │ Daily 4 AM PST (12:00 UTC)
-       │ GitHub Actions: sync-classify-reviews.yml
+       │ GitHub Actions: step2-sync-classify-reviews-daily.yml (daily)
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -57,7 +57,7 @@
        │
        │ 1 hour delay
        │ Daily 5 AM PST (13:00 UTC)
-       │ GitHub Actions: run-daily-incidents.yml
+       │ GitHub Actions: step3-run-daily-incidents-daily.yml (daily)
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -83,7 +83,7 @@
        │
        │ 9 hours delay
        │ Weekly Monday 2 PM UTC (14:00 UTC)
-       │ GitHub Actions: send-weekly-reports.yml
+       │ GitHub Actions: step4-send-weekly-reports-weekly.yml (weekly)
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -252,6 +252,12 @@ One row per (firm_id, week_number, year). Cached output of the report generator;
 ```
 Populated by `lib/digest/generator.ts` → `generateWeeklyReport()`. Read by `GET /api/cron/send-weekly-reports` to build digest emails.
 
+#### How weekly report is generated and how email is sent
+
+- **Report generation:** `lib/digest/generator.ts` exposes `generateWeeklyReport(firmId, weekStart, weekEnd)`. It loads payout data (from JSON), Trustpilot reviews, and incidents for that firm/week, builds payouts summary, Trustpilot summary, incidents list, and an AI “Our Take” section, then upserts one row per (firm, week) into `weekly_reports`. There is no workflow in this repo that calls it; a script or separate job should run it for “last week” before the send cron (e.g. Monday morning).
+- **Email send:** Every Monday 14:00 UTC, GitHub Actions runs `step4-send-weekly-reports-weekly.yml`, which calls `GET /api/cron/send-weekly-reports` (auth: `Authorization: Bearer CRON_SECRET`). The route: (1) computes last week (Mon–Sun) in UTC; (2) loads `user_subscriptions` with `email_enabled = true` and groups by `user_id` → list of `firm_id`s; (3) loads user emails from `profiles`; (4) loads `weekly_reports` for last week for those firms; (5) for each user with email and at least one report, calls `sendWeeklyDigest(user, reports, { weekStart, weekEnd, baseUrl })` in `lib/email/send-digest.ts`, which builds HTML and sends via Resend (`lib/resend.ts`). Response includes `sent`, `failed`, `skipped`, `errors[]`, `weekStart`, `weekEnd`, `durationMs`.
+- **Testing:** `app/api/cron/send-weekly-reports/route.test.js` covers auth, no subscribers, with subscribers + mock `sendWeeklyDigest`, and error paths. `lib/email/__tests__/send-digest.test.ts` mocks Resend and asserts `sendWeeklyDigest` success/failure and call args.
+
 ### weekly_incidents
 Many rows per firm per week (0 or more). One row = one detected incident (e.g. “payout delays” from ≥3 reviews).
 ```sql
@@ -333,14 +339,14 @@ LOW     → ≥3 reviews in category
 
 ## GitHub Actions Workflows
 
-### 1. sync-trustpilot-reviews.yml
+### 1. step1-sync-trustpilot-reviews-daily.yml (daily)
 ```yaml
 Cron: 0 11 * * *  (3 AM PST / 11:00 UTC)
 Runs: npx tsx scripts/backfill-trustpilot.ts
 Env:  NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 
-### 2. sync-classify-reviews.yml
+### 2. step2-sync-classify-reviews-daily.yml (daily)
 ```yaml
 Cron: 0 12 * * *  (4 AM PST / 12:00 UTC)
 Runs: npx tsx scripts/classify-unclassified-reviews.ts
@@ -357,7 +363,7 @@ Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 | `lib/ai/classification-taxonomy.ts` | Single source of truth: category list, incident rules, legacy mapping. Used by classifier, incident-aggregator, generator. | — |
 | `lib/ai/classifier.ts` | Single- and batch OpenAI calls (`classifyReview`, `classifyReviewBatch`), DB helpers. | 20 per API call (max 25) |
 | `lib/ai/batch-classify.ts` | Library: `runBatchClassification()` — fetch unclassified, call `classifyReviewBatch`, write DB. Same batch size as script. | 20 (env override) |
-| `scripts/classify-unclassified-reviews.ts` | Cron entry point (sync-classify-reviews.yml). Uses `classifyReviewBatch`; supports MAX_PER_RUN, delay. | 20 (env override) |
+| `scripts/classify-unclassified-reviews.ts` | Cron entry point (step2-sync-classify-reviews-daily.yml). Uses `classifyReviewBatch`; supports MAX_PER_RUN, delay. | 20 (env override) |
 
 ### 3. run-daily-incidents.yml
 ```yaml
@@ -366,7 +372,7 @@ Runs: npx tsx scripts/run-daily-incidents.ts
 Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 
-### 4. send-weekly-reports.yml
+### 4. step4-send-weekly-reports-weekly.yml (weekly)
 ```yaml
 Cron: 0 14 * * 1  (Monday 2 PM UTC)
 Runs: curl -H "Authorization: Bearer $CRON_SECRET" $SITE_URL/api/cron/send-weekly-reports
@@ -417,10 +423,10 @@ Database:
 └── migrations/XX_trustpilot_reviews_fields.sql  ⚠️ VERIFY category+classified_at
 
 Workflows:
-├── .github/workflows/sync-trustpilot-reviews.yml      ✅ EXISTS
-├── .github/workflows/sync-classify-reviews.yml        ✅ EXISTS
-├── .github/workflows/run-daily-incidents.yml          ✅ EXISTS
-└── .github/workflows/send-weekly-reports.yml          ✅ EXISTS
+├── .github/workflows/step1-sync-trustpilot-reviews-daily.yml   ✅ EXISTS
+├── .github/workflows/step2-sync-classify-reviews-daily.yml     ✅ EXISTS
+├── .github/workflows/step3-run-daily-incidents-daily.yml       ✅ EXISTS
+└── .github/workflows/step4-send-weekly-reports-weekly.yml      ✅ EXISTS
 ```
 
 ## Environment Variables
@@ -500,16 +506,16 @@ Storage: Minimal (text only, ~10 MB/month)
 ### Manual Trigger (Testing)
 ```bash
 # Trigger scraper
-gh workflow run sync-trustpilot-reviews.yml
+gh workflow run step1-sync-trustpilot-reviews-daily.yml
 
 # Trigger classifier
-gh workflow run sync-classify-reviews.yml
+gh workflow run step2-sync-classify-reviews-daily.yml
 
 # Trigger incident detector
-gh workflow run run-daily-incidents.yml
+gh workflow run step3-run-daily-incidents-daily.yml
 
 # Trigger email send
-gh workflow run send-weekly-reports.yml
+gh workflow run step4-send-weekly-reports-weekly.yml
 ```
 
 ### Check Status
