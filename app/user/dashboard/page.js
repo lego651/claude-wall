@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import config from "@/config";
 import { useTransactions } from "@/lib/hooks/useTransactions";
@@ -11,13 +12,11 @@ import ActiveLinksCard from "@/components/common/ActiveLinksCard";
 import { getFirmLogoUrl } from "@/lib/logoUtils";
 import MetricsCards from "@/components/common/MetricsCards";
 import MonthlyPayoutChart from "@/components/common/MonthlyPayoutChart";
-import AccountSettingsModal from "@/components/user/dashboard/AccountSettingsModal";
 import ConnectWalletModal from "@/components/user/dashboard/ConnectWalletModal";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isConnectWalletModalOpen, setIsConnectWalletModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [backfillStatus, setBackfillStatus] = useState(null);
@@ -218,8 +217,8 @@ export default function Dashboard() {
               )}
             </div>
             <div className="flex gap-3">
-              <button
-                onClick={() => setIsSettingsModalOpen(true)}
+              <Link
+                href="/user/settings"
                 className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition-colors flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,7 +226,7 @@ export default function Dashboard() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 Edit Settings
-              </button>
+              </Link>
               {hasNoWallet ? (
                 <button
                   onClick={() => setIsConnectWalletModalOpen(true)}
@@ -465,13 +464,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      {/* Settings Modal */}
-      <AccountSettingsModal
-        isOpen={isSettingsModalOpen}
-        onClose={() => setIsSettingsModalOpen(false)}
-        onUpdate={handleProfileUpdate}
-      />
 
       {/* Connect Wallet Modal (for users without a wallet) */}
       <ConnectWalletModal

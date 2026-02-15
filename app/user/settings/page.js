@@ -6,11 +6,17 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import apiClient from "@/lib/api";
 import config from "@/config";
-import SubscriptionSettings from "@/components/user/settings/SubscriptionSettings";
+import SubscriptionsSection from "@/components/user/settings/SubscriptionsSection";
+
+const SECTIONS = [
+  { id: "account", label: "Account" },
+  { id: "subscriptions", label: "Subscriptions" },
+];
 
 export default function SettingsPage() {
   const supabase = createClient();
   const router = useRouter();
+  const [activeSection, setActiveSection] = useState("account");
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -233,20 +239,48 @@ export default function SettingsPage() {
     <main className="min-h-screen bg-slate-200/60 p-8 pb-24">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+            aria-label="Back"
+          >
+            <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </button>
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold">User Settings</h1>
-            <p className="text-gray-600 mt-2">
-              Manage your profile appearance and social links.
+            <h1 className="text-3xl font-bold text-slate-900">User Settings</h1>
+            <p className="text-sm text-slate-500">
+              Manage your profile, preferences, and news subscriptions.
             </p>
           </div>
-          <button
-            onClick={() => router.back()}
-            className="text-gray-600 hover:text-gray-900 font-medium"
-          >
-            Cancel
-          </button>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Navigation sidebar */}
+          <nav className="md:col-span-1 space-y-2" aria-label="Settings sections">
+            {SECTIONS.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setActiveSection(id)}
+                className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                  activeSection === id
+                    ? "bg-primary/10 text-primary shadow-sm"
+                    : "text-slate-500 hover:bg-slate-100"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          {/* Content */}
+          <div className="md:col-span-3 space-y-6">
+            {activeSection === "account" && (
+              <>
 
         {/* Profile Links Section */}
         <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
@@ -457,9 +491,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Weekly Digest Subscriptions (TICKET-014) */}
-        <SubscriptionSettings />
-
         {/* Security Section */}
         <div className="bg-white border border-red-200 rounded-2xl p-8 shadow-sm">
           <div className="flex items-center gap-2 mb-6">
@@ -498,6 +529,11 @@ export default function SettingsPage() {
               "Sign out from all devices"
             )}
           </button>
+        </div>
+            </>
+            )}
+            {activeSection === "subscriptions" && <SubscriptionsSection />}
+          </div>
         </div>
       </div>
     </main>
