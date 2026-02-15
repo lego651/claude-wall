@@ -161,7 +161,19 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (['recent_payouts', 'trustpilot_reviews', 'weekly_incidents', 'weekly_reports', 'user_subscriptions'].includes(table)) {
+      if (table === 'weekly_incidents') {
+        return {
+          select: jest.fn().mockImplementation((cols, opts) => {
+            if (opts && opts.head === true) return Promise.resolve({ count: 0, error: null });
+            return {
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            };
+          }),
+        };
+      }
+      if (['recent_payouts', 'trustpilot_reviews', 'weekly_reports', 'user_subscriptions'].includes(table)) {
         return {
           select: jest.fn().mockResolvedValue({ count: 0, error: null }),
         };
@@ -178,6 +190,12 @@ describe('GET /api/admin/metrics', () => {
     expect(body).toHaveProperty('database');
     expect(body).toHaveProperty('files');
     expect(body).toHaveProperty('arbiscan');
+    expect(body.incidentDetection).toBeDefined();
+    expect(body.incidentDetection.currentWeek).toEqual({ weekNumber: 6, year: 2025, weekLabel: '2025-W06' });
+    expect(Array.isArray(body.incidentDetection.firms)).toBe(true);
+    expect(body.incidentDetection.firms).toHaveLength(1);
+    expect(body.incidentDetection.firms[0]).toEqual({ firmId: 'fundingpips', firmName: 'FundingPips', incidentCount: 0 });
+    expect(body.incidentDetection.note).toContain('5 AM PST');
     expect(body.trustpilotScraper).toEqual({
       firms: [
         {
@@ -239,7 +257,19 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (['recent_payouts', 'trustpilot_reviews', 'weekly_incidents', 'weekly_reports', 'user_subscriptions'].includes(table)) {
+      if (table === 'weekly_incidents') {
+        return {
+          select: jest.fn().mockImplementation((cols, opts) => {
+            if (opts && opts.head === true) return Promise.resolve({ count: 0, error: null });
+            return {
+              eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            };
+          }),
+        };
+      }
+      if (['recent_payouts', 'trustpilot_reviews', 'weekly_reports', 'user_subscriptions'].includes(table)) {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {
@@ -252,6 +282,7 @@ describe('GET /api/admin/metrics', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.trustpilotScraper.firms).toEqual([]);
+    expect(body.incidentDetection.firms).toEqual([]);
   });
 
   it('returns file stats when payout dir has firm subdirs and json files', async () => {

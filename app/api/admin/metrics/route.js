@@ -15,6 +15,42 @@ import { getCacheStats } from '@/lib/cache';
 import { sendAlert } from '@/lib/alerts';
 import { getWeekNumber, getYear, getWeekBounds } from '@/lib/digest/week-utils';
 
+/** Incident detection: current week and per-firm incident counts (for admin dashboard). */
+async function getIncidentDetectionStatus(supabase, trustpilotFirms) {
+  const now = new Date();
+  const { weekStart } = getWeekBounds(now);
+  const weekNumber = getWeekNumber(weekStart);
+  const year = getYear(weekStart);
+  const weekLabel = `${year}-W${String(weekNumber).padStart(2, '0')}`;
+
+  let rows = [];
+  try {
+    const { data, error } = await supabase
+      .from('weekly_incidents')
+      .select('firm_id')
+      .eq('week_number', weekNumber)
+      .eq('year', year);
+    if (error) return { currentWeek: { weekNumber, year, weekLabel }, firms: [], error: error.message };
+    rows = data || [];
+  } catch (e) {
+    return { currentWeek: { weekNumber, year, weekLabel }, firms: [], error: e.message };
+  }
+
+  const countByFirm = new Map();
+  for (const r of rows) {
+    const id = r.firm_id;
+    if (id != null) countByFirm.set(id, (countByFirm.get(id) || 0) + 1);
+  }
+
+  const firms = (trustpilotFirms || []).map((f) => ({
+    firmId: f.id,
+    firmName: f.name || f.id,
+    incidentCount: countByFirm.get(f.id) ?? 0,
+  }));
+
+  return { currentWeek: { weekNumber, year, weekLabel }, firms };
+}
+
 const PAYOUTS_DIR = path.join(process.cwd(), 'data', 'propfirms');
 const LARGE_FILE_BYTES = 5 * 1024 * 1024; // 5MB warning
 const FAIL_FILE_BYTES = 10 * 1024 * 1024; // 10MB critical
@@ -282,6 +318,8 @@ export async function GET() {
     getIntelligenceFeedStatus(supabase),
   ]);
 
+  const incidentDetection = await getIncidentDetectionStatus(supabase, trustpilotScraperFirms);
+
   const arbiscan = usageTracker?.getUsage ? usageTracker.getUsage() : { calls: 0, limit: 0, percentage: 0, day: null };
   const cache = getCacheStats();
   const dbStats = dbResult.counts;
@@ -395,6 +433,11 @@ export async function GET() {
       subscriptionsTotal: intelligenceFeed.subscriptionsTotal,
       subscriptionsEmailEnabled: intelligenceFeed.subscriptionsEmailEnabled,
       weekLabel: intelligenceFeed.weekLabel,
+    },
+    incidentDetection: {
+      currentWeek: incidentDetection.currentWeek,
+      firms: incidentDetection.firms,
+      note: 'Run daily at 5 AM PST (13:00 UTC), 1 hour after classifier. Pipeline: scrape → classify → incidents.',
     },
     apiLatency: { note: 'See Vercel Analytics for P50/P95/P99 by route' },
     errorRates: { note: 'See Vercel Analytics or logs for error rates by endpoint' },

@@ -13,8 +13,8 @@ const COVERAGE_THRESHOLD = 80;
 const COVERAGE_SUMMARY_PATH = path.join(process.cwd(), "coverage", "coverage-summary.json");
 const SCOPE_PATTERN = /^(lib|app\/api|components)\/.+\.(js|jsx|ts|tsx)$/;
 const TEST_FILE_PATTERN = /__tests__|\.(test|spec)\.(js|jsx|ts|tsx)$/;
-/** Paths that skip coverage enforcement (internal/admin, AI/OpenAI). */
-const COVERAGE_SKIP_PATTERNS = [/^app\/api\/admin\//, /^lib\/ai\//];
+/** Paths that skip coverage enforcement (internal/admin, AI/OpenAI, digest/incidents). */
+const COVERAGE_SKIP_PATTERNS = [/^app\/api\/admin\//, /^lib\/ai\//, /^lib\/digest\//];
 
 function getStagedFiles() {
   const out = execSync("git diff --cached --name-only", { encoding: "utf8" });

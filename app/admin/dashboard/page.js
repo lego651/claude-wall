@@ -573,6 +573,48 @@ export default function AdminDashboardPage() {
               </div>
             </section>
 
+            {/* Incident detection (daily, after classifier) */}
+            {data.incidentDetection && (
+              <section>
+                <h2 className="text-lg font-semibold mb-4">Incident detection</h2>
+                <p className="text-sm text-base-content/60 mb-3">
+                  {data.incidentDetection.note ?? 'Run daily at 5 AM PST (13:00 UTC), 1 hour after classifier. Pipeline: scrape → classify → incidents.'}
+                </p>
+                <div className="card card-border bg-base-100 shadow overflow-hidden">
+                  <div className="card-body">
+                    <div className="mb-3">
+                      <span className="text-base-content/60 text-sm">Current week</span>
+                      <p className="font-semibold">{data.incidentDetection.currentWeek?.weekLabel ?? '—'}</p>
+                    </div>
+                    {data.incidentDetection.firms?.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="table table-sm w-full">
+                          <thead>
+                            <tr>
+                              <th className="font-medium">Firm</th>
+                              <th className="text-right font-medium">Incidents (this week)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {data.incidentDetection.firms
+                              .sort((a, b) => (a.firmName || a.firmId).localeCompare(b.firmName || b.firmId))
+                              .map((f) => (
+                                <tr key={f.firmId}>
+                                  <td className="font-medium">{f.firmName ?? f.firmId}</td>
+                                  <td className="text-right tabular-nums">{f.incidentCount ?? 0}</td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-base-content/60 text-sm">No firms with Trustpilot or no data.</p>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* Intelligence feed (weekly reports + digest) */}
             {data.intelligenceFeed && (
               <section>

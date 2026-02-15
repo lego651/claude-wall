@@ -62,7 +62,8 @@
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ STEP 3: DETECT INCIDENTS                                                 │
-│ scripts/run-daily-incidents.ts (MISSING ❌)                             │
+│ scripts/run-daily-incidents.ts                                          │
+│ ├─ OpenAI: batch of 10 incidents per API call (lib/digest/incident-aggregator) │
 │ ├─ Group reviews by: firm_id, current_week, category                    │
 │ ├─ Threshold: ≥3 reviews = incident                                     │
 │ ├─ OpenAI GPT-4: aggregate → title + summary                            │
@@ -402,7 +403,7 @@ Code:
 ├── lib/scrapers/trustpilot.ts           ✅ EXISTS
 ├── scripts/backfill-trustpilot.ts       ❌ MISSING
 ├── scripts/classify-unclassified-reviews.ts  ✅ EXISTS (batch size 20)
-├── scripts/run-daily-incidents.ts       ❌ MISSING
+├── scripts/run-daily-incidents.ts       ✅ EXISTS (batch 10 incidents/call)
 ├── app/api/cron/send-weekly-reports/route.js  ❌ MISSING
 ├── app/propfirms/[id]/page.js           ✅ EXISTS (intelligence section)
 ├── app/propfirms/[id]/intelligence/page.js    ✅ EXISTS
@@ -520,7 +521,7 @@ gh run list
 psql $DATABASE_URL -c "SELECT COUNT(*) FROM trustpilot_reviews WHERE classified_at IS NULL;"
 psql $DATABASE_URL -c "SELECT COUNT(*) FROM weekly_incidents WHERE created_at > NOW() - INTERVAL '7 days';"
 
-# Monitor admin dashboard
+# Monitor admin dashboard (includes: review classification, incident detection per-firm this week, Trustpilot scraper, intelligence feed)
 open https://your-app.vercel.app/admin/dashboard
 ```
 
