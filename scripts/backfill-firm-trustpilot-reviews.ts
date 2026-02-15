@@ -4,7 +4,7 @@
  *
  * Scrapes Trustpilot reviews for all firms with trustpilot_url in DB, stores in Supabase,
  * then runs retention cleanup (delete old reviews, incidents, reports).
- * Called daily by GitHub Actions (step1-sync-trustpilot-reviews-daily.yml).
+ * Called daily by GitHub Actions (daily-step1-sync-firm-trustpilot-reviews.yml).
  *
  * Usage:
  *   npx tsx scripts/backfill-firm-trustpilot-reviews.ts

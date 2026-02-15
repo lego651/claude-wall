@@ -3,7 +3,7 @@
  * For each firm with Trustpilot, fetches classified reviews for the current ISO week,
  * groups by category, detects incidents (spike ≥3 or high_risk ≥1), generates title/summary
  * via OpenAI (batched), upserts to firm_daily_incidents.
- * Called by GitHub Actions (step3-run-daily-incidents-daily.yml).
+ * Called by GitHub Actions (daily-step3-sync-firm-incidents.yml).
  *
  * Usage:
  *   npx tsx scripts/run-firm-daily-incidents.ts

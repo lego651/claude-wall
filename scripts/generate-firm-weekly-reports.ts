@@ -1,6 +1,6 @@
 /**
  * Generate firm_weekly_reports for the current week (Mon–Sun UTC).
- * Run by GitHub Actions (step3b-generate-weekly-reports-weekly.yml) every Sunday 7:00 UTC.
+ * Run by GitHub Actions (weekly-step1-generate-firm-weekly-reports.yml) every Sunday 7:00 UTC.
  * Digest (Weekly 2) runs Sunday 8:00 UTC and uses this data.
  * Persists last run and summary to cron_last_run for admin dashboard monitoring.
  *

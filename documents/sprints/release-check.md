@@ -145,7 +145,7 @@ UI Consumption:
 
 ## Feature 2: Weekly Email Reports
 
-**Workflow:** [.github/workflows/step4-send-weekly-reports-weekly.yml](../../.github/workflows/step4-send-weekly-reports-weekly.yml)
+**Workflow:** [.github/workflows/weekly-step2-send-firm-weekly-reports.yml](../../.github/workflows/weekly-step2-send-firm-weekly-reports.yml)
 
 **Status:** ❌ CRITICAL - Missing implementation
 
@@ -221,7 +221,7 @@ UI Consumption:
 
 ### 3.1 Trustpilot Scraper
 
-**Workflow:** [.github/workflows/step1-sync-trustpilot-reviews-daily.yml](../../.github/workflows/step1-sync-trustpilot-reviews-daily.yml)
+**Workflow:** [.github/workflows/daily-step1-sync-firm-trustpilot-reviews.yml](../../.github/workflows/daily-step1-sync-firm-trustpilot-reviews.yml)
 
 **Script:** `scripts/backfill-firm-trustpilot-reviews.ts` ❌ NOT FOUND
 
@@ -320,7 +320,7 @@ Neutral: neutral_mixed, neutral
 
 ### 3.3 Incident Detection
 
-**Workflow:** [.github/workflows/step3-run-daily-incidents-daily.yml](../../.github/workflows/step3-run-daily-incidents-daily.yml)
+**Workflow:** [.github/workflows/daily-step3-sync-firm-incidents.yml](../../.github/workflows/daily-step3-sync-firm-incidents.yml)
 
 **Script:** `scripts/run-firm-daily-incidents.ts` ❌ NOT FOUND
 
@@ -493,10 +493,11 @@ Add new monitoring panel after "Prop firms payout data" section (around line 433
 **Workflow Tests:**
 
 - [ ] Manually trigger each GitHub Actions workflow:
-  - [ ] `step1-sync-trustpilot-reviews-daily.yml`
-  - [ ] `step2-sync-classify-reviews-daily.yml`
-  - [ ] `step3-run-daily-incidents-daily.yml`
-  - [ ] `step4-send-weekly-reports-weekly.yml`
+  - [ ] `daily-step1-sync-firm-trustpilot-reviews.yml`
+  - [ ] `daily-step2-sync-firm-classify-reviews.yml`
+  - [ ] `daily-step3-sync-firm-incidents.yml`
+  - [ ] `weekly-step1-generate-firm-weekly-reports.yml`
+  - [ ] `weekly-step2-send-firm-weekly-reports.yml`
 - [ ] Verify success in Actions logs
 - [ ] Check database for expected changes
 

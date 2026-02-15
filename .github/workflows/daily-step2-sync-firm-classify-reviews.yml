@@ -1,23 +1,25 @@
-# Step 3 — Run Daily Incidents (Daily)
+# Daily Step 2 — Sync Firm Classify Reviews
 #
-# Pipeline order: step1 → step2 → step3 → step4. Schedule: daily.
+# Pipeline order: daily-step1 → daily-step2 → daily-step3. Schedule: daily.
 #
-# Runs daily at 5 AM PST (13:00 UTC), 1 hour after the classifier (4 AM PST / 12 UTC).
-# For each supported firm, runs detectIncidents(current week) and writes to weekly_incidents.
+# TICKET-008: Batch Classification Cron Job
+# Runs daily at 4 AM PST (12:00 UTC), 1 hour after the scraper (3 AM PST / 11 UTC).
+# Fetches reviews where classified_at IS NULL, runs OpenAI classifier, updates DB.
 #
 # Requires repo secrets: OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
-name: Step 3 – Run Daily Incidents (Daily)
+name: Daily Step 2 – Sync Firm Classify Reviews
 
 on:
   schedule:
-    - cron: "0 13 * * *"
+    # 4 AM PST = 12:00 UTC (1 hour after scraper at 11 UTC)
+    - cron: "0 12 * * *"
   workflow_dispatch:
 
 jobs:
-  daily-incidents:
+  classify-reviews:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -32,9 +34,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Run daily incident detection
+      - name: Run batch classification
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: npx tsx scripts/run-firm-daily-incidents.ts
+        run: npx tsx scripts/classify-firm-unclassified-trustpilot-reviews.ts

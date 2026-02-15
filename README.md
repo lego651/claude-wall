@@ -95,10 +95,11 @@ The Intelligence Feed ingests Trustpilot reviews for prop firms, classifies them
 
 | Workflow | Schedule | Purpose |
 |----------|----------|---------|
-| `step1-sync-trustpilot-reviews-daily.yml` | Daily 3 AM PST | Scrape Trustpilot for all firms with `trustpilot_url` |
-| `step2-sync-classify-reviews-daily.yml` | Daily 4 AM PST | Classify unclassified reviews (OpenAI batch) |
-| `step3-run-daily-incidents-daily.yml` | Daily 5 AM PST | Aggregate reviews into weekly incidents |
-| `step4-send-weekly-reports-weekly.yml` | Weekly Monday 2 PM UTC | Send weekly digest emails to subscribers |
+| `daily-step1-sync-firm-trustpilot-reviews.yml` | Daily 3 AM PST | Scrape Trustpilot for all firms with `trustpilot_url` |
+| `daily-step2-sync-firm-classify-reviews.yml` | Daily 4 AM PST | Classify unclassified reviews (OpenAI batch) |
+| `daily-step3-sync-firm-incidents.yml` | Daily 5 AM PST | Aggregate reviews into firm_daily_incidents |
+| `weekly-step1-generate-firm-weekly-reports.yml` | Weekly Sunday 7:00 UTC | Generate firm_weekly_reports for current week |
+| `weekly-step2-send-firm-weekly-reports.yml` | Weekly Sunday 8:00 UTC | Send weekly digest emails to subscribers |
 
 ### Environment variables (Intelligence Feed)
 
@@ -113,7 +114,7 @@ SUPABASE_SERVICE_ROLE_KEY=...
 # Intelligence pipeline
 OPENAI_API_KEY=...          # Classification + incident summaries
 RESEND_API_KEY=...          # Weekly digest emails
-CRON_SECRET=...             # Auth for cron API (e.g. step4-send-weekly-reports-weekly)
+CRON_SECRET=...             # Auth for cron API (e.g. weekly-step2-send-firm-weekly-reports)
 ALERT_EMAIL=...             # Optional: critical pipeline alerts (throttled)
 ```
 

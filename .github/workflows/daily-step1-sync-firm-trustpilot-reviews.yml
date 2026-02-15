@@ -1,6 +1,6 @@
-# Step 1 — Sync Trustpilot Reviews (Daily)
+# Daily Step 1 — Sync Firm Trustpilot Reviews
 #
-# Pipeline order: step1 → step2 → step3 → step4. Schedule: daily.
+# Pipeline order: daily-step1 → daily-step2 → daily-step3. Schedule: daily.
 #
 # TICKET-004: Daily Scraper Cron Job
 # Runs daily at 3 AM PST (11:00 UTC) to scrape 3 pages per firm for all firms with Trustpilot URLs.
@@ -10,7 +10,7 @@
 # Uses GitHub Actions (not Vercel cron) because the scraper needs Playwright/Chromium
 # and runs ~2–5 minutes; Vercel cron has a 10s timeout on free tier.
 
-name: Step 1 – Sync Trustpilot Reviews (Daily)
+name: Daily Step 1 – Sync Firm Trustpilot Reviews
 
 on:
   schedule:

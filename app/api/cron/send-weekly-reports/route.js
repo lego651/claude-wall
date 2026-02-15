@@ -1,6 +1,6 @@
 /**
  * TICKET-004: Weekly Email Reports API Route
- * Cron endpoint invoked by GitHub Actions (step4-send-weekly-reports-weekly.yml) every Monday 14:00 UTC.
+ * Cron endpoint invoked by GitHub Actions (weekly-step2-send-firm-weekly-reports.yml) every Sunday 8:00 UTC.
  * Queries user_subscriptions, fetches firm_weekly_reports for each user's firms, sends one digest email per user.
  */
 

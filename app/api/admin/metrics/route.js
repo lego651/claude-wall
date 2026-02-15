@@ -507,7 +507,7 @@ export async function GET() {
     },
     trustpilotScraper: {
       firms: trustpilotScraperFirms,
-      note: 'Updated by daily GitHub Actions (step1-sync-trustpilot-reviews-daily). Refresh to see latest run.',
+      note: 'Updated by daily GitHub Actions (daily-step1-sync-firm-trustpilot-reviews). Refresh to see latest run.',
     },
     intelligenceFeed: {
       lastWeek: intelligenceFeed.lastWeek,
@@ -526,7 +526,7 @@ export async function GET() {
           weekStart: generateWeeklyReportsRun.weekStart,
           weekEnd: generateWeeklyReportsRun.weekEnd,
           durationMs: generateWeeklyReportsRun.durationMs,
-          note: 'Runs Sunday 7:00 UTC via step3b-generate-weekly-reports-weekly. Populates firm_weekly_reports for current week (Mon–Sun UTC) before Weekly 2 send.',
+          note: 'Runs Sunday 7:00 UTC via weekly-step1-generate-firm-weekly-reports. Populates firm_weekly_reports for current week (Mon–Sun UTC) before Weekly 2 send.',
         }
       : null,
     weeklyEmailReport: {
@@ -537,7 +537,7 @@ export async function GET() {
       weekStart: weeklyEmailLastRun.weekStart,
       weekEnd: weeklyEmailLastRun.weekEnd,
       errors: weeklyEmailLastRun.errors,
-      note: 'Weekly 2: Send runs Sunday 8:00 UTC via step4-send-weekly-reports-weekly workflow.',
+      note: 'Weekly 2: Send runs Sunday 8:00 UTC via weekly-step2-send-firm-weekly-reports workflow.',
     },
     incidentDetection: {
       currentWeek: incidentDetection.currentWeek,

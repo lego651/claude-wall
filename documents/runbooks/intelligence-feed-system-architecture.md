@@ -13,7 +13,7 @@
 └──────┬───────┘
        │
        │ Daily 3 AM PST (11:00 UTC)
-       │ GitHub Actions: step1-sync-trustpilot-reviews-daily.yml (daily)
+       │ GitHub Actions: daily-step1-sync-firm-trustpilot-reviews.yml (daily)
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -36,7 +36,7 @@
        │
        │ 1 hour delay
        │ Daily 4 AM PST (12:00 UTC)
-       │ GitHub Actions: step2-sync-classify-reviews-daily.yml (daily)
+       │ GitHub Actions: daily-step2-sync-firm-classify-reviews.yml (daily)
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -57,7 +57,7 @@
        │
        │ 1 hour delay
        │ Daily 5 AM PST (13:00 UTC)
-       │ GitHub Actions: step3-run-daily-incidents-daily.yml (daily)
+       │ GitHub Actions: daily-step3-sync-firm-incidents.yml (daily)
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -82,7 +82,7 @@
 └──────┬──────────────────────────────────────────────┘
        │
        │ Weekly Monday 13:30 UTC
-       │ GitHub Actions: step3b-generate-weekly-reports-weekly.yml (weekly)
+       │ GitHub Actions: weekly-step1-generate-firm-weekly-reports.yml (weekly)
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -302,8 +302,8 @@ Populated by `lib/digest/generator.ts` → `generateWeeklyReport()`. Read by `GE
 
 #### How weekly report is generated and how email is sent
 
-- **Report generation:** `lib/digest/generator.ts` exposes `generateWeeklyReport(firmId, weekStart, weekEnd)`. It loads payout data (from JSON), Trustpilot reviews, and incidents for that firm/week, builds payouts summary, Trustpilot summary, incidents list, and an AI “Our Take” section, then upserts one row per (firm, week) into `weekly_reports`. Step 3b (step3b-generate-weekly-reports-weekly.yml, Monday 13:30 UTC) runs it for “last week” before the send cron (e.g. Monday morning).
-- **Email send:** Every Monday 14:00 UTC, GitHub Actions runs `step4-send-weekly-reports-weekly.yml`, which calls `GET /api/cron/send-weekly-reports` (auth: `Authorization: Bearer CRON_SECRET`). The route: (1) computes last week (Mon–Sun) in UTC; (2) loads `user_subscriptions` with `email_enabled = true` and groups by `user_id` → list of `firm_id`s; (3) loads user emails from `profiles`; (4) loads `weekly_reports` for last week for those firms; (5) for each user with email and at least one report, calls `sendWeeklyDigest(user, reports, { weekStart, weekEnd, baseUrl })` in `lib/email/send-digest.ts`, which builds HTML and sends via Resend (`lib/resend.ts`). Response and run summary are stored in `cron_last_run` for admin dashboard monitoring. See [Weekly email flow and per-user customization](#weekly-email-flow-and-per-user-customization) below.
+- **Report generation:** `lib/digest/generator.ts` exposes `generateWeeklyReport(firmId, weekStart, weekEnd)`. It loads payout data (from JSON), Trustpilot reviews, and incidents for that firm/week, builds payouts summary, Trustpilot summary, incidents list, and an AI “Our Take” section, then upserts one row per (firm, week) into `firm_weekly_reports`. Weekly Step 1 (weekly-step1-generate-firm-weekly-reports.yml, Sunday 7:00 UTC) runs it for “last week” before the send cron (Sunday 8:00 UTC).
+- **Email send:** Every Sunday 8:00 UTC, GitHub Actions runs `weekly-step2-send-firm-weekly-reports.yml`, which calls `GET /api/cron/send-weekly-reports` (auth: `Authorization: Bearer CRON_SECRET`). The route: (1) computes last week (Mon–Sun) in UTC; (2) loads `user_subscriptions` with `email_enabled = true` and groups by `user_id` → list of `firm_id`s; (3) loads user emails from `profiles`; (4) loads `firm_weekly_reports` for current week for those firms; (5) for each user with email and at least one report, calls `sendWeeklyDigest(user, reports, { weekStart, weekEnd, baseUrl })` in `lib/email/send-digest.ts`, which builds HTML and sends via Resend (`lib/resend.ts`). Response and run summary are stored in `cron_last_run` for admin dashboard monitoring. See [Weekly email flow and per-user customization](#weekly-email-flow-and-per-user-customization) below.
 - **Testing:** `app/api/cron/send-weekly-reports/route.test.js` covers auth, no subscribers, with subscribers + mock `sendWeeklyDigest`, and error paths. `lib/email/__tests__/send-digest.test.ts` mocks Resend and asserts `sendWeeklyDigest` success/failure and call args.
 
 ### weekly_incidents
@@ -387,14 +387,14 @@ LOW     → ≥3 reviews in category
 
 ## GitHub Actions Workflows
 
-### 1. step1-sync-trustpilot-reviews-daily.yml (daily)
+### 1. daily-step1-sync-firm-trustpilot-reviews.yml (daily)
 ```yaml
 Cron: 0 11 * * *  (3 AM PST / 11:00 UTC)
 Runs: npx tsx scripts/backfill-firm-trustpilot-reviews.ts
 Env:  NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 
-### 2. step2-sync-classify-reviews-daily.yml (daily)
+### 2. daily-step2-sync-firm-classify-reviews.yml (daily)
 ```yaml
 Cron: 0 12 * * *  (4 AM PST / 12:00 UTC)
 Runs: npx tsx scripts/classify-firm-unclassified-trustpilot-reviews.ts
@@ -411,16 +411,16 @@ Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 | `lib/ai/classification-taxonomy.ts` | Single source of truth: category list, incident rules, legacy mapping. Used by classifier, incident-aggregator, generator. | — |
 | `lib/ai/classifier.ts` | Single- and batch OpenAI calls (`classifyReview`, `classifyReviewBatch`), DB helpers. | 20 per API call (max 25) |
 | `lib/ai/batch-classify.ts` | Library: `runBatchClassification()` — fetch unclassified, call `classifyReviewBatch`, write DB. Same batch size as script. | 20 (env override) |
-| `scripts/classify-firm-unclassified-trustpilot-reviews.ts` | Cron entry point (step2-sync-classify-reviews-daily.yml). Uses `classifyReviewBatch`; supports MAX_PER_RUN, delay. | 20 (env override) |
+| `scripts/classify-firm-unclassified-trustpilot-reviews.ts` | Cron entry point (daily-step2-sync-firm-classify-reviews.yml). Uses `classifyReviewBatch`; supports MAX_PER_RUN, delay. | 20 (env override) |
 
-### 3. run-daily-incidents.yml
+### 3. daily-step3-sync-firm-incidents.yml (daily)
 ```yaml
 Cron: 0 13 * * *  (5 AM PST / 13:00 UTC)
 Runs: npx tsx scripts/run-firm-daily-incidents.ts
 Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 
-### 3b. step3b-generate-weekly-reports-weekly.yml (weekly)
+### 3b. weekly-step1-generate-firm-weekly-reports.yml (weekly)
 ```yaml
 Cron: 30 13 * * 1  (Monday 13:30 UTC)
 Runs: npx tsx scripts/generate-firm-weekly-reports.ts
@@ -428,7 +428,7 @@ Env:  OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 ```
 Populates `weekly_reports` for last week. Results stored in `cron_last_run` (job: generate_weekly_reports). Admin dashboard shows last run, firms processed, success/error counts.
 
-### 4. step4-send-weekly-reports-weekly.yml (weekly)
+### 4. weekly-step2-send-firm-weekly-reports.yml (weekly)
 ```yaml
 Cron: 0 14 * * 1  (Monday 14:00 UTC)
 Runs: curl -H "Authorization: Bearer $CRON_SECRET" $SITE_URL/api/cron/send-weekly-reports
@@ -456,7 +456,7 @@ Used by: Overview page (currently)
 ```
 Auth: Bearer $CRON_SECRET
 Returns: { sent: N, failed: M, skipped: K, errors: [...], weekStart, weekEnd, durationMs }
-Used by: GitHub Actions step4-send-weekly-reports-weekly (weekly)
+Used by: GitHub Actions weekly-step2-send-firm-weekly-reports (weekly)
 ```
 
 ## File Locations
@@ -481,10 +481,11 @@ Database:
 └── migrations/XX_trustpilot_reviews_fields.sql  ⚠️ VERIFY category+classified_at
 
 Workflows:
-├── .github/workflows/step1-sync-trustpilot-reviews-daily.yml   ✅ EXISTS
-├── .github/workflows/step2-sync-classify-reviews-daily.yml     ✅ EXISTS
-├── .github/workflows/step3-run-daily-incidents-daily.yml       ✅ EXISTS
-└── .github/workflows/step4-send-weekly-reports-weekly.yml      ✅ EXISTS
+├── .github/workflows/daily-step1-sync-firm-trustpilot-reviews.yml   ✅ EXISTS
+├── .github/workflows/daily-step2-sync-firm-classify-reviews.yml     ✅ EXISTS
+├── .github/workflows/daily-step3-sync-firm-incidents.yml            ✅ EXISTS
+├── .github/workflows/weekly-step1-generate-firm-weekly-reports.yml  ✅ EXISTS
+└── .github/workflows/weekly-step2-send-firm-weekly-reports.yml      ✅ EXISTS
 ```
 
 ## Environment Variables
@@ -564,16 +565,16 @@ Storage: Minimal (text only, ~10 MB/month)
 ### Manual Trigger (Testing)
 ```bash
 # Trigger scraper
-gh workflow run step1-sync-trustpilot-reviews-daily.yml
+gh workflow run daily-step1-sync-firm-trustpilot-reviews.yml
 
 # Trigger classifier
-gh workflow run step2-sync-classify-reviews-daily.yml
+gh workflow run daily-step2-sync-firm-classify-reviews.yml
 
 # Trigger incident detector
-gh workflow run step3-run-daily-incidents-daily.yml
+gh workflow run daily-step3-sync-firm-incidents.yml
 
 # Trigger email send
-gh workflow run step4-send-weekly-reports-weekly.yml
+gh workflow run weekly-step2-send-firm-weekly-reports.yml
 ```
 
 ### Check Status

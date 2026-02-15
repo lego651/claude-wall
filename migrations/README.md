@@ -77,7 +77,7 @@ Reference table for prop firms (migrated from `data/propfirms.json`)
 ### 2. `trustpilot_reviews`
 Stores scraped Trustpilot reviews with AI classification:
 - Review data: `firm_id`, `rating`, `title`, `review_text`, `review_date`, `trustpilot_url` (unique), `reviewer_name`
-- AI classification: `category`, `classified_at` (nullable until classified by step2-sync-classify-reviews-daily)
+- AI classification: `category`, `classified_at` (nullable until classified by daily-step2-sync-firm-classify-reviews)
 - Optional: `severity`, `confidence`, `ai_summary` (taxonomy in `lib/ai/classification-taxonomy.ts`)
 - Indexes for firm/date and unclassified queries (`classified_at IS NULL`)
 
@@ -97,7 +97,7 @@ Cached weekly intelligence reports per firm (UTC week Mon–Sun):
 Aggregated incidents from classified reviews (per firm, per week); data updated daily:
 - Columns: `firm_id`, `year`, `week_number`, `incident_type`, `severity`, `title`, `summary`, `review_count`, `review_ids`
 - Unique on `(firm_id, year, week_number, incident_type)`
-- Populated by step3-run-daily-incidents-daily workflow (script: `scripts/run-firm-daily-incidents.ts`)
+- Populated by daily-step3-sync-firm-incidents workflow (script: `scripts/run-firm-daily-incidents.ts`)
 
 ## Verification
 

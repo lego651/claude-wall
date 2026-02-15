@@ -12,16 +12,17 @@ All intelligence workflows support **workflow_dispatch** (manual trigger) in Git
 
 1. Open the repo on GitHub → **Actions**.
 2. Select the workflow in the left sidebar:
-   - **Step 1 – Sync Trustpilot Reviews (Daily)** — `step1-sync-trustpilot-reviews-daily.yml`
-   - **Step 2 – Sync Classify Reviews (Daily)** — `step2-sync-classify-reviews-daily.yml`
-   - **Step 3 – Run Daily Incidents (Daily)** — `step3-run-daily-incidents-daily.yml`
-   - **Step 4 – Send Weekly Reports (Weekly)** — `step4-send-weekly-reports-weekly.yml`
+   - **Step 1 – Sync Trustpilot Reviews (Daily)** — `daily-step1-sync-firm-trustpilot-reviews.yml`
+   - **Step 2 – Sync Classify Reviews (Daily)** — `daily-step2-sync-firm-classify-reviews.yml`
+   - **Step 3 – Sync Incidents (Daily)** — `daily-step3-sync-firm-incidents.yml`
+   - **Weekly Step 1 – Generate Firm Weekly Reports** — `weekly-step1-generate-firm-weekly-reports.yml`
+   - **Weekly Step 2 – Send Firm Weekly Reports** — `weekly-step2-send-firm-weekly-reports.yml`
 3. Click **Run workflow** → choose branch (e.g. `main`) → **Run workflow**.
 
 **Requirements:**
 
 - **Scraper / Classify / Incidents:** GitHub repo must have secrets: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY` (for classify and incidents). Scraper also needs Playwright (workflow installs Chromium).
-- **Send Weekly Reports (Step 4):** Vercel must have `CRON_SECRET`; call is `GET /api/cron/send-weekly-reports` with `Authorization: Bearer <CRON_SECRET>`. You can trigger the workflow (step4-send-weekly-reports-weekly.yml; it runs the same API via `curl` and `SITE_URL` + secret) or call the API yourself.
+- **Send Weekly Reports (Weekly Step 2):** Vercel must have `CRON_SECRET`; call is `GET /api/cron/send-weekly-reports` with `Authorization: Bearer <CRON_SECRET>`. You can trigger the workflow (weekly-step2-send-firm-weekly-reports.yml; it runs the same API via `curl` and `SITE_URL` + secret) or call the API yourself.
 
 ---
 

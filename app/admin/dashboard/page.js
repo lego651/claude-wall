@@ -1039,7 +1039,7 @@ export default function AdminDashboardPage() {
                 </div>
               </section>
             ) : (
-              <p className="text-base-content/60">No incident detection data. Run step3-run-daily-incidents-daily workflow.</p>
+              <p className="text-base-content/60">No incident detection data. Run daily-step3-sync-firm-incidents workflow.</p>
             )}
           </div>
         )}
@@ -1050,7 +1050,7 @@ export default function AdminDashboardPage() {
             <section>
               <h2 className="text-lg font-semibold mb-4">Weekly 1 – Generate reports</h2>
               <p className="text-sm text-base-content/60 mb-3">
-                Populates <code className="text-xs bg-base-200 px-1 rounded">firm_weekly_reports</code> for current week (Mon–Sun UTC). Runs Sunday 7:00 UTC (step3b-generate-weekly-reports-weekly). Weekly 2 (digest send) uses this data.
+                Populates <code className="text-xs bg-base-200 px-1 rounded">firm_weekly_reports</code> for current week (Mon–Sun UTC). Runs Sunday 7:00 UTC (weekly-step1-generate-firm-weekly-reports). Weekly 2 (digest send) uses this data.
               </p>
               <div className="card card-border bg-base-100 shadow overflow-hidden">
                 <div className="card-body">
@@ -1112,12 +1112,12 @@ export default function AdminDashboardPage() {
                             )}
                           </>
                         ) : (
-                          <p className="text-base-content/60 text-sm">No run recorded yet. Trigger step3b-generate-weekly-reports-weekly to populate.</p>
+                          <p className="text-base-content/60 text-sm">No run recorded yet. Trigger weekly-step1-generate-firm-weekly-reports to populate.</p>
                         )}
                       </div>
                     </>
                   ) : (
-                    <p className="text-base-content/60 text-sm">No run recorded yet. Trigger step3b-generate-weekly-reports-weekly to populate.</p>
+                    <p className="text-base-content/60 text-sm">No run recorded yet. Trigger weekly-step1-generate-firm-weekly-reports to populate.</p>
                   )}
                 </div>
               </div>
@@ -1191,11 +1191,11 @@ export default function AdminDashboardPage() {
               </section>
             )}
 
-            {/* Weekly 2: Email send – last run from step4-send-weekly-reports-weekly */}
+            {/* Weekly 2: Email send – last run from weekly-step2-send-firm-weekly-reports */}
             <section>
                 <h2 className="text-lg font-semibold mb-4">Weekly 2 – Email send</h2>
                 <p className="text-sm text-base-content/60 mb-3">
-                  Sends digest emails to subscribers via Resend. Runs Sunday 8:00 UTC (step4-send-weekly-reports-weekly). Uses <code className="text-xs bg-base-200 px-1 rounded">firm_weekly_reports</code> from Weekly 1.
+                  Sends digest emails to subscribers via Resend. Runs Sunday 8:00 UTC (weekly-step2-send-firm-weekly-reports). Uses <code className="text-xs bg-base-200 px-1 rounded">firm_weekly_reports</code> from Weekly 1.
                 </p>
                 <div className="card card-border bg-base-100 shadow overflow-hidden">
                   <div className="card-body">
@@ -1249,7 +1249,7 @@ export default function AdminDashboardPage() {
                               )}
                             </>
                           ) : (
-                            <p className="text-base-content/60 text-sm">No run recorded yet. Trigger step4-send-weekly-reports-weekly to populate.</p>
+                            <p className="text-base-content/60 text-sm">No run recorded yet. Trigger weekly-step2-send-firm-weekly-reports to populate.</p>
                           )}
                         </div>
                       </>
@@ -1268,7 +1268,7 @@ export default function AdminDashboardPage() {
             <section>
                 <h2 className="text-lg font-semibold mb-4">Daily 1 – Scrape</h2>
                 <p className="text-sm text-base-content/60 mb-3">
-                  Trustpilot scraping. Daily run via GitHub Actions (step1-sync-trustpilot-reviews-daily). Last run per firm below.
+                  Trustpilot scraping. Daily run via GitHub Actions (daily-step1-sync-firm-trustpilot-reviews). Last run per firm below.
                 </p>
                 <div className="card card-border bg-base-100 shadow overflow-hidden">
                   <div className="overflow-x-auto">

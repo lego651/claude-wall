@@ -1,16 +1,16 @@
-# Step 3b — Generate Weekly Reports (Weekly)
+# Weekly Step 1 — Generate Firm Weekly Reports
 #
-# Pipeline order: step1 → step2 → step3 → step3b (weekly) → step4.
-# Runs every Sunday at 7:00 UTC (1 hour before step4 send at 8:00 UTC).
-# Populates firm_weekly_reports for current week (Mon–Sun UTC) so step4 has content to send.
+# Pipeline order: daily-step1/2/3 (daily) → weekly-step1 → weekly-step2. Schedule: weekly.
+# Runs every Sunday at 7:00 UTC (1 hour before weekly-step2 send at 8:00 UTC).
+# Populates firm_weekly_reports for current week (Mon–Sun UTC) so weekly-step2 has content to send.
 #
 # Requires repo secrets: OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
-name: Step 3b – Generate Weekly Reports (Weekly)
+name: Weekly Step 1 – Generate Firm Weekly Reports
 
 on:
   schedule:
-    # Sunday 7:00 UTC (1 hour before step4 at 8:00 UTC)
+    # Sunday 7:00 UTC (1 hour before weekly-step2 at 8:00 UTC)
     - cron: "0 7 * * 0"
   workflow_dispatch:
 
@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Generate weekly reports (last week)
+      - name: Generate firm weekly reports (current week)
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}

@@ -1,15 +1,15 @@
-# Step 4 — Send Weekly Reports (Weekly)
+# Weekly Step 2 — Send Firm Weekly Reports
 #
-# Pipeline order: step1 → step2 → step3 → step3b (weekly) → step4. Schedule: weekly (Sunday 8:00 UTC).
+# Pipeline order: daily-step1/2/3 (daily) → weekly-step1 → weekly-step2. Schedule: weekly (Sunday 8:00 UTC).
 #
 # Runs every Sunday at 8:00 UTC. Sends digest emails for the current week (Mon–Sun UTC).
-# Step 3b (Sunday 7:00 UTC) populates firm_weekly_reports for that week first.
+# Weekly Step 1 (Sunday 7:00 UTC) populates firm_weekly_reports for that week first.
 #
 # Requires repo secrets:
 #   CRON_SECRET – must match CRON_SECRET in Vercel env (for Authorization: Bearer)
 #   SITE_URL – production base URL (e.g. https://your-app.vercel.app)
 
-name: Step 4 – Send Weekly Reports (Weekly)
+name: Weekly Step 2 – Send Firm Weekly Reports
 
 on:
   schedule:
