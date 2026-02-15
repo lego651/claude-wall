@@ -11,6 +11,78 @@ function formatBytes(n) {
   return `${n} B`;
 }
 
+/** Compute overall dashboard status and list of issues for the summary banner. */
+function getSummaryStatus(data) {
+  if (!data) return { status: "unknown", issues: [], label: "No data" };
+  const issues = [];
+  let hasCritical = false;
+  let hasWarning = false;
+
+  // Checks
+  const fileStatus = data.checks?.fileSize?.status;
+  if (fileStatus === "critical") {
+    hasCritical = true;
+    issues.push("File size critical (≥10 MB)");
+  } else if (fileStatus === "warning") {
+    hasWarning = true;
+    issues.push("File size warning (≥5 MB)");
+  }
+  const arbStatus = data.checks?.arbiscan?.status;
+  if (arbStatus === "critical") {
+    hasCritical = true;
+    issues.push("Arbiscan usage ≥95%");
+  } else if (arbStatus === "warning") {
+    hasWarning = true;
+    issues.push("Arbiscan usage ≥80%");
+  }
+  if (data.checks?.supabase?.status === "critical") {
+    hasCritical = true;
+    issues.push("Database check failed");
+  }
+  const propStatus = data.checks?.propfirmsData?.status;
+  if (propStatus === "critical") {
+    hasCritical = true;
+    issues.push("Prop firms payout data critical");
+  } else if (propStatus === "warning") {
+    hasWarning = true;
+    issues.push("Prop firms payout data warning");
+  }
+
+  // Step 1: Scraper
+  const firms = data.trustpilotScraper?.firms ?? [];
+  const scraperTimestamps = firms.map((f) => f.last_scraper_run_at).filter(Boolean);
+  const lastScraperRun = scraperTimestamps.length ? Math.max(...scraperTimestamps.map((t) => new Date(t).getTime())) : null;
+  const hoursSinceScraper = lastScraperRun ? (Date.now() - lastScraperRun) / (1000 * 60 * 60) : Infinity;
+  if (!lastScraperRun) {
+    hasCritical = true;
+    issues.push("Step 1: Scraper never run");
+  } else if (hoursSinceScraper > 25) {
+    hasWarning = true;
+    issues.push(`Step 1: Scraper stale (${Math.round(hoursSinceScraper)}h ago)`);
+  }
+
+  // Step 2: Classifier backlog
+  const unclassified = data.classifyReviews?.unclassified ?? 0;
+  if (unclassified > 1000) {
+    hasCritical = true;
+    issues.push(`Step 2: Classifier backlog critical (${unclassified} unclassified)`);
+  } else if (unclassified > 500) {
+    hasWarning = true;
+    issues.push(`Step 2: Classifier backlog (${unclassified} unclassified)`);
+  }
+
+  // Step 4: Weekly email failures
+  const failed = data.weeklyEmailReport?.failed ?? 0;
+  if (failed > 0 && data.weeklyEmailReport?.lastRunAt) {
+    hasWarning = true;
+    issues.push(`Step 4: Last email run had ${failed} failed`);
+  }
+
+  const status = hasCritical ? "critical" : hasWarning ? "warning" : "ok";
+  const label = hasCritical ? "Critical" : hasWarning ? "Warning" : "All good";
+  return { status, issues, label };
+}
+
 function metricsToCSV(data) {
   const rows = [];
   rows.push("metric,value");
@@ -77,6 +149,57 @@ export default function AdminDashboardPage() {
   const [classifyRunResult, setClassifyRunResult] = useState(null);
   const [classifyRunLoading, setClassifyRunLoading] = useState(false);
   const [classifyLimit, setClassifyLimit] = useState(40);
+  const [activeTab, setActiveTab] = useState("system");
+
+  const summary = getSummaryStatus(data);
+  const TAB_IDS = ["system", "step1", "step2", "step3", "step4", "payouts"];
+  /** Map summary issue text to tab id for "go to" links. */
+  const getTabForIssue = (msg) => {
+    if (!msg) return null;
+    if (msg.startsWith("Step 1") || msg.includes("Scraper")) return "step1";
+    if (msg.startsWith("Step 2") || msg.includes("Classifier")) return "step2";
+    if (msg.startsWith("Step 3")) return "step3";
+    if (msg.startsWith("Step 4") || msg.includes("email")) return "step4";
+    if (msg.includes("Prop firms") || msg.includes("Arbiscan") || msg.includes("File size")) return "payouts";
+    if (msg.includes("Database")) return "system";
+    return null;
+  };
+  const TAB_LABELS = {
+    system: "System",
+    step1: "Step 1 – Scrape",
+    step2: "Step 2 – Classify",
+    step3: "Step 3 – Incidents",
+    step4: "Step 4 – Digest",
+    payouts: "Payouts & data",
+  };
+
+  /** Format last run for tab: relative (e.g. "2h ago") or short date if older. */
+  const formatLastRun = (iso) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    const diffMs = Date.now() - d.getTime();
+    const diffM = diffMs / (60 * 1000);
+    const diffH = diffMs / (60 * 60 * 1000);
+    const diffD = diffMs / (24 * 60 * 60 * 1000);
+    if (diffM < 60) return `${Math.round(diffM)}m ago`;
+    if (diffH < 24) return `${Math.round(diffH)}h ago`;
+    if (diffD < 7) return `${Math.round(diffD)}d ago`;
+    return d.toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" });
+  };
+
+  /** Last run per step for nav tabs (system/payouts have no single "run"). */
+  const getTabLastRun = (tabId) => {
+    if (!data) return null;
+    if (tabId === "step1") {
+      const times = data.trustpilotScraper?.firms?.map((f) => f.last_scraper_run_at).filter(Boolean) || [];
+      if (!times.length) return null;
+      return new Date(Math.max(...times.map((t) => new Date(t).getTime()))).toISOString();
+    }
+    if (tabId === "step2") return classifyStatus?.lastClassifiedAt ?? null;
+    if (tabId === "step3") return data.incidentDetection?.lastRunAt ?? null;
+    if (tabId === "step4") return data.weeklyEmailReport?.lastRunAt ?? null;
+    return null;
+  };
 
   const fetchMetrics = useCallback(async () => {
     try {
@@ -214,7 +337,91 @@ export default function AdminDashboardPage() {
           <div className="text-base-content/70">No metrics available.</div>
         )}
 
-        {data?.alerts && (
+        {/* Overall status summary */}
+        {data && (
+          <div className="mb-6">
+            <div
+              className={`rounded-xl border-2 p-4 sm:p-5 ${
+                summary.status === "critical"
+                  ? "border-error bg-error/10"
+                  : summary.status === "warning"
+                    ? "border-warning bg-warning/10"
+                    : "border-success bg-success/10"
+              }`}
+            >
+              <div className="flex flex-wrap items-center gap-4">
+                <span
+                  className={`text-xl font-bold ${
+                    summary.status === "critical"
+                      ? "text-error"
+                      : summary.status === "warning"
+                        ? "text-warning"
+                        : "text-success"
+                  }`}
+                >
+                  {summary.status === "critical" ? "🔴 Critical" : summary.status === "warning" ? "🟡 Warning" : "🟢 All good"}
+                </span>
+                <span className="text-base-content/80 font-medium">{summary.label}</span>
+                {summary.issues.length > 0 && (
+                  <ul className="list-disc list-inside text-sm text-base-content/70 mt-1 flex-1 space-y-0.5">
+                    {summary.issues.slice(0, 6).map((msg, i) => {
+                      const tabId = getTabForIssue(msg);
+                      return (
+                        <li key={i}>
+                          {tabId ? (
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab(tabId)}
+                              className="link link-hover text-left font-medium underline-offset-2 hover:underline"
+                            >
+                              {msg}
+                              <span className="ml-1 text-xs opacity-70">→ {TAB_LABELS[tabId]}</span>
+                            </button>
+                          ) : (
+                            msg
+                          )}
+                        </li>
+                      );
+                    })}
+                    {summary.issues.length > 6 && <li>… and {summary.issues.length - 6} more</li>}
+                  </ul>
+                )}
+              </div>
+            </div>
+            {/* Navigation tabs */}
+            <p className="text-xs font-medium text-base-content/50 uppercase tracking-wider mt-6 mb-2">Sections</p>
+            <nav role="tablist" aria-label="Dashboard sections" className="flex flex-wrap gap-0 border border-base-300 rounded-lg overflow-hidden bg-base-200/60 divide-x divide-base-300">
+              {TAB_IDS.map((id) => {
+                const lastRun = getTabLastRun(id);
+                return (
+                  <button
+                    key={id}
+                    role="tab"
+                    type="button"
+                    aria-selected={activeTab === id}
+                    className={`flex-1 min-w-0 px-3 py-2.5 text-sm font-medium transition-colors first:rounded-l-lg last:rounded-r-lg flex flex-col items-center gap-0.5 ${
+                      activeTab === id
+                        ? "bg-primary text-primary-content"
+                        : "bg-base-200/50 text-base-content/80 hover:bg-base-300"
+                    }`}
+                    onClick={() => setActiveTab(id)}
+                  >
+                    <span>{TAB_LABELS[id]}</span>
+                    {(id.startsWith("step") && (lastRun != null ? (
+                      <span className={`text-[10px] font-normal ${activeTab === id ? "opacity-90" : "text-base-content/50"}`} title={lastRun ? new Date(lastRun).toLocaleString() : ""}>
+                        Last: {formatLastRun(lastRun)}
+                      </span>
+                    ) : (
+                      <span className={`text-[10px] font-normal ${activeTab === id ? "opacity-70" : "text-base-content/40"}`}>Last: —</span>
+                    ))) || null}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        )}
+
+        {data?.alerts && activeTab === "system" && (
           <section className="mb-8">
             <h2 className="text-lg font-semibold mb-4">Critical email alerts</h2>
             <div className="card card-border bg-base-100 shadow">
@@ -266,7 +473,7 @@ export default function AdminDashboardPage() {
         )}
 
         {/* Intelligence pipeline alerts (TICKET-014) — green OK, yellow warning, red critical */}
-        {data && (data.trustpilotScraper?.firms?.length > 0 || data.classifyReviews != null) && (
+        {data && activeTab === "system" && (data.trustpilotScraper?.firms?.length > 0 || data.classifyReviews != null) && (
           <section className="mb-8">
             <h2 className="text-lg font-semibold mb-4">Intelligence pipeline alerts</h2>
             <div className="card card-border bg-base-100 shadow">
@@ -335,110 +542,146 @@ export default function AdminDashboardPage() {
           </section>
         )}
 
-        {data?.checks && (
+        {data?.checks && activeTab === "system" && (
           <section className="mb-8">
             <h2 className="text-lg font-semibold mb-4">Verification checks</h2>
             <div className="card card-border bg-base-100 shadow">
               <div className="card-body">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {Object.entries(data.checks.config || {}).map(([key, c]) => (
-                    <div key={key} className="flex items-center justify-between gap-2">
-                      <span className="text-sm">{c.label}</span>
-                      <span className={`badge ${c.set ? "badge-success" : "badge-ghost"}`}>
-                        {c.set ? "Set" : "Not set"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="divider my-2" />
-                <div className="flex flex-wrap gap-4 items-center">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">{data.checks.fileSize?.label ?? "File size"}</span>
-                    <span
-                      className={`badge ${
-                        data.checks.fileSize?.status === "critical"
-                          ? "badge-error"
-                          : data.checks.fileSize?.status === "warning"
-                            ? "badge-warning"
-                            : "badge-success"
-                      }`}
-                    >
-                      {data.checks.fileSize?.status ?? "—"}
-                    </span>
-                    {data.checks.fileSize?.maxFileBytes != null && data.checks.fileSize.maxFileBytes > 0 && (
-                      <span className="text-xs text-base-content/60">
-                        max {formatBytes(data.checks.fileSize.maxFileBytes)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">{data.checks.arbiscan?.label ?? "Arbiscan"}</span>
-                    <span
-                      className={`badge ${
-                        data.checks.arbiscan?.status === "critical"
-                          ? "badge-error"
-                          : data.checks.arbiscan?.status === "warning"
-                            ? "badge-warning"
-                            : "badge-success"
-                      }`}
-                    >
-                      {data.checks.arbiscan?.status ?? "—"}
-                    </span>
-                    {data.checks.arbiscan?.percentage != null && (
-                      <span className="text-xs text-base-content/60">{data.checks.arbiscan.percentage}%</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">{data.checks.supabase?.label ?? "Database"}</span>
-                    <span
-                      className={`badge ${
-                        data.checks.supabase?.status === "critical" ? "badge-error" : "badge-success"
-                      }`}
-                    >
-                      {data.checks.supabase?.status ?? "—"}
-                    </span>
-                    {data.checks.supabase?.latencyMs != null && (
-                      <span className="text-xs text-base-content/60">{data.checks.supabase.latencyMs} ms</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">{data.checks.cacheConfigured?.label ?? "Cache"}</span>
-                    <span className={`badge ${data.checks.cacheConfigured?.set ? "badge-success" : "badge-ghost"}`}>
-                      {data.checks.cacheConfigured?.set ? "Configured" : "Not set"}
-                    </span>
-                  </div>
-                  {data.checks.propfirmsData && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">{data.checks.propfirmsData.label ?? "Prop firms data"}</span>
-                      <span
-                        className={`badge ${
-                          data.checks.propfirmsData.status === "critical"
-                            ? "badge-error"
-                            : data.checks.propfirmsData.status === "warning"
-                              ? "badge-warning"
-                              : "badge-success"
-                        }`}
-                      >
-                        {data.checks.propfirmsData.status ?? "ok"}
-                      </span>
-                      {data.checks.propfirmsData.firmsWithIssues?.length > 0 && (
-                        <span className="text-xs text-base-content/60">
-                          {data.checks.propfirmsData.firmsWithIssues.length} firm(s) with issues
-                        </span>
+                <div className="overflow-x-auto">
+                  <table className="table table-sm">
+                    <thead>
+                      <tr>
+                        <th className="font-medium">Check</th>
+                        <th className="font-medium w-28">Status</th>
+                        <th className="font-medium w-40 text-right">Where to look</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(data.checks.config || {}).map(([key, c]) => (
+                        <tr key={key}>
+                          <td>{c.label}</td>
+                          <td>
+                            <span className={`badge badge-sm ${c.set ? "badge-success" : "badge-ghost"}`}>
+                              {c.set ? "Set" : "Not set"}
+                            </span>
+                          </td>
+                          <td className="text-right text-base-content/50 text-xs">—</td>
+                        </tr>
+                      ))}
+                      <tr>
+                        <td>{data.checks.fileSize?.label ?? "File size"}</td>
+                        <td>
+                          <span
+                            className={`badge badge-sm ${
+                              data.checks.fileSize?.status === "critical"
+                                ? "badge-error"
+                                : data.checks.fileSize?.status === "warning"
+                                  ? "badge-warning"
+                                  : "badge-success"
+                            }`}
+                          >
+                            {data.checks.fileSize?.status ?? "—"}
+                          </span>
+                          {data.checks.fileSize?.maxFileBytes != null && data.checks.fileSize.maxFileBytes > 0 && (
+                            <span className="ml-1 text-xs text-base-content/60">{formatBytes(data.checks.fileSize.maxFileBytes)}</span>
+                          )}
+                        </td>
+                        <td className="text-right">
+                          <button type="button" onClick={() => setActiveTab("payouts")} className="link link-hover text-xs">
+                            Payouts → files
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>{data.checks.arbiscan?.label ?? "Arbiscan"}</td>
+                        <td>
+                          <span
+                            className={`badge badge-sm ${
+                              data.checks.arbiscan?.status === "critical"
+                                ? "badge-error"
+                                : data.checks.arbiscan?.status === "warning"
+                                  ? "badge-warning"
+                                  : "badge-success"
+                            }`}
+                          >
+                            {data.checks.arbiscan?.status ?? "—"}
+                          </span>
+                          {data.checks.arbiscan?.percentage != null && (
+                            <span className="ml-1 text-xs">{data.checks.arbiscan.percentage}%</span>
+                          )}
+                        </td>
+                        <td className="text-right">
+                          <button type="button" onClick={() => setActiveTab("payouts")} className="link link-hover text-xs">
+                            Payouts → Arbiscan
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>{data.checks.supabase?.label ?? "Database"}</td>
+                        <td>
+                          <span className={`badge badge-sm ${data.checks.supabase?.status === "critical" ? "badge-error" : "badge-success"}`}>
+                            {data.checks.supabase?.status ?? "—"}
+                          </span>
+                          {data.checks.supabase?.latencyMs != null && (
+                            <span className="ml-1 text-xs">{data.checks.supabase.latencyMs} ms</span>
+                          )}
+                        </td>
+                        <td className="text-right text-base-content/50 text-xs">This tab (below)</td>
+                      </tr>
+                      <tr>
+                        <td>{data.checks.cacheConfigured?.label ?? "Cache"}</td>
+                        <td>
+                          <span className={`badge badge-sm ${data.checks.cacheConfigured?.set ? "badge-success" : "badge-ghost"}`}>
+                            {data.checks.cacheConfigured?.set ? "Configured" : "Not set"}
+                          </span>
+                        </td>
+                        <td className="text-right text-base-content/50 text-xs">This tab (below)</td>
+                      </tr>
+                      {data.checks.propfirmsData && (
+                        <tr>
+                          <td>{data.checks.propfirmsData.label ?? "Prop firms payout data"}</td>
+                          <td>
+                            <span
+                              className={`badge badge-sm ${
+                                data.checks.propfirmsData.status === "critical"
+                                  ? "badge-error"
+                                  : data.checks.propfirmsData.status === "warning"
+                                    ? "badge-warning"
+                                    : "badge-success"
+                              }`}
+                            >
+                              {data.checks.propfirmsData.status ?? "ok"}
+                            </span>
+                            {data.checks.propfirmsData.firmsWithIssues?.length > 0 && (
+                              <span className="ml-1 text-xs text-base-content/60">
+                                {data.checks.propfirmsData.firmsWithIssues.length} firm(s)
+                              </span>
+                            )}
+                          </td>
+                          <td className="text-right">
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("payouts")}
+                              className="link link-hover text-xs font-medium"
+                            >
+                              View in Payouts tab →
+                            </button>
+                          </td>
+                        </tr>
                       )}
-                    </div>
-                  )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
           </section>
         )}
 
-        {data && (
+        {data && activeTab === "payouts" && (
           <div className="space-y-8">
             {/* Prop firms payout data – chart table: cols = firms, rows = time ranges */}
-            {data.propfirmsData && (
-              <section>
+            {data.propfirmsData ? (
+            <section>
                 <h2 className="text-lg font-semibold mb-4">Prop firms payout data</h2>
                 <div className="card card-border bg-base-100 shadow">
                   <div className="card-body">
@@ -566,8 +809,78 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
               </section>
-            )}
+            ) : null}
+            {/* Arbiscan */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Arbiscan API</h2>
+              <div className="stats stats-vertical sm:stats-horizontal shadow w-full bg-base-100">
+                <div className="stat">
+                  <div className="stat-title">Calls today</div>
+                  <div className="stat-value text-primary">{data.arbiscan?.calls ?? "—"}</div>
+                </div>
+                <div className="stat">
+                  <div className="stat-title">Daily limit</div>
+                  <div className="stat-value">{data.arbiscan?.limit ?? "—"}</div>
+                </div>
+                <div className="stat">
+                  <div className="stat-title">Usage %</div>
+                  <div className={`stat-value ${(data.arbiscan?.percentage ?? 0) >= 80 ? "text-error" : ""}`}>
+                    {data.arbiscan?.percentage != null ? `${data.arbiscan.percentage}%` : "—"}
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-base-content/50 mt-2">
+                Count is per process (in-memory). On serverless, this often shows 0 because the instance serving this page may not have made any Arbiscan requests today. Sync/cron runs that call Arbiscan run in other instances.
+              </p>
+            </section>
+            {/* Payout files */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Payout files (data/propfirms)</h2>
+              <div className="card card-border bg-base-100 shadow">
+                <div className="card-body">
+                  <div className="flex flex-wrap gap-6">
+                    <div>
+                      <span className="text-base-content/60">Total size: </span>
+                      <strong>{data.files?.totalMB != null ? `${data.files.totalMB} MB` : "—"}</strong>
+                    </div>
+                    <div>
+                      <span className="text-base-content/60">Files: </span>
+                      <strong>{data.files?.totalFiles ?? "—"}</strong>
+                    </div>
+                  </div>
+                  {data.files?.error && (
+                    <p className="text-error text-sm mt-2">{data.files.error}</p>
+                  )}
+                  {data.files?.largest?.length > 0 && (
+                    <div className="overflow-x-auto mt-4">
+                      <table className="table table-sm">
+                        <thead>
+                          <tr>
+                            <th>Path</th>
+                            <th>Size</th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.files.largest.map((f) => (
+                            <tr key={f.path}>
+                              <td className="font-mono text-xs">{f.path}</td>
+                              <td>{formatBytes(f.bytes)}</td>
+                              <td>{f.over5MB ? <span className="badge badge-warning">&gt;5MB</span> : null}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          </div>
+        )}
 
+        {data && activeTab === "step2" && (
+          <div className="space-y-8">
             {/* Review classification (Trustpilot) */}
             <section>
               <h2 className="text-lg font-semibold mb-4">Review classification</h2>
@@ -577,6 +890,14 @@ export default function AdminDashboardPage() {
               <div className="card card-border bg-base-100 shadow overflow-hidden">
                 <div className="card-body">
                   <div className="flex flex-wrap items-end gap-4 mb-4">
+                    <div>
+                      <span className="text-base-content/60 text-sm block">Last run</span>
+                      <p className="font-mono text-sm">
+                        {classifyStatus?.lastClassifiedAt
+                          ? new Date(classifyStatus.lastClassifiedAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
+                          : "—"}
+                      </p>
+                    </div>
                     <div>
                       <span className="text-base-content/60 text-sm block">Total reviews</span>
                       <p className="font-semibold text-lg">{classifyStatus?.totalReviews ?? "—"}</p>
@@ -650,19 +971,32 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
             </section>
+          </div>
+        )}
 
-            {/* Incident detection (daily, after classifier) */}
-            {data.incidentDetection && (
-              <section>
+        {data && activeTab === "step3" && (
+          <div className="space-y-8">
+            {data.incidentDetection ? (
+            <section>
                 <h2 className="text-lg font-semibold mb-4">Incident detection</h2>
                 <p className="text-sm text-base-content/60 mb-3">
                   {data.incidentDetection.note ?? 'Run daily at 5 AM PST (13:00 UTC), 1 hour after classifier. Pipeline: scrape → classify → incidents.'}
                 </p>
                 <div className="card card-border bg-base-100 shadow overflow-hidden">
                   <div className="card-body">
-                    <div className="mb-3">
-                      <span className="text-base-content/60 text-sm">Current week</span>
-                      <p className="font-semibold">{data.incidentDetection.currentWeek?.weekLabel ?? '—'}</p>
+                    <div className="flex flex-wrap items-end gap-6 mb-3">
+                      <div>
+                        <span className="text-base-content/60 text-sm block">Last run</span>
+                        <p className="font-mono text-sm">
+                          {data.incidentDetection.lastRunAt
+                            ? new Date(data.incidentDetection.lastRunAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
+                            : "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-base-content/60 text-sm block">Current week</span>
+                        <p className="font-semibold">{data.incidentDetection.currentWeek?.weekLabel ?? "—"}</p>
+                      </div>
                     </div>
                     {data.incidentDetection.firms?.length > 0 ? (
                       <div className="overflow-x-auto">
@@ -691,8 +1025,31 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
               </section>
+            ) : (
+              <p className="text-base-content/60">No incident detection data. Run step3-run-daily-incidents-daily workflow.</p>
             )}
+          </div>
+        )}
 
+        {data && activeTab === "step4" && (
+          <div className="space-y-8">
+            {/* Step 4 last run summary */}
+            <div className="flex flex-wrap items-end gap-6 p-3 rounded-lg bg-base-200/60">
+              <div>
+                <span className="text-base-content/60 text-sm block">Last run</span>
+                <p className="font-mono text-sm">
+                  {data.weeklyEmailReport?.lastRunAt
+                    ? new Date(data.weeklyEmailReport.lastRunAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
+                    : "—"}
+                </p>
+              </div>
+              {data.weeklyEmailReport?.weekStart && data.weeklyEmailReport?.weekEnd && (
+                <div>
+                  <span className="text-base-content/60 text-sm block">Week</span>
+                  <p className="font-mono text-sm">{data.weeklyEmailReport.weekStart} → {data.weeklyEmailReport.weekEnd}</p>
+                </div>
+              )}
+            </div>
             {/* Intelligence feed (weekly reports + digest) */}
             {data.intelligenceFeed && (
               <section>
@@ -758,8 +1115,7 @@ export default function AdminDashboardPage() {
             )}
 
             {/* Weekly email send – last run from step4-send-weekly-reports-weekly */}
-            {data && (
-              <section>
+            <section>
                 <h2 className="text-lg font-semibold mb-4">Weekly email send</h2>
                 <p className="text-sm text-base-content/60 mb-3">
                   Last run of the digest cron (step4-send-weekly-reports-weekly). Runs Monday 14:00 UTC.
@@ -826,11 +1182,13 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
               </section>
-            )}
+            </div>
+        )}
 
-            {/* Trustpilot scraping (daily GitHub Actions) */}
-            {data.trustpilotScraper?.firms?.length > 0 && (
-              <section>
+        {data && activeTab === "step1" && (
+          <div className="space-y-8">
+            {data.trustpilotScraper?.firms?.length > 0 ? (
+            <section>
                 <h2 className="text-lg font-semibold mb-4">Trustpilot scraping</h2>
                 <p className="text-sm text-base-content/60 mb-3">
                   Daily run via GitHub Actions (step1-sync-trustpilot-reviews-daily). Last run per firm below.
@@ -895,88 +1253,35 @@ export default function AdminDashboardPage() {
                   )}
                 </div>
               </section>
+            ) : (
+              <p className="text-base-content/60">No firms with Trustpilot URL. Configure firms to see scraper runs.</p>
             )}
+          </div>
+        )}
 
-            {/* Arbiscan */}
-            <section>
-              <h2 className="text-lg font-semibold mb-4">Arbiscan API</h2>
-              <div className="stats stats-vertical sm:stats-horizontal shadow w-full bg-base-100">
-                <div className="stat">
-                  <div className="stat-title">Calls today</div>
-                  <div className="stat-value text-primary">{data.arbiscan?.calls ?? "—"}</div>
-                </div>
-                <div className="stat">
-                  <div className="stat-title">Daily limit</div>
-                  <div className="stat-value">{data.arbiscan?.limit ?? "—"}</div>
-                </div>
-                <div className="stat">
-                  <div className="stat-title">Usage %</div>
-                  <div className={`stat-value ${(data.arbiscan?.percentage ?? 0) >= 80 ? "text-error" : ""}`}>
-                    {data.arbiscan?.percentage != null ? `${data.arbiscan.percentage}%` : "—"}
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Files */}
-            <section>
-              <h2 className="text-lg font-semibold mb-4">Payout files (data/propfirms)</h2>
-              <div className="card card-border bg-base-100 shadow">
-                <div className="card-body">
-                  <div className="flex flex-wrap gap-6">
-                    <div>
-                      <span className="text-base-content/60">Total size: </span>
-                      <strong>{data.files?.totalMB != null ? `${data.files.totalMB} MB` : "—"}</strong>
-                    </div>
-                    <div>
-                      <span className="text-base-content/60">Files: </span>
-                      <strong>{data.files?.totalFiles ?? "—"}</strong>
-                    </div>
-                  </div>
-                  {data.files?.error && (
-                    <p className="text-error text-sm mt-2">{data.files.error}</p>
-                  )}
-                  {data.files?.largest?.length > 0 && (
-                    <div className="overflow-x-auto mt-4">
-                      <table className="table table-sm">
-                        <thead>
-                          <tr>
-                            <th>Path</th>
-                            <th>Size</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {data.files.largest.map((f) => (
-                            <tr key={f.path}>
-                              <td className="font-mono text-xs">{f.path}</td>
-                              <td>{formatBytes(f.bytes)}</td>
-                              <td>{f.over5MB ? <span className="badge badge-warning">&gt;5MB</span> : null}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-
+        {data && activeTab === "system" && (
+          <div className="space-y-8">
             {/* Database */}
             <section>
               <h2 className="text-lg font-semibold mb-4">Database (row counts)</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {data.database &&
-                  Object.entries(data.database).map(([table, count]) => (
-                    <div key={table} className="card card-border bg-base-100 shadow">
-                      <div className="card-body py-4">
-                        <div className="stat padding-0">
-                          <div className="stat-title text-xs">{table}</div>
-                          <div className="stat-value text-lg">{count != null ? count.toLocaleString() : "—"}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              <div className="overflow-x-auto">
+                <table className="table table-sm table-border w-full max-w-md">
+                  <thead>
+                    <tr>
+                      <th className="font-medium">Table</th>
+                      <th className="text-right font-medium">Rows</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.database &&
+                      Object.entries(data.database).map(([table, count]) => (
+                        <tr key={table}>
+                          <td className="font-mono text-sm">{table}</td>
+                          <td className="text-right tabular-nums">{count != null ? count.toLocaleString() : "—"}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
               </div>
             </section>
 

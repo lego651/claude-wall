@@ -30,16 +30,20 @@ export async function GET() {
   const [
     { count: total },
     { count: classifiedCount },
+    { data: latestRow },
   ] = await Promise.all([
     supabase.from('trustpilot_reviews').select('*', { count: 'exact', head: true }),
     supabase.from('trustpilot_reviews').select('*', { count: 'exact', head: true }).not('classified_at', 'is', null),
+    supabase.from('trustpilot_reviews').select('classified_at').not('classified_at', 'is', null).order('classified_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
 
   const unclassifiedCount = total != null && classifiedCount != null ? total - classifiedCount : null;
+  const lastClassifiedAt = latestRow?.classified_at ?? null;
 
   return NextResponse.json({
     totalReviews: total ?? 0,
     classifiedCount: classifiedCount ?? 0,
     unclassifiedCount: unclassifiedCount ?? 0,
+    lastClassifiedAt: lastClassifiedAt ? new Date(lastClassifiedAt).toISOString() : null,
   });
 }

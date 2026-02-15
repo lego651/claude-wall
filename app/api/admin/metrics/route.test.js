@@ -168,6 +168,15 @@ describe('GET /api/admin/metrics', () => {
         return {
           select: jest.fn().mockImplementation((cols, opts) => {
             if (opts && opts.head === true) return Promise.resolve({ count: 0, error: null });
+            if (cols === 'created_at') {
+              return {
+                order: jest.fn().mockReturnValue({
+                  limit: jest.fn().mockReturnValue({
+                    maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+                  }),
+                }),
+              };
+            }
             return {
               eq: jest.fn().mockReturnValue({
                 eq: jest.fn().mockResolvedValue({ data: [], error: null }),

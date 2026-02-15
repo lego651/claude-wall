@@ -24,16 +24,26 @@ async function getIncidentDetectionStatus(supabase, trustpilotFirms) {
   const weekLabel = `${year}-W${String(weekNumber).padStart(2, '0')}`;
 
   let rows = [];
+  let lastRunAt = null;
   try {
-    const { data, error } = await supabase
-      .from('weekly_incidents')
-      .select('firm_id')
-      .eq('week_number', weekNumber)
-      .eq('year', year);
-    if (error) return { currentWeek: { weekNumber, year, weekLabel }, firms: [], error: error.message };
+    const [{ data, error }, { data: latestRow }] = await Promise.all([
+      supabase
+        .from('weekly_incidents')
+        .select('firm_id')
+        .eq('week_number', weekNumber)
+        .eq('year', year),
+      supabase
+        .from('weekly_incidents')
+        .select('created_at')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    if (error) return { currentWeek: { weekNumber, year, weekLabel }, firms: [], lastRunAt: null, error: error.message };
     rows = data || [];
+    lastRunAt = latestRow?.created_at ? new Date(latestRow.created_at).toISOString() : null;
   } catch (e) {
-    return { currentWeek: { weekNumber, year, weekLabel }, firms: [], error: e.message };
+    return { currentWeek: { weekNumber, year, weekLabel }, firms: [], lastRunAt: null, error: e.message };
   }
 
   const countByFirm = new Map();
@@ -48,7 +58,7 @@ async function getIncidentDetectionStatus(supabase, trustpilotFirms) {
     incidentCount: countByFirm.get(f.id) ?? 0,
   }));
 
-  return { currentWeek: { weekNumber, year, weekLabel }, firms };
+  return { currentWeek: { weekNumber, year, weekLabel }, firms, lastRunAt };
 }
 
 /** Unclassified review count for classifier backlog alert (TICKET-014). */
@@ -490,6 +500,7 @@ export async function GET() {
     incidentDetection: {
       currentWeek: incidentDetection.currentWeek,
       firms: incidentDetection.firms,
+      lastRunAt: incidentDetection.lastRunAt ?? null,
       note: 'Run daily at 5 AM PST (13:00 UTC), 1 hour after classifier. Pipeline: scrape → classify → incidents.',
     },
     classifyReviews: {
