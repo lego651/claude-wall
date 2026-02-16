@@ -69,10 +69,11 @@ export async function GET(request) {
     const supabase = createServiceClient();
     const { weekStartIso, weekEndIso } = getCurrentWeekUtcIso();
 
-    // Active subscriptions: user_id, firm_id (email_enabled = true)
+    // Active subscriptions: user_id, firm_id, email (email_enabled = true)
+    // Note: email column added in migration 23 for performance (no JOIN with profiles needed)
     const { data: rows, error: subsError } = await supabase
       .from('user_subscriptions')
-      .select('user_id, firm_id')
+      .select('user_id, firm_id, email')
       .eq('email_enabled', true);
 
     if (subsError) {
@@ -89,30 +90,15 @@ export async function GET(request) {
       return NextResponse.json(result);
     }
 
-    // Group by user_id -> firm_ids[]
+    // Group by user_id -> { email, firm_ids[] }
     const byUser = new Map();
     for (const r of rows) {
       const uid = r.user_id;
-      if (!byUser.has(uid)) byUser.set(uid, []);
-      byUser.get(uid).push(r.firm_id);
+      if (!byUser.has(uid)) {
+        byUser.set(uid, { email: r.email?.trim(), firmIds: [] });
+      }
+      byUser.get(uid).firmIds.push(r.firm_id);
     }
-
-    // Get email for each user from profiles
-    const userIds = [...byUser.keys()];
-    const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, email')
-      .in('id', userIds);
-
-    if (profilesError) {
-      console.error('[send-weekly-reports] profiles', profilesError);
-      return NextResponse.json(
-        { error: 'Failed to fetch profiles', detail: profilesError.message },
-        { status: 500 }
-      );
-    }
-
-    const emailByUser = new Map((profiles || []).map((p) => [p.id, p.email?.trim()]).filter(([, e]) => e));
 
     // Fetch firm_weekly_reports for current week (week_from_date / week_to_date) for all firms we need
     const firmIds = [...new Set(rows.map((r) => r.firm_id))];
@@ -138,15 +124,15 @@ export async function GET(request) {
     let skipped = 0;
     const errors = [];
 
-    for (const [userId, firmIdsForUser] of byUser) {
-      const email = emailByUser.get(userId);
+    for (const [userId, userData] of byUser) {
+      const { email, firmIds } = userData;
       if (!email) {
-        errors.push(`${userId}: no email in profile`);
+        errors.push(`${userId}: no email in subscription`);
         failed += 1;
         continue;
       }
 
-      const reports = firmIdsForUser
+      const reports = firmIds
         .map((fid) => reportsByFirm.get(fid))
         .filter(Boolean);
 

@@ -107,15 +107,7 @@ describe('GET /api/cron/send-weekly-reports', () => {
       .mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockResolvedValue({
-            data: [{ user_id: userId, firm_id: firmId }],
-            error: null,
-          }),
-        }),
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          in: jest.fn().mockResolvedValue({
-            data: [{ id: userId, email: 'u@example.com' }],
+            data: [{ user_id: userId, firm_id: firmId, email: 'u@example.com' }],
             error: null,
           }),
         }),
@@ -164,22 +156,14 @@ describe('GET /api/cron/send-weekly-reports', () => {
     );
   });
 
-  it('returns 200 with failed 1 when user has no email in profile', async () => {
+  it('returns 200 with failed 1 when user has no email in subscription', async () => {
     const userId = 'user-1';
     const mockFrom = jest.fn();
     mockFrom
       .mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockResolvedValue({
-            data: [{ user_id: userId, firm_id: 'fp' }],
-            error: null,
-          }),
-        }),
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          in: jest.fn().mockResolvedValue({
-            data: [{ id: userId, email: null }],
+            data: [{ user_id: userId, firm_id: 'fp', email: null }],
             error: null,
           }),
         }),
@@ -215,15 +199,7 @@ describe('GET /api/cron/send-weekly-reports', () => {
       .mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockResolvedValue({
-            data: [{ user_id: userId, firm_id: 'fp' }],
-            error: null,
-          }),
-        }),
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          in: jest.fn().mockResolvedValue({
-            data: [{ id: userId, email: 'u@example.com' }],
+            data: [{ user_id: userId, firm_id: 'fp', email: 'u@example.com' }],
             error: null,
           }),
         }),
@@ -252,62 +228,34 @@ describe('GET /api/cron/send-weekly-reports', () => {
     expect(sendWeeklyDigest).not.toHaveBeenCalled();
   });
 
-  it('returns 500 when profiles query fails', async () => {
-    const mockFrom = jest.fn();
-    mockFrom
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({
-            data: [{ user_id: 'user-1', firm_id: 'fp' }],
-            error: null,
-          }),
-        }),
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          in: jest.fn().mockResolvedValue({ data: null, error: { message: 'profiles error' } }),
-        }),
-      });
-    createClient.mockReturnValue({ from: mockFrom });
-
-    const req = new Request('https://example.com/api/cron/send-weekly-reports', {
-      headers: { Authorization: 'Bearer test-secret' },
-    });
-    const res = await GET(req);
-    expect(res.status).toBe(500);
-    const body = await res.json();
-    expect(body.error).toBe('Failed to fetch profiles');
-  });
-
   it('returns 500 when firm_weekly_reports query fails', async () => {
     const userId = 'user-1';
     const mockFrom = jest.fn();
+
+    // First from(): user_subscriptions query succeeds
+    const selectSubs = jest.fn().mockReturnValue({
+      eq: jest.fn().mockResolvedValue({
+        data: [{ user_id: userId, firm_id: 'fp', email: 'u@example.com' }],
+        error: null,
+      }),
+    });
+
+    // Second from(): firm_weekly_reports query returns an error object
+    const selectReports = jest.fn();
+    const inReports = jest.fn();
+    const eqFirst = jest.fn();
+    const eqSecond = jest
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'reports error' } });
+
+    selectReports.mockReturnValue({ in: inReports });
+    inReports.mockReturnValue({ eq: eqFirst });
+    eqFirst.mockReturnValue({ eq: eqSecond });
+
     mockFrom
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({
-            data: [{ user_id: userId, firm_id: 'fp' }],
-            error: null,
-          }),
-        }),
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          in: jest.fn().mockResolvedValue({
-            data: [{ id: userId, email: 'u@example.com' }],
-            error: null,
-          }),
-        }),
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          in: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              eq: jest.fn().mockResolvedValue({ data: null, error: { message: 'reports error' } }),
-            }),
-          }),
-        }),
-      });
+      .mockReturnValueOnce({ select: selectSubs })
+      .mockReturnValueOnce({ select: selectReports });
+
     createClient.mockReturnValue({ from: mockFrom });
 
     const req = new Request('https://example.com/api/cron/send-weekly-reports', {
@@ -327,15 +275,7 @@ describe('GET /api/cron/send-weekly-reports', () => {
       .mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockResolvedValue({
-            data: [{ user_id: userId, firm_id: firmId }],
-            error: null,
-          }),
-        }),
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          in: jest.fn().mockResolvedValue({
-            data: [{ id: userId, email: 'u@example.com' }],
+            data: [{ user_id: userId, firm_id: firmId, email: 'u@example.com' }],
             error: null,
           }),
         }),

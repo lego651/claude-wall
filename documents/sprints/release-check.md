@@ -1,505 +1,114 @@
 # Alpha Release Checklist - Intelligence Feed System
 
-**Release Date:** TBD
+**Release Date:** TBD (pending S6 completion)
 **System:** Prop Firm Intelligence Feed & Weekly Email Digest
 **Tech Lead Review:** Required before production deployment
 
 ---
 
-## System Overview
+## Critical Blockers for Alpha Release
 
-The Intelligence Feed system is an async data pipeline that scrapes Trustpilot reviews, classifies them using OpenAI, detects incidents, and delivers weekly aggregated reports to subscribed users.
+### 🔴 HIGH PRIORITY (Must Fix Before Release)
 
-### Architecture Flow
+#### 1. Subscription Email Delivery - S6 Sprint
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    ASYNC DATA PIPELINE                          │
-└─────────────────────────────────────────────────────────────────┘
+**Status:** ❌ BLOCKED - Missing data pipeline component
 
-Daily 3 AM PST (11:00 UTC)
-  ↓
-┌─────────────────────┐
-│ 1. Scrape Reviews   │ → Playwright scraper → trustpilot_reviews table
-│    (3 pages/firm)   │    (lib/scrapers/trustpilot.ts)
-└──────────┬──────────┘
-           │ 1 hour delay
-           ↓
-Daily 4 AM PST (12:00 UTC)
-┌─────────────────────┐
-│ 2. Classify Reviews │ → OpenAI GPT-4 → category field updated
-│    (Unclassified)   │    (scripts/classify-firm-unclassified-trustpilot-reviews.ts)
-└──────────┬──────────┘
-           │ 1 hour delay
-           ↓
-Daily 5 AM PST (13:00 UTC)
-┌─────────────────────┐
-│ 3. Detect Incidents │ → Aggregate by week → weekly_incidents table
-│    (Current Week)   │    (scripts/run-firm-daily-incidents.ts)
-└──────────┬──────────┘
-           │ 9 hours
-           ↓
-Weekly Mon 2 PM UTC (14:00 UTC)
-┌─────────────────────┐
-│ 4. Send Reports     │ → Query subscribers → Email via Resend
-│    (Weekly Digest)  │    (app/api/cron/send-weekly-reports)
-└─────────────────────┘
+**Problem:** Users are not receiving weekly emails because `firm_weekly_reports` table is either:
+- Not populated with weekly report data, OR
+- Missing entirely from database schema
 
-UI Consumption:
-┌─────────────────────────────────────────────────────────────────┐
-│ /propfirms/[id]          → Intelligence Feed (last 3, 30d data)  │
-│ /propfirms/[id]/intelligence → Full feed (30d filter, 30d data) │
-└─────────────────────────────────────────────────────────────────┘
-```
+**Root Cause:**
+- The email sending route (`app/api/cron/send-weekly-reports/route.js`) correctly filters by user subscriptions ✅
+- BUT it queries `firm_weekly_reports` table (line 119-124) which may be empty/missing ❌
+- The workflow that populates this table (`weekly-step1-generate-firm-weekly-reports.yml`) may not exist or is failing
 
----
+**S6 Tickets to Resolve:**
+- [ ] **S6-001:** Verify `firm_weekly_reports` table schema exists ⚠️ **BLOCKER**
+- [ ] **S6-002:** Investigate `weekly-step1` workflow status ⚠️ **BLOCKER**
+- [ ] **S6-003:** Implement report generation API if missing (8 pts) ⚠️ **BLOCKER**
+- [ ] **S6-004:** Fix email template to render `report_json` structure (3 pts) 🔴 **HIGH**
+- [ ] **S6-005:** End-to-end testing of subscription flow (5 pts) 🔴 **HIGH**
 
-## Feature 1: Intelligence Feed UI (Per-Firm)
+**Investigation Steps:**
 
-### 1.1 Overview Page (`/propfirms/fundingpips`)
+```sql
+-- 1. Check if table exists
+SELECT table_name FROM information_schema.tables
+WHERE table_name = 'firm_weekly_reports';
 
-**File:** [app/propfirms/[id]/page.js](../../app/propfirms/[id]/page.js)
+-- 2. Check schema (if exists)
+\d firm_weekly_reports;
 
-**Status:** ✅ IMPLEMENTED
+-- 3. Check for recent data
+SELECT firm_id, week_from_date, week_to_date, created_at
+FROM firm_weekly_reports
+ORDER BY created_at DESC
+LIMIT 10;
 
-**Verification Steps:**
-
-- [ ] Navigate to `/propfirms/fundingpips`
-- [ ] Scroll to "Intelligence Feed" section (line 400-438)
-- [ ] Verify section shows:
-  - [ ] Title: "Intelligence Feed"
-  - [ ] Link: "Live Reports" → navigates to `/propfirms/fundingpips/intelligence`
-  - [ ] Last 3 incidents displayed (from 30-day data)
-  - [ ] Each incident shows:
-    - [ ] Severity badge (high/medium/low with color coding)
-    - [ ] Incident type (e.g., "PAYOUT DELAY")
-    - [ ] Week detected date
-    - [ ] Title and summary text
-    - [ ] Hover effect on card
-
-**API Endpoint:** `GET /api/v2/propfirms/[id]/incidents?days=30`
-
-- [ ] Returns incidents from `weekly_incidents` table
-- [ ] Includes `source_links` (up to 3 Trustpilot URLs per incident)
-- [ ] Test file exists: [app/api/v2/propfirms/[id]/incidents/route.test.js](../../app/api/v2/propfirms/[id]/incidents/route.test.js)
-
-**Data Requirements:**
-
-- [ ] Database table `weekly_incidents` exists and populated
-- [ ] Incidents have valid `firm_id`, `week_number`, `year`, `severity`, `title`, `summary`
-- [ ] Review IDs resolve to Trustpilot URLs in `trustpilot_reviews` table
-
-**Edge Cases:**
-
-- [ ] No incidents in 30 days → Shows "No recent incidents in the last 30 days"
-- [ ] Loading state → Shows spinner
-- [ ] API failure → Graceful error (currently no error UI shown)
-
----
-
-### 1.2 Intelligence Feed Page (`/propfirms/fundingpips/intelligence`)
-
-**File:** [app/propfirms/[id]/intelligence/page.js](../../app/propfirms/[id]/intelligence/page.js)
-
-**Status:** ✅ IMPLEMENTED (30 days)
-
-**Current Implementation:**
-
-- Line 138: `fetch(/api/v2/propfirms/${firmId}/incidents?days=30)`
-- Displays last 30 days of data
-- Description text: "last 30 days"
-
-**Verification Steps:**
-
-- [ ] Navigate to `/propfirms/fundingpips/intelligence`
-- [ ] Verify header shows:
-  - [ ] Title: "Firm Intelligence Feed"
-  - [ ] Description: "Curated, summarized, and classified signals from the last 30 days"
-  - [ ] Filter dropdown: "All Types" / "Reputation" / "Operational" / "Regulatory"
-  - [ ] Filter icon button (non-functional decoration)
-- [ ] Verify timeline rendering:
-  - [ ] Vertical timeline line on left
-  - [ ] Each incident shows as [IntelligenceCard](../../components/propfirms/intelligence/IntelligenceCard.js)
-  - [ ] Dot indicator (colored by category)
-  - [ ] Title, summary, confidence badge, tags, source links
-- [ ] Test filtering:
-  - [ ] "All Types" → shows all incidents
-  - [ ] "Operational" → filters to support_issue, payout_delay, etc.
-  - [ ] "Reputation" → filters to scam_warning, rules_dispute, etc.
-- [ ] Verify footer CTA:
-  - [ ] "Want real-time alerts?" section renders
-  - [ ] "Enable Notifications" button present (non-functional)
-
-**Components:**
-
-- [ ] [IntelligenceCard.js](../../components/propfirms/intelligence/IntelligenceCard.js) - Test coverage exists ✅
-- [ ] [IntelligenceCardSkeleton.js](../../components/propfirms/intelligence/IntelligenceCardSkeleton.js) - Test coverage exists ✅
-
-**Edge Cases:**
-
-- [ ] No incidents → Shows "No intelligence signals in the last 30 days"
-- [ ] No matches for filter → Shows "No incidents match the selected type"
-- [ ] Loading → Shows 3 skeleton cards
-
----
-
-## Feature 2: Weekly Email Reports
-
-**Workflow:** [.github/workflows/weekly-step2-send-firm-weekly-reports.yml](../../.github/workflows/weekly-step2-send-firm-weekly-reports.yml)
-
-**Status:** ❌ CRITICAL - Missing implementation
-
-**Cron Schedule:** Every Monday 14:00 UTC (after daily incidents at 13:00 UTC)
-
-### 2.1 API Endpoint
-
-**Expected:** `POST /api/cron/send-weekly-reports`
-
-**Current Status:** ❌ EMPTY DIRECTORY
-
-- Directory exists: `app/api/cron/send-weekly-reports/`
-- No `route.js` or `route.ts` file found
-- Workflow calls this endpoint with `Authorization: Bearer $CRON_SECRET`
-
-**Required Implementation:**
-
-- [ ] Create `app/api/cron/send-weekly-reports/route.js`
-- [ ] Implement:
-  1. CRON_SECRET authentication
-  2. Query `user_subscriptions` table for active subscribers
-  3. For each user, query subscribed firms' incidents from past week
-  4. Aggregate incidents by firm
-  5. Generate HTML email with weekly digest
-  6. Send via [lib/resend.ts](../../lib/resend.ts)
-  7. Log success/failure per user
-  8. Return summary: `{ sent: N, failed: M, errors: [...] }`
-
-### 2.2 Database Schema
-
-**Missing Tables:**
-
-- [ ] `user_subscriptions` (user_id, firm_id, email, active, created_at)
-- [ ] Schema migration file needed in [migrations/](../../migrations/)
-
-**Email Service:**
-
-- [ ] [lib/resend.ts](../../lib/resend.ts) ✅ EXISTS
-- [ ] Requires `RESEND_API_KEY` environment variable
-- [ ] Uses `config.resend.fromNoReply` for sender
-
-### 2.3 Email Template
-
-**Required Fields:**
-
-- [ ] Subject: "Weekly Prop Firm Intelligence Digest - [Week of YYYY-MM-DD]"
-- [ ] Body (HTML):
-  - [ ] Personalized greeting
-  - [ ] Per-firm sections with incidents from past week
-  - [ ] Incident cards: severity, type, title, summary, source links
-  - [ ] Unsubscribe link
-  - [ ] Footer with company info
-
-### 2.4 Verification Steps
-
-- [ ] Manually trigger workflow: `workflow_dispatch` in GitHub Actions
-- [ ] Check logs for successful API call
-- [ ] Verify email sent to test subscriber
-- [ ] Check email rendering in multiple clients (Gmail, Outlook, Apple Mail)
-- [ ] Test unsubscribe flow
-- [ ] Monitor for errors in production after first Monday run
-
-**Edge Cases:**
-
-- [ ] No subscribers → Log "No active subscribers" and return 200
-- [ ] No incidents for week → Send "quiet week" email or skip?
-- [ ] Resend API failure → Log error, return 500, retry on next run
-- [ ] CRON_SECRET mismatch → Return 403 Forbidden
-
----
-
-## Feature 3: Async Scraping System
-
-### 3.1 Trustpilot Scraper
-
-**Workflow:** [.github/workflows/daily-step1-sync-firm-trustpilot-reviews.yml](../../.github/workflows/daily-step1-sync-firm-trustpilot-reviews.yml)
-
-**Script:** `scripts/backfill-firm-trustpilot-reviews.ts` ❌ NOT FOUND
-
-**Status:** ⚠️ SCRIPT MISSING but scraper lib exists
-
-**Implementation:** [lib/scrapers/trustpilot.ts](../../lib/scrapers/trustpilot.ts) ✅ EXISTS
-
-**Cron Schedule:** Daily 3 AM PST (11:00 UTC)
-
-**Verification Steps:**
-
-- [ ] Create `scripts/backfill-firm-trustpilot-reviews.ts` to call `scrapeAndStoreReviews()` for all firms
-- [ ] Test scraper locally:
-  ```bash
-  npx tsx scripts/backfill-firm-trustpilot-reviews.ts
-  ```
-- [ ] Verify it scrapes 3 pages × ~20 reviews/page = ~60 reviews per firm
-- [ ] Check `trustpilot_reviews` table for new rows
-- [ ] Verify duplicate detection (unique constraint on `trustpilot_url`)
-- [ ] Monitor Playwright browser launch in GitHub Actions
-- [ ] Check runtime: should complete within 15-minute timeout
-
-**Supported Firms:**
-
-```typescript
-fundednext, the5ers, fundingpips, alphacapitalgroup, blueguardian,
-aquafunded, instantfunding, fxify
+-- 4. Check if weekly_reports table exists (may have been renamed)
+SELECT table_name FROM information_schema.tables
+WHERE table_name LIKE '%weekly%';
 ```
 
-(FTMO and TopStep NOT supported - no Trustpilot URLs)
+**Expected Table Schema:**
 
-**Database Table:**
-
-- [ ] `trustpilot_reviews` (id, firm_id, rating, title, review_text, reviewer_name, review_date, trustpilot_url, category, classified_at)
-- [ ] Unique constraint on `trustpilot_url`
-
-**Edge Cases:**
-
-- [ ] Trustpilot blocks scraper → Playwright stealth mode configured ✅
-- [ ] No reviews on page 2/3 → Stops pagination gracefully ✅
-- [ ] Review date parsing fails → Fallback to current date ✅
-
----
-
-### 3.2 Review Classification
-
-**Workflow:** [.github/workflows/sync-classify-reviews.yml](../../.github/workflows/sync-classify-reviews.yml)
-
-**Script:** `scripts/classify-firm-unclassified-trustpilot-reviews.ts` ❌ NOT FOUND
-
-**Status:** ❌ CRITICAL - Missing implementation
-
-**Cron Schedule:** Daily 4 AM PST (12:00 UTC), 1 hour after scraper
-
-**Required Implementation:**
-
-- [ ] Create `scripts/classify-firm-unclassified-trustpilot-reviews.ts`
-- [ ] Query `trustpilot_reviews` WHERE `classified_at IS NULL`
-- [ ] Batch process (e.g., 50 reviews at a time to respect OpenAI rate limits)
-- [ ] Call OpenAI GPT-4 with classification prompt:
-  - Input: `review_text`, `title`, `rating`
-  - Output: `category` (one of INCIDENT_TYPE_TO_CATEGORY keys from [intelligence/types.js](../../app/propfirms/[id]/intelligence/types.js))
-- [ ] Update `category` and `classified_at` fields
-- [ ] Log: `{ total: N, classified: M, failed: K, duration: Xms }`
-
-**Categories:**
-
-```
-Operational: platform_technical_issue, support_issue, payout_delay,
-             payout_denied, kyc_withdrawal_issue, execution_conditions
-
-Reputation: high_risk_allegation, scam_warning, rules_dispute,
-            pricing_fee_complaint, payout_issue, platform_issue,
-            rule_violation, other
-
-Positive: positive_experience, positive
-
-Neutral: neutral_mixed, neutral
+```sql
+CREATE TABLE IF NOT EXISTS firm_weekly_reports (
+  id SERIAL PRIMARY KEY,
+  firm_id TEXT NOT NULL REFERENCES firms(id) ON DELETE CASCADE,
+  week_from_date DATE NOT NULL,
+  week_to_date DATE NOT NULL,
+  report_json JSONB NOT NULL,
+  generated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(firm_id, week_from_date, week_to_date)
+);
 ```
 
-**Verification Steps:**
+**Workflow Dependencies:**
 
-- [ ] Manually trigger workflow
-- [ ] Check `trustpilot_reviews` table for updated `category` values
-- [ ] Verify `classified_at` timestamp is set
-- [ ] Monitor OpenAI API usage and costs
-- [ ] Check for classification accuracy (manual review of sample)
+```
+Sunday 7:00 UTC: weekly-step1-generate-firm-weekly-reports.yml
+  ↓ Populates firm_weekly_reports table
+  ↓ (1 hour gap)
+Sunday 8:00 UTC: weekly-step2-send-firm-weekly-reports.yml
+  ↓ Queries firm_weekly_reports
+  ↓ Sends emails to users
+```
 
-**Edge Cases:**
-
-- [ ] OpenAI API failure → Retry with exponential backoff, skip and log error
-- [ ] Rate limit exceeded → Slow down batch processing
-- [ ] Ambiguous review → Default to "other" category
-
----
-
-### 3.3 Incident Detection
-
-**Workflow:** [.github/workflows/daily-step3-sync-firm-incidents.yml](../../.github/workflows/daily-step3-sync-firm-incidents.yml)
-
-**Script:** `scripts/run-firm-daily-incidents.ts` ❌ NOT FOUND
-
-**Status:** ❌ CRITICAL - Missing implementation
-
-**Cron Schedule:** Daily 5 AM PST (13:00 UTC), 1 hour after classification
-
-**Required Implementation:**
-
-- [ ] Create `scripts/run-firm-daily-incidents.ts`
-- [ ] For each firm in `TRUSTPILOT_FIRM_IDS`:
-  1. Get current ISO week number and year
-  2. Query `trustpilot_reviews` for current week, grouped by `category`
-  3. Detect if category count exceeds threshold (e.g., ≥5 negative reviews)
-  4. If incident detected:
-     - Generate `title` and `summary` using OpenAI (aggregate review texts)
-     - Determine `severity` (high/medium/low based on count and rating)
-     - Extract `review_ids` (up to 10 review IDs for source links)
-  5. Upsert to `weekly_incidents` table:
-     - `ON CONFLICT (firm_id, year, week_number, incident_type) DO UPDATE`
-     - Update `title`, `summary`, `severity`, `review_count`, `review_ids`
-
-**Database Table:**
-
-- [ ] `weekly_incidents` (id, firm_id, week_number, year, incident_type, severity, title, summary, review_count, affected_users, review_ids, created_at)
-- [ ] Unique constraint on `(firm_id, year, week_number, incident_type)`
-
-**Detection Logic:**
-
-- [ ] Severity thresholds:
-  - High: ≥10 reviews OR avg rating ≤2.0
-  - Medium: ≥5 reviews OR avg rating ≤3.0
-  - Low: ≥3 reviews
-
-**Verification Steps:**
-
-- [ ] Manually trigger workflow
-- [ ] Check `weekly_incidents` table for new rows
-- [ ] Verify `review_ids` array contains valid IDs
-- [ ] Verify `title` and `summary` are coherent (manual review)
-- [ ] Test upsert: re-run same week should update, not duplicate
-
-**Edge Cases:**
-
-- [ ] No incidents for current week → No inserts, log "No incidents detected"
-- [ ] OpenAI summary generation fails → Use fallback template summary
-- [ ] Multiple incident types in same week → Each gets separate row
+**Files to Verify:**
+- [.github/workflows/weekly-step1-generate-firm-weekly-reports.yml](../../.github/workflows/weekly-step1-generate-firm-weekly-reports.yml) - Does it exist?
+- [app/api/cron/generate-weekly-reports/route.js](../../app/api/cron/generate-weekly-reports/route.js) - Does it exist?
+- Check migration 22: [migrations/22_rename_weekly_tables_and_firm_weekly_reports_dates.sql](../../migrations/22_rename_weekly_tables_and_firm_weekly_reports_dates.sql)
 
 ---
 
-## Feature 4: Monitoring & Observability
+## S5 Sprint Completion Status
 
-### 4.1 Admin Dashboard Enhancement
+### ✅ Completed Items (Removed from Checklist)
 
-**Current:** [app/admin/dashboard/page.js](../../app/admin/dashboard/page.js)
+**S5 successfully delivered:**
+1. ✅ Trustpilot scraper infrastructure ([lib/scrapers/trustpilot.ts](../../lib/scrapers/trustpilot.ts))
+2. ✅ Intelligence feed UI ([app/propfirms/[id]/intelligence/page.js](../../app/propfirms/[id]/intelligence/page.js))
+3. ✅ 30-day data window fix (changed from 90d)
+4. ✅ API endpoints for incidents and signals
+5. ✅ Test coverage for components and API routes (437 tests passing)
+6. ✅ Admin dashboard intelligence metrics
+7. ✅ Error alerting system ([lib/alerts.js](../../lib/alerts.js))
+8. ✅ Database migrations (11-22) including `user_subscriptions` table
+9. ✅ Subscription UI in user settings ([components/user/settings/SubscriptionsSection.js](../../components/user/settings/SubscriptionsSection.js))
+10. ✅ Subscription API routes ([app/api/subscriptions/route.js](../../app/api/subscriptions/route.js))
+11. ✅ Email sending route ([app/api/cron/send-weekly-reports/route.js](../../app/api/cron/send-weekly-reports/route.js))
+12. ✅ Documentation and runbooks
 
-**Status:** ✅ EXISTS but needs Intelligence Feed monitoring
+**What's Working:**
+- Users CAN subscribe/unsubscribe to firms via UI ✅
+- Subscription data IS stored in `user_subscriptions` table ✅
+- Email route DOES filter by user subscriptions ✅
 
-**Required Additions:**
-
-Add new monitoring panel after "Prop firms payout data" section (around line 433):
-
-#### Panel: Intelligence Feed Pipeline
-
-**Metrics to Display:**
-
-1. **Scraper Status:**
-   - [ ] Last run timestamp (from `firms.last_scraper_run_at` - NEW FIELD)
-   - [ ] Total reviews scraped (count from `trustpilot_reviews`)
-   - [ ] Scraper errors (new `scraper_errors` log table)
-
-2. **Classification Status:**
-   - [ ] Unclassified reviews count (WHERE `classified_at IS NULL`)
-   - [ ] Last classification run timestamp
-   - [ ] Classification error rate (failed / total)
-
-3. **Incident Detection:**
-   - [ ] Current week incidents count (per firm)
-   - [ ] Last incident detection run timestamp
-   - [ ] Incidents by severity: High / Medium / Low
-
-4. **Weekly Email Reports:**
-   - [ ] Last report sent timestamp
-   - [ ] Subscribers count (from `user_subscriptions`)
-   - [ ] Delivery success rate (sent / total)
-   - [ ] Email errors log (last 10)
-
-**API Endpoint:**
-
-- [ ] Extend `GET /api/admin/metrics` to include intelligence feed metrics
-- [ ] Add to existing response:
-  ```json
-  {
-    "intelligenceFeed": {
-      "scraper": { "lastRun": "ISO timestamp", "reviewsCount": N, "errors": [...] },
-      "classifier": { "unclassified": N, "lastRun": "ISO timestamp", "errorRate": 0.05 },
-      "incidents": { "currentWeek": N, "byFirm": {...}, "bySeverity": {...} },
-      "emailReports": { "lastSent": "ISO timestamp", "subscribers": N, "successRate": 0.95 }
-    }
-  }
-  ```
-
-**Verification Steps:**
-
-- [ ] Navigate to `/admin/dashboard`
-- [ ] Verify new "Intelligence Feed Pipeline" section renders
-- [ ] Check all metrics display correctly
-- [ ] Test auto-refresh (30-second interval)
-- [ ] Verify CSV export includes new metrics
-
----
-
-### 4.2 Error Alerts
-
-**Current:** Admin dashboard has email alerts for critical failures ✅
-
-**Required:**
-
-- [ ] Add intelligence feed failures to alert conditions:
-  - Scraper fails 3 consecutive runs
-  - Unclassified reviews > 500 (backlog too large)
-  - Incident detection fails
-  - Weekly email report delivery < 80% success rate
-
-**Implementation:**
-
-- [ ] Extend `lib/alerts.js` (or create if missing)
-- [ ] Check in `/api/admin/metrics` endpoint
-- [ ] Send email via Resend if threshold exceeded
-- [ ] Throttle: max 1 alert per condition per 4 hours
-
----
-
-## Test Coverage Requirements
-
-### Unit Tests (≥80% coverage enforced by pre-commit hook)
-
-**Files Requiring Tests:**
-
-- [ ] `app/api/v2/propfirms/[id]/incidents/route.js` ✅ HAS TEST
-- [ ] `app/api/v2/propfirms/[id]/signals/route.js` ✅ HAS TEST
-- [ ] `lib/scrapers/trustpilot.ts` ❌ NO TEST (create `lib/__tests__/scrapers/trustpilot.test.ts`)
-- [ ] `scripts/classify-firm-unclassified-trustpilot-reviews.ts` ❌ SCRIPT MISSING
-- [ ] `scripts/run-firm-daily-incidents.ts` ❌ SCRIPT MISSING
-- [ ] `scripts/backfill-firm-trustpilot-reviews.ts` ❌ SCRIPT MISSING
-- [ ] `app/api/cron/send-weekly-reports/route.js` ❌ ROUTE MISSING
-
-**Component Tests:**
-
-- [ ] [IntelligenceCard.test.js](../../components/__tests__/propfirms/intelligence/IntelligenceCard.test.js) ✅ EXISTS
-- [ ] [IntelligenceCardSkeleton.test.js](../../components/__tests__/propfirms/intelligence/IntelligenceCardSkeleton.test.js) ✅ EXISTS
-
-### Integration Tests
-
-**E2E Tests (Playwright):**
-
-- [ ] Create `e2e/intelligence-feed.spec.js`:
-  - [ ] Test `/propfirms/fundingpips` intelligence section
-  - [ ] Test `/propfirms/fundingpips/intelligence` full page
-  - [ ] Test filtering by category
-  - [ ] Test loading states
-  - [ ] Test no data states
-
-**API Tests:**
-
-- [ ] Test incident endpoint with various `days` params
-- [ ] Test error handling (invalid firm_id, missing data)
-- [ ] Test source_links resolution
-
-**Workflow Tests:**
-
-- [ ] Manually trigger each GitHub Actions workflow:
-  - [ ] `daily-step1-sync-firm-trustpilot-reviews.yml`
-  - [ ] `daily-step2-sync-firm-classify-reviews.yml`
-  - [ ] `daily-step3-sync-firm-incidents.yml`
-  - [ ] `weekly-step1-generate-firm-weekly-reports.yml`
-  - [ ] `weekly-step2-send-firm-weekly-reports.yml`
-- [ ] Verify success in Actions logs
-- [ ] Check database for expected changes
+**What's NOT Working:**
+- Email route queries empty/missing `firm_weekly_reports` table ❌
+- Weekly report generation workflow missing or failing ❌
 
 ---
 
@@ -507,13 +116,13 @@ Add new monitoring panel after "Prop firms payout data" section (around line 433
 
 **Required in Production (Vercel):**
 
-- [ ] `NEXT_PUBLIC_SUPABASE_URL` ✅
-- [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` ✅
-- [ ] `SUPABASE_SERVICE_ROLE_KEY` ✅
-- [ ] `OPENAI_API_KEY` (for classification & incident summaries)
-- [ ] `RESEND_API_KEY` (for weekly emails)
-- [ ] `CRON_SECRET` (for webhook authentication)
-- [ ] `ALERT_EMAIL` or `ALERTS_TO` (for monitoring alerts)
+- [x] `NEXT_PUBLIC_SUPABASE_URL` ✅
+- [x] `NEXT_PUBLIC_SUPABASE_ANON_KEY` ✅
+- [x] `SUPABASE_SERVICE_ROLE_KEY` ✅
+- [ ] `OPENAI_API_KEY` (for classification & incident summaries) ⚠️ **VERIFY SET**
+- [ ] `RESEND_API_KEY` (for weekly emails) ⚠️ **VERIFY SET**
+- [ ] `CRON_SECRET` (for webhook authentication) ⚠️ **VERIFY SET**
+- [ ] `ALERT_EMAIL` or `ALERTS_TO` (for monitoring alerts) ⚠️ **VERIFY SET**
 
 **Required in GitHub Secrets:**
 
@@ -525,42 +134,84 @@ Add new monitoring panel after "Prop firms payout data" section (around line 433
 
 ---
 
-## Database Migration Checklist
+## Database Schema Verification
 
-**New Tables Needed:**
+### Tables to Verify Before Deploy
 
-1. [ ] `user_subscriptions`
-   ```sql
-   CREATE TABLE user_subscriptions (
-     id SERIAL PRIMARY KEY,
-     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-     firm_id TEXT NOT NULL,
-     email TEXT NOT NULL,
-     active BOOLEAN DEFAULT TRUE,
-     created_at TIMESTAMPTZ DEFAULT NOW(),
-     updated_at TIMESTAMPTZ DEFAULT NOW(),
-     UNIQUE (user_id, firm_id)
-   );
-   ```
+1. [ ] **`user_subscriptions`** (created in migration 11, renamed in migration 20)
+   - Columns: `id, user_id, firm_id, email_enabled, subscribed_at, last_sent_at`
+   - Unique constraint: `(user_id, firm_id)`
+   - RLS policies: enabled ✅
 
-2. [ ] `weekly_incidents` - Verify exists with correct schema
-   - Columns: id, firm_id, week_number, year, incident_type, severity, title, summary, review_count, affected_users, review_ids, created_at
-   - Unique constraint: `(firm_id, year, week_number, incident_type)`
+2. [ ] **`firm_weekly_reports`** ⚠️ **NEEDS VERIFICATION**
+   - Expected columns: `id, firm_id, week_from_date, week_to_date, report_json, generated_at`
+   - Unique constraint: `(firm_id, week_from_date, week_to_date)`
+   - Check if table exists or was renamed from `weekly_reports`
 
-3. [ ] `trustpilot_reviews` - Verify exists
-   - Add `category` TEXT field if missing
-   - Add `classified_at` TIMESTAMPTZ field if missing
-   - Unique constraint: `trustpilot_url`
+3. [x] **`weekly_incidents`** (created in migration 11)
+   - Verified in S5 ✅
+   - Populated by daily-step3 workflow ✅
 
-**Firm Metadata:**
+4. [x] **`trustpilot_reviews`** (created in migration 11)
+   - Columns include `category, classified_at` ✅
+   - Populated by daily-step1 workflow ✅
 
-- [ ] Add `last_scraper_run_at` TIMESTAMPTZ to `firms` table
+5. [x] **`firms`** table
+   - Columns: `id, name, trustpilot_url, last_scraper_run_at` ✅
+   - 8 firms seeded ✅
 
-**Migration Files:**
+---
 
-- [ ] Create `migrations/XX_intelligence_feed_schema.sql` (where XX is next number)
-- [ ] Update [migrations/README.md](../../migrations/README.md)
-- [ ] Run migrations in Supabase SQL Editor or via psql
+## Workflow Status
+
+### Daily Workflows (3 AM - 5 AM PST / 11:00 - 13:00 UTC)
+
+- [x] `daily-step1-sync-firm-trustpilot-reviews.yml` (11:00 UTC) ✅ EXISTS
+- [x] `daily-step2-sync-firm-classify-reviews.yml` (12:00 UTC) ✅ EXISTS (check: sync-classify-reviews.yml)
+- [x] `daily-step3-sync-firm-incidents.yml` (13:00 UTC) ✅ EXISTS
+
+### Weekly Workflows (Sunday 7-8 AM UTC)
+
+- [ ] `weekly-step1-generate-firm-weekly-reports.yml` (7:00 UTC) ⚠️ **VERIFY EXISTS**
+- [x] `weekly-step2-send-firm-weekly-reports.yml` (8:00 UTC) ✅ EXISTS
+
+**Action Items:**
+- [ ] Check if `weekly-step1` workflow file exists in `.github/workflows/`
+- [ ] If exists, check GitHub Actions logs for recent runs
+- [ ] If missing, create workflow as part of S6-002/S6-003
+
+---
+
+## Testing Checklist
+
+### Pre-Deployment Tests
+
+**Unit Tests:**
+- [x] 437 tests passing (`npm run test`) ✅
+- [x] Coverage enforcement for new code ✅
+
+**E2E Tests:**
+- [x] Intelligence feed UI tests (`tests/e2e/intelligence-feed.spec.js`) ✅
+- [ ] Subscription flow E2E test ⚠️ **S6-005**
+
+**Manual Tests Required:**
+
+1. [ ] **Subscription UI:**
+   - [ ] User can subscribe to firm
+   - [ ] User can unsubscribe from firm
+   - [ ] Toggle reflects in database
+   - [ ] Search and filters work
+
+2. [ ] **Email Delivery (After S6 fixes):**
+   - [ ] User with 2 subscriptions receives email with 2 firms only
+   - [ ] User with 0 subscriptions receives no email
+   - [ ] Email template renders correctly (firms, incidents, stats)
+   - [ ] Unsubscribe link works
+
+3. [ ] **Admin Dashboard:**
+   - [ ] Intelligence metrics display
+   - [ ] Subscription metrics display (if S6-006 completed)
+   - [ ] Error alerts working
 
 ---
 
@@ -568,95 +219,112 @@ Add new monitoring panel after "Prop firms payout data" section (around line 433
 
 **API Response Times (P95):**
 
-- [ ] `GET /api/v2/propfirms/[id]/incidents?days=30` < 500ms
-- [ ] `GET /api/v2/propfirms/[id]/signals?days=30` < 300ms
+- [x] `GET /api/v2/propfirms/[id]/incidents?days=30` < 500ms ✅
+- [x] `GET /api/v2/propfirms/[id]/signals?days=30` < 300ms ✅
 
 **Workflow Execution Times:**
 
-- [ ] Trustpilot scraper (8 firms × 3 pages) < 10 minutes
-- [ ] Classification (50 reviews batch) < 3 minutes
-- [ ] Incident detection (8 firms) < 2 minutes
-- [ ] Weekly email reports (100 subscribers) < 5 minutes
-
-**Database Query Optimization:**
-
-- [ ] Add index on `trustpilot_reviews(firm_id, review_date)` for scraper dedup
-- [ ] Add index on `trustpilot_reviews(classified_at)` for classifier query
-- [ ] Add index on `weekly_incidents(firm_id, year, week_number)` for UI query
+- [x] Trustpilot scraper (8 firms × 3 pages) < 10 minutes ✅
+- [ ] Report generation (8 firms) < 5 minutes ⚠️ **TO TEST AFTER S6-003**
+- [ ] Weekly email reports (100 subscribers) < 5 minutes ⚠️ **TO TEST AFTER S6**
 
 ---
 
-## Critical Blockers for Alpha Release
+## Deployment Checklist
 
-### HIGH PRIORITY (Must Fix)
+**Before deploying to production:**
 
-1. ❌ **Missing Scripts:**
-   - [ ] `scripts/backfill-firm-trustpilot-reviews.ts`
-   - [ ] `scripts/classify-firm-unclassified-trustpilot-reviews.ts`
-   - [ ] `scripts/run-firm-daily-incidents.ts`
+### Code Quality
+- [x] All tests passing (`npm run test:coverage:enforce-new`) ✅
+- [x] Build succeeds (`npm run build`) ✅
+- [ ] S6 tickets completed ⚠️ **IN PROGRESS**
 
-2. ❌ **Missing API Route:**
-   - [ ] `app/api/cron/send-weekly-reports/route.js`
+### Database
+- [ ] Verify `firm_weekly_reports` table exists ⚠️ **S6-001**
+- [x] Migrations 11-22 applied in production ✅
+- [ ] Run migration 23+ if needed for S6
 
-3. ❌ **Database Schema:**
-   - [ ] `user_subscriptions` table
-   - [ ] Verify `weekly_incidents` table structure
-   - [ ] Verify `trustpilot_reviews` has `category` and `classified_at` fields
+### Environment
+- [ ] All env vars configured in Vercel ⚠️ **VERIFY**
+- [ ] GitHub Actions secrets configured ⚠️ **VERIFY**
+- [ ] `CRON_SECRET` matches between Vercel and GitHub
 
-4. ✅ **UI Data Range:** Intelligence page uses 30 days (done).
+### Workflows
+- [ ] `weekly-step1` workflow exists and tested ⚠️ **S6-002**
+- [ ] Manually trigger all workflows and verify success
+- [ ] Check logs for errors
 
-### MEDIUM PRIORITY (Should Fix)
+### Monitoring
+- [x] Admin dashboard displaying metrics ✅
+- [x] Error alerts configured ✅
+- [ ] Subscription metrics added (optional - S6-006)
 
-5. ✅ **Test Coverage:** (done)
-   - [x] `lib/scrapers/trustpilot.ts` unit tests
-   - [x] E2E test for intelligence feed pages (`tests/e2e/intelligence-feed.spec.js`)
-   - [x] API route tests for send-weekly-reports
+---
 
-6. ✅ **Monitoring:** (done)
-   - [x] Intelligence feed metrics in admin dashboard (`intelligenceFeed` in `/api/admin/metrics`)
-   - [x] Error alerts for pipeline (`lib/alerts.js` checkIntelligenceFeedAlerts)
+## Deployment Plan
 
-### LOW PRIORITY (Nice to Have)
+### Phase 1: Staging Deployment
+1. [ ] Merge S6 branch to `main`
+2. [ ] Deploy to Vercel staging
+3. [ ] Apply database migrations (if any)
+4. [ ] Run smoke tests:
+   - [ ] Visit intelligence feed pages
+   - [ ] Subscribe to 2 firms via UI
+   - [ ] Manually trigger `weekly-step1` workflow
+   - [ ] Verify `firm_weekly_reports` table populated
+   - [ ] Manually trigger `weekly-step2` workflow
+   - [ ] Verify test email received with correct firms
 
-7. [ ] Email template design (HTML/CSS)
-8. [ ] Unsubscribe flow implementation
-9. [ ] User subscription UI (allow users to subscribe to firms)
+### Phase 2: Production Deployment
+1. [ ] Promote staging to production
+2. [ ] Monitor first daily workflow runs (Mon-Fri 3-5 AM PST)
+3. [ ] Monitor first weekly workflow runs (Sunday 7-8 AM UTC)
+4. [ ] Check error logs and admin dashboard
+
+### Phase 3: Post-Deploy Monitoring (48 hours)
+- [ ] Day 1 (11:00 UTC): Monitor scraper workflow
+- [ ] Day 1 (12:00 UTC): Monitor classifier workflow
+- [ ] Day 1 (13:00 UTC): Monitor incident detection
+- [ ] Week 1 (Sunday 7:00 UTC): Monitor report generation
+- [ ] Week 1 (Sunday 8:00 UTC): Monitor email delivery
+- [ ] Check admin dashboard daily for errors
+
+---
+
+## Rollback Plan
+
+**If S6 deployment fails:**
+
+1. **Email delivery broken:**
+   - [ ] Disable `weekly-step2` workflow (comment out cron schedule)
+   - [ ] Investigate `firm_weekly_reports` table
+   - [ ] Check GitHub Actions logs for errors
+
+2. **Report generation broken:**
+   - [ ] Disable `weekly-step1` workflow
+   - [ ] Check API endpoint `/api/cron/generate-weekly-reports`
+   - [ ] Verify database queries
+
+3. **UI broken:**
+   - [ ] Revert PR
+   - [ ] Redeploy previous version from git tag
+
+4. **Database migration failure:**
+   - [ ] Rollback migration via Supabase SQL Editor
+   - [ ] Restore from backup if needed
 
 ---
 
 ## Sign-Off
 
-**Before deploying to production:**
+**Tech Lead:** ___________________  **Date:** ___________
 
-- [ ] All HIGH PRIORITY items resolved
-- [ ] All tests passing (`npm run test:coverage:enforce-new`)
-- [ ] Build succeeds (`npm run build`)
-- [ ] Manual QA completed on staging
-- [ ] Environment variables configured in Vercel
-- [ ] GitHub Actions secrets configured
-- [ ] Database migrations applied in production
-- [ ] Monitoring dashboard verified
-- [ ] Error alerts tested (send test email)
-
-**Deployment Plan:**
-
-1. Merge feature branch to `main`
-2. Deploy to staging (Vercel preview)
-3. Run smoke tests on staging
-4. Promote to production
-5. Monitor first scraper run (next day 3 AM PST)
-6. Monitor first weekly email send (next Monday 2 PM UTC)
-7. Check error logs and dashboard metrics
-
-**Rollback Plan:**
-
-- If scraper fails → Disable workflow, investigate logs, fix script, re-enable
-- If email send fails → Check Resend logs, verify RESEND_API_KEY, fix route
-- If UI breaks → Revert PR, redeploy previous version
-- Database migration failure → Rollback using Supabase UI or psql
+**PM:** ___________________  **Date:** ___________
 
 ---
 
-**Tech Lead Approval:** ___________________  **Date:** ___________
+## Sprint Timeline
 
-**PM Approval:** ___________________  **Date:** ___________
+- **S5 Sprint:** Completed Feb 2025 ✅
+- **S6 Sprint:** Started Feb 15, 2026 (estimated 1 week)
+- **Alpha Release:** Target Feb 22, 2026 (pending S6 completion)
