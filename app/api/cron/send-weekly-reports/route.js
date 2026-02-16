@@ -124,6 +124,9 @@ export async function GET(request) {
     let skipped = 0;
     const errors = [];
 
+    // Resend free tier: 2 requests/second. Add 600ms delay between emails.
+    const RATE_LIMIT_DELAY_MS = 600;
+
     for (const [userId, userData] of byUser) {
       const { email, firmIds } = userData;
       if (!email) {
@@ -153,6 +156,8 @@ export async function GET(request) {
 
       if (result.ok) {
         sent += 1;
+        // Rate limit: wait 600ms after successful send to stay under 2 req/sec
+        await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY_MS));
       } else {
         failed += 1;
         errors.push(`${email}: ${result.error || 'unknown'}`);
