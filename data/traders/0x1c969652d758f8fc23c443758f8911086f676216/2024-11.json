@@ -1,27 +1,23 @@
 {
-  "wallet_address": "0x1c969652d758f8fc23c443758f8911086f676216",
-  "year_month": "2024-11",
+  "walletAddress": "0x1c969652d758f8fc23c443758f8911086f676216",
+  "period": "2024-11",
+  "timezone": "UTC",
+  "generatedAt": "2026-02-16T19:12:46.812Z",
   "summary": {
     "totalPayouts": 2025,
     "payoutCount": 1,
     "largestPayout": 2025,
     "avgPayout": 2025
   },
-  "dailyBuckets": [
-    {
-      "date": "2024-11-25",
-      "total": 2025
-    }
-  ],
   "transactions": [
     {
       "tx_hash": "0x8043ed3b866e09563dc8f6f5aabfc9ab0afa7bd81b65b66438ae4292013d1fd8",
+      "wallet_address": "0x1c969652d758f8fc23c443758f8911086f676216",
+      "amount": 2024.57,
+      "payment_method": "rise",
       "timestamp": "2024-11-25T17:59:46.000Z",
       "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
-      "to_address": "0x1c969652d758f8fc23c443758f8911086f676216",
-      "token": "RISEPAY",
-      "amount": 2024.57,
-      "block_number": 278238977
+      "to_address": "0x1c969652d758f8fc23c443758f8911086f676216"
     }
   ]
 }

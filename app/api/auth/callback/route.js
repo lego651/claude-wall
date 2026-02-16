@@ -218,8 +218,9 @@ async function triggerBackfill(walletAddress, userId) {
     }
 
     // Run backfill script in background (fire-and-forget)
+    // Use npx tsx so @/ imports and ESM resolve (same as firm backfill script)
     const scriptPath = 'scripts/backfill-trader-history.js';
-    const command = `node ${scriptPath} ${walletAddress}`;
+    const command = `npx tsx ${scriptPath} ${walletAddress}`;
 
     console.log(`[OAuth Backfill] Executing: ${command}`);
 

@@ -70,11 +70,12 @@ export async function POST(req) {
     }
 
     // Run backfill script in background
+    // Use npx tsx so @/ imports and ESM resolve (same as firm backfill script)
     // Note: This executes synchronously in serverless environment
     // For production, consider using a job queue (Inngest, BullMQ, etc.)
     try {
       const scriptPath = 'scripts/backfill-trader-history.js';
-      const command = `node ${scriptPath} ${wallet_address}`;
+      const command = `npx tsx ${scriptPath} ${wallet_address}`;
 
       console.log(`[Backfill API] Executing: ${command}`);
 

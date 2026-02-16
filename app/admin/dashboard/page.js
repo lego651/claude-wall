@@ -78,6 +78,21 @@ function getSummaryStatus(data) {
     issues.push(`Weekly 2: Last email run had ${failed} failed`);
   }
 
+  // Traders: sync errors or many pending backfills
+  const tradersSummary = data.traders?.summary;
+  if (tradersSummary) {
+    const syncErr = tradersSummary.syncErrors ?? 0;
+    const pending = tradersSummary.pendingBackfill ?? 0;
+    if (syncErr > 0) {
+      hasWarning = true;
+      issues.push(`Traders: ${syncErr} sync error(s)`);
+    }
+    if (pending > 5) {
+      hasWarning = true;
+      issues.push(`Traders: ${pending} pending backfill(s)`);
+    }
+  }
+
   const status = hasCritical ? "critical" : hasWarning ? "warning" : "ok";
   const label = hasCritical ? "Critical" : hasWarning ? "Warning" : "All good";
   return { status, issues, label };
@@ -142,6 +157,14 @@ function metricsToCSV(data) {
     rows.push(`weeklyEmail_weekStart,${data.weeklyEmailReport.weekStart ?? ""}`);
     rows.push(`weeklyEmail_weekEnd,${data.weeklyEmailReport.weekEnd ?? ""}`);
   }
+  if (data?.traders?.summary) {
+    const s = data.traders.summary;
+    rows.push(`traders_totalProfiles,${s.totalProfiles ?? ""}`);
+    rows.push(`traders_withWallet,${s.withWallet ?? ""}`);
+    rows.push(`traders_backfilled,${s.backfilled ?? ""}`);
+    rows.push(`traders_pendingBackfill,${s.pendingBackfill ?? ""}`);
+    rows.push(`traders_syncErrors,${s.syncErrors ?? ""}`);
+  }
   rows.push(`fetchedAt,${data?.fetchedAt ?? ""}`);
   return rows.join("\n");
 }
@@ -160,7 +183,7 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState("system");
 
   const summary = getSummaryStatus(data);
-  const TAB_IDS = ["system", "daily1", "daily2", "daily3", "weekly1", "weekly2", "payouts"];
+  const TAB_IDS = ["system", "traders", "daily1", "daily2", "daily3", "weekly1", "weekly2", "payouts"];
   /** Map summary issue text to tab id for "go to" links. */
   const getTabForIssue = (msg) => {
     if (!msg) return null;
@@ -170,11 +193,13 @@ export default function AdminDashboardPage() {
     if (msg.startsWith("Weekly 1")) return "weekly1";
     if (msg.startsWith("Weekly 2") || msg.includes("email")) return "weekly2";
     if (msg.includes("Prop firms") || msg.includes("Arbiscan") || msg.includes("File size")) return "payouts";
+    if (msg.includes("Traders") || msg.includes("trader") || msg.includes("backfill") || msg.includes("sync")) return "traders";
     if (msg.includes("Database")) return "system";
     return null;
   };
   const TAB_LABELS = {
     system: "System",
+    traders: "Traders",
     daily1: "Daily 1 – Scrape",
     daily2: "Daily 2 – Classify",
     daily3: "Daily 3 – Incidents",
@@ -431,6 +456,138 @@ export default function AdminDashboardPage() {
                 );
               })}
             </nav>
+          </div>
+        )}
+
+        {data?.traders && activeTab === "traders" && (
+          <div className="space-y-8">
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Trader monitoring</h2>
+              <p className="text-sm text-base-content/60 mb-4">
+                Sign-up, wallet linking, historical backfill, and real-time payout sync status per trader.
+              </p>
+              {data.traders.error ? (
+                <div className="alert alert-error">
+                  <span>{data.traders.error}</span>
+                </div>
+              ) : (
+                <>
+                  {data.traders.summary && (
+                    <div className="stats stats-vertical sm:stats-horizontal shadow w-full bg-base-100 mb-6">
+                      <div className="stat">
+                        <div className="stat-title">Profiles (signed up)</div>
+                        <div className="stat-value text-primary">{data.traders.summary.totalProfiles ?? 0}</div>
+                      </div>
+                      <div className="stat">
+                        <div className="stat-title">Wallet linked</div>
+                        <div className="stat-value">{data.traders.summary.withWallet ?? 0}</div>
+                      </div>
+                      <div className="stat">
+                        <div className="stat-title">Backfill done</div>
+                        <div className="stat-value text-success">{data.traders.summary.backfilled ?? 0}</div>
+                      </div>
+                      <div className="stat">
+                        <div className="stat-title">Pending backfill</div>
+                        <div className={`stat-value ${(data.traders.summary.pendingBackfill ?? 0) > 0 ? "text-warning" : ""}`}>
+                          {data.traders.summary.pendingBackfill ?? 0}
+                        </div>
+                      </div>
+                      <div className="stat">
+                        <div className="stat-title">Sync errors</div>
+                        <div className={`stat-value ${(data.traders.summary.syncErrors ?? 0) > 0 ? "text-error" : ""}`}>
+                          {data.traders.summary.syncErrors ?? 0}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="card card-border bg-base-100 shadow overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="table table-sm w-full">
+                        <thead>
+                          <tr>
+                            <th className="font-medium">Email / Handle</th>
+                            <th className="font-medium">Wallet</th>
+                            <th className="text-right font-medium">Signed up</th>
+                            <th className="text-right font-medium">Wallet linked</th>
+                            <th className="text-center font-medium">Backfill</th>
+                            <th className="text-center font-medium">Realtime sync</th>
+                            <th className="text-right font-medium">Payouts</th>
+                            <th>Errors</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(data.traders.traders ?? []).map((t) => {
+                            const backfillStatus = t.wallet_address
+                              ? t.backfilled_at
+                                ? "ok"
+                                : "pending"
+                              : "—";
+                            const syncStatus = t.sync_error ? "error" : t.last_synced_at ? "ok" : t.wallet_address ? "pending" : "—";
+                            return (
+                              <tr key={t.id}>
+                                <td>
+                                  <div className="font-medium truncate max-w-[180px]" title={t.email}>
+                                    {t.display_name || t.email || "—"}
+                                  </div>
+                                  {(t.handle || t.email) && (
+                                    <div className="text-xs text-base-content/50 truncate max-w-[180px]">
+                                      {t.handle ? `@${t.handle}` : t.email}
+                                    </div>
+                                  )}
+                                </td>
+                                <td>
+                                  {t.wallet_address ? (
+                                    <span className="font-mono text-xs" title={t.wallet_address}>
+                                      {t.wallet_address.slice(0, 6)}…{t.wallet_address.slice(-4)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-base-content/40">—</span>
+                                  )}
+                                </td>
+                                <td className="text-right text-base-content/70 text-xs tabular-nums">
+                                  {t.created_at ? new Date(t.created_at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" }) : "—"}
+                                </td>
+                                <td className="text-right text-base-content/70 text-xs tabular-nums">
+                                  {t.wallet_address && t.updated_at
+                                    ? new Date(t.updated_at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
+                                    : "—"}
+                                </td>
+                                <td className="text-center">
+                                  {backfillStatus === "ok" && <span className="badge badge-success badge-sm">OK</span>}
+                                  {backfillStatus === "pending" && <span className="badge badge-warning badge-sm">Pending</span>}
+                                  {backfillStatus === "—" && <span className="text-base-content/40">—</span>}
+                                </td>
+                                <td className="text-center">
+                                  {syncStatus === "ok" && <span className="badge badge-success badge-sm">OK</span>}
+                                  {syncStatus === "pending" && <span className="badge badge-warning badge-sm">Pending</span>}
+                                  {syncStatus === "error" && <span className="badge badge-error badge-sm">Error</span>}
+                                  {syncStatus === "—" && <span className="text-base-content/40">—</span>}
+                                </td>
+                                <td className="text-right tabular-nums text-sm">
+                                  {t.payout_count != null ? `${t.payout_count} ($${Number(t.total_payout_usd ?? 0).toLocaleString()})` : "—"}
+                                </td>
+                                <td className="max-w-[220px]">
+                                  {t.sync_error ? (
+                                    <span className="text-error text-xs truncate block" title={t.sync_error}>
+                                      {t.sync_error}
+                                    </span>
+                                  ) : (
+                                    <span className="text-base-content/40">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    {(!data.traders.traders || data.traders.traders.length === 0) && (
+                      <div className="p-6 text-center text-base-content/60 text-sm">No profiles yet.</div>
+                    )}
+                  </div>
+                </>
+              )}
+            </section>
           </div>
         )}
 

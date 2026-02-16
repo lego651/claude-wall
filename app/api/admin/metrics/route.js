@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { usageTracker } from '@/lib/arbiscan';
 import { getCacheStats } from '@/lib/cache';
 import { sendAlert, checkIntelligenceFeedAlerts } from '@/lib/alerts';
@@ -368,6 +369,72 @@ async function getPropfirmsPayoutCounts(supabase) {
   return { firmsWithIssues, overallStatus };
 }
 
+/** Trader monitoring: sign-up, wallet link, backfill, realtime sync status and errors. */
+async function getTraderMonitoringStatus() {
+  try {
+    const service = createServiceClient();
+    const [
+      { data: profiles, error: profilesError },
+      { data: records, error: recordsError },
+    ] = await Promise.all([
+      service
+        .from('profiles')
+        .select('id, email, display_name, handle, wallet_address, backfilled_at, created_at, updated_at')
+        .order('created_at', { ascending: false }),
+      service
+        .from('trader_records')
+        .select('wallet_address, profile_id, last_synced_at, sync_error, total_payout_usd, payout_count'),
+    ]);
+    if (profilesError) return { error: profilesError.message, summary: null, traders: [] };
+    if (recordsError) return { error: recordsError.message, summary: null, traders: [] };
+
+    const profilesList = profiles || [];
+    const recordsList = records || [];
+    const recordByWallet = new Map(recordsList.map((r) => [r.wallet_address?.toLowerCase(), r]));
+    const recordByProfile = new Map(recordsList.map((r) => [r.profile_id, r]).filter(([, r]) => r.profile_id != null));
+
+    const withWallet = profilesList.filter((p) => p.wallet_address?.trim());
+    const backfilled = withWallet.filter((p) => p.backfilled_at != null);
+    const pendingBackfill = withWallet.filter((p) => p.backfilled_at == null);
+    const syncErrors = recordsList.filter((r) => r.sync_error?.trim());
+
+    const traders = profilesList.map((p) => {
+      const walletLower = p.wallet_address?.trim()?.toLowerCase();
+      const rec = walletLower
+        ? recordByWallet.get(walletLower) ?? recordByProfile.get(p.id) ?? null
+        : null;
+      return {
+        id: p.id,
+        email: p.email ?? '—',
+        display_name: p.display_name ?? '—',
+        handle: p.handle ?? '—',
+        wallet_address: p.wallet_address ?? null,
+        created_at: p.created_at,
+        updated_at: p.updated_at,
+        backfilled_at: p.backfilled_at ?? null,
+        last_synced_at: rec?.last_synced_at ?? null,
+        sync_error: rec?.sync_error ?? null,
+        total_payout_usd: rec?.total_payout_usd ?? null,
+        payout_count: rec?.payout_count ?? null,
+      };
+    });
+
+    return {
+      error: null,
+      summary: {
+        totalProfiles: profilesList.length,
+        withWallet: withWallet.length,
+        backfilled: backfilled.length,
+        pendingBackfill: pendingBackfill.length,
+        syncErrors: syncErrors.length,
+      },
+      traders,
+    };
+  } catch (e) {
+    return { error: e.message, summary: null, traders: [] };
+  }
+}
+
 export async function GET() {
   const supabase = await createClient();
   const {
@@ -388,7 +455,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed, generateWeeklyReportsRun, weeklyEmailLastRun] = await Promise.all([
+  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed, generateWeeklyReportsRun, weeklyEmailLastRun, traderMonitoring] = await Promise.all([
     getFileStats(),
     getDbStats(supabase),
     getPropfirmsPayoutCounts(supabase),
@@ -396,6 +463,7 @@ export async function GET() {
     getIntelligenceFeedStatus(supabase),
     getGenerateWeeklyReportsLastRun(supabase),
     getWeeklyEmailLastRun(supabase),
+    getTraderMonitoringStatus(),
   ]);
 
   const incidentDetection = await getIncidentDetectionStatus(supabase, trustpilotScraperFirms);
@@ -548,6 +616,12 @@ export async function GET() {
     classifyReviews: {
       unclassified: classifyReviews.unclassified,
     },
+    traders: traderMonitoring?.error
+      ? { error: traderMonitoring.error, summary: null, traders: [] }
+      : {
+          summary: traderMonitoring?.summary ?? null,
+          traders: traderMonitoring?.traders ?? [],
+        },
     apiLatency: { note: 'See Vercel Analytics for P50/P95/P99 by route' },
     errorRates: { note: 'See Vercel Analytics or logs for error rates by endpoint' },
     fetchedAt: new Date().toISOString(),
