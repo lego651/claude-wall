@@ -21,6 +21,7 @@ describe('GET /api/cron/send-weekly-reports', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.CRON_SECRET = 'test-secret';
+    process.env.RESEND_TEST_EMAIL = 'legogao651@gmail.com'; // Test filter
     const mockFrom = jest.fn();
     mockFrom
       .mockReturnValueOnce({
@@ -102,12 +103,13 @@ describe('GET /api/cron/send-weekly-reports', () => {
   it('returns 200 and sends one digest when one subscriber has reports', async () => {
     const userId = 'user-1';
     const firmId = 'fp';
+    const allowedEmail = 'legogao651@gmail.com';
     const mockFrom = jest.fn();
     mockFrom
       .mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockResolvedValue({
-            data: [{ user_id: userId, firm_id: firmId, email: 'u@example.com' }],
+            data: [{ user_id: userId, firm_id: firmId, email: allowedEmail }],
             error: null,
           }),
         }),
@@ -150,7 +152,7 @@ describe('GET /api/cron/send-weekly-reports', () => {
     expect(body.sent).toBe(1);
     expect(body.failed).toBe(0);
     expect(sendWeeklyDigest).toHaveBeenCalledWith(
-      { id: userId, email: 'u@example.com' },
+      { id: userId, email: allowedEmail },
       expect.any(Array),
       expect.objectContaining({ weekStart: '2025-02-03', weekEnd: '2025-02-09' })
     );
@@ -270,12 +272,13 @@ describe('GET /api/cron/send-weekly-reports', () => {
   it('returns 200 with failed 1 when sendWeeklyDigest returns not ok', async () => {
     const userId = 'user-1';
     const firmId = 'fp';
+    const allowedEmail = 'legogao651@gmail.com';
     const mockFrom = jest.fn();
     mockFrom
       .mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockResolvedValue({
-            data: [{ user_id: userId, firm_id: firmId, email: 'u@example.com' }],
+            data: [{ user_id: userId, firm_id: firmId, email: allowedEmail }],
             error: null,
           }),
         }),
@@ -318,5 +321,108 @@ describe('GET /api/cron/send-weekly-reports', () => {
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.error).toContain('supabase broken');
+  });
+
+  it('skips emails when no reports available for subscribed firms', async () => {
+    const userId = 'user-1';
+    const firmId = 'fp';
+    const allowedEmail = 'legogao651@gmail.com';
+    const mockFrom = jest.fn();
+    mockFrom
+      .mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({
+            data: [{ user_id: userId, firm_id: firmId, email: allowedEmail }],
+            error: null,
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          in: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              eq: jest.fn().mockResolvedValue({
+                data: [], // No reports for this firm
+                error: null,
+              }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce(cronLastRunUpsertMock());
+    createClient.mockReturnValue({ from: mockFrom });
+
+    const req = new Request('https://example.com/api/cron/send-weekly-reports', {
+      headers: { Authorization: 'Bearer test-secret' },
+    });
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.sent).toBe(0);
+    expect(body.skipped).toBe(1); // Skipped because no reports
+    expect(sendWeeklyDigest).not.toHaveBeenCalled();
+  });
+
+  it('skips non-allowed emails when RESEND_TEST_EMAIL filter is active', async () => {
+    process.env.RESEND_TEST_EMAIL = 'allowed@example.com';
+    const userId1 = 'user-1';
+    const userId2 = 'user-2';
+    const firmId = 'fp';
+    const mockFrom = jest.fn();
+    mockFrom
+      .mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({
+            data: [
+              { user_id: userId1, firm_id: firmId, email: 'allowed@example.com' },
+              { user_id: userId2, firm_id: firmId, email: 'notallowed@example.com' },
+            ],
+            error: null,
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          in: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              eq: jest.fn().mockResolvedValue({
+                data: [
+                  {
+                    firm_id: firmId,
+                    report_json: {
+                      firmId,
+                      weekStart: '2025-02-03',
+                      weekEnd: '2025-02-09',
+                      payouts: {},
+                      trustpilot: {},
+                      incidents: [],
+                      ourTake: 'Ok',
+                    },
+                  },
+                ],
+                error: null,
+              }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce(cronLastRunUpsertMock());
+    createClient.mockReturnValue({ from: mockFrom });
+    sendWeeklyDigest.mockResolvedValue({ ok: true });
+
+    const req = new Request('https://example.com/api/cron/send-weekly-reports', {
+      headers: { Authorization: 'Bearer test-secret' },
+    });
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.sent).toBe(1); // Only allowed@example.com
+    expect(body.skipped).toBe(1); // notallowed@example.com skipped
+    expect(sendWeeklyDigest).toHaveBeenCalledTimes(1);
+    expect(sendWeeklyDigest).toHaveBeenCalledWith(
+      { id: userId1, email: 'allowed@example.com' },
+      expect.any(Array),
+      expect.any(Object)
+    );
   });
 });

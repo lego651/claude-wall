@@ -127,11 +127,22 @@ export async function GET(request) {
     // Resend free tier: 2 requests/second. Add 600ms delay between emails.
     const RATE_LIMIT_DELAY_MS = 600;
 
+    // TEMPORARY: Resend free tier only allows sending to verified email
+    // TODO: Remove this filter after domain verification at resend.com/domains
+    const ALLOWED_TEST_EMAIL = process.env.RESEND_TEST_EMAIL || 'legogao651@gmail.com';
+
     for (const [userId, userData] of byUser) {
       const { email, firmIds } = userData;
       if (!email) {
         errors.push(`${userId}: no email in subscription`);
         failed += 1;
+        continue;
+      }
+
+      // TEMPORARY: Skip non-verified emails in Resend free tier
+      if (email !== ALLOWED_TEST_EMAIL) {
+        skipped += 1;
+        console.log(`[send-weekly-reports] Skipping ${email} (Resend free tier - only ${ALLOWED_TEST_EMAIL} allowed)`);
         continue;
       }
 
