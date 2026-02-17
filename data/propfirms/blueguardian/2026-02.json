@@ -2,18 +2,18 @@
   "firmId": "blueguardian",
   "period": "2026-02",
   "timezone": "UTC",
-  "generatedAt": "2026-02-14T00:56:39.096Z",
+  "generatedAt": "2026-02-17T11:35:10.182Z",
   "summary": {
-    "totalPayouts": 245607,
-    "payoutCount": 134,
+    "totalPayouts": 258561,
+    "payoutCount": 141,
     "largestPayout": 12000,
-    "avgPayout": 1833
+    "avgPayout": 1834
   },
   "dailyBuckets": [
     {
       "date": "2026-02-01",
-      "total": 19701.2,
-      "rise": 19701.2,
+      "total": 19701,
+      "rise": 19701,
       "crypto": 0,
       "wire": 0
     },
@@ -26,50 +26,50 @@
     },
     {
       "date": "2026-02-03",
-      "total": 41917.920000000006,
-      "rise": 41917.920000000006,
+      "total": 41918,
+      "rise": 41918,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-02-05",
-      "total": 43978.229999999996,
-      "rise": 43978.229999999996,
+      "total": 43978,
+      "rise": 43978,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-02-06",
-      "total": 10929.400000000001,
-      "rise": 10929.400000000001,
+      "total": 10929,
+      "rise": 10929,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-02-07",
-      "total": 4025.92,
-      "rise": 4025.92,
+      "total": 4026,
+      "rise": 4026,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-02-09",
-      "total": 23209.370000000003,
-      "rise": 23209.370000000003,
+      "total": 23209,
+      "rise": 23209,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-02-10",
-      "total": 15293.39,
-      "rise": 15293.39,
+      "total": 15293,
+      "rise": 15293,
       "crypto": 0,
       "wire": 0
     },
     {
       "date": "2026-02-12",
-      "total": 36798.549999999996,
-      "rise": 36798.549999999996,
+      "total": 36799,
+      "rise": 36799,
       "crypto": 0,
       "wire": 0
     },
@@ -82,13 +82,83 @@
     },
     {
       "date": "2026-02-14",
-      "total": 6924.88,
-      "rise": 6924.88,
+      "total": 6925,
+      "rise": 6925,
+      "crypto": 0,
+      "wire": 0
+    },
+    {
+      "date": "2026-02-16",
+      "total": 12954,
+      "rise": 12954,
       "crypto": 0,
       "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0x034c6092c478b2452a706941a38821b47d948be4608d4b947c941fe703e9c7d9",
+      "firm_id": "blueguardian",
+      "amount": 7600,
+      "payment_method": "rise",
+      "timestamp": "2026-02-16T17:47:25.000Z",
+      "from_address": "0x68035843020b6c0cd94dd29c273fff13c8e9a914",
+      "to_address": "0xa8ae108a6c2a433b1bef6c78bb057a54a8affd38"
+    },
+    {
+      "tx_hash": "0x063c67cb0e832b55fa97a57063f6601d35169cbbf013308a28f421dc3df78f77",
+      "firm_id": "blueguardian",
+      "amount": 750,
+      "payment_method": "rise",
+      "timestamp": "2026-02-16T17:44:42.000Z",
+      "from_address": "0x68035843020b6c0cd94dd29c273fff13c8e9a914",
+      "to_address": "0x4d9d07855f7819fc51df1aa7d3b7da52dccf00c8"
+    },
+    {
+      "tx_hash": "0x5b5aec57e23c1ce55d4c143cad5ed5927af4eb04fb222442f727a78a32cc6e2b",
+      "firm_id": "blueguardian",
+      "amount": 750,
+      "payment_method": "rise",
+      "timestamp": "2026-02-16T17:43:48.000Z",
+      "from_address": "0x68035843020b6c0cd94dd29c273fff13c8e9a914",
+      "to_address": "0x9f52892635572e172d3b24d32138e7eee1aab882"
+    },
+    {
+      "tx_hash": "0x273d7a9d01674e96f0112d98f02d9548f3f88c7e91d8cd7e23c5a37f146c5fcb",
+      "firm_id": "blueguardian",
+      "amount": 1350,
+      "payment_method": "rise",
+      "timestamp": "2026-02-16T17:42:53.000Z",
+      "from_address": "0x68035843020b6c0cd94dd29c273fff13c8e9a914",
+      "to_address": "0xc9491e54d9e2f0376d028e4c5ebdb9fc6f75eaf2"
+    },
+    {
+      "tx_hash": "0xc95d7b198bad4ff41fc1581ca0bc470a1c4f9d4476f9be633d3c03fbc46c6323",
+      "firm_id": "blueguardian",
+      "amount": 1500,
+      "payment_method": "rise",
+      "timestamp": "2026-02-16T17:40:34.000Z",
+      "from_address": "0x68035843020b6c0cd94dd29c273fff13c8e9a914",
+      "to_address": "0xfb5a2d7afd550cc04e9893d589ad739a2881fb65"
+    },
+    {
+      "tx_hash": "0x61d49965a232072d0998bb6a55d2a76fe27b128b006427e5c5240a7f18a08ab3",
+      "firm_id": "blueguardian",
+      "amount": 750,
+      "payment_method": "rise",
+      "timestamp": "2026-02-16T17:37:30.000Z",
+      "from_address": "0x68035843020b6c0cd94dd29c273fff13c8e9a914",
+      "to_address": "0xaa9354d17c72eaf85c3fe84c84fcdf743fa4e857"
+    },
+    {
+      "tx_hash": "0xb14e0395354915597bbffe141a41280523ddc4cd7f0136db4b9a80c04930dcff",
+      "firm_id": "blueguardian",
+      "amount": 254,
+      "payment_method": "rise",
+      "timestamp": "2026-02-16T17:34:30.000Z",
+      "from_address": "0x68035843020b6c0cd94dd29c273fff13c8e9a914",
+      "to_address": "0x4cd22f9c39e9bb777ba4f4694484bebea52af1ee"
+    },
     {
       "tx_hash": "0x253ada762187f9f9a4be8bd29f7f4f0ac88442077f7d5c39656b4a6a2b7ad281",
       "firm_id": "blueguardian",
