@@ -29,7 +29,7 @@ describe("/api/auth/callback", () => {
   let mockSupabase;
   let mockCookieStore;
   let mockServiceClient;
-  /** Captured return value of from("profiles") so we can assert on .upsert / .update */
+  /** Captured return value of from("user_profiles") so we can assert on .upsert / .update */
   let profilesChain;
 
   beforeEach(() => {
@@ -48,7 +48,7 @@ describe("/api/auth/callback", () => {
     cookies.mockResolvedValue(mockCookieStore);
     mockServiceClient = {
       from: jest.fn((table) => {
-        if (table === "profiles") {
+        if (table === "user_profiles") {
           return profilesChain;
         }
         return {};

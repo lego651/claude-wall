@@ -69,8 +69,8 @@ async function getClassifyUnclassifiedCount(supabase) {
       { count: total },
       { count: classified },
     ] = await Promise.all([
-      supabase.from('trustpilot_reviews').select('*', { count: 'exact', head: true }),
-      supabase.from('trustpilot_reviews').select('*', { count: 'exact', head: true }).not('classified_at', 'is', null),
+      supabase.from('firm_trustpilot_reviews').select('*', { count: 'exact', head: true }),
+      supabase.from('firm_trustpilot_reviews').select('*', { count: 'exact', head: true }).not('classified_at', 'is', null),
     ]);
     const unclassified = total != null && classified != null ? total - classified : 0;
     return { unclassified: Math.max(0, unclassified) };
@@ -129,7 +129,7 @@ async function getFileStats() {
 }
 
 async function getDbStats(supabase) {
-  const tables = ['firms', 'recent_payouts', 'trustpilot_reviews', 'firm_daily_incidents', 'firm_weekly_reports', 'user_subscriptions'];
+  const tables = ['firm_profiles', 'firm_recent_payouts', 'firm_trustpilot_reviews', 'firm_daily_incidents', 'firm_weekly_reports', 'user_subscriptions'];
   const counts = {};
   const start = Date.now();
   let ok = true;
@@ -181,7 +181,7 @@ async function getIntelligenceFeedStatus(supabase) {
     firmsWithReport = (reportRows || []).map((r) => r.firm_id);
 
     const { data: firmRows } = await supabase
-      .from('firms')
+      .from('firm_profiles')
       .select('id, name')
       .not('trustpilot_url', 'is', null)
       .order('id');
@@ -274,7 +274,7 @@ async function getWeeklyEmailLastRun(supabase) {
 async function getTrustpilotScraperStatus(supabase) {
   try {
     const { data, error } = await supabase
-      .from('firms')
+      .from('firm_profiles')
       .select('id, name, last_scraper_run_at, last_scraper_reviews_scraped, last_scraper_reviews_stored, last_scraper_duplicates_skipped, last_scraper_error')
       .not('trustpilot_url', 'is', null)
       .order('id');
@@ -299,7 +299,7 @@ async function getPropfirmsPayoutCounts(supabase) {
 
   let firms = [];
   try {
-    const { data: firmsRows } = await supabase.from('firms').select('id, name');
+    const { data: firmsRows } = await supabase.from('firm_profiles').select('id, name');
     firms = firmsRows || [];
   } catch {
     // ignore
@@ -311,7 +311,7 @@ async function getPropfirmsPayoutCounts(supabase) {
   for (const [label, cutoff] of Object.entries(cutoffs)) {
     try {
       const { data: rows } = await supabase
-        .from('recent_payouts')
+        .from('firm_recent_payouts')
         .select('firm_id')
         .gte('timestamp', cutoff);
       const map = countByFirm(rows);
@@ -378,7 +378,7 @@ async function getTraderMonitoringStatus() {
       { data: records, error: recordsError },
     ] = await Promise.all([
       service
-        .from('profiles')
+        .from('user_profiles')
         .select('id, email, display_name, handle, wallet_address, backfilled_at, created_at, updated_at')
         .order('created_at', { ascending: false }),
       service
@@ -446,7 +446,7 @@ export async function GET() {
   }
 
   const { data: profile } = await supabase
-    .from('profiles')
+    .from('user_profiles')
     .select('is_admin')
     .eq('id', user.id)
     .single();

@@ -16,7 +16,7 @@ export async function POST(req) {
 
     // Check if profile exists
     const { data: existingProfile } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select("id")
       .eq("id", user.id)
       .maybeSingle();
@@ -30,7 +30,7 @@ export async function POST(req) {
 
     // Create profile
     const { data, error } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .insert({
         id: user.id,
         email: user.email,

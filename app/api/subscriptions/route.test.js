@@ -56,7 +56,7 @@ describe('/api/subscriptions', () => {
                       firm_id: 'fp',
                       subscribed_at: '2025-01-01T00:00:00Z',
                       email_enabled: true,
-                      firms: { id: 'fp', name: 'FundingPips', logo_url: null, website: 'https://fp.com' },
+                      firm_profiles: { id: 'fp', name: 'FundingPips', logo_url: null, website: 'https://fp.com' },
                     },
                   ],
                   error: null,
@@ -141,7 +141,7 @@ describe('/api/subscriptions', () => {
 
     it('returns 200 with already_subscribed when subscription exists', async () => {
       mockSupabase.from.mockImplementation((table) => {
-        if (table === 'firms') {
+        if (table === 'firm_profiles') {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
@@ -179,7 +179,7 @@ describe('/api/subscriptions', () => {
 
     it('returns 200 with new subscription on insert', async () => {
       mockSupabase.from.mockImplementation((table) => {
-        if (table === 'firms') {
+        if (table === 'firm_profiles') {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
@@ -222,7 +222,7 @@ describe('/api/subscriptions', () => {
 
     it('returns 500 when existing check fails', async () => {
       mockSupabase.from.mockImplementation((table) => {
-        if (table === 'firms') {
+        if (table === 'firm_profiles') {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
@@ -255,7 +255,7 @@ describe('/api/subscriptions', () => {
 
     it('returns 200 with already_subscribed when insert returns 23505 and select returns row', async () => {
       mockSupabase.from.mockImplementation((table) => {
-        if (table === 'firms') {
+        if (table === 'firm_profiles') {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
@@ -295,7 +295,7 @@ describe('/api/subscriptions', () => {
 
     it('returns 500 when insert fails with 23505 but select returns no row', async () => {
       mockSupabase.from.mockImplementation((table) => {
-        if (table === 'firms') {
+        if (table === 'firm_profiles') {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
@@ -334,7 +334,7 @@ describe('/api/subscriptions', () => {
 
     it('returns 500 when insert fails with non-23505 error', async () => {
       mockSupabase.from.mockImplementation((table) => {
-        if (table === 'firms') {
+        if (table === 'firm_profiles') {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({

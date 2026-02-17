@@ -54,7 +54,7 @@ export async function POST(req) {
 
     // 3. Check if it's already used by another user
     const { data: existingProfile, error: checkError } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select("id")
       .eq("wallet_address", trimmedAddress)
       .maybeSingle();
@@ -76,7 +76,7 @@ export async function POST(req) {
 
     // Update profile with wallet address (use trimmed lowercase version)
     const { data, error } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .update({
         wallet_address: trimmedAddress,
         updated_at: new Date().toISOString(),
@@ -91,7 +91,7 @@ export async function POST(req) {
       // If profile doesn't exist, create it
       if (error.code === "PGRST116") {
         const { data: newProfile, error: createError } = await supabase
-          .from("profiles")
+          .from("user_profiles")
           .insert({
             id: user.id,
             email: user.email,

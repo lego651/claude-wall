@@ -35,14 +35,14 @@ describe('GET /api/v2/propfirms/[id]/latest-payouts', () => {
     mockSingle = jest.fn().mockResolvedValue({ data: { id: 'f1' }, error: null });
     mockOrder = jest.fn().mockResolvedValue({ data: [], error: null });
     mockFrom = jest.fn().mockImplementation((table) => {
-      if (table === 'firms') {
+      if (table === 'firm_profiles') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({ single: mockSingle }),
           }),
         };
       }
-      if (table === 'recent_payouts') {
+      if (table === 'firm_recent_payouts') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -106,6 +106,32 @@ describe('GET /api/v2/propfirms/[id]/latest-payouts', () => {
 
     expect(res.status).toBe(404);
     expect(body.error).toBe('Firm not found');
+  });
+
+  it('returns 500 when payouts fetch fails', async () => {
+    mockSingle.mockResolvedValueOnce({ data: { id: 'f1' }, error: null });
+    mockOrder.mockResolvedValueOnce({ data: null, error: { message: 'DB error' } });
+
+    const req = createRequest();
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(body.error).toContain('Failed to fetch payouts');
+  });
+
+  it('returns 403 when origin is invalid', async () => {
+    validateOrigin.mockReturnValueOnce({ ok: false, headers: {} });
+    const req = createRequest('https://evil.com/api/v2/propfirms/f1/latest-payouts');
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 429 when rate limited', async () => {
+    isRateLimited.mockReturnValueOnce({ limited: true, retryAfterMs: 30_000 });
+    const req = createRequest();
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    expect(res.status).toBe(429);
   });
 
   it('includes Arbiscan URLs in each payout', async () => {

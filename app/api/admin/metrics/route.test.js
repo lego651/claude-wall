@@ -65,7 +65,7 @@ describe('GET /api/admin/metrics', () => {
 
   it('returns 403 when user is not admin', async () => {
     mockSupabase.from.mockImplementation((table) => {
-      if (table === 'profiles') {
+      if (table === 'user_profiles') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -84,7 +84,7 @@ describe('GET /api/admin/metrics', () => {
 
   it('returns 403 when profile is null', async () => {
     mockSupabase.from.mockImplementation((table) => {
-      if (table === 'profiles') {
+      if (table === 'user_profiles') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -103,7 +103,7 @@ describe('GET /api/admin/metrics', () => {
 
   it('returns 200 with metrics when admin', async () => {
     mockSupabase.from.mockImplementation((table) => {
-      if (table === 'profiles') {
+      if (table === 'user_profiles') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -112,7 +112,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'firms') {
+      if (table === 'firm_profiles') {
         return {
           select: jest.fn().mockImplementation((...args) => {
             if (args[1] && args[1].head === true) return Promise.resolve({ count: 0, error: null });
@@ -185,7 +185,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'trustpilot_reviews') {
+      if (table === 'firm_trustpilot_reviews') {
         return {
           select: jest.fn()
             .mockResolvedValueOnce({ count: 0, error: null })
@@ -193,7 +193,7 @@ describe('GET /api/admin/metrics', () => {
             .mockReturnValueOnce({ not: jest.fn().mockResolvedValue({ count: 0, error: null }) }),
         };
       }
-      if (['recent_payouts', 'firm_weekly_reports', 'user_subscriptions'].includes(table)) {
+      if (['firm_recent_payouts', 'firm_weekly_reports', 'user_subscriptions'].includes(table)) {
         return {
           select: jest.fn().mockResolvedValue({ count: 0, error: null }),
         };
@@ -242,7 +242,7 @@ describe('GET /api/admin/metrics', () => {
 
   it('includes trustpilotScraper.firms as empty when getTrustpilotScraperStatus returns empty', async () => {
     mockSupabase.from.mockImplementation((table) => {
-      if (table === 'profiles') {
+      if (table === 'user_profiles') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -251,7 +251,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'firms') {
+      if (table === 'firm_profiles') {
         return {
           select: jest.fn().mockImplementation((...args) => {
             if (args[1] && args[1].head === true) return Promise.resolve({ count: 0, error: null });
@@ -292,7 +292,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (['recent_payouts', 'trustpilot_reviews', 'firm_weekly_reports', 'user_subscriptions'].includes(table)) {
+      if (['firm_recent_payouts', 'firm_trustpilot_reviews', 'firm_weekly_reports', 'user_subscriptions'].includes(table)) {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {
@@ -324,7 +324,7 @@ describe('GET /api/admin/metrics', () => {
       return Promise.resolve({ isDirectory: () => false, size: 0 });
     });
     mockSupabase.from.mockImplementation((table) => {
-      if (table === 'profiles') {
+      if (table === 'user_profiles') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -333,7 +333,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'firms') {
+      if (table === 'firm_profiles') {
         return {
           select: jest.fn().mockImplementation((...args) => {
             if (args[1] && args[1].head === true) return Promise.resolve({ count: 0, error: null });
@@ -358,7 +358,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (['recent_payouts', 'trustpilot_reviews', 'firm_daily_incidents', 'firm_weekly_reports', 'user_subscriptions'].includes(table)) {
+      if (['firm_recent_payouts', 'firm_trustpilot_reviews', 'firm_daily_incidents', 'firm_weekly_reports', 'user_subscriptions'].includes(table)) {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {
@@ -458,7 +458,7 @@ describe('GET /api/admin/metrics', () => {
     const { sendAlert } = require('@/lib/alerts');
     sendAlert.mockRejectedValue(new Error('email failed'));
     mockSupabase.from.mockImplementation((table) => {
-      if (table === 'profiles') {
+      if (table === 'user_profiles') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -467,7 +467,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'trustpilot_reviews') {
+      if (table === 'firm_trustpilot_reviews') {
         return {
           select: jest.fn()
             .mockResolvedValueOnce({ count: null, error: { message: 'timeout' } })
@@ -475,7 +475,7 @@ describe('GET /api/admin/metrics', () => {
             .mockResolvedValueOnce({ count: 4, error: null }),
         };
       }
-      if (table === 'firms') {
+      if (table === 'firm_profiles') {
         return {
           select: jest.fn().mockImplementation((...args) => {
             if (args[1] && args[1].head === true) return Promise.resolve({ count: 0, error: null });
@@ -498,7 +498,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'recent_payouts') {
+      if (table === 'firm_recent_payouts') {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {
@@ -515,7 +515,7 @@ describe('GET /api/admin/metrics', () => {
   it('returns propfirmsData overallStatus warning when firm has only high flag', async () => {
     let gteCallIndex = 0;
     mockSupabase.from.mockImplementation((table) => {
-      if (table === 'profiles') {
+      if (table === 'user_profiles') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -524,7 +524,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'firms') {
+      if (table === 'firm_profiles') {
         return {
           select: jest.fn().mockImplementation((...args) => {
             if (args[1] && args[1].head === true) return Promise.resolve({ count: 0, error: null });
@@ -539,7 +539,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'recent_payouts') {
+      if (table === 'firm_recent_payouts') {
         return {
           select: jest.fn().mockReturnValue({
             gte: jest.fn().mockImplementation(() => {
@@ -550,7 +550,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (['trustpilot_reviews', 'firm_daily_incidents'].includes(table)) {
+      if (['firm_trustpilot_reviews', 'firm_daily_incidents'].includes(table)) {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {
@@ -584,7 +584,7 @@ describe('GET /api/admin/metrics', () => {
     const { sendAlert } = require('@/lib/alerts');
     sendAlert.mockRejectedValue(new Error('email failed'));
     mockSupabase.from.mockImplementation((table) => {
-      if (table === 'profiles') {
+      if (table === 'user_profiles') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -593,7 +593,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'firms') {
+      if (table === 'firm_profiles') {
         return {
           select: jest.fn().mockImplementation((...args) => {
             if (args[1] && args[1].head === true) return Promise.resolve({ count: 0, error: null });
@@ -604,10 +604,10 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'recent_payouts') {
+      if (table === 'firm_recent_payouts') {
         return { select: jest.fn().mockResolvedValue({ count: null, error: { message: 'Connection failed' } }) };
       }
-      if (['trustpilot_reviews', 'firm_daily_incidents'].includes(table)) {
+      if (['firm_trustpilot_reviews', 'firm_daily_incidents'].includes(table)) {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {
@@ -646,7 +646,7 @@ describe('GET /api/admin/metrics', () => {
 
   it('returns trustpilotScraper.firms empty when firms query returns error', async () => {
     mockSupabase.from.mockImplementation((table) => {
-      if (table === 'profiles') {
+      if (table === 'user_profiles') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -655,7 +655,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'firms') {
+      if (table === 'firm_profiles') {
         return {
           select: jest.fn().mockImplementation((...args) => {
             if (args[1] && args[1].head === true) return Promise.resolve({ count: 0, error: null });
@@ -670,7 +670,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (['recent_payouts', 'trustpilot_reviews', 'firm_daily_incidents', 'firm_weekly_reports', 'user_subscriptions'].includes(table)) {
+      if (['firm_recent_payouts', 'firm_trustpilot_reviews', 'firm_daily_incidents', 'firm_weekly_reports', 'user_subscriptions'].includes(table)) {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {
@@ -690,7 +690,7 @@ describe('GET /api/admin/metrics', () => {
     sendAlert.mockRejectedValue(new Error('email failed'));
     let gteCallIndex = 0;
     mockSupabase.from.mockImplementation((table) => {
-      if (table === 'profiles') {
+      if (table === 'user_profiles') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -699,7 +699,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'firms') {
+      if (table === 'firm_profiles') {
         return {
           select: jest.fn().mockImplementation((...args) => {
             if (args[1] && args[1].head === true) return Promise.resolve({ count: 0, error: null });
@@ -714,7 +714,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'recent_payouts') {
+      if (table === 'firm_recent_payouts') {
         return {
           select: jest.fn().mockReturnValue({
             gte: jest.fn().mockImplementation(() => {
@@ -725,7 +725,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (['trustpilot_reviews', 'firm_daily_incidents'].includes(table)) {
+      if (['firm_trustpilot_reviews', 'firm_daily_incidents'].includes(table)) {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {
@@ -758,7 +758,7 @@ describe('GET /api/admin/metrics', () => {
 
   it('includes trustpilotScraper.firms as empty when getTrustpilotScraperStatus throws', async () => {
     mockSupabase.from.mockImplementation((table) => {
-      if (table === 'profiles') {
+      if (table === 'user_profiles') {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -767,7 +767,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (table === 'firms') {
+      if (table === 'firm_profiles') {
         return {
           select: jest.fn().mockImplementation((...args) => {
             if (args[1] && args[1].head === true) return Promise.resolve({ count: 0, error: null });
@@ -782,7 +782,7 @@ describe('GET /api/admin/metrics', () => {
           }),
         };
       }
-      if (['recent_payouts', 'trustpilot_reviews', 'firm_daily_incidents', 'firm_weekly_reports', 'user_subscriptions'].includes(table)) {
+      if (['firm_recent_payouts', 'firm_trustpilot_reviews', 'firm_daily_incidents', 'firm_weekly_reports', 'user_subscriptions'].includes(table)) {
         return { select: jest.fn().mockResolvedValue({ count: 0, error: null }) };
       }
       return {

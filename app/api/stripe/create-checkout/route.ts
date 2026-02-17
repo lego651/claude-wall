@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     const { priceId, mode, successUrl, cancelUrl } = body;
 
     const { data } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select("*")
       .eq("id", user.id)
       .single();

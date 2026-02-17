@@ -52,7 +52,7 @@ export async function GET(request) {
 
         // Check if profile exists
         const { data: existingProfile, error: profileCheckError } = await serviceClient
-          .from("profiles")
+          .from("user_profiles")
           .select("id, wallet_address, display_name, handle")
           .eq("id", session.user.id)
           .maybeSingle();
@@ -103,7 +103,7 @@ export async function GET(request) {
         if (!existingProfile) {
           console.log("🆕 Creating new profile with wallet:", walletAddress || "none");
           const { data: newProfile, error: insertError } = await serviceClient
-            .from("profiles")
+            .from("user_profiles")
             .upsert(profileData, {
               onConflict: "id",
             })
@@ -151,7 +151,7 @@ export async function GET(request) {
           if (Object.keys(updatePayload).length > 1) {
             console.log("🔄 Updating existing profile:", Object.keys(updatePayload));
             const { error: updateError } = await serviceClient
-              .from("profiles")
+              .from("user_profiles")
               .update(updatePayload)
               .eq("id", session.user.id);
 
@@ -246,7 +246,7 @@ async function triggerBackfill(walletAddress, userId) {
         );
 
         serviceClient
-          .from("profiles")
+          .from("user_profiles")
           .update({
             backfilled_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),

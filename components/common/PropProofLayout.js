@@ -21,7 +21,7 @@ const PropProofLayout = ({ children }) => {
 
       if (currentUser) {
         const { data: profileData } = await supabase
-          .from("profiles")
+          .from("user_profiles")
           .select("*")
           .eq("id", currentUser.id)
           .single();

@@ -18,7 +18,7 @@ export async function GET() {
   }
 
   const { data: profile } = await supabase
-    .from('profiles')
+    .from('user_profiles')
     .select('is_admin')
     .eq('id', user.id)
     .single();
@@ -32,9 +32,9 @@ export async function GET() {
     { count: classifiedCount },
     { data: latestRow },
   ] = await Promise.all([
-    supabase.from('trustpilot_reviews').select('*', { count: 'exact', head: true }),
-    supabase.from('trustpilot_reviews').select('*', { count: 'exact', head: true }).not('classified_at', 'is', null),
-    supabase.from('trustpilot_reviews').select('classified_at').not('classified_at', 'is', null).order('classified_at', { ascending: false }).limit(1).maybeSingle(),
+    supabase.from('firm_trustpilot_reviews').select('*', { count: 'exact', head: true }),
+    supabase.from('firm_trustpilot_reviews').select('*', { count: 'exact', head: true }).not('classified_at', 'is', null),
+    supabase.from('firm_trustpilot_reviews').select('classified_at').not('classified_at', 'is', null).order('classified_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
 
   const unclassifiedCount = total != null && classifiedCount != null ? total - classifiedCount : null;

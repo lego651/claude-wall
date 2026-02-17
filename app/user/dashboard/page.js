@@ -42,7 +42,7 @@ export default function Dashboard() {
 
         // Load profile
         const { data: profileData, error } = await supabase
-          .from("profiles")
+          .from("user_profiles")
           .select("*")
           .eq("id", currentUser.id)
           .single();

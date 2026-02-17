@@ -64,7 +64,7 @@ describe('GET /api/v2/propfirms/[id]/incidents', () => {
           }),
         };
       }
-      if (table === 'trustpilot_reviews') {
+      if (table === 'firm_trustpilot_reviews') {
         return {
           select: () => ({
             in: () => Promise.resolve({

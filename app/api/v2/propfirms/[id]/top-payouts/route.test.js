@@ -17,6 +17,9 @@ jest.mock('@/middleware/requestId', () => ({
   getRequestId: () => 'test-req-id',
   setRequestIdHeader: jest.fn(),
 }));
+jest.mock('@/lib/cache', () => ({
+  cache: { get: jest.fn(), set: jest.fn() },
+}));
 
 function createRequest(url = 'https://x.com/api/v2/propfirms/f1/top-payouts') {
   return new Request(url, { headers: { Origin: 'http://localhost:3000' } });
@@ -95,6 +98,34 @@ describe('GET /api/v2/propfirms/[id]/top-payouts', () => {
 
     expect(res.status).toBe(404);
     expect(body.error).toBe('Firm not found');
+  });
+
+  it('returns 403 when origin is invalid', async () => {
+    validateOrigin.mockReturnValueOnce({ ok: false, headers: {} });
+    const req = createRequest('https://evil.com/api/v2/propfirms/f1/top-payouts');
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 429 when rate limited', async () => {
+    isRateLimited.mockReturnValueOnce({ limited: true, retryAfterMs: 30_000 });
+    const req = createRequest();
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    expect(res.status).toBe(429);
+  });
+
+  it('returns cached response when cache hit', async () => {
+    const { cache } = require('@/lib/cache');
+    const cachedBody = { firmId: 'f1', period: '30d', payouts: [] };
+    cache.get.mockResolvedValueOnce(cachedBody);
+
+    const req = createRequest('https://x.com/api/v2/propfirms/f1/top-payouts?period=30d');
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual(cachedBody);
+    expect(getTopPayoutsFromFiles).not.toHaveBeenCalled();
   });
 
   it('sorted by amount descending (Rise-only slice)', async () => {

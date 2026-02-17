@@ -105,4 +105,65 @@ describe('GET /api/v2/propfirms/[id]/signals', () => {
     expect(res.status).toBe(404);
     expect(body.error).toBe('Firm not found');
   });
+
+  it('returns 403 when origin is invalid', async () => {
+    validateOrigin.mockReturnValueOnce({ ok: false, headers: {} });
+    const req = createRequest('https://evil.com/api/v2/propfirms/f1/signals');
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 429 when rate limited', async () => {
+    isRateLimited.mockReturnValueOnce({ limited: true, retryAfterMs: 30_000 });
+    const req = createRequest();
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    expect(res.status).toBe(429);
+  });
+
+  it('returns 500 when Trustpilot reviews query fails', async () => {
+    mockGte.mockResolvedValueOnce({ data: null, error: { message: 'DB error' } });
+    const req = createRequest();
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+    expect(res.status).toBe(500);
+    expect(body.error).toBe('DB error');
+  });
+
+  it('returns payout with avgPayout 0 when payoutCount is 0', async () => {
+    loadPeriodData.mockReturnValueOnce({
+      summary: { totalPayouts: 0, payoutCount: 0, largestPayout: 0 },
+    });
+    const req = createRequest();
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.payout.avgPayout).toBe(0);
+    expect(body.payout.payoutCount).toBe(0);
+  });
+
+  it('counts reviews with unknown category as neither positive nor negative nor neutral', async () => {
+    mockGte.mockResolvedValueOnce({
+      data: [
+        { category: 'positive_experience' },
+        { category: 'unknown_category' },
+        { category: null },
+      ],
+      error: null,
+    });
+    const req = createRequest();
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+    expect(body.trustpilot.sentiment.positive).toBe(1);
+    expect(body.trustpilot.sentiment.neutral).toBe(0);
+    expect(body.trustpilot.sentiment.negative).toBe(0);
+  });
+
+  it('returns 500 when handler throws', async () => {
+    mockSingle.mockRejectedValueOnce(new Error('Connection failed'));
+    const req = createRequest();
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+    expect(res.status).toBe(500);
+    expect(body.error).toBeDefined();
+  });
 });

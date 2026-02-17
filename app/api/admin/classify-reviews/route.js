@@ -21,7 +21,7 @@ export async function POST(request) {
   }
 
   const { data: profile } = await supabase
-    .from('profiles')
+    .from('user_profiles')
     .select('is_admin')
     .eq('id', user.id)
     .single();
@@ -53,7 +53,7 @@ export async function POST(request) {
 
   const service = createServiceClient();
   const { count: unclassifiedRemaining } = await service
-    .from('trustpilot_reviews')
+    .from('firm_trustpilot_reviews')
     .select('*', { count: 'exact', head: true })
     .is('classified_at', null);
 

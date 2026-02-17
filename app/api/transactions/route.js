@@ -26,8 +26,8 @@ function createSupabaseClient() {
 }
 
 export async function GET(request) {
+  const { searchParams } = new URL(request.url);
   try {
-    const { searchParams } = new URL(request.url);
     const address = searchParams.get('address');
 
     // Validate address parameter
@@ -49,7 +49,7 @@ export async function GET(request) {
     const addressLower = address.toLowerCase();
     const supabase = createSupabaseClient();
 
-    // Step 1: Try to load from Supabase (trader_payout_history) or JSON files (historical data)
+    // Step 1: Try to load from Supabase (trader_history_payouts) or JSON files (historical data)
     let jsonTransactions = [];
     try {
       jsonTransactions = await getAllTraderTransactions(addressLower, null, supabase);

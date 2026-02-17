@@ -27,7 +27,7 @@ export async function POST(req) {
       }
       // Handle must be unique (excluding current user)
       const { data: existingHandleProfile } = await supabase
-        .from("profiles")
+        .from("user_profiles")
         .select("id")
         .eq("handle", normalizedHandle)
         .neq("id", user.id)
@@ -42,7 +42,7 @@ export async function POST(req) {
 
     // Get existing profile to check if wallet is being added for first time
     const { data: existingProfile } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select("wallet_address, backfilled_at")
       .eq("id", user.id)
       .single();
@@ -80,7 +80,7 @@ export async function POST(req) {
           );
         }
         const { data: otherProfileWithWallet } = await supabase
-          .from("profiles")
+          .from("user_profiles")
           .select("id")
           .eq("wallet_address", trimmedAddress)
           .neq("id", user.id)
@@ -117,7 +117,7 @@ export async function POST(req) {
 
     // Upsert profile data
     const { data, error } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .upsert(profileData, {
         onConflict: "id",
       })
@@ -194,7 +194,7 @@ export async function GET(req) {
     }
 
     const { data, error } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select("*")
       .eq("id", user.id)
       .single();

@@ -35,7 +35,7 @@ export default async function AdminLayout({ children }) {
 
   // Get user profile to check is_admin status
   const { data: profile, error } = await supabase
-    .from("profiles")
+    .from("user_profiles")
     .select("is_admin")
     .eq("id", user.id)
     .single();

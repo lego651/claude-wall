@@ -30,7 +30,7 @@ export default function ConnectWalletModal({ isOpen, onClose, onUpdate }) {
       if (!user) return;
 
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("user_profiles")
         .select("display_name, bio, handle, twitter, instagram, youtube, wallet_address")
         .eq("id", user.id)
         .single();

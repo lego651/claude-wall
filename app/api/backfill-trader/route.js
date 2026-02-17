@@ -46,7 +46,7 @@ export async function POST(req) {
 
     // Verify this wallet belongs to the authenticated user
     const { data: profile } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select("wallet_address")
       .eq("id", user.id)
       .single();
@@ -94,7 +94,7 @@ export async function POST(req) {
 
       // Update profile to mark backfill as complete
       await supabase
-        .from("profiles")
+        .from("user_profiles")
         .update({
           backfilled_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -142,7 +142,7 @@ export async function POST(req) {
  *
  * Returns whether the authenticated user's wallet has been backfilled.
  * For returning users: if backfilled_at is null but we already have transaction
- * data in Supabase (trader_records or trader_payout_history), we treat them as
+ * data in Supabase (trader_records or trader_history_payouts), we treat them as
  * backfilled and set backfilled_at so the "Syncing" banner is not shown again.
  */
 export async function GET(req) {
@@ -157,7 +157,7 @@ export async function GET(req) {
     }
 
     const { data: profile } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select("wallet_address, backfilled_at")
       .eq("id", user.id)
       .single();
@@ -202,7 +202,7 @@ export async function GET(req) {
     let hasHistoryData = false;
     if (!hasCachedData) {
       const { data: historyRows } = await supabase
-        .from("trader_payout_history")
+        .from("trader_history_payouts")
         .select("year_month")
         .eq("wallet_address", walletLower)
         .limit(1);
@@ -214,7 +214,7 @@ export async function GET(req) {
     if (alreadyHasData) {
       const now = new Date().toISOString();
       await supabase
-        .from("profiles")
+        .from("user_profiles")
         .update({ backfilled_at: now, updated_at: now })
         .eq("id", user.id);
 

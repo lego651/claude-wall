@@ -78,7 +78,7 @@ describe('Trustpilot scraper', () => {
 
       const result = await getFirmsWithTrustpilot();
       expect(result).toEqual(data);
-      expect(mockSupabase.from).toHaveBeenCalledWith('firms');
+      expect(mockSupabase.from).toHaveBeenCalledWith('firm_profiles');
     });
 
     it('throws when Supabase returns error', async () => {
@@ -253,7 +253,7 @@ describe('Trustpilot scraper', () => {
 
       const result = await scrapeTrustpilot('the5ers', { maxPages: 1, maxReviews: 10 });
       expect(result.success).toBe(true);
-      expect(mockSupabase.from).toHaveBeenCalledWith('firms');
+      expect(mockSupabase.from).toHaveBeenCalledWith('firm_profiles');
     });
 
     it('returns error result and closes browser when launch throws', async () => {
@@ -376,7 +376,7 @@ describe('Trustpilot scraper', () => {
       expect(result.success).toBe(true);
       expect(result.reviewsScraped).toBe(1);
       expect(result.reviewsStored).toBe(1);
-      expect(mockSupabase.from).toHaveBeenCalledWith('trustpilot_reviews');
+      expect(mockSupabase.from).toHaveBeenCalledWith('firm_trustpilot_reviews');
     });
 
     it('does not set reviewsStored when scrape returns no reviews', async () => {
@@ -389,7 +389,7 @@ describe('Trustpilot scraper', () => {
       expect(result.reviewsScraped).toBe(0);
       expect(result.reviewsStored).toBe(0);
       expect(result.duplicatesSkipped).toBe(0);
-      expect(mockSupabase.from).not.toHaveBeenCalledWith('trustpilot_reviews');
+      expect(mockSupabase.from).not.toHaveBeenCalledWith('firm_trustpilot_reviews');
     });
   });
 

@@ -109,7 +109,7 @@ async function getReviewsAndSentiment(
   const endStr = weekEnd.toISOString().slice(0, 10);
 
   const { data: reviews, error } = await supabase
-    .from('trustpilot_reviews')
+    .from('firm_trustpilot_reviews')
     .select('rating, category')
     .eq('firm_id', firmId)
     .gte('review_date', startStr)

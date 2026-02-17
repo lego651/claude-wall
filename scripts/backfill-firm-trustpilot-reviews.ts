@@ -51,7 +51,7 @@ async function runRetentionCleanup() {
     `[Trustpilot Backfill] trustpilot_reviews: delete where review_date < ${reviewCutoff} (${REVIEWS_RETENTION_DAYS}d)`
   );
   const { data: deletedReviews, error: errReviews } = await supabase
-    .from('trustpilot_reviews')
+    .from('firm_trustpilot_reviews')
     .delete()
     .lt('review_date', reviewCutoff)
     .select('id');
@@ -85,7 +85,7 @@ async function updateFirmScraperStatus(
 ) {
   const supabase = createServiceClient();
   await supabase
-    .from('firms')
+    .from('firm_profiles')
     .update({
       last_scraper_run_at: new Date().toISOString(),
       last_scraper_reviews_scraped: result.reviewsScraped,

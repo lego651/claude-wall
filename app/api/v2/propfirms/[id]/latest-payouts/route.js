@@ -60,7 +60,7 @@ export async function GET(request, { params }) {
 
     // Verify firm exists
     const { data: firm, error: firmError } = await withQueryGuard(
-      supabase.from('firms').select('id').eq('id', firmId).single(),
+      supabase.from('firm_profiles').select('id').eq('id', firmId).single(),
       { context: 'latest-payouts firms' }
     );
 
@@ -75,7 +75,7 @@ export async function GET(request, { params }) {
     const cutoffDate = new Date(Date.now() - (24 * 60 * 60 * 1000)).toISOString();
     const { data: payouts, error: payoutsError } = await withQueryGuard(
       supabase
-        .from('recent_payouts')
+        .from('firm_recent_payouts')
         .select('tx_hash, amount, payment_method, timestamp')
         .eq('firm_id', firmId)
         .gte('timestamp', cutoffDate)

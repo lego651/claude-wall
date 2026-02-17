@@ -19,7 +19,7 @@ export async function GET() {
   }
 
   const { data: profile } = await supabase
-    .from('profiles')
+    .from('user_profiles')
     .select('is_admin')
     .eq('id', user.id)
     .single();

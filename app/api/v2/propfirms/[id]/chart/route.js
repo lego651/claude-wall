@@ -74,7 +74,7 @@ export async function GET(request, { params }) {
 
     const { data: firmRow, error: firmError } = await withQueryGuard(
       supabase
-        .from('firms')
+        .from('firm_profiles')
         .select('id, name, logo_url, website, last_payout_at')
         .eq('id', firmId)
         .single(),

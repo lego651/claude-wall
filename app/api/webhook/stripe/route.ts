@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
         if (!userId) {
           // check if user already exists
           const { data: profile } = await supabase
-            .from("profiles")
+            .from("user_profiles")
             .select("*")
             .eq("email", customer.email)
             .single();
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
               await new Promise(resolve => setTimeout(resolve, 100));
 
               const { data: existingProfile } = await supabase
-                .from("profiles")
+                .from("user_profiles")
                 .select("*")
                 .eq("id", user.id)
                 .single();
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
         } else {
           // find user by ID
           const { data: profile } = await supabase
-            .from("profiles")
+            .from("user_profiles")
             .select("*")
             .eq("id", userId)
             .single();
@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
         }
 
         const { error } = await supabase
-          .from("profiles")
+          .from("user_profiles")
           .upsert({
             id: user.id,
             email: customer.email,
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
         );
 
         await supabase
-          .from("profiles")
+          .from("user_profiles")
           .update({ has_access: false })
           .eq("customer_id", subscription.customer);
         break;
@@ -190,9 +190,9 @@ export async function POST(req: NextRequest) {
         const priceId = stripeObject.lines.data[0].price.id;
         const customerId = stripeObject.customer;
 
-        // Find profile where customer_id equals the customerId (in table called 'profiles')
+        // Find profile where customer_id equals the customerId (in table user_profiles)
         const { data: profile } = await supabase
-          .from("profiles")
+          .from("user_profiles")
           .select("*")
           .eq("customer_id", customerId)
           .single();
@@ -207,7 +207,7 @@ export async function POST(req: NextRequest) {
 
         // Grant the profile access to your product. It's a boolean in the database, but could be a number of credits, etc...
         await supabase
-          .from("profiles")
+          .from("user_profiles")
           .update({ has_access: true })
           .eq("customer_id", customerId);
 

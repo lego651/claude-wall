@@ -106,7 +106,7 @@ export async function GET(request, { params }) {
   let idToInfo = {};
   if (allReviewIds.length > 0) {
     const { data: reviewRows } = await withQueryGuard(
-      supabase.from('trustpilot_reviews').select('id, trustpilot_url, review_date').in('id', allReviewIds),
+      supabase.from('firm_trustpilot_reviews').select('id, trustpilot_url, review_date').in('id', allReviewIds),
       { context: 'incidents trustpilot_reviews' }
     );
     if (reviewRows?.length) {

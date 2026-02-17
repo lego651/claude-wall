@@ -9,7 +9,7 @@ import { calculateStats } from "@/lib/transactionProcessor";
  * GET /api/leaderboard
  *
  * Returns all public profiles with their transaction statistics.
- * Data source priority: trader_records (by wallet) then trader_payout_history (Supabase JSON).
+ * Data source priority: trader_records (by wallet) then trader_history_payouts (Supabase JSON).
  * Uses anon key so unauthenticated visitors can load the page.
  */
 export async function GET() {
@@ -24,7 +24,7 @@ export async function GET() {
 
     // Fetch public profiles (wallet + display_name + handle)
     const { data: profiles, error } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select("id, display_name, handle, wallet_address, created_at")
       .not("wallet_address", "is", null)
       .not("display_name", "is", null)
@@ -79,7 +79,7 @@ export async function GET() {
           };
         }
         
-        // Otherwise, try to load from Supabase (trader_payout_history) or JSON files
+        // Otherwise, try to load from Supabase (trader_history_payouts) or JSON files
         try {
           const jsonTransactions = await getAllTraderTransactions(walletAddress, null, supabase);
           

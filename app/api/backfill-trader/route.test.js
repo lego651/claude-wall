@@ -117,7 +117,7 @@ describe("/api/backfill-trader", () => {
     it("returns 200 and updates backfilled_at when script succeeds", async () => {
       process.env.ARBISCAN_API_KEY = "test-key";
       mockSupabase.from.mockImplementation((table) => {
-        if (table === "profiles") {
+        if (table === "user_profiles") {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
@@ -262,7 +262,7 @@ describe("/api/backfill-trader", () => {
 
     it("returns backfilled: true when profile has backfilled_at", async () => {
       mockSupabase.from.mockImplementation((table) => {
-        if (table === "profiles") {
+        if (table === "user_profiles") {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
@@ -308,7 +308,7 @@ describe("/api/backfill-trader", () => {
     it("returns backfilled: true and sets backfilled_at when trader_records has data", async () => {
       const wallet = "0x1234567890123456789012345678901234567890";
       mockSupabase.from.mockImplementation((table) => {
-        if (table === "profiles") {
+        if (table === "user_profiles") {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
@@ -345,10 +345,10 @@ describe("/api/backfill-trader", () => {
       expect(body.backfilled_at).toBeDefined();
     });
 
-    it("returns backfilled: true when trader_payout_history has data", async () => {
+    it("returns backfilled: true when trader_history_payouts has data", async () => {
       const wallet = "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd";
       mockSupabase.from.mockImplementation((table) => {
-        if (table === "profiles") {
+        if (table === "user_profiles") {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
@@ -372,7 +372,7 @@ describe("/api/backfill-trader", () => {
             }),
           };
         }
-        if (table === "trader_payout_history") {
+        if (table === "trader_history_payouts") {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
@@ -395,7 +395,7 @@ describe("/api/backfill-trader", () => {
 
     it("returns backfilled: false when wallet set but no data yet", async () => {
       mockSupabase.from.mockImplementation((table) => {
-        if (table === "profiles") {
+        if (table === "user_profiles") {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
@@ -419,7 +419,7 @@ describe("/api/backfill-trader", () => {
             }),
           };
         }
-        if (table === "trader_payout_history") {
+        if (table === "trader_history_payouts") {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({

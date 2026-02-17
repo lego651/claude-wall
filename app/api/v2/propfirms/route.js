@@ -127,12 +127,12 @@ export async function GET(request) {
       const supabase = createSupabaseClient();
 
       let firmsResult = await withQueryGuard(
-        supabase.from('firms').select('id, name, logo_url, website, last_payout_at'),
+        supabase.from('firm_profiles').select('id, name, logo_url, website, last_payout_at'),
         { context: 'propfirms firms' }
       );
       if (firmsResult.error?.code === '42703') {
         firmsResult = await withQueryGuard(
-          supabase.from('firms').select('id, name, logo_url, website'),
+          supabase.from('firm_profiles').select('id, name, logo_url, website'),
           { context: 'propfirms firms fallback' }
         );
       }
@@ -154,7 +154,7 @@ export async function GET(request) {
 
           const { data: payoutsRows, error: payoutsError } = await withQueryGuard(
             supabase
-              .from('recent_payouts')
+              .from('firm_recent_payouts')
               .select('firm_id, amount')
               .in('firm_id', firmIds)
               .gte('timestamp', cutoffDate),

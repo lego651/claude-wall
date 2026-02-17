@@ -47,7 +47,7 @@ export async function GET() {
         firm_id,
         subscribed_at,
         email_enabled,
-        firms (
+        firm_profiles (
           id,
           name,
           logo_url,
@@ -70,12 +70,12 @@ export async function GET() {
     const items = (subscriptions || []).map((s) => ({
       id: s.id,
       firm_id: s.firm_id,
-      firm: s.firms
+      firm: s.firm_profiles
         ? {
-            id: s.firms.id,
-            name: s.firms.name,
-            logo_url: s.firms.logo_url ?? null,
-            website: s.firms.website ?? null,
+            id: s.firm_profiles.id,
+            name: s.firm_profiles.name,
+            logo_url: s.firm_profiles.logo_url ?? null,
+            website: s.firm_profiles.website ?? null,
           }
         : null,
       subscribed_at: s.subscribed_at,
@@ -124,7 +124,7 @@ export async function POST(req) {
     }
 
     const { data: firm, error: firmError } = await supabase
-      .from("firms")
+      .from("firm_profiles")
       .select("id, name, logo_url, website")
       .eq("id", firm_id)
       .maybeSingle();

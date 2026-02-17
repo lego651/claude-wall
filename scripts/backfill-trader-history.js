@@ -3,7 +3,7 @@
  * Backfill Trader History
  *
  * Fetches ALL historical incoming payouts for a trader wallet from Arbiscan,
- * groups by month (UTC), and upserts into Supabase trader_payout_history table.
+ * groups by month (UTC), and upserts into Supabase trader_history_payouts table.
  * Used on first wallet link (OAuth callback) and for manual retry via API.
  *
  * Usage:
@@ -202,7 +202,7 @@ async function main() {
         transactions,
       };
 
-      const { error } = await supabase.from("trader_payout_history").upsert(
+      const { error } = await supabase.from("trader_history_payouts").upsert(
         {
           wallet_address: walletLower,
           year_month: yearMonth,
@@ -218,10 +218,10 @@ async function main() {
         logError(`Upsert ${yearMonth} failed:`, error.message);
         throw error;
       }
-      log(`Upserted trader_payout_history ${walletLower} / ${yearMonth}`);
+      log(`Upserted trader_history_payouts ${walletLower} / ${yearMonth}`);
     }
 
-    log(`Complete. ${months.length} month(s) written to trader_payout_history.`);
+    log(`Complete. ${months.length} month(s) written to trader_history_payouts.`);
     process.exit(0);
   } catch (err) {
     logError("Error:", err.message);

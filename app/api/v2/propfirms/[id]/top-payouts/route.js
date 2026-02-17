@@ -76,7 +76,7 @@ export async function GET(request, { params }) {
 
     // Verify firm exists
     const { data: firm, error: firmError } = await withQueryGuard(
-      supabase.from('firms').select('id').eq('id', firmId).single(),
+      supabase.from('firm_profiles').select('id').eq('id', firmId).single(),
       { context: 'top-payouts firms' }
     );
 

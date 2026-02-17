@@ -48,7 +48,7 @@ export async function runBatchClassification(options?: RunBatchOptions): Promise
   const limit = options?.limit;
 
   let query = supabase
-    .from('trustpilot_reviews')
+    .from('firm_trustpilot_reviews')
     .select('id, firm_id, rating, title, review_text, review_date, trustpilot_url')
     .is('classified_at', null)
     .order('created_at', { ascending: true });

@@ -51,8 +51,8 @@ describe('GET /api/v2/propfirms', () => {
       error: null,
     });
     mockFrom = jest.fn().mockImplementation((table) => {
-      if (table === 'firms') return { select: mockSelectFirms };
-      if (table === 'recent_payouts') return { select: mockSelectPayouts };
+      if (table === 'firm_profiles') return { select: mockSelectFirms };
+      if (table === 'firm_recent_payouts') return { select: mockSelectPayouts };
       return {};
     });
     createClient.mockReturnValue({ from: mockFrom });
@@ -249,6 +249,24 @@ describe('GET /api/v2/propfirms', () => {
       expect(res.status).toBe(500);
       expect(body.error).toContain('Connection refused');
     });
+
+    it('falls back to select without last_payout_at when column missing (42703)', async () => {
+      mockSelectFirms
+        .mockResolvedValueOnce({ data: null, error: { code: '42703' } })
+        .mockResolvedValueOnce({
+          data: [{ id: 'f1', name: 'Firm One', logo_url: null, website: null }],
+          error: null,
+        });
+      mockGte.mockResolvedValueOnce({ data: [], error: null });
+
+      const req = createRequest('https://x.com/api/v2/propfirms?period=1d');
+      const res = await GET(req);
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.data).toHaveLength(1);
+      expect(mockSelectFirms).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('parameter validation', () => {
@@ -275,6 +293,26 @@ describe('GET /api/v2/propfirms', () => {
       const body = await res.json();
 
       expect(body.meta.order).toBe('desc');
+    });
+
+    it('sorts by latestPayout when sort=latestPayout', async () => {
+      mockSelectFirms.mockResolvedValueOnce({
+        data: [
+          { id: 'a', name: 'A', logo_url: null, website: null, last_payout_at: '2025-02-10T00:00:00Z' },
+          { id: 'b', name: 'B', logo_url: null, website: null, last_payout_at: '2025-02-15T00:00:00Z' },
+        ],
+        error: null,
+      });
+      mockGte.mockResolvedValueOnce({ data: [], error: null });
+      loadPeriodData
+        .mockReturnValueOnce({ summary: { totalPayouts: 100, payoutCount: 1, largestPayout: 100, avgPayout: 100 } })
+        .mockReturnValueOnce({ summary: { totalPayouts: 200, payoutCount: 1, largestPayout: 200, avgPayout: 200 } });
+      const req = createRequest('https://x.com/api/v2/propfirms?period=7d&sort=latestPayout&order=desc');
+      const res = await GET(req);
+      const body = await res.json();
+      expect(res.status).toBe(200);
+      expect(body.data[0].id).toBe('b');
+      expect(body.data[1].id).toBe('a');
     });
   });
 

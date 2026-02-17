@@ -92,7 +92,7 @@ export async function POST(req) {
     
     // First, try exact match (case-sensitive)
     let { data: existingProfile, error: checkError } = await serviceClient
-      .from("profiles")
+      .from("user_profiles")
       .select("id, email, wallet_address")
       .eq("wallet_address", trimmedAddress)
       .maybeSingle();
@@ -107,7 +107,7 @@ export async function POST(req) {
     // and comparing in JavaScript (since Supabase doesn't support case-insensitive text comparison directly)
     if (!existingProfile && !checkError) {
       const { data: allProfiles, error: allProfilesError } = await serviceClient
-        .from("profiles")
+        .from("user_profiles")
         .select("id, email, wallet_address")
         .not("wallet_address", "is", null);
 

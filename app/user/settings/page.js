@@ -50,7 +50,7 @@ export default function SettingsPage() {
 
         // Load user profile data, create if it doesn't exist
         let { data: profile, error } = await supabase
-          .from("profiles")
+          .from("user_profiles")
           .select("*")
           .eq("id", currentUser.id)
           .single();
@@ -59,7 +59,7 @@ export default function SettingsPage() {
         if (error && error.code === "PGRST116") {
           // Profile doesn't exist, create it
           const { data: newProfile, error: createError } = await supabase
-            .from("profiles")
+            .from("user_profiles")
             .insert({
               id: currentUser.id,
               email: currentUser.email,

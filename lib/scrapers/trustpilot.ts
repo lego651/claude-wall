@@ -71,7 +71,7 @@ export interface FirmWithTrustpilot {
 export async function getFirmsWithTrustpilot(): Promise<FirmWithTrustpilot[]> {
   const supabase = createServiceClient();
   const { data, error } = await supabase
-    .from('firms')
+    .from('firm_profiles')
     .select('id, trustpilot_url')
     .not('trustpilot_url', 'is', null);
   if (error) throw new Error(`Failed to fetch firms with Trustpilot: ${error.message}`);
@@ -81,7 +81,7 @@ export async function getFirmsWithTrustpilot(): Promise<FirmWithTrustpilot[]> {
 async function getTrustpilotUrlForFirm(firmId: string): Promise<string | null> {
   const supabase = createServiceClient();
   const { data, error } = await supabase
-    .from('firms')
+    .from('firm_profiles')
     .select('trustpilot_url')
     .eq('id', firmId)
     .single();
@@ -333,7 +333,7 @@ export async function storeReviews(
   for (const review of reviews) {
     try {
       const { error } = await supabase
-        .from('trustpilot_reviews')
+        .from('firm_trustpilot_reviews')
         .insert({
           firm_id: firmId,
           rating: review.rating,

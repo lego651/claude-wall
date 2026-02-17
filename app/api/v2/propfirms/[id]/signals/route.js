@@ -70,7 +70,7 @@ export async function GET(request, { params }) {
     const supabase = createSupabaseClient();
 
     const { data: firm, error: firmError } = await withQueryGuard(
-      supabase.from('firms').select('id, name').eq('id', firmId).single(),
+      supabase.from('firm_profiles').select('id, name').eq('id', firmId).single(),
       { context: 'signals firms' }
     );
 
@@ -91,7 +91,7 @@ export async function GET(request, { params }) {
 
     const { data: reviews, error: revError } = await withQueryGuard(
       supabase
-        .from('trustpilot_reviews')
+        .from('firm_trustpilot_reviews')
         .select('category')
         .eq('firm_id', firmId)
         .gte('review_date', cutoffStr),

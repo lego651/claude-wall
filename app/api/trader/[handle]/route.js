@@ -31,7 +31,7 @@ export async function GET(request, { params }) {
 
     // Fetch profile by handle (case-insensitive)
     const { data: profiles, error } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select(`
         id,
         display_name,
@@ -102,7 +102,7 @@ export async function GET(request, { params }) {
       trader.payoutCount = record.payout_count || 0;
       trader.lastSyncedAt = record.last_synced_at || null;
     } else {
-      // Otherwise, try to load from Supabase (trader_payout_history) or JSON files
+      // Otherwise, try to load from Supabase (trader_history_payouts) or JSON files
       try {
         const jsonTransactions = await getAllTraderTransactions(walletAddress, null, supabase);
         

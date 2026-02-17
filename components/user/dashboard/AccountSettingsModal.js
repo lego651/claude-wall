@@ -35,7 +35,7 @@ export default function AccountSettingsModal({ isOpen, onClose, onUpdate }) {
 
       // Get profile data
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("user_profiles")
         .select("*")
         .eq("id", user.id)
         .single();

@@ -262,7 +262,7 @@ export async function updateReviewClassification(
 ): Promise<void> {
   const supabase = createServiceClient();
   const { error } = await supabase
-    .from('trustpilot_reviews')
+    .from('firm_trustpilot_reviews')
     .update({
       category: result.category,
       severity: result.severity,
@@ -311,7 +311,7 @@ export async function updateReviewClassificationsBulk(
     classified_at: now,
   }));
   const { error } = await supabase
-    .from('trustpilot_reviews')
+    .from('firm_trustpilot_reviews')
     .upsert(rows, { onConflict: 'id' });
   if (error) throw new Error(`Failed to bulk update reviews: ${error.message}`);
 }
