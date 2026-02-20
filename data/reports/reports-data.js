@@ -10,6 +10,36 @@ export const reportTypes = {
 // All available trading reports (metadata only, no markdown content)
 export const reports = [
   {
+    slug: 'week-08-2026',
+    type: reportTypes.weekly,
+    title: 'Week 8, 2026',
+    period: '2026-02-16 to 2026-02-20',
+    weekNumber: 8,
+    year: 2026,
+    publishedAt: '2026-02-20',
+    summary: {
+      totalR: 2.4,
+      winRate: 60,
+      totalTrades: 15,
+      bestDay: 'Tuesday (+2.10R)',
+    },
+  },
+  {
+    slug: 'week-07-2026',
+    type: reportTypes.weekly,
+    title: 'Week 7, 2026',
+    period: '2026-02-09 to 2026-02-13',
+    weekNumber: 7,
+    year: 2026,
+    publishedAt: '2026-02-13',
+    summary: {
+      totalR: 3.7,
+      winRate: 52.4,
+      totalTrades: 21,
+      bestDay: 'Monday (+6.00R)',
+    },
+  },
+  {
     slug: 'week-06-2026',
     type: reportTypes.weekly,
     title: 'Week 6, 2026',
