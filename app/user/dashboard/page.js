@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [backfillStatus, setBackfillStatus] = useState(null);
   const [syncBannerDismissed, setSyncBannerDismissed] = useState(false);
+  const [firmLogosMap, setFirmLogosMap] = useState({});
 
   // Get wallet address from profile
   const walletAddress = profile?.wallet_address;
@@ -65,6 +66,27 @@ export default function Dashboard() {
     };
 
     loadUserData();
+  }, []);
+
+  // Fetch firm logos from DB (firm_profiles) for verified payouts card
+  useEffect(() => {
+    const loadFirmLogos = async () => {
+      try {
+        const supabase = createClient();
+        const { data: firms, error } = await supabase
+          .from("firm_profiles")
+          .select("id, logo_url");
+        if (error) return;
+        const map = {};
+        (firms || []).forEach((f) => {
+          if (f.id && (f.logo_url ?? "").trim()) map[f.id] = f.logo_url.trim();
+        });
+        setFirmLogosMap(map);
+      } catch {
+        // non-blocking
+      }
+    };
+    loadFirmLogos();
   }, []);
 
   // Auto-dismiss syncing banner after 60 seconds so it doesn't run forever
@@ -123,15 +145,17 @@ export default function Dashboard() {
 
     const firmsWithPayouts = propfirmsData.firms.map((firm) => {
       const firmAddressesLower = new Set(
-        firm.addresses.map((addr) => addr.toLowerCase())
+        (firm.addresses || []).map((addr) => addr.toLowerCase())
       );
       const firmTxs = transactionData.transactions.filter((tx) =>
         firmAddressesLower.has((tx.from || "").toLowerCase())
       );
       const totalPayout = firmTxs.reduce((sum, tx) => sum + (tx.amountUSD || 0), 0);
-      const logoPath = getFirmLogoUrl({ ...firm, logo: firm.logo_url });
+      const logoUrl = firmLogosMap[firm.id] ?? firm.logo_url ?? null;
+      const logoPath = getFirmLogoUrl({ ...firm, logo: logoUrl, logo_url: logoUrl });
       return {
         ...firm,
+        logo_url: logoUrl,
         logoPath,
         totalPayout,
       };
@@ -140,7 +164,7 @@ export default function Dashboard() {
     return firmsWithPayouts
       .filter((f) => f.totalPayout > 0)
       .sort((a, b) => b.totalPayout - a.totalPayout);
-  }, [transactionData?.transactions]);
+  }, [transactionData?.transactions, firmLogosMap]);
 
   // Calculate success rate (simplified - based on payout count)
   const payoutCount = transactionData?.transactions?.length || 0;

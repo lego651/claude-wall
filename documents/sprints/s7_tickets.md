@@ -8,6 +8,25 @@
 
 ---
 
+## Sprint 7 status (updated 2026-02-20)
+
+| Ticket | Title | Status |
+|--------|--------|--------|
+| S7-001 | Test both auth flows | ✅ Done |
+| S7-002 | Backfill script exists & works | ✅ Done |
+| S7-003 | OAuth callback error handling (`backfill_error`) | 🔲 Pending |
+| S7-004 | DB tables verified | ✅ Done |
+| S7-005 | Test real-time sync (Inngest) | 🔲 Pending |
+| S7-006 | Combined data loader tests | 🔲 Pending |
+| S7-007 | Auto-subscribe new users | ✅ Done (DB trigger) |
+| S7-008 | Bulk subscribe/unsubscribe UI | 🔲 Pending |
+| S7-009 | Subscription stats panel | 🔲 Pending |
+| S7-010 | Rate limits & scaling docs | 🔲 Pending |
+
+**Next:** S7-003 (OAuth callback error handling) or S7-005 (real-time sync testing).
+
+---
+
 ## Current State
 
 ### ✅ What's Already Built
@@ -21,14 +40,14 @@
 2. **Backfill System:**
    - OAuth callback triggers backfill script on first wallet link ✅
    - Fetches full history from Arbiscan ✅
-   - Writes monthly JSON files to `data/traders/<wallet>/` ✅
-   - Sets `backfilled_at` timestamp in profiles ✅
+   - Writes to Supabase `trader_history_payouts` (script: `scripts/backfill-trader-history.js`) ✅
+   - Sets `backfilled_at` timestamp in `user_profiles` ✅
    - Fire-and-forget (doesn't block OAuth redirect) ✅
 
 3. **Real-time Sync:**
    - Inngest cron (every 5 min) ✅
-   - Syncs last 24h of incoming payouts to `recent_trader_payouts` ✅
-   - Combines with JSON files for complete view ✅
+   - Syncs last 24h of incoming payouts to `trader_recent_payouts` (renamed from `recent_trader_payouts`) ✅
+   - Combines with historical data for complete view ✅
    - Architecture mirrors firm sync (proven system) ✅
 
 4. **Firm Subscriptions:**
@@ -36,14 +55,14 @@
    - Toggle switches for subscribe/unsubscribe ✅
    - Shows subscription count badge ✅
    - API routes: GET/POST/DELETE `/api/subscriptions` ✅
-   - New users: Default behavior exists (but not auto-subscribed) ⚠️
+   - New users: Auto-subscribe via DB trigger `auto_subscribe_new_user` (migration 23, 24) ✅
    - Bulk operations: No UI yet ⚠️
 
 ### 🔴 What Needs Verification/Polish
 
 1. **Authentication Flow Testing:**
-   - Test both signup flows end-to-end
-   - Verify error handling (duplicate wallet, invalid format, prop firm address)
+   - Flow 1 (Google first → add wallet) verified ✅
+   - Flow 2 (wallet first → Google) verified ✅; error-handling cases optional
    - Check profile creation with edge cases (no name, no email prefix)
 
 2. **Backfill Script:**
@@ -61,8 +80,8 @@
    - Bulk subscribe/unsubscribe UI polish
 
 5. **Database Migrations:**
-   - Verify `recent_trader_payouts` and `trader_records` tables exist
-   - Check indexes and RLS policies
+   - `trader_records` and `trader_recent_payouts` (renamed from `recent_trader_payouts`) exist ✅
+   - Tables created in migrations 06, 08; rename in 24
 
 ---
 
@@ -70,7 +89,7 @@
 
 ### TICKET-S7-001: Test Both Authentication Flows 🔴 CRITICAL
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done (2026-02-20 — Flow 1 & Flow 2 verified: email-first and wallet-first signup)
 **Priority:** P0 (Blocker)
 **Story Points:** 3
 **Assignee:** QA Engineer
@@ -79,28 +98,30 @@
 
 Test both signup flows: (1) Google first → wallet, and (2) Wallet first → Google. Verify error handling, profile creation, and wallet validation.
 
+**Runbook:** [documents/runbooks/s7-001-auth-flows-test-runbook.md](../runbooks/s7-001-auth-flows-test-runbook.md) — use this for step-by-step manual execution.
+
 **Acceptance Criteria:**
 
-**Flow 1: Google OAuth First**
-- [ ] Sign in with Google (no wallet yet)
-- [ ] Profile created with display_name and handle from Google
-- [ ] Navigate to settings → Add wallet address
-- [ ] Submit valid wallet → Success
+**Flow 1: Google OAuth First** ✅ Verified 2026-02-20
+- [x] Sign in with Google (no wallet yet)
+- [x] Profile created with display_name and handle from Google
+- [x] Navigate to settings → Add wallet address
+- [x] Submit valid wallet → Success
 - [ ] Submit duplicate wallet → Error: "already linked to another account"
 - [ ] Submit prop firm address → Error: "belongs to prop firm"
 - [ ] Submit invalid format → Error: "invalid format"
-- [ ] After successful link → `wallet_address` in profile
+- [x] After successful link → `wallet_address` in profile
 - [ ] After successful link → Backfill starts (check logs)
 
-**Flow 2: Wallet Address First**
-- [ ] Navigate to signup page
-- [ ] Enter wallet address (no Google yet)
-- [ ] Click "Sign in with Google"
-- [ ] Wallet stored in `pending_wallet` cookie
-- [ ] OAuth redirect → callback retrieves cookie
-- [ ] Profile created WITH wallet_address
+**Flow 2: Wallet Address First** ✅ Verified 2026-02-20
+- [x] Navigate to `/connect-wallet` (wallet-first entry)
+- [x] Enter wallet address (no Google yet), submit → redirects to `/signin`
+- [x] Click "Sign in with Google"
+- [x] Wallet stored in `pending_wallet` cookie
+- [x] OAuth redirect → callback retrieves cookie
+- [x] Profile created WITH wallet_address
 - [ ] Backfill triggered automatically
-- [ ] Cookie cleared after callback
+- [x] Cookie cleared after callback
 
 **Edge Cases:**
 - [ ] No full_name in Google → Falls back to email prefix
@@ -110,27 +131,8 @@ Test both signup flows: (1) Google first → wallet, and (2) Wallet first → Go
 
 **Testing:**
 
-```bash
-# Test Flow 1
-1. Sign in with Google: test1@example.com
-2. Check profile: display_name, handle set correctly
-3. Add wallet: 0x1c969652d758f8fc23c443758f8911086f676216
-4. Verify backfill triggered: Check logs for "[OAuth Backfill]"
-
-# Test Flow 2
-1. Visit /signup
-2. Enter wallet: 0x0074fa9c170e12351afabd7df0ebd0aed2a5eab3
-3. Click "Sign in with Google"
-4. Sign in with test2@example.com
-5. Verify profile has wallet_address
-6. Check backfilled_at is set (or pending)
-
-# Test Edge Cases
-- Duplicate wallet: Use 0x1c969... (already linked)
-- Prop firm address: Use 0x1e198Ad0608476EfA952De1cD8e574dB68df5f16 (fundingpips)
-- Invalid format: Use "not-a-wallet"
-- Same user: Add wallet twice with same account
-```
+- **Manual:** Follow the [S7-001 auth flows runbook](../runbooks/s7-001-auth-flows-test-runbook.md). Entry points: Flow 1 = `/signin` then `/user/settings` to add wallet; Flow 2 = `/connect-wallet` → `/signin` → Sign in with Google.
+- **API coverage:** `app/api/wallet/validate/route.test.js` covers format, prop_firm, already_used, same-user. `app/api/auth/callback/route.test.js` covers callback with/without pending_wallet, profile create/update, backfill trigger, cookie clear.
 
 **Files to Check:**
 - [app/api/auth/callback/route.js:11-275](../../app/api/auth/callback/route.js) - OAuth callback
@@ -142,14 +144,14 @@ Test both signup flows: (1) Google first → wallet, and (2) Wallet first → Go
 
 ### TICKET-S7-002: Verify Backfill Script Exists and Works 🔴 CRITICAL
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done (2026-02-19)
 **Priority:** P0 (Blocker)
 **Story Points:** 5
 **Assignee:** Backend Engineer
 
 **Description:**
 
-The OAuth callback references `scripts/backfill-trader-history.js` but this file doesn't exist in the codebase. We need to verify if it exists or create it.
+~~The OAuth callback references `scripts/backfill-trader-history.js` but this file doesn't exist.~~ **Done:** Script exists; writes to Supabase `trader_history_payouts` (not JSON files). Caller uses 5 min timeout.
 
 **Acceptance Criteria:**
 
@@ -436,14 +438,14 @@ ADD COLUMN IF NOT EXISTS backfill_error TEXT;
 
 ### TICKET-S7-004: Verify Database Tables and Migrations 🔴 CRITICAL
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done (2026-02-19)
 **Priority:** P0 (Blocker)
 **Story Points:** 2
 **Assignee:** Database Engineer
 
 **Description:**
 
-Verify that `recent_trader_payouts` and `trader_records` tables exist with correct schemas, indexes, and RLS policies.
+Verify that `recent_trader_payouts` and `trader_records` tables exist. **Done:** `trader_records` (migration 06), table created as `recent_trader_payouts` (08) then renamed to `trader_recent_payouts` (24). Code uses `trader_recent_payouts`.
 
 **Acceptance Criteria:**
 
@@ -723,14 +725,14 @@ curl https://your-app.vercel.app/api/traders/0x1c969652d758f8fc23c443758f8911086
 
 ### TICKET-S7-007: Auto-Subscribe New Users to All Firms 🟡 HIGH
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done (DB trigger in migration 23/24)
 **Priority:** P1 (High)
 **Story Points:** 3
 **Assignee:** Backend Engineer
 
 **Description:**
 
-New users should be automatically subscribed to all firms on first signup, so they receive the weekly digest immediately.
+New users should be automatically subscribed to all firms on first signup. **Done:** Trigger `auto_subscribe_new_user` (migration 23, recreated on `user_profiles` in 24) subscribes new profiles to all firms with `trustpilot_url`.
 
 **Acceptance Criteria:**
 
@@ -1165,13 +1167,13 @@ du -sh data/traders/
 
 ### Critical Path (Must Complete for Alpha)
 
-1. **TICKET-S7-001:** Test auth flows (3 pts) ⚠️ **BLOCKER**
-2. **TICKET-S7-002:** Verify/create backfill script (5 pts) ⚠️ **BLOCKER**
-3. **TICKET-S7-004:** Verify database tables (2 pts) ⚠️ **BLOCKER**
-4. **TICKET-S7-005:** Test real-time sync (5 pts) ⚠️ **BLOCKER**
-5. **TICKET-S7-007:** Auto-subscribe new users (3 pts) 🔴 **HIGH**
+1. **TICKET-S7-001:** Test auth flows (3 pts) ⚠️ **BLOCKER** — *Pending*
+2. **TICKET-S7-002:** ~~Verify/create backfill script~~ ✅ **Done**
+3. **TICKET-S7-004:** ~~Verify database tables~~ ✅ **Done**
+4. **TICKET-S7-005:** Test real-time sync (5 pts) ⚠️ **BLOCKER** — *Next*
+5. **TICKET-S7-007:** ~~Auto-subscribe new users~~ ✅ **Done** (DB trigger)
 
-**Total Critical Path:** 18 story points (~1 week with 2 engineers)
+**Remaining Critical Path:** ~8 pts (S7-001 + S7-005)
 
 ### Nice-to-Have (Can Defer)
 
@@ -1188,33 +1190,35 @@ du -sh data/traders/
 ### What's Already Working ✅
 
 - Authentication infrastructure is solid (OAuth + wallet linking)
+- Backfill script exists (`scripts/backfill-trader-history.js`), writes to `trader_history_payouts`
+- Database tables exist: `trader_records`, `trader_recent_payouts` (migrations 06, 08, 24)
+- Auto-subscribe on signup via DB trigger `auto_subscribe_new_user`
 - Real-time sync architecture mirrors proven firm sync
 - Firm subscription UI is complete and polished
 - Rate limits are well within safe thresholds
 
-### What Needs Verification ❌
+### What Needs Verification / Polish ❌
 
-- Backfill script may not exist (`scripts/backfill-trader-history.js`)
-- Database tables may not be created yet
-- Auto-subscribe on signup not implemented
-- Error handling could be more robust
+- **S7-001:** End-to-end test of both auth flows (manual QA)
+- **S7-005:** End-to-end test of Inngest real-time sync
+- **S7-003:** `backfill_error` column + error handling in OAuth callback (optional polish)
+- **S7-006:** Unit tests for `traderDataLoader.js` (optional)
+- **S7-008 / S7-009 / S7-010:** Bulk UI, subscription stats, docs (nice-to-have)
 
-### The Real Risks 🔴
+### Remaining Risks 🔴
 
-1. **Backfill script missing:** OAuth callback references it but it doesn't exist
-2. **Database schema:** Tables may not be created in migrations
-3. **Auto-subscribe:** New users won't receive emails without manual subscription
-4. **Scaling:** No clear monitoring or alerting when approaching limits
+1. **Auth/sync not validated:** Manual testing of flows and Inngest job still pending
+2. **Scaling:** No clear monitoring or alerting when approaching limits
 
 ---
 
-## Next Steps
+## Next Steps (updated 2026-02-19)
 
-1. **Start with TICKET-S7-002:** Check if backfill script exists, create if missing
-2. **Then TICKET-S7-004:** Verify database tables, create migrations if needed
-3. **Then TICKET-S7-001:** Test auth flows end-to-end
-4. **Then TICKET-S7-005:** Test real-time sync with Inngest
-5. **Finally TICKET-S7-007:** Implement auto-subscribe for new users
+1. **TICKET-S7-001:** Test both auth flows end-to-end (Google first → wallet, wallet first → Google; edge cases)
+2. **TICKET-S7-005:** Test real-time sync (Inngest `sync-trader-payouts`, verify `trader_recent_payouts` + `trader_records`)
+3. **TICKET-S7-003** (optional): Add `backfill_error` column and `updateBackfillError` in OAuth callback for debugging
+4. **TICKET-S7-006** (optional): Add tests for `lib/services/traderDataLoader.js`
+5. **TICKET-S7-008 / S7-009 / S7-010:** Bulk subscribe UI, subscription stats API/panel, runbook monitoring section
 
 ---
 
