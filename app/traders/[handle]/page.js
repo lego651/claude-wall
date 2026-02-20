@@ -79,35 +79,49 @@ const ProfilePage = ({ params }) => {
   const walletAddress = trader?.walletAddress || null;
   const { data, loading, error } = useTransactions(walletAddress);
 
-  // Match transactions to verified firms
-  // Must call useMemo before conditional returns to follow Rules of Hooks
+  // Verified firms with aggregated payouts (same logic as user/dashboard): totalPayout per firm, sorted high to low
   const verifiedFirms = useMemo(() => {
     if (!data?.transactions || data.transactions.length === 0) {
       return [];
     }
 
-    // Get unique sender addresses from transactions
-    const senderAddresses = new Set(
-      data.transactions.map(tx => tx.from.toLowerCase())
-    );
-
-    // Find firms that match transaction sender addresses
-    const matchedFirms = propfirmsData.firms.filter(firm => {
-      return firm.addresses.some(addr => 
-        senderAddresses.has(addr.toLowerCase())
+    const firmsWithPayouts = (propfirmsData.firms || []).map((firm) => {
+      const firmAddressesLower = new Set(
+        (firm.addresses || []).map((addr) => addr.toLowerCase())
       );
-    });
-
-    return matchedFirms.map(firm => {
+      const firmTxs = data.transactions.filter((tx) =>
+        firmAddressesLower.has((tx.from || "").toLowerCase())
+      );
+      const totalPayout = firmTxs.reduce((sum, tx) => sum + (Number(tx.amountUSD) || 0), 0);
       const logoUrl = firmLogosMap[firm.id] ?? firm.logo_url ?? null;
       const logoPath = getFirmLogoUrl({ ...firm, logo: logoUrl, logo_url: logoUrl });
       return {
         ...firm,
         logo_url: logoUrl,
         logoPath,
+        totalPayout,
       };
     });
+
+    return firmsWithPayouts
+      .filter((f) => f.totalPayout > 0)
+      .sort((a, b) => b.totalPayout - a.totalPayout);
   }, [data?.transactions, firmLogosMap]);
+
+  // Trust score: (total from known firm addresses) / (total received) * 100 — same as user/dashboard
+  const trustScore = useMemo(() => {
+    const txs = data?.transactions || [];
+    if (txs.length === 0) return 0;
+    const knownAddresses = new Set(
+      (propfirmsData.firms || []).flatMap((f) => (f.addresses || []).map((a) => a.toLowerCase()))
+    );
+    const totalReceived = txs.reduce((sum, tx) => sum + (Number(tx.amountUSD) || 0), 0);
+    if (totalReceived <= 0) return 0;
+    const totalFromKnownFirms = txs
+      .filter((tx) => knownAddresses.has((tx.from || "").toLowerCase()))
+      .reduce((sum, tx) => sum + (Number(tx.amountUSD) || 0), 0);
+    return Math.min(100, Math.round((totalFromKnownFirms / totalReceived) * 100));
+  }, [data?.transactions]);
 
   // Map sender address (lowercase) -> firm { id, name } for Verified Transactions table
   const addressToFirm = useMemo(() => {
@@ -176,7 +190,7 @@ const ProfilePage = ({ params }) => {
             socialLinks={trader.socialLinks}
             payoutCount={trader.payoutCount}
             memberSince={trader.createdAt ? new Date(trader.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : "N/A"}
-            trustScore={98}
+            trustScore={trustScore}
           />
 
           <ActiveLinksCard
