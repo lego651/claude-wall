@@ -166,6 +166,17 @@ export default function Dashboard() {
       .sort((a, b) => b.totalPayout - a.totalPayout);
   }, [transactionData?.transactions, firmLogosMap]);
 
+  // Map sender address (lowercase) -> firm { id, name } for Verified Transactions table
+  const addressToFirm = useMemo(() => {
+    const map = new Map();
+    (propfirmsData.firms || []).forEach((firm) => {
+      (firm.addresses || []).forEach((addr) => {
+        map.set(addr.toLowerCase(), { id: firm.id, name: firm.name });
+      });
+    });
+    return map;
+  }, []);
+
   // Calculate success rate (simplified - based on payout count)
   const payoutCount = transactionData?.transactions?.length || 0;
   const successRate = payoutCount > 0 ? Math.min(84.2, 50 + (payoutCount * 2)) : 0;
@@ -397,9 +408,6 @@ export default function Dashboard() {
                         From
                       </th>
                       <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                        Token
-                      </th>
-                      <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
                         Tx Hash
                       </th>
                       <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wide text-right">
@@ -412,7 +420,7 @@ export default function Dashboard() {
                       // Loading state
                       Array.from({ length: 5 }).map((_, i) => (
                         <tr key={i}>
-                          <td className="px-6 py-4" colSpan={5}>
+                          <td className="px-6 py-4" colSpan={4}>
                             <div className="h-4 bg-gray-100 rounded animate-pulse"></div>
                           </td>
                         </tr>
@@ -420,7 +428,7 @@ export default function Dashboard() {
                     ) : !transactionData?.transactions || transactionData.transactions.length === 0 ? (
                       // Empty state: Connect Wallet CTA when no wallet, else fallback text
                       <tr>
-                        <td className="px-6 py-8 text-center" colSpan={5}>
+                        <td className="px-6 py-8 text-center" colSpan={4}>
                           {hasNoWallet ? (
                             <div className="flex flex-col items-center gap-4">
                               <p className="text-sm text-gray-500">Connect your wallet to see verified transactions</p>
@@ -451,15 +459,25 @@ export default function Dashboard() {
                             {new Date(tx.timestamp * 1000).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4">
-                            <code className="text-[10px] bg-slate-50 px-2 py-1 rounded border border-slate-200 text-slate-500 font-medium">
-                              {tx.fromShort}
-                            </code>
-                          </td>
-                          <td className="px-6 py-4 text-sm font-bold text-slate-900 flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#635BFF' }}>
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                            {tx.token}
+                            <div className="flex items-center gap-2">
+                              <code className="text-[10px] bg-slate-50 px-2 py-1 rounded border border-slate-200 text-slate-500 font-medium">
+                                {tx.fromShort}
+                              </code>
+                              {(() => {
+                                const firm = addressToFirm.get((tx.from || "").toLowerCase());
+                                if (!firm) return null;
+                                const logoUrl = firmLogosMap[firm.id] ? getFirmLogoUrl({ logo: firmLogosMap[firm.id], logo_url: firmLogosMap[firm.id] }) : null;
+                                return (
+                                  <img
+                                    src={logoUrl || "/icon.png"}
+                                    alt=""
+                                    title={firm.name}
+                                    className="w-5 h-5 rounded object-cover flex-shrink-0 cursor-help"
+                                    onError={(e) => { e.target.src = "/icon.png"; }}
+                                  />
+                                );
+                              })()}
+                            </div>
                           </td>
                           <td className="px-6 py-4">
                             <a

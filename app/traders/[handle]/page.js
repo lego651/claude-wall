@@ -84,6 +84,17 @@ const ProfilePage = ({ params }) => {
     });
   }, [data?.transactions]);
 
+  // Map sender address (lowercase) -> firm { id, name } for Verified Transactions table
+  const addressToFirm = useMemo(() => {
+    const map = new Map();
+    (propfirmsData.firms || []).forEach((firm) => {
+      (firm.addresses || []).forEach((addr) => {
+        map.set(addr.toLowerCase(), { id: firm.id, name: firm.name });
+      });
+    });
+    return map;
+  }, []);
+
   // Loading state
   if (traderLoading) {
     return (
@@ -194,9 +205,6 @@ const ProfilePage = ({ params }) => {
                       From
                     </th>
                     <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                      Token
-                    </th>
-                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
                       Tx Hash
                     </th>
                     <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wide text-right">
@@ -209,7 +217,7 @@ const ProfilePage = ({ params }) => {
                     // Loading state
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i}>
-                        <td className="px-6 py-4" colSpan={5}>
+                        <td className="px-6 py-4" colSpan={4}>
                           <div className="h-4 bg-gray-100 rounded animate-pulse"></div>
                         </td>
                       </tr>
@@ -217,34 +225,41 @@ const ProfilePage = ({ params }) => {
                   ) : error ? (
                     // Error state
                     <tr>
-                      <td className="px-6 py-8 text-center text-sm text-red-500" colSpan={5}>
+                      <td className="px-6 py-8 text-center text-sm text-red-500" colSpan={4}>
                         Error loading transactions: {error}
                       </td>
                     </tr>
                   ) : !data?.transactions || data.transactions.length === 0 ? (
                     // Empty state
                     <tr>
-                      <td className="px-6 py-8 text-center text-sm text-gray-400" colSpan={5}>
+                      <td className="px-6 py-8 text-center text-sm text-gray-400" colSpan={4}>
                         No transactions found
                       </td>
                     </tr>
                   ) : (
                     // Data rows - limit to 10 latest payouts
-                    data.transactions.slice(0, 10).map((tx) => (
+                    data.transactions.slice(0, 10).map((tx) => {
+                      const firm = addressToFirm.get((tx.from || "").toLowerCase());
+                      return (
                       <tr key={tx.txHash} className="hover:bg-slate-50 transition-colors">
                         <td className="px-6 py-4 text-sm font-semibold text-slate-900">
                           {new Date(tx.timestamp * 1000).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4">
-                          <code className="text-[10px] bg-slate-50 px-2 py-1 rounded border border-slate-200 text-slate-500 font-medium">
-                            {tx.fromShort}
-                          </code>
-                        </td>
-                        <td className="px-6 py-4 text-sm font-bold text-slate-900 flex items-center gap-2">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#635BFF' }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                          {tx.token}
+                          <div className="flex items-center gap-2">
+                            <code className="text-[10px] bg-slate-50 px-2 py-1 rounded border border-slate-200 text-slate-500 font-medium">
+                              {tx.fromShort}
+                            </code>
+                            {firm ? (
+                              <img
+                                src={getFirmLogoUrl(firm)}
+                                alt=""
+                                title={firm.name}
+                                className="w-5 h-5 rounded object-cover flex-shrink-0 cursor-help"
+                                onError={(e) => { e.target.src = "/icon.png"; }}
+                              />
+                            ) : null}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <a
@@ -266,7 +281,7 @@ const ProfilePage = ({ params }) => {
                           ${tx.amountUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                       </tr>
-                    ))
+                    ); })
                   )}
                 </tbody>
               </table>
