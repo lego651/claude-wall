@@ -10,13 +10,36 @@ import ActiveLinksCard from "@/components/common/ActiveLinksCard";
 import MetricsCards from "@/components/common/MetricsCards";
 import MonthlyPayoutChart from "@/components/common/MonthlyPayoutChart";
 import { getFirmLogoUrl } from "@/lib/logoUtils";
+import { createClient } from "@/lib/supabase/client";
 
 const ProfilePage = ({ params }) => {
   const { handle } = use(params);
   const [trader, setTrader] = useState(null);
   const [traderLoading, setTraderLoading] = useState(true);
   const [traderError, setTraderError] = useState(null);
-  
+  const [firmLogosMap, setFirmLogosMap] = useState({});
+
+  // Fetch firm logos from DB (firm_profiles) for Verified Firm Payouts and Verified Transactions
+  useEffect(() => {
+    const loadFirmLogos = async () => {
+      try {
+        const supabase = createClient();
+        const { data: firms, error } = await supabase
+          .from("firm_profiles")
+          .select("id, logo_url");
+        if (error) return;
+        const map = {};
+        (firms || []).forEach((f) => {
+          if (f.id && (f.logo_url ?? "").trim()) map[f.id] = f.logo_url.trim();
+        });
+        setFirmLogosMap(map);
+      } catch {
+        // non-blocking
+      }
+    };
+    loadFirmLogos();
+  }, []);
+
   // Fetch trader data from API
   useEffect(() => {
     const fetchTrader = async () => {
@@ -76,13 +99,15 @@ const ProfilePage = ({ params }) => {
     });
 
     return matchedFirms.map(firm => {
-      const logoPath = getFirmLogoUrl(firm);
+      const logoUrl = firmLogosMap[firm.id] ?? firm.logo_url ?? null;
+      const logoPath = getFirmLogoUrl({ ...firm, logo: logoUrl, logo_url: logoUrl });
       return {
         ...firm,
+        logo_url: logoUrl,
         logoPath,
       };
     });
-  }, [data?.transactions]);
+  }, [data?.transactions, firmLogosMap]);
 
   // Map sender address (lowercase) -> firm { id, name } for Verified Transactions table
   const addressToFirm = useMemo(() => {
@@ -258,7 +283,7 @@ const ProfilePage = ({ params }) => {
                                 className="inline-flex flex-shrink-0 rounded focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-slate-400"
                               >
                                 <img
-                                  src={getFirmLogoUrl(firm)}
+                                  src={firmLogosMap[firm.id] ? getFirmLogoUrl({ logo: firmLogosMap[firm.id], logo_url: firmLogosMap[firm.id] }) : getFirmLogoUrl(firm)}
                                   alt={`${firm.name || "Prop firm"} logo`}
                                   className="w-5 h-5 rounded object-cover cursor-pointer"
                                   onError={(e) => { e.target.src = "/icon.png"; }}
