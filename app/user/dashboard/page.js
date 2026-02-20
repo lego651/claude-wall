@@ -467,14 +467,21 @@ export default function Dashboard() {
                                 const firm = addressToFirm.get((tx.from || "").toLowerCase());
                                 if (!firm) return null;
                                 const logoUrl = firmLogosMap[firm.id] ? getFirmLogoUrl({ logo: firmLogosMap[firm.id], logo_url: firmLogosMap[firm.id] }) : null;
+                                const firmName = firm.name || "Prop firm";
                                 return (
-                                  <img
-                                    src={logoUrl || "/icon.png"}
-                                    alt=""
-                                    title={firm.name}
-                                    className="w-5 h-5 rounded object-cover flex-shrink-0 cursor-help"
-                                    onError={(e) => { e.target.src = "/icon.png"; }}
-                                  />
+                                  <Link
+                                    href={`/propfirms/${firm.id}`}
+                                    title={firmName}
+                                    aria-label={`View ${firmName}`}
+                                    className="inline-flex flex-shrink-0 rounded focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-slate-400"
+                                  >
+                                    <img
+                                      src={logoUrl || "/icon.png"}
+                                      alt={`${firmName} logo`}
+                                      className="w-5 h-5 rounded object-cover cursor-pointer"
+                                      onError={(e) => { e.target.src = "/icon.png"; }}
+                                    />
+                                  </Link>
                                 );
                               })()}
                             </div>

@@ -251,13 +251,19 @@ const ProfilePage = ({ params }) => {
                               {tx.fromShort}
                             </code>
                             {firm ? (
-                              <img
-                                src={getFirmLogoUrl(firm)}
-                                alt=""
-                                title={firm.name}
-                                className="w-5 h-5 rounded object-cover flex-shrink-0 cursor-help"
-                                onError={(e) => { e.target.src = "/icon.png"; }}
-                              />
+                              <Link
+                                href={`/propfirms/${firm.id}`}
+                                title={firm.name || "Prop firm"}
+                                aria-label={`View ${firm.name || "Prop firm"}`}
+                                className="inline-flex flex-shrink-0 rounded focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-slate-400"
+                              >
+                                <img
+                                  src={getFirmLogoUrl(firm)}
+                                  alt={`${firm.name || "Prop firm"} logo`}
+                                  className="w-5 h-5 rounded object-cover cursor-pointer"
+                                  onError={(e) => { e.target.src = "/icon.png"; }}
+                                />
+                              </Link>
                             ) : null}
                           </div>
                         </td>
