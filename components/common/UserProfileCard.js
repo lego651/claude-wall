@@ -151,8 +151,9 @@ export default function UserProfileCard({
               </div>
               <span className="font-bold text-emerald-600">{trustScore}/100</span>
             </div>
+            <p className="text-[10px] text-slate-400 -mt-0.5">Share of received funds from verified prop firms</p>
             <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-              <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${trustScore}%` }}></div>
+              <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${Math.min(100, trustScore)}%` }}></div>
             </div>
           </div>
         </div>

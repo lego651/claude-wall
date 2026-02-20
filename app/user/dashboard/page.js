@@ -170,6 +170,21 @@ export default function Dashboard() {
   const payoutCount = transactionData?.transactions?.length || 0;
   const successRate = payoutCount > 0 ? Math.min(84.2, 50 + (payoutCount * 2)) : 0;
 
+  // Trust score: (total from known firm addresses) / (total received) * 100
+  const trustScore = useMemo(() => {
+    const txs = transactionData?.transactions || [];
+    if (txs.length === 0) return 0;
+    const knownAddresses = new Set(
+      (propfirmsData.firms || []).flatMap((f) => (f.addresses || []).map((a) => a.toLowerCase()))
+    );
+    const totalReceived = txs.reduce((sum, tx) => sum + (Number(tx.amountUSD) || 0), 0);
+    if (totalReceived <= 0) return 0;
+    const totalFromKnownFirms = txs
+      .filter((tx) => knownAddresses.has((tx.from || "").toLowerCase()))
+      .reduce((sum, tx) => sum + (Number(tx.amountUSD) || 0), 0);
+    return Math.min(100, Math.round((totalFromKnownFirms / totalReceived) * 100));
+  }, [transactionData?.transactions]);
+
   // Format member since date
   const memberSince = profile?.created_at 
     ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
@@ -188,9 +203,6 @@ export default function Dashboard() {
     twitter: profile?.twitter || null,
     youtube: profile?.youtube || null,
   };
-
-  // Calculate trust rating (simplified)
-  const trustRating = Math.min(100, Math.max(70, 70 + (payoutCount * 2)));
 
   const handleProfileUpdate = (updatedProfile, backfillTriggered) => {
     setProfile(updatedProfile);
@@ -329,7 +341,7 @@ export default function Dashboard() {
               socialLinks={socialLinks}
               payoutCount={payoutCount}
               memberSince={memberSince}
-              trustScore={trustRating}
+              trustScore={trustScore}
             />
 
             <ActiveLinksCard
