@@ -317,8 +317,14 @@ export default function AdminDashboardPage() {
   if (loading && !data) {
     return (
       <AdminLayout>
-        <div className="max-w-6xl mx-auto py-12 px-4 flex items-center justify-center">
-          <span className="loading loading-spinner loading-lg text-primary" />
+        <div className="bg-white border-b border-slate-200 w-full">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Admin Dashboard</h1>
+            <p className="text-sm text-slate-500">Monitoring &amp; alerts</p>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-12 flex items-center justify-center">
+          <span className="loading loading-spinner loading-lg" style={{ color: "#635BFF" }} />
         </div>
       </AdminLayout>
     );
@@ -341,67 +347,82 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminLayout>
-      <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-base-content">Dashboard</h1>
-            <p className="text-sm text-base-content/60 mt-1">Monitoring &amp; alerts in one place</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={fetchMetrics}
-              className="btn btn-sm btn-ghost"
-              disabled={loading}
-            >
-              {loading ? "Refreshing…" : "Refresh now"}
-            </button>
-            <button type="button" onClick={exportCSV} className="btn btn-sm btn-primary" disabled={!data}>
-              Export CSV
-            </button>
+      {/* Header - same style as My Dashboard */}
+      <div className="bg-white border-b border-slate-200 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">Admin Dashboard</h1>
+              <p className="text-sm text-slate-500">
+                Monitoring &amp; alerts in one place. Auto-refresh every {REFRESH_MS / 1000}s.
+                {data?.fetchedAt && (
+                  <span className="ml-1">Last fetched: {new Date(data.fetchedAt).toLocaleString()}</span>
+                )}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={fetchMetrics}
+                className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition-colors flex items-center gap-2 disabled:opacity-50"
+                disabled={loading}
+              >
+                {loading ? "Refreshing…" : "Refresh now"}
+              </button>
+              <button
+                type="button"
+                onClick={exportCSV}
+                className="px-6 py-2 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 disabled:opacity-50"
+                style={{ backgroundColor: "#635BFF" }}
+                onMouseEnter={(e) => { if (!data) return; e.currentTarget.style.backgroundColor = "#5a52e6"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#635BFF"; }}
+                disabled={!data}
+              >
+                Export CSV
+              </button>
+            </div>
           </div>
         </div>
-        <p className="text-sm text-base-content/60 mb-6">
-          Auto-refresh every {REFRESH_MS / 1000}s. Last fetched: {data?.fetchedAt ? new Date(data.fetchedAt).toLocaleString() : "—"}
-        </p>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-8">
         {error && (
-          <div className="alert alert-error mb-6">
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
             <span>{error}</span>
           </div>
         )}
 
         {!data && !loading && (
-          <div className="text-base-content/70">No metrics available.</div>
+          <div className="text-slate-600">No metrics available.</div>
         )}
 
         {/* Overall status summary */}
         {data && (
           <div className="mb-6">
             <div
-              className={`rounded-xl border-2 p-4 sm:p-5 ${
+              className={`rounded-2xl border p-4 sm:p-5 ${
                 summary.status === "critical"
-                  ? "border-error bg-error/10"
+                  ? "border-red-300 bg-red-50"
                   : summary.status === "warning"
-                    ? "border-warning bg-warning/10"
-                    : "border-success bg-success/10"
+                    ? "border-amber-300 bg-amber-50"
+                    : "border-emerald-200 bg-emerald-50"
               }`}
             >
               <div className="flex flex-wrap items-center gap-4">
                 <span
                   className={`text-xl font-bold ${
                     summary.status === "critical"
-                      ? "text-error"
+                      ? "text-red-700"
                       : summary.status === "warning"
-                        ? "text-warning"
-                        : "text-success"
+                        ? "text-amber-700"
+                        : "text-emerald-700"
                   }`}
                 >
                   {summary.status === "critical" ? "🔴 Critical" : summary.status === "warning" ? "🟡 Warning" : "🟢 All good"}
                 </span>
-                <span className="text-base-content/80 font-medium">{summary.label}</span>
+                <span className="text-slate-700 font-medium">{summary.label}</span>
                 {summary.issues.length > 0 && (
-                  <ul className="list-disc list-inside text-sm text-base-content/70 mt-1 flex-1 space-y-0.5">
+                  <ul className="list-disc list-inside text-sm text-slate-600 mt-1 flex-1 space-y-0.5">
                     {summary.issues.slice(0, 6).map((msg, i) => {
                       const tabId = getTabForIssue(msg);
                       return (
@@ -410,10 +431,10 @@ export default function AdminDashboardPage() {
                             <button
                               type="button"
                               onClick={() => setActiveTab(tabId)}
-                              className="link link-hover text-left font-medium underline-offset-2 hover:underline"
+                              className="text-left font-medium text-slate-700 underline-offset-2 hover:underline hover:text-slate-900"
                             >
                               {msg}
-                              <span className="ml-1 text-xs opacity-70">→ {TAB_LABELS[tabId]}</span>
+                              <span className="ml-1 text-xs text-slate-500">→ {TAB_LABELS[tabId]}</span>
                             </button>
                           ) : (
                             msg
@@ -427,8 +448,8 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             {/* Navigation tabs */}
-            <p className="text-xs font-medium text-base-content/50 uppercase tracking-wider mt-6 mb-2">Sections</p>
-            <nav role="tablist" aria-label="Dashboard sections" className="flex flex-wrap gap-0 border border-base-300 rounded-lg overflow-hidden bg-base-200/60 divide-x divide-base-300">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-6 mb-2">Sections</p>
+            <nav role="tablist" aria-label="Dashboard sections" className="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-xl">
               {TAB_IDS.map((id) => {
                 const lastRun = getTabLastRun(id);
                 return (
@@ -437,20 +458,20 @@ export default function AdminDashboardPage() {
                     role="tab"
                     type="button"
                     aria-selected={activeTab === id}
-                    className={`flex-1 min-w-0 px-3 py-2.5 text-sm font-medium transition-colors first:rounded-l-lg last:rounded-r-lg flex flex-col items-center gap-0.5 ${
+                    className={`min-w-0 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors flex flex-col items-center gap-0.5 ${
                       activeTab === id
-                        ? "bg-primary text-primary-content"
-                        : "bg-base-200/50 text-base-content/80 hover:bg-base-300"
+                        ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
                     }`}
                     onClick={() => setActiveTab(id)}
                   >
                     <span>{TAB_LABELS[id]}</span>
                     {(STEP_TAB_IDS.includes(id) && (lastRun != null ? (
-                      <span className={`text-[10px] font-normal ${activeTab === id ? "opacity-90" : "text-base-content/50"}`} title={lastRun ? new Date(lastRun).toLocaleString() : ""}>
+                      <span className={`text-[10px] font-normal ${activeTab === id ? "text-slate-500" : "text-slate-400"}`} title={lastRun ? new Date(lastRun).toLocaleString() : ""}>
                         Last: {formatLastRun(lastRun)}
                       </span>
                     ) : (
-                      <span className={`text-[10px] font-normal ${activeTab === id ? "opacity-70" : "text-base-content/40"}`}>Last: —</span>
+                      <span className={`text-[10px] font-normal ${activeTab === id ? "text-slate-400" : "text-slate-400"}`}>Last: —</span>
                     ))) || null}
                   </button>
                 );
@@ -461,58 +482,60 @@ export default function AdminDashboardPage() {
 
         {data?.traders && activeTab === "traders" && (
           <div className="space-y-8">
-            <section>
-              <h2 className="text-lg font-semibold mb-4">Trader monitoring</h2>
-              <p className="text-sm text-base-content/60 mb-4">
-                Sign-up, wallet linking, historical backfill, and real-time payout sync status per trader.
-              </p>
+            <section className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100">
+                <h2 className="text-lg font-semibold text-slate-900 mb-2">Trader monitoring</h2>
+                <p className="text-sm text-slate-500">
+                  Sign-up, wallet linking, historical backfill, and real-time payout sync status per trader.
+                </p>
+              </div>
               {data.traders.error ? (
-                <div className="alert alert-error">
+                <div className="p-6 rounded-xl border border-red-200 bg-red-50 text-red-800 mx-6 mt-4">
                   <span>{data.traders.error}</span>
                 </div>
               ) : (
-                <>
+                <div className="p-6">
                   {data.traders.summary && (
-                    <div className="stats stats-vertical sm:stats-horizontal shadow w-full bg-base-100 mb-6">
-                      <div className="stat">
-                        <div className="stat-title">Profiles (signed up)</div>
-                        <div className="stat-value text-primary">{data.traders.summary.totalProfiles ?? 0}</div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-6">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Profiles (signed up)</div>
+                        <div className="text-2xl font-bold text-slate-900 mt-1" style={{ color: "#635BFF" }}>{data.traders.summary.totalProfiles ?? 0}</div>
                       </div>
-                      <div className="stat">
-                        <div className="stat-title">Wallet linked</div>
-                        <div className="stat-value">{data.traders.summary.withWallet ?? 0}</div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Wallet linked</div>
+                        <div className="text-2xl font-bold text-slate-900 mt-1">{data.traders.summary.withWallet ?? 0}</div>
                       </div>
-                      <div className="stat">
-                        <div className="stat-title">Backfill done</div>
-                        <div className="stat-value text-success">{data.traders.summary.backfilled ?? 0}</div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Backfill done</div>
+                        <div className="text-2xl font-bold text-emerald-600 mt-1">{data.traders.summary.backfilled ?? 0}</div>
                       </div>
-                      <div className="stat">
-                        <div className="stat-title">Pending backfill</div>
-                        <div className={`stat-value ${(data.traders.summary.pendingBackfill ?? 0) > 0 ? "text-warning" : ""}`}>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Pending backfill</div>
+                        <div className={`text-2xl font-bold mt-1 ${(data.traders.summary.pendingBackfill ?? 0) > 0 ? "text-amber-600" : "text-slate-900"}`}>
                           {data.traders.summary.pendingBackfill ?? 0}
                         </div>
                       </div>
-                      <div className="stat">
-                        <div className="stat-title">Sync errors</div>
-                        <div className={`stat-value ${(data.traders.summary.syncErrors ?? 0) > 0 ? "text-error" : ""}`}>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Sync errors</div>
+                        <div className={`text-2xl font-bold mt-1 ${(data.traders.summary.syncErrors ?? 0) > 0 ? "text-red-600" : "text-slate-900"}`}>
                           {data.traders.summary.syncErrors ?? 0}
                         </div>
                       </div>
                     </div>
                   )}
-                  <div className="card card-border bg-base-100 shadow overflow-hidden">
+                  <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
                     <div className="overflow-x-auto">
-                      <table className="table table-sm w-full">
+                      <table className="w-full text-sm">
                         <thead>
-                          <tr>
-                            <th className="font-medium">Email / Handle</th>
-                            <th className="font-medium">Wallet</th>
-                            <th className="text-right font-medium">Signed up</th>
-                            <th className="text-right font-medium">Wallet linked</th>
-                            <th className="text-center font-medium">Backfill</th>
-                            <th className="text-center font-medium">Realtime sync</th>
-                            <th className="text-right font-medium">Payouts</th>
-                            <th>Errors</th>
+                          <tr className="border-b border-slate-200 bg-slate-50/80">
+                            <th className="text-left font-semibold text-slate-700 px-4 py-3">Email / Handle</th>
+                            <th className="text-left font-semibold text-slate-700 px-4 py-3">Wallet</th>
+                            <th className="text-right font-semibold text-slate-700 px-4 py-3">Signed up</th>
+                            <th className="text-right font-semibold text-slate-700 px-4 py-3">Wallet linked</th>
+                            <th className="text-center font-semibold text-slate-700 px-4 py-3">Backfill</th>
+                            <th className="text-center font-semibold text-slate-700 px-4 py-3">Realtime sync</th>
+                            <th className="text-right font-semibold text-slate-700 px-4 py-3">Payouts</th>
+                            <th className="text-left font-semibold text-slate-700 px-4 py-3">Errors</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -524,55 +547,55 @@ export default function AdminDashboardPage() {
                               : "—";
                             const syncStatus = t.sync_error ? "error" : t.last_synced_at ? "ok" : t.wallet_address ? "pending" : "—";
                             return (
-                              <tr key={t.id}>
-                                <td>
-                                  <div className="font-medium truncate max-w-[180px]" title={t.email}>
+                              <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50/50">
+                                <td className="px-4 py-3">
+                                  <div className="font-medium truncate max-w-[180px] text-slate-900" title={t.email}>
                                     {t.display_name || t.email || "—"}
                                   </div>
                                   {(t.handle || t.email) && (
-                                    <div className="text-xs text-base-content/50 truncate max-w-[180px]">
+                                    <div className="text-xs text-slate-500 truncate max-w-[180px]">
                                       {t.handle ? `@${t.handle}` : t.email}
                                     </div>
                                   )}
                                 </td>
-                                <td>
+                                <td className="px-4 py-3">
                                   {t.wallet_address ? (
-                                    <span className="font-mono text-xs" title={t.wallet_address}>
+                                    <span className="font-mono text-xs text-slate-600" title={t.wallet_address}>
                                       {t.wallet_address.slice(0, 6)}…{t.wallet_address.slice(-4)}
                                     </span>
                                   ) : (
-                                    <span className="text-base-content/40">—</span>
+                                    <span className="text-slate-400">—</span>
                                   )}
                                 </td>
-                                <td className="text-right text-base-content/70 text-xs tabular-nums">
+                                <td className="text-right text-slate-600 text-xs tabular-nums px-4 py-3">
                                   {t.created_at ? new Date(t.created_at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" }) : "—"}
                                 </td>
-                                <td className="text-right text-base-content/70 text-xs tabular-nums">
+                                <td className="text-right text-slate-600 text-xs tabular-nums px-4 py-3">
                                   {t.wallet_address && t.updated_at
                                     ? new Date(t.updated_at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
                                     : "—"}
                                 </td>
-                                <td className="text-center">
-                                  {backfillStatus === "ok" && <span className="badge badge-success badge-sm">OK</span>}
-                                  {backfillStatus === "pending" && <span className="badge badge-warning badge-sm">Pending</span>}
-                                  {backfillStatus === "—" && <span className="text-base-content/40">—</span>}
+                                <td className="text-center px-4 py-3">
+                                  {backfillStatus === "ok" && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">OK</span>}
+                                  {backfillStatus === "pending" && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Pending</span>}
+                                  {backfillStatus === "—" && <span className="text-slate-400">—</span>}
                                 </td>
-                                <td className="text-center">
-                                  {syncStatus === "ok" && <span className="badge badge-success badge-sm">OK</span>}
-                                  {syncStatus === "pending" && <span className="badge badge-warning badge-sm">Pending</span>}
-                                  {syncStatus === "error" && <span className="badge badge-error badge-sm">Error</span>}
-                                  {syncStatus === "—" && <span className="text-base-content/40">—</span>}
+                                <td className="text-center px-4 py-3">
+                                  {syncStatus === "ok" && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">OK</span>}
+                                  {syncStatus === "pending" && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Pending</span>}
+                                  {syncStatus === "error" && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Error</span>}
+                                  {syncStatus === "—" && <span className="text-slate-400">—</span>}
                                 </td>
-                                <td className="text-right tabular-nums text-sm">
+                                <td className="text-right tabular-nums text-slate-700 px-4 py-3">
                                   {t.payout_count != null ? `${t.payout_count} ($${Number(t.total_payout_usd ?? 0).toLocaleString()})` : "—"}
                                 </td>
-                                <td className="max-w-[220px]">
+                                <td className="max-w-[220px] px-4 py-3">
                                   {t.sync_error ? (
-                                    <span className="text-error text-xs truncate block" title={t.sync_error}>
+                                    <span className="text-red-600 text-xs truncate block" title={t.sync_error}>
                                       {t.sync_error}
                                     </span>
                                   ) : (
-                                    <span className="text-base-content/40">—</span>
+                                    <span className="text-slate-400">—</span>
                                   )}
                                 </td>
                               </tr>
@@ -582,10 +605,10 @@ export default function AdminDashboardPage() {
                       </table>
                     </div>
                     {(!data.traders.traders || data.traders.traders.length === 0) && (
-                      <div className="p-6 text-center text-base-content/60 text-sm">No profiles yet.</div>
+                      <div className="p-8 text-center text-slate-500 text-sm">No profiles yet.</div>
                     )}
                   </div>
-                </>
+                </div>
               )}
             </section>
           </div>
@@ -593,27 +616,29 @@ export default function AdminDashboardPage() {
 
         {data?.alerts && activeTab === "system" && (
           <section className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">Critical email alerts</h2>
-            <div className="card card-border bg-base-100 shadow">
-              <div className="card-body">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100">
+                <h2 className="text-lg font-semibold text-slate-900 mb-2">Critical email alerts</h2>
+              </div>
+              <div className="p-6">
                 <div className="flex flex-wrap items-center gap-6">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-base-content/70">Status</span>
+                    <span className="text-sm text-slate-500">Status</span>
                     <span
-                      className={`badge ${data.alerts.status === "enabled" ? "badge-success" : "badge-warning"}`}
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium ${data.alerts.status === "enabled" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}
                     >
                       {data.alerts.status === "enabled" ? "Enabled" : "Disabled"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-base-content/70">Recipient</span>
-                    <span className="font-mono text-sm">
+                    <span className="text-sm text-slate-500">Recipient</span>
+                    <span className="font-mono text-sm text-slate-700">
                       {data.alerts.recipient ?? "Not set"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-base-content/70">Resend</span>
-                    <span className={`badge ${data.alerts.resendConfigured ? "badge-success" : "badge-ghost"}`}>
+                    <span className="text-sm text-slate-500">Resend</span>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium ${data.alerts.resendConfigured ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>
                       {data.alerts.resendConfigured ? "Configured" : "Not set"}
                     </span>
                   </div>
@@ -622,19 +647,19 @@ export default function AdminDashboardPage() {
                       type="button"
                       onClick={sendTestAlert}
                       disabled={testAlertLoading || data.alerts.status !== "enabled"}
-                      className="btn btn-sm btn-outline"
+                      className="px-3 py-1.5 text-sm font-medium rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                     >
                       {testAlertLoading ? "Sending…" : "Send test alert"}
                     </button>
                     {testAlertResult === "sent" && (
-                      <span className="text-sm text-success">Test email sent.</span>
+                      <span className="text-sm text-emerald-600">Test email sent.</span>
                     )}
                     {testAlertResult && testAlertResult !== "sent" && (
-                      <span className="text-sm text-error">{testAlertResult}</span>
+                      <span className="text-sm text-red-600">{testAlertResult}</span>
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-base-content/50 mt-3">
+                <p className="text-xs text-slate-500 mt-3">
                   Critical checks (file ≥10 MB, Arbiscan ≥95%, DB failure) send an email here (throttled 1h). Set ALERT_EMAIL or ALERTS_TO and RESEND_API_KEY to enable.
                 </p>
               </div>
@@ -645,10 +670,12 @@ export default function AdminDashboardPage() {
         {/* Intelligence pipeline alerts (TICKET-014) — green OK, yellow warning, red critical */}
         {data && activeTab === "system" && (data.trustpilotScraper?.firms?.length > 0 || data.classifyReviews != null) && (
           <section className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">Intelligence pipeline alerts</h2>
-            <div className="card card-border bg-base-100 shadow">
-              <div className="card-body">
-                <p className="text-sm text-base-content/60 mb-3">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100">
+                <h2 className="text-lg font-semibold text-slate-900 mb-2">Intelligence pipeline alerts</h2>
+              </div>
+              <div className="p-6">
+                <p className="text-sm text-slate-500 mb-3">
                   When a condition is triggered, an email is sent to the alert recipient (throttled 4h per condition).
                 </p>
                 <div className="flex flex-wrap gap-3">
@@ -714,125 +741,127 @@ export default function AdminDashboardPage() {
 
         {data?.checks && activeTab === "system" && (
           <section className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">Verification checks</h2>
-            <div className="card card-border bg-base-100 shadow">
-              <div className="card-body">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100">
+                <h2 className="text-lg font-semibold text-slate-900 mb-2">Verification checks</h2>
+              </div>
+              <div className="p-6">
                 <div className="overflow-x-auto">
-                  <table className="table table-sm">
+                  <table className="w-full text-sm">
                     <thead>
-                      <tr>
-                        <th className="font-medium">Check</th>
-                        <th className="font-medium w-28">Status</th>
-                        <th className="font-medium w-40 text-right">Where to look</th>
+                      <tr className="border-b border-slate-200 bg-slate-50/80">
+                        <th className="text-left font-semibold text-slate-700 px-4 py-3">Check</th>
+                        <th className="text-left font-semibold text-slate-700 px-4 py-3 w-28">Status</th>
+                        <th className="text-right font-semibold text-slate-700 px-4 py-3 w-40">Where to look</th>
                       </tr>
                     </thead>
                     <tbody>
                       {Object.entries(data.checks.config || {}).map(([key, c]) => (
-                        <tr key={key}>
-                          <td>{c.label}</td>
-                          <td>
-                            <span className={`badge badge-sm ${c.set ? "badge-success" : "badge-ghost"}`}>
+                        <tr key={key} className="border-b border-slate-100">
+                          <td className="px-4 py-3 text-slate-700">{c.label}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${c.set ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>
                               {c.set ? "Set" : "Not set"}
                             </span>
                           </td>
-                          <td className="text-right text-base-content/50 text-xs">—</td>
+                          <td className="text-right text-slate-500 text-xs px-4 py-3">—</td>
                         </tr>
                       ))}
-                      <tr>
-                        <td>{data.checks.fileSize?.label ?? "File size"}</td>
-                        <td>
+                      <tr className="border-b border-slate-100">
+                        <td className="px-4 py-3 text-slate-700">{data.checks.fileSize?.label ?? "File size"}</td>
+                        <td className="px-4 py-3">
                           <span
-                            className={`badge badge-sm ${
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                               data.checks.fileSize?.status === "critical"
-                                ? "badge-error"
+                                ? "bg-red-100 text-red-800"
                                 : data.checks.fileSize?.status === "warning"
-                                  ? "badge-warning"
-                                  : "badge-success"
+                                  ? "bg-amber-100 text-amber-800"
+                                  : "bg-emerald-100 text-emerald-800"
                             }`}
                           >
                             {data.checks.fileSize?.status ?? "—"}
                           </span>
                           {data.checks.fileSize?.maxFileBytes != null && data.checks.fileSize.maxFileBytes > 0 && (
-                            <span className="ml-1 text-xs text-base-content/60">{formatBytes(data.checks.fileSize.maxFileBytes)}</span>
+                            <span className="ml-1 text-xs text-slate-500">{formatBytes(data.checks.fileSize.maxFileBytes)}</span>
                           )}
                         </td>
-                        <td className="text-right">
-                          <button type="button" onClick={() => setActiveTab("payouts")} className="link link-hover text-xs">
+                        <td className="text-right px-4 py-3">
+                          <button type="button" onClick={() => setActiveTab("payouts")} className="text-slate-600 hover:text-slate-900 text-xs font-medium">
                             Payouts → files
                           </button>
                         </td>
                       </tr>
-                      <tr>
-                        <td>{data.checks.arbiscan?.label ?? "Arbiscan"}</td>
-                        <td>
+                      <tr className="border-b border-slate-100">
+                        <td className="px-4 py-3 text-slate-700">{data.checks.arbiscan?.label ?? "Arbiscan"}</td>
+                        <td className="px-4 py-3">
                           <span
-                            className={`badge badge-sm ${
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                               data.checks.arbiscan?.status === "critical"
-                                ? "badge-error"
+                                ? "bg-red-100 text-red-800"
                                 : data.checks.arbiscan?.status === "warning"
-                                  ? "badge-warning"
-                                  : "badge-success"
+                                  ? "bg-amber-100 text-amber-800"
+                                  : "bg-emerald-100 text-emerald-800"
                             }`}
                           >
                             {data.checks.arbiscan?.status ?? "—"}
                           </span>
                           {data.checks.arbiscan?.percentage != null && (
-                            <span className="ml-1 text-xs">{data.checks.arbiscan.percentage}%</span>
+                            <span className="ml-1 text-xs text-slate-600">{data.checks.arbiscan.percentage}%</span>
                           )}
                         </td>
-                        <td className="text-right">
-                          <button type="button" onClick={() => setActiveTab("payouts")} className="link link-hover text-xs">
+                        <td className="text-right px-4 py-3">
+                          <button type="button" onClick={() => setActiveTab("payouts")} className="text-slate-600 hover:text-slate-900 text-xs font-medium">
                             Payouts → Arbiscan
                           </button>
                         </td>
                       </tr>
-                      <tr>
-                        <td>{data.checks.supabase?.label ?? "Database"}</td>
-                        <td>
-                          <span className={`badge badge-sm ${data.checks.supabase?.status === "critical" ? "badge-error" : "badge-success"}`}>
+                      <tr className="border-b border-slate-100">
+                        <td className="px-4 py-3 text-slate-700">{data.checks.supabase?.label ?? "Database"}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${data.checks.supabase?.status === "critical" ? "bg-red-100 text-red-800" : "bg-emerald-100 text-emerald-800"}`}>
                             {data.checks.supabase?.status ?? "—"}
                           </span>
                           {data.checks.supabase?.latencyMs != null && (
-                            <span className="ml-1 text-xs">{data.checks.supabase.latencyMs} ms</span>
+                            <span className="ml-1 text-xs text-slate-600">{data.checks.supabase.latencyMs} ms</span>
                           )}
                         </td>
-                        <td className="text-right text-base-content/50 text-xs">This tab (below)</td>
+                        <td className="text-right text-slate-500 text-xs px-4 py-3">This tab (below)</td>
                       </tr>
-                      <tr>
-                        <td>{data.checks.cacheConfigured?.label ?? "Cache"}</td>
-                        <td>
-                          <span className={`badge badge-sm ${data.checks.cacheConfigured?.set ? "badge-success" : "badge-ghost"}`}>
+                      <tr className="border-b border-slate-100">
+                        <td className="px-4 py-3 text-slate-700">{data.checks.cacheConfigured?.label ?? "Cache"}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${data.checks.cacheConfigured?.set ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>
                             {data.checks.cacheConfigured?.set ? "Configured" : "Not set"}
                           </span>
                         </td>
-                        <td className="text-right text-base-content/50 text-xs">This tab (below)</td>
+                        <td className="text-right text-slate-500 text-xs px-4 py-3">This tab (below)</td>
                       </tr>
                       {data.checks.propfirmsData && (
-                        <tr>
-                          <td>{data.checks.propfirmsData.label ?? "Prop firms payout data"}</td>
-                          <td>
+                        <tr className="border-b border-slate-100">
+                          <td className="px-4 py-3 text-slate-700">{data.checks.propfirmsData.label ?? "Prop firms payout data"}</td>
+                          <td className="px-4 py-3">
                             <span
-                              className={`badge badge-sm ${
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                                 data.checks.propfirmsData.status === "critical"
-                                  ? "badge-error"
+                                  ? "bg-red-100 text-red-800"
                                   : data.checks.propfirmsData.status === "warning"
-                                    ? "badge-warning"
-                                    : "badge-success"
+                                    ? "bg-amber-100 text-amber-800"
+                                    : "bg-emerald-100 text-emerald-800"
                               }`}
                             >
                               {data.checks.propfirmsData.status ?? "ok"}
                             </span>
                             {data.checks.propfirmsData.firmsWithIssues?.length > 0 && (
-                              <span className="ml-1 text-xs text-base-content/60">
+                              <span className="ml-1 text-xs text-slate-500">
                                 {data.checks.propfirmsData.firmsWithIssues.length} firm(s)
                               </span>
                             )}
                           </td>
-                          <td className="text-right">
+                          <td className="text-right px-4 py-3">
                             <button
                               type="button"
                               onClick={() => setActiveTab("payouts")}
-                              className="link link-hover text-xs font-medium"
+                              className="text-slate-600 hover:text-slate-900 text-xs font-medium"
                             >
                               View in Payouts tab →
                             </button>
@@ -851,12 +880,13 @@ export default function AdminDashboardPage() {
           <div className="space-y-8">
             {/* Prop firms payout data – chart table: cols = firms, rows = time ranges */}
             {data.propfirmsData ? (
-            <section>
-                <h2 className="text-lg font-semibold mb-4">Prop firms payout data</h2>
-                <div className="card card-border bg-base-100 shadow">
-                  <div className="card-body">
+            <section className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-100">
+                  <h2 className="text-lg font-semibold text-slate-900 mb-2">Prop firms payout data</h2>
+                </div>
+                <div className="p-6">
                     {!data.propfirmsData.firmsWithIssues?.length ? (
-                      <p className="text-base-content/70">No prop firms with payout data issues.</p>
+                      <p className="text-slate-600">No prop firms with payout data issues.</p>
                     ) : (
                       <>
                         {/* Summary: counts + why only these firms + top 3 messages */}
@@ -868,24 +898,24 @@ export default function AdminDashboardPage() {
                           const top3 = allMessages.slice(0, 3);
                           return (
                             <div className="mb-4 space-y-3">
-                              <div className="flex flex-wrap items-center gap-4 p-3 rounded-lg bg-base-200/60">
+                              <div className="flex flex-wrap items-center gap-4 p-3 rounded-lg bg-slate-100">
                                 <span className="font-medium">
                                   {issues.length} firm(s) with issues below — all other firms are ok.
                                 </span>
                                 {critical > 0 && (
-                                  <span className="badge badge-error badge-sm">{critical} critical</span>
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">{critical} critical</span>
                                 )}
                                 {warning > 0 && (
-                                  <span className="badge badge-warning badge-sm">{warning} warning</span>
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">{warning} warning</span>
                                 )}
                               </div>
                               {top3.length > 0 && (
-                                <div className="p-3 rounded-lg border border-base-300 bg-base-200/40">
-                                  <div className="text-sm font-medium text-base-content/80 mb-1">What&apos;s wrong (top 3):</div>
-                                  <ol className="list-decimal list-inside text-sm text-base-content/70 space-y-0.5">
+                                <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
+                                  <div className="text-sm font-medium text-slate-700 mb-1">What&apos;s wrong (top 3):</div>
+                                  <ol className="list-decimal list-inside text-sm text-slate-600 space-y-0.5">
                                     {top3.map((item, i) => (
                                       <li key={i}>
-                                        <span className="font-medium text-base-content/90">{item.firm}:</span> {item.message}
+                                        <span className="font-medium text-slate-800">{item.firm}:</span> {item.message}
                                       </li>
                                     ))}
                                   </ol>
@@ -899,7 +929,7 @@ export default function AdminDashboardPage() {
                           <table className="table table-sm w-full">
                             <thead>
                               <tr>
-                                <th className="w-20 sticky left-0 bg-base-100 z-10">Period</th>
+                                <th className="w-20 sticky left-0 bg-white z-10">Period</th>
                                 {data.propfirmsData.firmsWithIssues.map((f) => (
                                   <th key={f.firmId} className="text-center min-w-[100px] font-medium">
                                     {f.firmName ?? f.firmId}
@@ -910,7 +940,7 @@ export default function AdminDashboardPage() {
                             <tbody>
                               {["24h", "7d", "30d"].map((period) => (
                                 <tr key={period}>
-                                  <td className="sticky left-0 bg-base-100 z-10 font-medium">{period}</td>
+                                  <td className="sticky left-0 bg-white z-10 font-medium">{period}</td>
                                   {data.propfirmsData.firmsWithIssues.map((f) => {
                                     const cellStatus = f.statusByPeriod?.[period] ?? "ok";
                                     const messages = f.messagesByPeriod?.[period] ?? [];
@@ -954,72 +984,71 @@ export default function AdminDashboardPage() {
                         {/* Visible hover tooltip (below table so it never clips) */}
                         {propfirmsTooltip && (
                           <div
-                            className="mt-3 p-3 rounded-lg shadow-lg border border-base-300 bg-base-100 text-left text-sm"
+                            className="mt-3 p-3 rounded-lg shadow-lg border border-slate-200 bg-white text-left text-sm"
                             role="tooltip"
                           >
-                            <div className="font-medium text-base-content">
+                            <div className="font-medium text-slate-900">
                               {propfirmsTooltip.firmName} ({propfirmsTooltip.period})
                               {propfirmsTooltip.count != null && (
-                                <span className="ml-2 text-base-content/60">Count: {propfirmsTooltip.count}</span>
+                                <span className="ml-2 text-slate-500">Count: {propfirmsTooltip.count}</span>
                               )}
                             </div>
-                            <p className="text-base-content/70 mt-1">Why this is warning/critical:</p>
-                            <ul className="list-disc list-inside mt-0.5 text-base-content/80 space-y-0.5">
+                            <p className="text-slate-600 mt-1">Why this is warning/critical:</p>
+                            <ul className="list-disc list-inside mt-0.5 text-slate-700 space-y-0.5">
                               {propfirmsTooltip.messages.map((msg, i) => (
                                 <li key={i}>{msg}</li>
                               ))}
                             </ul>
                           </div>
                         )}
-                        <p className="text-xs text-base-content/50 mt-3">
+                        <p className="text-xs text-slate-500 mt-3">
                           Each column is a firm; rows are time ranges. Green = ok, yellow = warning, red = critical. Hover a yellow or red cell to see why.
                         </p>
                       </>
                     )}
-                  </div>
                 </div>
               </section>
             ) : null}
             {/* Arbiscan */}
             <section>
-              <h2 className="text-lg font-semibold mb-4">Arbiscan API</h2>
-              <div className="stats stats-vertical sm:stats-horizontal shadow w-full bg-base-100">
-                <div className="stat">
-                  <div className="stat-title">Calls today</div>
-                  <div className="stat-value text-primary">{data.arbiscan?.calls ?? "—"}</div>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Arbiscan API</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Calls today</div>
+                  <div className="text-2xl font-bold mt-1" style={{ color: "#635BFF" }}>{data.arbiscan?.calls ?? "—"}</div>
                 </div>
-                <div className="stat">
-                  <div className="stat-title">Daily limit</div>
-                  <div className="stat-value">{data.arbiscan?.limit ?? "—"}</div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Daily limit</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">{data.arbiscan?.limit ?? "—"}</div>
                 </div>
-                <div className="stat">
-                  <div className="stat-title">Usage %</div>
-                  <div className={`stat-value ${(data.arbiscan?.percentage ?? 0) >= 80 ? "text-error" : ""}`}>
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Usage %</div>
+                  <div className={`text-2xl font-bold mt-1 ${(data.arbiscan?.percentage ?? 0) >= 80 ? "text-red-600" : "text-slate-900"}`}>
                     {data.arbiscan?.percentage != null ? `${data.arbiscan.percentage}%` : "—"}
                   </div>
                 </div>
               </div>
-              <p className="text-xs text-base-content/50 mt-2">
+              <p className="text-xs text-slate-500 mt-2">
                 Count is per process (in-memory). On serverless, this often shows 0 because the instance serving this page may not have made any Arbiscan requests today. Sync/cron runs that call Arbiscan run in other instances.
               </p>
             </section>
             {/* Payout files */}
             <section>
               <h2 className="text-lg font-semibold mb-4">Payout files (data/propfirms)</h2>
-              <div className="card card-border bg-base-100 shadow">
-                <div className="card-body">
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
+                <div className="p-6">
                   <div className="flex flex-wrap gap-6">
                     <div>
-                      <span className="text-base-content/60">Total size: </span>
+                      <span className="text-slate-500">Total size: </span>
                       <strong>{data.files?.totalMB != null ? `${data.files.totalMB} MB` : "—"}</strong>
                     </div>
                     <div>
-                      <span className="text-base-content/60">Files: </span>
+                      <span className="text-slate-500">Files: </span>
                       <strong>{data.files?.totalFiles ?? "—"}</strong>
                     </div>
                   </div>
                   {data.files?.error && (
-                    <p className="text-error text-sm mt-2">{data.files.error}</p>
+                    <p className="text-red-600 text-sm mt-2">{data.files.error}</p>
                   )}
                   {data.files?.largest?.length > 0 && (
                     <div className="overflow-x-auto mt-4">
@@ -1036,7 +1065,7 @@ export default function AdminDashboardPage() {
                             <tr key={f.path}>
                               <td className="font-mono text-xs">{f.path}</td>
                               <td>{formatBytes(f.bytes)}</td>
-                              <td>{f.over5MB ? <span className="badge badge-warning">&gt;5MB</span> : null}</td>
+                              <td>{f.over5MB ? <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">&gt;5MB</span> : null}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -1054,14 +1083,14 @@ export default function AdminDashboardPage() {
             {/* Daily 2: Classify */}
             <section>
               <h2 className="text-lg font-semibold mb-4">Daily 2 – Classify</h2>
-              <p className="text-sm text-base-content/60 mb-3">
+              <p className="text-sm text-slate-500 mb-3">
                 Classify unclassified Trustpilot reviews via OpenAI (batch of 20 per API call). Run a limited batch here or use the cron script.
               </p>
-              <div className="card card-border bg-base-100 shadow overflow-hidden">
-                <div className="card-body">
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-6">
                   <div className="flex flex-wrap items-end gap-4 mb-4">
                     <div>
-                      <span className="text-base-content/60 text-sm block">Last run</span>
+                      <span className="text-slate-500 text-sm block">Last run</span>
                       <p className="font-mono text-sm">
                         {classifyStatus?.lastClassifiedAt
                           ? new Date(classifyStatus.lastClassifiedAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
@@ -1069,15 +1098,15 @@ export default function AdminDashboardPage() {
                       </p>
                     </div>
                     <div>
-                      <span className="text-base-content/60 text-sm block">Total reviews</span>
+                      <span className="text-slate-500 text-sm block">Total reviews</span>
                       <p className="font-semibold text-lg">{classifyStatus?.totalReviews ?? "—"}</p>
                     </div>
                     <div>
-                      <span className="text-base-content/60 text-sm block">Classified</span>
-                      <p className="font-semibold text-lg text-success">{classifyStatus?.classifiedCount ?? "—"}</p>
+                      <span className="text-slate-500 text-sm block">Classified</span>
+                      <p className="font-semibold text-lg text-emerald-600">{classifyStatus?.classifiedCount ?? "—"}</p>
                     </div>
                     <div>
-                      <span className="text-base-content/60 text-sm block">Unclassified</span>
+                      <span className="text-slate-500 text-sm block">Unclassified</span>
                       <p className="font-semibold text-lg">{classifyStatus?.unclassifiedCount ?? "—"}</p>
                     </div>
                     <div className="flex items-center gap-2 ml-auto">
@@ -1096,35 +1125,36 @@ export default function AdminDashboardPage() {
                         type="button"
                         onClick={runClassify}
                         disabled={classifyRunLoading || (classifyStatus?.unclassifiedCount === 0)}
-                        className="btn btn-primary btn-sm"
+                        className="px-4 py-2 text-white rounded-lg font-semibold text-sm"
+                        style={{ backgroundColor: "#635BFF" }}
                       >
                         {classifyRunLoading ? "Running…" : `Classify next ${classifyLimit}`}
                       </button>
                     </div>
                   </div>
                   {classifyRunResult && (
-                    <div className="border-t border-base-200 pt-4 mt-2">
+                    <div className="border-t border-slate-200 pt-4 mt-2">
                       {classifyRunResult.error ? (
-                        <p className="text-error text-sm">{classifyRunResult.error}</p>
+                        <p className="text-red-600 text-sm">{classifyRunResult.error}</p>
                       ) : (
                         <>
-                          <p className="font-medium text-base-content mb-2">Last run result</p>
+                          <p className="font-medium text-slate-900 mb-2">Last run result</p>
                           <div className="flex flex-wrap gap-4 text-sm mb-2">
                             <span><strong>Processed:</strong> {classifyRunResult.totalProcessed ?? 0} (limit {classifyRunResult.limit ?? 0})</span>
-                            <span className="text-success"><strong>Classified:</strong> {classifyRunResult.classified ?? 0}</span>
-                            <span className={classifyRunResult.failed > 0 ? "text-warning" : ""}><strong>Failed:</strong> {classifyRunResult.failed ?? 0}</span>
-                            <span className="text-base-content/70"><strong>Unclassified remaining:</strong> {classifyRunResult.unclassifiedRemaining ?? "—"}</span>
+                            <span className="text-emerald-600"><strong>Classified:</strong> {classifyRunResult.classified ?? 0}</span>
+                            <span className={classifyRunResult.failed > 0 ? "text-amber-600" : ""}><strong>Failed:</strong> {classifyRunResult.failed ?? 0}</span>
+                            <span className="text-slate-600"><strong>Unclassified remaining:</strong> {classifyRunResult.unclassifiedRemaining ?? "—"}</span>
                             {classifyRunResult.durationMs != null && (
-                              <span className="text-base-content/60">({(classifyRunResult.durationMs / 1000).toFixed(1)}s)</span>
+                              <span className="text-slate-500">({(classifyRunResult.durationMs / 1000).toFixed(1)}s)</span>
                             )}
                           </div>
-                          <p className="text-base-content/70 text-sm">
+                          <p className="text-slate-600 text-sm">
                             {classifyRunResult.classified ?? 0} classified; {(classifyRunResult.unclassifiedRemaining ?? 0)} not run; {classifyRunResult.failed ?? 0} failed.
                           </p>
                           {classifyRunResult.errors?.length > 0 && (
                             <div className="mt-2">
-                              <p className="text-xs font-medium text-base-content/70 mb-1">Failure reasons:</p>
-                              <ul className="list-disc list-inside text-xs text-warning space-y-0.5">
+                              <p className="text-xs font-medium text-slate-600 mb-1">Failure reasons:</p>
+                              <ul className="list-disc list-inside text-xs text-amber-600 space-y-0.5">
                                 {classifyRunResult.errors.slice(0, 10).map((msg, i) => (
                                   <li key={i}>{msg}</li>
                                 ))}
@@ -1149,14 +1179,14 @@ export default function AdminDashboardPage() {
             {data.incidentDetection ? (
             <section>
                 <h2 className="text-lg font-semibold mb-4">Daily 3 – Incidents</h2>
-                <p className="text-sm text-base-content/60 mb-3">
+                <p className="text-sm text-slate-500 mb-3">
                   {data.incidentDetection.note ?? 'Run daily at 5 AM PST (13:00 UTC), 1 hour after classifier. Pipeline: scrape → classify → incidents.'}
                 </p>
-                <div className="card card-border bg-base-100 shadow overflow-hidden">
-                  <div className="card-body">
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="p-6">
                     <div className="flex flex-wrap items-end gap-6 mb-3">
                       <div>
-                        <span className="text-base-content/60 text-sm block">Last run</span>
+                        <span className="text-slate-500 text-sm block">Last run</span>
                         <p className="font-mono text-sm">
                           {data.incidentDetection.lastRunAt
                             ? new Date(data.incidentDetection.lastRunAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
@@ -1164,7 +1194,7 @@ export default function AdminDashboardPage() {
                         </p>
                       </div>
                       <div>
-                        <span className="text-base-content/60 text-sm block">Current week</span>
+                        <span className="text-slate-500 text-sm block">Current week</span>
                         <p className="font-semibold">{data.incidentDetection.currentWeek?.weekLabel ?? "—"}</p>
                       </div>
                     </div>
@@ -1190,13 +1220,13 @@ export default function AdminDashboardPage() {
                         </table>
                       </div>
                     ) : (
-                      <p className="text-base-content/60 text-sm">No firms with Trustpilot or no data.</p>
+                      <p className="text-slate-500 text-sm">No firms with Trustpilot or no data.</p>
                     )}
                   </div>
                 </div>
               </section>
             ) : (
-              <p className="text-base-content/60">No incident detection data. Run daily-step3-sync-firm-incidents workflow.</p>
+              <p className="text-slate-500">No incident detection data. Run daily-step3-sync-firm-incidents workflow.</p>
             )}
           </div>
         )}
@@ -1206,19 +1236,19 @@ export default function AdminDashboardPage() {
             {/* Weekly 1: Generate weekly reports – monitoring */}
             <section>
               <h2 className="text-lg font-semibold mb-4">Weekly 1 – Generate reports</h2>
-              <p className="text-sm text-base-content/60 mb-3">
-                Populates <code className="text-xs bg-base-200 px-1 rounded">firm_weekly_reports</code> for current week (Mon–Sun UTC). Runs Sunday 7:00 UTC (weekly-step1-generate-firm-weekly-reports). Weekly 2 (digest send) uses this data.
+              <p className="text-sm text-slate-500 mb-3">
+                Populates <code className="text-xs bg-slate-100 px-1 rounded">firm_weekly_reports</code> for current week (Mon–Sun UTC). Runs Sunday 7:00 UTC (weekly-step1-generate-firm-weekly-reports). Weekly 2 (digest send) uses this data.
               </p>
-              <div className="card card-border bg-base-100 shadow overflow-hidden">
-                <div className="card-body">
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-6">
                   {data.generateWeeklyReportsRun ? (
                     <>
-                      <p className="text-xs text-base-content/60 mb-3">{data.generateWeeklyReportsRun.note}</p>
+                      <p className="text-xs text-slate-500 mb-3">{data.generateWeeklyReportsRun.note}</p>
                       <div className="flex flex-wrap gap-4 items-baseline">
                         {data.generateWeeklyReportsRun.lastRunAt ? (
                           <>
                             <div>
-                              <span className="text-base-content/60 text-sm">Last run</span>
+                              <span className="text-slate-500 text-sm">Last run</span>
                               <p className="font-mono text-sm">
                                 {new Date(data.generateWeeklyReportsRun.lastRunAt).toLocaleString(undefined, {
                                   dateStyle: "short",
@@ -1227,37 +1257,37 @@ export default function AdminDashboardPage() {
                               </p>
                             </div>
                             <div>
-                              <span className="text-base-content/60 text-sm">Week</span>
+                              <span className="text-slate-500 text-sm">Week</span>
                               <p className="font-mono text-sm">{data.generateWeeklyReportsRun.weekLabel ?? "—"}</p>
                             </div>
                             {data.generateWeeklyReportsRun.weekStart && (
                               <div>
-                                <span className="text-base-content/60 text-sm">Range</span>
+                                <span className="text-slate-500 text-sm">Range</span>
                                 <p className="font-mono text-sm">{data.generateWeeklyReportsRun.weekStart} → {data.generateWeeklyReportsRun.weekEnd}</p>
                               </div>
                             )}
                             <div>
-                              <span className="text-base-content/60 text-sm">Firms processed</span>
+                              <span className="text-slate-500 text-sm">Firms processed</span>
                               <p className="font-semibold">{data.generateWeeklyReportsRun.firmsProcessed ?? "—"}</p>
                             </div>
                             <div>
-                              <span className="text-base-content/60 text-sm">Success</span>
-                              <p className="font-semibold text-success">{data.generateWeeklyReportsRun.successCount ?? "—"}</p>
+                              <span className="text-slate-500 text-sm">Success</span>
+                              <p className="font-semibold text-emerald-600">{data.generateWeeklyReportsRun.successCount ?? "—"}</p>
                             </div>
                             <div>
-                              <span className="text-base-content/60 text-sm">Errors</span>
-                              <p className="font-semibold text-error">{data.generateWeeklyReportsRun.errorCount ?? "—"}</p>
+                              <span className="text-slate-500 text-sm">Errors</span>
+                              <p className="font-semibold text-red-600">{data.generateWeeklyReportsRun.errorCount ?? "—"}</p>
                             </div>
                             {data.generateWeeklyReportsRun.durationMs != null && (
                               <div>
-                                <span className="text-base-content/60 text-sm">Duration</span>
+                                <span className="text-slate-500 text-sm">Duration</span>
                                 <p className="font-mono text-sm">{Math.round(data.generateWeeklyReportsRun.durationMs / 1000)}s</p>
                               </div>
                             )}
                             {Array.isArray(data.generateWeeklyReportsRun.errors) && data.generateWeeklyReportsRun.errors.length > 0 && (
                               <div className="w-full">
-                                <span className="text-base-content/60 text-sm">Errors (sample)</span>
-                                <ul className="list-disc list-inside text-xs text-error/90 mt-0.5 max-h-24 overflow-y-auto">
+                                <span className="text-slate-500 text-sm">Errors (sample)</span>
+                                <ul className="list-disc list-inside text-xs text-red-600 mt-0.5 max-h-24 overflow-y-auto">
                                   {data.generateWeeklyReportsRun.errors.slice(0, 5).map((msg, i) => (
                                     <li key={i}>{String(msg)}</li>
                                   ))}
@@ -1269,12 +1299,12 @@ export default function AdminDashboardPage() {
                             )}
                           </>
                         ) : (
-                          <p className="text-base-content/60 text-sm">No run recorded yet. Trigger weekly-step1-generate-firm-weekly-reports to populate.</p>
+                          <p className="text-slate-500 text-sm">No run recorded yet. Trigger weekly-step1-generate-firm-weekly-reports to populate.</p>
                         )}
                       </div>
                     </>
                   ) : (
-                    <p className="text-base-content/60 text-sm">No run recorded yet. Trigger weekly-step1-generate-firm-weekly-reports to populate.</p>
+                    <p className="text-slate-500 text-sm">No run recorded yet. Trigger weekly-step1-generate-firm-weekly-reports to populate.</p>
                   )}
                 </div>
               </div>
@@ -1288,22 +1318,22 @@ export default function AdminDashboardPage() {
             {data.intelligenceFeed && (
               <section>
                 <h2 className="text-lg font-semibold mb-4">Intelligence feed</h2>
-                <p className="text-sm text-base-content/60 mb-3">
-                  Weekly reports and digest readiness. Digest uses <code className="text-xs bg-base-200 px-1 rounded">firm_weekly_reports</code> for current week (Mon–Sun UTC); missing reports = gaps in emails.
+                <p className="text-sm text-slate-500 mb-3">
+                  Weekly reports and digest readiness. Digest uses <code className="text-xs bg-slate-100 px-1 rounded">firm_weekly_reports</code> for current week (Mon–Sun UTC); missing reports = gaps in emails.
                 </p>
-                <div className="card card-border bg-base-100 shadow overflow-hidden">
-                  <div className="card-body">
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="p-6">
                     <div className="flex flex-wrap gap-6 mb-4">
                       <div>
-                        <span className="text-base-content/60 text-sm">Subscriptions</span>
+                        <span className="text-slate-500 text-sm">Subscriptions</span>
                         <p className="font-semibold">{data.intelligenceFeed.subscriptionsTotal ?? 0}</p>
                       </div>
                       <div>
-                        <span className="text-base-content/60 text-sm">Email enabled</span>
+                        <span className="text-slate-500 text-sm">Email enabled</span>
                         <p className="font-semibold">{data.intelligenceFeed.subscriptionsEmailEnabled ?? 0}</p>
                       </div>
                       <div>
-                        <span className="text-base-content/60 text-sm">Last week ({data.intelligenceFeed.weekLabel ?? "—"})</span>
+                        <span className="text-slate-500 text-sm">Last week ({data.intelligenceFeed.weekLabel ?? "—"})</span>
                         <p className="font-semibold">
                           {(data.intelligenceFeed.lastWeek?.firmsWithReport ?? 0)} / {(data.intelligenceFeed.lastWeek?.firmsExpected ?? 0)} firms have report
                         </p>
@@ -1329,9 +1359,9 @@ export default function AdminDashboardPage() {
                                   <td className="font-medium">{f.name ?? f.id}</td>
                                   <td className="text-right">
                                     {f.hasReport ? (
-                                      <span className="badge badge-success badge-sm">OK</span>
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">OK</span>
                                     ) : (
-                                      <span className="badge badge-warning badge-sm">Missing</span>
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Missing</span>
                                     )}
                                   </td>
                                 </tr>
@@ -1341,7 +1371,7 @@ export default function AdminDashboardPage() {
                       </div>
                     )}
                     {(!data.intelligenceFeed.lastWeek?.firmIdsWithReport?.length && !data.intelligenceFeed.lastWeek?.firmIdsWithoutReport?.length) && (
-                      <p className="text-base-content/60 text-sm">No firms with Trustpilot URL, or no data for last week.</p>
+                      <p className="text-slate-500 text-sm">No firms with Trustpilot URL, or no data for last week.</p>
                     )}
                   </div>
                 </div>
@@ -1351,19 +1381,19 @@ export default function AdminDashboardPage() {
             {/* Weekly 2: Email send – last run from weekly-step2-send-firm-weekly-reports */}
             <section>
                 <h2 className="text-lg font-semibold mb-4">Weekly 2 – Email send</h2>
-                <p className="text-sm text-base-content/60 mb-3">
-                  Sends digest emails to subscribers via Resend. Runs Sunday 8:00 UTC (weekly-step2-send-firm-weekly-reports). Uses <code className="text-xs bg-base-200 px-1 rounded">firm_weekly_reports</code> from Weekly 1.
+                <p className="text-sm text-slate-500 mb-3">
+                  Sends digest emails to subscribers via Resend. Runs Sunday 8:00 UTC (weekly-step2-send-firm-weekly-reports). Uses <code className="text-xs bg-slate-100 px-1 rounded">firm_weekly_reports</code> from Weekly 1.
                 </p>
-                <div className="card card-border bg-base-100 shadow overflow-hidden">
-                  <div className="card-body">
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="p-6">
                     {data.weeklyEmailReport ? (
                       <>
-                        <p className="text-xs text-base-content/60 mb-3">{data.weeklyEmailReport.note}</p>
+                        <p className="text-xs text-slate-500 mb-3">{data.weeklyEmailReport.note}</p>
                         <div className="flex flex-wrap gap-4 items-baseline">
                           {data.weeklyEmailReport.lastRunAt ? (
                             <>
                               <div>
-                                <span className="text-base-content/60 text-sm">Last run</span>
+                                <span className="text-slate-500 text-sm">Last run</span>
                                 <p className="font-mono text-sm">
                                   {new Date(data.weeklyEmailReport.lastRunAt).toLocaleString(undefined, {
                                     dateStyle: "short",
@@ -1373,28 +1403,28 @@ export default function AdminDashboardPage() {
                               </div>
                               {data.weeklyEmailReport.weekStart && (
                                 <div>
-                                  <span className="text-base-content/60 text-sm">Week</span>
+                                  <span className="text-slate-500 text-sm">Week</span>
                                   <p className="font-mono text-sm">
                                     {data.weeklyEmailReport.weekStart} → {data.weeklyEmailReport.weekEnd}
                                   </p>
                                 </div>
                               )}
                               <div>
-                                <span className="text-base-content/60 text-sm">Sent</span>
-                                <p className="font-semibold text-success">{data.weeklyEmailReport.sent ?? "—"}</p>
+                                <span className="text-slate-500 text-sm">Sent</span>
+                                <p className="font-semibold text-emerald-600">{data.weeklyEmailReport.sent ?? "—"}</p>
                               </div>
                               <div>
-                                <span className="text-base-content/60 text-sm">Failed</span>
-                                <p className="font-semibold text-error">{data.weeklyEmailReport.failed ?? "—"}</p>
+                                <span className="text-slate-500 text-sm">Failed</span>
+                                <p className="font-semibold text-red-600">{data.weeklyEmailReport.failed ?? "—"}</p>
                               </div>
                               <div>
-                                <span className="text-base-content/60 text-sm">Skipped</span>
-                                <p className="font-semibold text-base-content/70">{data.weeklyEmailReport.skipped ?? "—"}</p>
+                                <span className="text-slate-500 text-sm">Skipped</span>
+                                <p className="font-semibold text-slate-600">{data.weeklyEmailReport.skipped ?? "—"}</p>
                               </div>
                               {Array.isArray(data.weeklyEmailReport.errors) && data.weeklyEmailReport.errors.length > 0 && (
                                 <div className="w-full">
-                                  <span className="text-base-content/60 text-sm">Errors (sample)</span>
-                                  <ul className="list-disc list-inside text-xs text-error/90 mt-0.5 max-h-24 overflow-y-auto">
+                                  <span className="text-slate-500 text-sm">Errors (sample)</span>
+                                  <ul className="list-disc list-inside text-xs text-red-600 mt-0.5 max-h-24 overflow-y-auto">
                                     {data.weeklyEmailReport.errors.slice(0, 5).map((msg, i) => (
                                       <li key={i}>{String(msg)}</li>
                                     ))}
@@ -1406,12 +1436,12 @@ export default function AdminDashboardPage() {
                               )}
                             </>
                           ) : (
-                            <p className="text-base-content/60 text-sm">No run recorded yet. Trigger weekly-step2-send-firm-weekly-reports to populate.</p>
+                            <p className="text-slate-500 text-sm">No run recorded yet. Trigger weekly-step2-send-firm-weekly-reports to populate.</p>
                           )}
                         </div>
                       </>
                     ) : (
-                      <p className="text-base-content/60 text-sm">Metrics loading… Refresh if this persists. Ensure migration 21_cron_last_run.sql is applied.</p>
+                      <p className="text-slate-500 text-sm">Metrics loading… Refresh if this persists. Ensure migration 21_cron_last_run.sql is applied.</p>
                     )}
                   </div>
                 </div>
@@ -1424,10 +1454,10 @@ export default function AdminDashboardPage() {
             {data.trustpilotScraper?.firms?.length > 0 ? (
             <section>
                 <h2 className="text-lg font-semibold mb-4">Daily 1 – Scrape</h2>
-                <p className="text-sm text-base-content/60 mb-3">
+                <p className="text-sm text-slate-500 mb-3">
                   Trustpilot scraping. Daily run via GitHub Actions (daily-step1-sync-firm-trustpilot-reviews). Last run per firm below.
                 </p>
-                <div className="card card-border bg-base-100 shadow overflow-hidden">
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="table table-sm w-full">
                       <thead>
@@ -1444,7 +1474,7 @@ export default function AdminDashboardPage() {
                         {data.trustpilotScraper.firms.map((f) => (
                           <tr key={f.id}>
                             <td className="font-medium">{f.name ?? f.id}</td>
-                            <td className="text-right text-base-content/70 tabular-nums">
+                            <td className="text-right text-slate-600 tabular-nums">
                               {f.last_scraper_run_at
                                 ? new Date(f.last_scraper_run_at).toLocaleString(undefined, {
                                     dateStyle: "short",
@@ -1457,13 +1487,13 @@ export default function AdminDashboardPage() {
                             <td className="text-right tabular-nums">{f.last_scraper_duplicates_skipped ?? "—"}</td>
                             <td>
                               {f.last_scraper_error ? (
-                                <span className="badge badge-error badge-sm" title={f.last_scraper_error}>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" title={f.last_scraper_error}>
                                   Error
                                 </span>
                               ) : f.last_scraper_run_at ? (
-                                <span className="badge badge-success badge-sm">OK</span>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">OK</span>
                               ) : (
-                                <span className="text-base-content/50">—</span>
+                                <span className="text-slate-500">—</span>
                               )}
                             </td>
                           </tr>
@@ -1472,9 +1502,9 @@ export default function AdminDashboardPage() {
                     </table>
                   </div>
                   {data.trustpilotScraper.firms.some((f) => f.last_scraper_error) && (
-                    <div className="px-4 pb-3 pt-1 border-t border-base-200">
-                      <p className="text-xs font-medium text-base-content/70 mb-1">Errors (hover badge for message):</p>
-                      <ul className="text-xs text-base-content/60 space-y-0.5">
+                    <div className="px-4 pb-3 pt-1 border-t border-slate-200">
+                      <p className="text-xs font-medium text-slate-600 mb-1">Errors (hover badge for message):</p>
+                      <ul className="text-xs text-slate-500 space-y-0.5">
                         {data.trustpilotScraper.firms
                           .filter((f) => f.last_scraper_error)
                           .map((f) => (
@@ -1488,7 +1518,7 @@ export default function AdminDashboardPage() {
                 </div>
               </section>
             ) : (
-              <p className="text-base-content/60">No firms with Trustpilot URL. Configure firms to see scraper runs.</p>
+              <p className="text-slate-500">No firms with Trustpilot URL. Configure firms to see scraper runs.</p>
             )}
           </div>
         )}
@@ -1521,19 +1551,19 @@ export default function AdminDashboardPage() {
 
             {/* Cache */}
             <section>
-              <h2 className="text-lg font-semibold mb-4">Cache (since process start)</h2>
-              <div className="stats stats-vertical sm:stats-horizontal shadow w-full bg-base-100">
-                <div className="stat">
-                  <div className="stat-title">Hits</div>
-                  <div className="stat-value text-secondary">{data.cache?.hits ?? "—"}</div>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Cache (since process start)</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Hits</div>
+                  <div className="text-2xl font-bold text-slate-700 mt-1">{data.cache?.hits ?? "—"}</div>
                 </div>
-                <div className="stat">
-                  <div className="stat-title">Misses</div>
-                  <div className="stat-value">{data.cache?.misses ?? "—"}</div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Misses</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">{data.cache?.misses ?? "—"}</div>
                 </div>
-                <div className="stat">
-                  <div className="stat-title">Hit rate</div>
-                  <div className="stat-value">
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Hit rate</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">
                     {data.cache?.hitRate != null ? `${(data.cache.hitRate * 100).toFixed(1)}%` : "—"}
                   </div>
                 </div>
@@ -1543,12 +1573,12 @@ export default function AdminDashboardPage() {
             {/* API latency / errors note */}
             <section>
               <h2 className="text-lg font-semibold mb-4">API latency & error rates</h2>
-              <div className="card card-border bg-base-100 shadow">
-                <div className="card-body">
-                  <p className="text-base-content/80">
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
+                <div className="p-6">
+                  <p className="text-slate-700">
                     {data.apiLatency?.note ?? "See Vercel Analytics for P50/P95/P99 by route."}
                   </p>
-                  <p className="text-base-content/80 mt-2">
+                  <p className="text-slate-700 mt-2">
                     {data.errorRates?.note ?? "See Vercel Analytics or logs for error rates by endpoint."}
                   </p>
                 </div>

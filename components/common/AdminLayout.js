@@ -15,13 +15,13 @@ const AdminLayout = ({ children }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-200/60 text-gray-900 flex flex-col">
-      {/* Navigation */}
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+      {/* Navigation - same structure as PropProofLayout: white bar, logo + nav */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link href="/admin" className="flex items-center gap-2 group">
-              <div className="bg-slate-900 p-1.5 rounded-lg group-hover:bg-emerald-600 transition-colors">
+              <div className="p-1.5 rounded-lg transition-colors" style={{ backgroundColor: "#635BFF" }}>
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
@@ -30,18 +30,17 @@ const AdminLayout = ({ children }) => {
             </Link>
             <nav className="hidden md:flex items-center gap-1">
               {navItems.map((item) => {
-                // Check if current path matches or starts with the nav item path
                 const isActive = pathname === item.path || pathname?.startsWith(item.path);
-                
                 return (
                   <Link
                     key={item.path}
                     href={item.path}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                       isActive
-                        ? "text-emerald-600 bg-emerald-50"
+                        ? "text-white rounded-lg"
                         : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                     }`}
+                    style={isActive ? { backgroundColor: "#635BFF" } : undefined}
                   >
                     {item.label}
                   </Link>
@@ -50,15 +49,9 @@ const AdminLayout = ({ children }) => {
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-            </button>
-            <div className="h-4 w-px bg-slate-200 mx-2"></div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-bold">A</span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: "#635BFF" }}>
+                A
               </div>
               <span className="text-sm font-semibold text-slate-900">Admin</span>
             </div>
