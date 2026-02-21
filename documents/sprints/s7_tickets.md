@@ -17,13 +17,13 @@
 | S7-003 | OAuth callback error handling (`backfill_error`) | ✅ Done |
 | S7-004 | DB tables verified | ✅ Done |
 | S7-005 | Test real-time sync (Inngest) | ✅ Done |
-| S7-006 | Combined data loader tests | 🔲 Pending |
+| S7-006 | Combined data loader tests | ✅ Done |
 | S7-007 | Auto-subscribe new users | ✅ Done (DB trigger) |
 | S7-008 | Bulk subscribe/unsubscribe UI | 🔲 Pending |
 | S7-009 | Subscription stats panel | 🔲 Pending |
 | S7-010 | Rate limits & scaling docs | 🔲 Pending |
 
-**Next:** S7-006 (combined data loader tests).
+**Next:** S7-008 (bulk subscribe/unsubscribe UI) or S7-009 (subscription stats panel).
 
 ---
 
@@ -636,7 +636,7 @@ trader_records:
 
 ### TICKET-S7-006: Verify Combined Data Loader 🟡 HIGH
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done (2026-02-21 — unit tests for loadTraderMonthlyData, getTraderAvailableMonths, getAllTraderTransactions, loadTraderPeriodData)
 **Priority:** P1 (High)
 **Story Points:** 3
 **Assignee:** Full-stack Engineer
