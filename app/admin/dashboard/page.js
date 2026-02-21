@@ -239,6 +239,40 @@ export default function AdminDashboardPage() {
   /** Tab ids that show "Last run" under the tab label. */
   const STEP_TAB_IDS = ["daily1", "daily2", "daily3", "weekly1", "weekly2"];
 
+  /** Icons for firms nav segments (Heroicons-style). Active payouts uses purple. */
+  const FIRMS_SECTION_ICONS = {
+    payouts: (
+      <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    ),
+    daily1: (
+      <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    ),
+    daily2: (
+      <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+      </svg>
+    ),
+    daily3: (
+      <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    ),
+    weekly1: (
+      <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+    weekly2: (
+      <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    ),
+  };
+
   /** Format last run for tab: relative (e.g. "2h ago") or short date if older. */
   const formatLastRun = (iso) => {
     if (!iso) return null;
@@ -443,6 +477,7 @@ export default function AdminDashboardPage() {
               <nav role="tablist" aria-label="Main sections" className="grid w-full max-w-md grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1.5">
                 {MAIN_TAB_IDS.map((id) => {
                   const sectionStatus = getSectionStatus(id);
+                  const showStatus = true;
                   return (
                     <button
                       key={id}
@@ -457,51 +492,82 @@ export default function AdminDashboardPage() {
                       }`}
                       onClick={() => setActiveTab(id)}
                     >
-                      <span
-                        className={`inline-block h-2 w-2 shrink-0 rounded-full ${
-                          sectionStatus === "critical"
-                            ? "bg-red-500"
-                            : sectionStatus === "warning"
-                              ? "bg-amber-500"
-                              : "bg-emerald-500"
-                        }`}
-                        title={sectionStatus === "critical" ? "Critical issues" : sectionStatus === "warning" ? "Warnings" : "Healthy"}
-                        aria-hidden
-                      />
                       {MAIN_TAB_LABELS[id]}
+                      {showStatus && (
+                        <span
+                          className={`inline-block h-2 w-2 shrink-0 rounded-full ${
+                            sectionStatus === "critical"
+                              ? "bg-red-500"
+                              : sectionStatus === "warning"
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
+                          }`}
+                          title={sectionStatus === "critical" ? "Critical issues" : sectionStatus === "warning" ? "Warnings" : "Healthy"}
+                          aria-hidden
+                        />
+                      )}
                     </button>
                   );
                 })}
               </nav>
             </div>
-            {/* Firms: single row of 6 sections (pill buttons, reference-style) */}
+            {/* Firms: segmented nav bar — grey track, white pill for active, purple for Payouts & data */}
             {activeTab === "firms" && data && (
               <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
+                <div
+                  className="inline-flex w-full max-w-full rounded-xl bg-slate-100 p-1.5"
+                  role="tablist"
+                  aria-label="Firms sections"
+                >
                   {FIRMS_SECTION_IDS.map((id) => {
                     const lastRun = STEP_TAB_IDS.includes(id) ? getTabLastRun(id) : null;
                     const isActive = firmsSection === id;
+                    const label = FIRMS_SECTION_LABELS[id].replace(" – ", ": ");
                     return (
                       <button
                         key={id}
                         type="button"
                         role="tab"
                         aria-selected={isActive}
-                        className={`inline-flex flex-col items-start rounded-full px-4 py-2.5 text-sm font-medium transition-colors leading-tight ${
+                        className={`inline-flex min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
                           isActive
-                            ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80"
-                            : "text-slate-500 hover:bg-white/80 hover:text-slate-700"
+                            ? "bg-white text-[#6d28d9] shadow-sm ring-1 ring-slate-200/80"
+                            : "text-slate-600 hover:bg-white/60 hover:text-slate-800"
                         }`}
                         onClick={() => setFirmsSection(id)}
                       >
-                        <span>{FIRMS_SECTION_LABELS[id].replace(" – ", ": ")}</span>
-                        {lastRun != null ? (
-                          <span className={`text-[10px] ${isActive ? "text-slate-500" : "opacity-60"}`} title={new Date(lastRun).toLocaleString()}>
-                            Last: {formatLastRun(lastRun)}
+                        <span
+                          className={
+                            isActive && id === "payouts"
+                              ? "text-[#6d28d9]"
+                              : isActive
+                                ? "text-slate-600"
+                                : "text-slate-500"
+                          }
+                        >
+                          {FIRMS_SECTION_ICONS[id]}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <span
+                            className={
+                              isActive && id === "payouts"
+                                ? "font-semibold text-[#6d28d9]"
+                                : isActive
+                                  ? "font-semibold text-slate-900"
+                                  : "font-medium"
+                            }
+                          >
+                            {label}
                           </span>
-                        ) : id !== "payouts" ? (
-                          <span className="text-[10px] opacity-50">Last: —</span>
-                        ) : null}
+                          {id !== "payouts" && (
+                            <span
+                              className={`block text-xs ${isActive ? "text-slate-500" : "text-slate-400"}`}
+                              title={lastRun != null ? new Date(lastRun).toLocaleString() : undefined}
+                            >
+                              Last: {lastRun != null ? formatLastRun(lastRun) : "—"}
+                            </span>
+                          )}
+                        </div>
                       </button>
                     );
                   })}
@@ -1037,56 +1103,55 @@ export default function AdminDashboardPage() {
           <div className="mt-6 space-y-8">
             {/* Prop firms payout data – chart table: cols = firms, rows = time ranges */}
             {data.propfirmsData ? (
-            <section className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                {/* Card header: white background, title + description left, badge right */}
+            <section className="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm mb-10">
+                {/* Card header: title + description left, warning badge right */}
                 <div className="flex flex-wrap items-start justify-between gap-4 px-6 pt-6 pb-2">
                   <div>
                     <h2 className="text-lg font-bold leading-none text-slate-900">Prop firms payout data</h2>
                     <p className="mt-2 text-sm text-slate-500">Real-time monitoring of payout consistency and reporting</p>
                   </div>
                   {data.propfirmsData.firmsWithIssues?.length > 0 && (
-                    <span className="inline-flex shrink-0 items-center rounded-full border border-amber-200 bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
+                    <span className="inline-flex shrink-0 items-center rounded-full bg-orange-100 px-3 py-1.5 text-xs font-medium text-orange-800">
                       {data.propfirmsData.firmsWithIssues.length} warning{data.propfirmsData.firmsWithIssues.length !== 1 ? "s" : ""} active
                     </span>
                   )}
                 </div>
-                <div className="p-6 pt-4">
+                <div className="px-6 pb-6 pt-2">
                     {!data.propfirmsData.firmsWithIssues?.length ? (
                       <p className="text-slate-600">No prop firms with payout data issues.</p>
                     ) : (
                       <>
-                        {/* What's wrong (top 3): rounded box with icon, numbered list */}
+                        {/* What's wrong (top 3): darker grey box, warning icon, numbered list */}
                         {(() => {
                           const allMessages = data.propfirmsData.firmsWithIssues.flatMap((f) => (f.flags || []).map((flag) => ({ firm: f.firmName ?? f.firmId, message: flag.message })));
                           const top3 = allMessages.slice(0, 3);
                           if (top3.length === 0) return null;
                           return (
-                            <div className="mb-6 rounded-lg border border-slate-200 bg-slate-100/50 p-4">
-                              <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
-                                <svg className="h-4 w-4 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                            <div className="mb-6 rounded-lg bg-slate-100 p-4">
+                              <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-900">
+                                <svg className="h-4 w-4 shrink-0 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                                 What&apos;s wrong (top 3):
                               </h4>
-                              <ul className="space-y-2 text-sm text-slate-600">
+                              <ul className="list-none space-y-1.5 text-sm text-slate-700">
                                 {top3.map((item, i) => (
-                                  <li key={i} className="flex items-start gap-2">
-                                    <span className="font-semibold text-slate-900">{i + 1}. {item.firm}:</span>
-                                    <span>{item.message}</span>
+                                  <li key={i}>
+                                    {i + 1}. {item.firm}: {item.message}
                                   </li>
                                 ))}
                               </ul>
                             </div>
                           );
                         })()}
-                        {/* Table: wrapped in rounded border container, header bg-slate-50, badge-style cells */}
-                        <div className="overflow-x-auto rounded-xl border border-slate-200">
+                        {/* Table: white background, pill badges for status */}
+                        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
                           <table className="w-full text-sm">
                             <thead>
-                              <tr className="border-b border-slate-200 bg-slate-50">
-                                <th className="sticky left-0 z-10 h-10 w-[100px] bg-slate-50 px-2 text-left font-bold text-slate-900">Period</th>
+                              <tr className="border-b border-slate-200">
+                                <th className="sticky left-0 z-10 h-10 w-[100px] bg-white px-4 py-3 text-left font-bold text-slate-900">Period</th>
                                 {data.propfirmsData.firmsWithIssues.map((f) => (
-                                  <th key={f.firmId} className="h-10 px-2 text-left font-bold text-slate-900 min-w-[100px]">
+                                  <th key={f.firmId} className="h-10 bg-white px-4 py-3 text-left font-bold text-slate-900 min-w-[100px]">
                                     {f.firmName ?? f.firmId}
                                   </th>
                                 ))}
@@ -1095,7 +1160,7 @@ export default function AdminDashboardPage() {
                             <tbody>
                               {["24h", "7d", "30d"].map((period) => (
                                 <tr key={period} className="border-b border-slate-100 last:border-b-0">
-                                  <td className="sticky left-0 z-10 bg-white px-2 py-2 font-medium text-slate-900">{period}</td>
+                                  <td className="sticky left-0 z-10 bg-white px-4 py-3 font-medium text-slate-900">{period}</td>
                                   {data.propfirmsData.firmsWithIssues.map((f) => {
                                     const cellStatus = f.statusByPeriod?.[period] ?? "ok";
                                     const messages = f.messagesByPeriod?.[period] ?? [];
@@ -1104,7 +1169,7 @@ export default function AdminDashboardPage() {
                                     return (
                                       <td
                                         key={f.firmId}
-                                        className="px-2 py-2 text-left align-middle"
+                                        className="bg-white px-4 py-3 text-left align-middle"
                                         onMouseEnter={() =>
                                           hasTip
                                             ? setPropfirmsTooltip({
@@ -1118,12 +1183,12 @@ export default function AdminDashboardPage() {
                                         onMouseLeave={() => setPropfirmsTooltip(null)}
                                       >
                                         <span
-                                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
+                                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                             cellStatus === "critical"
-                                              ? "border-red-200 bg-red-100 text-red-700"
+                                              ? "bg-red-100 text-red-800"
                                               : cellStatus === "warning"
-                                                ? "border-amber-200 bg-amber-100 text-amber-700"
-                                                : "border-emerald-200 bg-emerald-100 text-emerald-700"
+                                                ? "bg-amber-100 text-amber-800"
+                                                : "bg-emerald-100 text-emerald-800"
                                           }`}
                                         >
                                           {cellStatus === "ok" ? "ok" : cellStatus}
@@ -1156,7 +1221,7 @@ export default function AdminDashboardPage() {
                             </ul>
                           </div>
                         )}
-                        <p className="mt-3 text-[11px] italic text-slate-400">
+                        <p className="mt-3 text-xs text-slate-400">
                           Each column is a firm; rows are time ranges. Green = ok, yellow = warning, red = critical. Hover a yellow or red cell to see why.
                         </p>
                       </>
