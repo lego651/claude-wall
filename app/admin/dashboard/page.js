@@ -14,88 +14,72 @@ function formatBytes(n) {
 /** Compute overall dashboard status and list of issues for the summary banner. */
 function getSummaryStatus(data) {
   if (!data) return { status: "unknown", issues: [], label: "No data" };
+  /** @type {{ msg: string, severity: "critical" | "warning" }[]} */
   const issues = [];
   let hasCritical = false;
   let hasWarning = false;
 
+  const push = (msg, severity) => {
+    issues.push({ msg, severity });
+    if (severity === "critical") hasCritical = true;
+    else hasWarning = true;
+  };
+
   // Checks
   const fileStatus = data.checks?.fileSize?.status;
-  if (fileStatus === "critical") {
-    hasCritical = true;
-    issues.push("File size critical (≥10 MB)");
-  } else if (fileStatus === "warning") {
-    hasWarning = true;
-    issues.push("File size warning (≥5 MB)");
-  }
+  if (fileStatus === "critical") push("File size critical (≥10 MB)", "critical");
+  else if (fileStatus === "warning") push("File size warning (≥5 MB)", "warning");
   const arbStatus = data.checks?.arbiscan?.status;
-  if (arbStatus === "critical") {
-    hasCritical = true;
-    issues.push("Arbiscan usage ≥95%");
-  } else if (arbStatus === "warning") {
-    hasWarning = true;
-    issues.push("Arbiscan usage ≥80%");
-  }
-  if (data.checks?.supabase?.status === "critical") {
-    hasCritical = true;
-    issues.push("Database check failed");
-  }
+  if (arbStatus === "critical") push("Arbiscan usage ≥95%", "critical");
+  else if (arbStatus === "warning") push("Arbiscan usage ≥80%", "warning");
+  if (data.checks?.supabase?.status === "critical") push("Database check failed", "critical");
   const propStatus = data.checks?.propfirmsData?.status;
-  if (propStatus === "critical") {
-    hasCritical = true;
-    issues.push("Prop firms payout data critical");
-  } else if (propStatus === "warning") {
-    hasWarning = true;
-    issues.push("Prop firms payout data warning");
-  }
+  if (propStatus === "critical") push("Prop firms payout data critical", "critical");
+  else if (propStatus === "warning") push("Prop firms payout data warning", "warning");
 
   // Daily 1: Scraper
   const firms = data.trustpilotScraper?.firms ?? [];
   const scraperTimestamps = firms.map((f) => f.last_scraper_run_at).filter(Boolean);
   const lastScraperRun = scraperTimestamps.length ? Math.max(...scraperTimestamps.map((t) => new Date(t).getTime())) : null;
   const hoursSinceScraper = lastScraperRun ? (Date.now() - lastScraperRun) / (1000 * 60 * 60) : Infinity;
-  if (!lastScraperRun) {
-    hasCritical = true;
-    issues.push("Daily 1: Scraper never run");
-  } else if (hoursSinceScraper > 25) {
-    hasWarning = true;
-    issues.push(`Daily 1: Scraper stale (${Math.round(hoursSinceScraper)}h ago)`);
-  }
+  if (!lastScraperRun) push("Daily 1: Scraper never run", "critical");
+  else if (hoursSinceScraper > 25) push(`Daily 1: Scraper stale (${Math.round(hoursSinceScraper)}h ago)`, "warning");
 
   // Daily 2: Classifier backlog
   const unclassified = data.classifyReviews?.unclassified ?? 0;
-  if (unclassified > 1000) {
-    hasCritical = true;
-    issues.push(`Daily 2: Classifier backlog critical (${unclassified} unclassified)`);
-  } else if (unclassified > 500) {
-    hasWarning = true;
-    issues.push(`Daily 2: Classifier backlog (${unclassified} unclassified)`);
-  }
+  if (unclassified > 1000) push(`Daily 2: Classifier backlog critical (${unclassified} unclassified)`, "critical");
+  else if (unclassified > 500) push(`Daily 2: Classifier backlog (${unclassified} unclassified)`, "warning");
 
   // Weekly 2: Email failures
   const failed = data.weeklyEmailReport?.failed ?? 0;
-  if (failed > 0 && data.weeklyEmailReport?.lastRunAt) {
-    hasWarning = true;
-    issues.push(`Weekly 2: Last email run had ${failed} failed`);
-  }
+  if (failed > 0 && data.weeklyEmailReport?.lastRunAt) push(`Weekly 2: Last email run had ${failed} failed`, "warning");
 
   // Traders: sync errors or many pending backfills
   const tradersSummary = data.traders?.summary;
   if (tradersSummary) {
     const syncErr = tradersSummary.syncErrors ?? 0;
     const pending = tradersSummary.pendingBackfill ?? 0;
-    if (syncErr > 0) {
-      hasWarning = true;
-      issues.push(`Traders: ${syncErr} sync error(s)`);
-    }
-    if (pending > 5) {
-      hasWarning = true;
-      issues.push(`Traders: ${pending} pending backfill(s)`);
-    }
+    if (syncErr > 0) push(`Traders: ${syncErr} sync error(s)`, "warning");
+    if (pending > 5) push(`Traders: ${pending} pending backfill(s)`, "warning");
   }
 
   const status = hasCritical ? "critical" : hasWarning ? "warning" : "ok";
   const label = hasCritical ? "Critical" : hasWarning ? "Warning" : "All good";
   return { status, issues, label };
+}
+
+/** Group issues by main section (firms/traders/system) for per-section banners and nav indicators. */
+function getIssuesBySection(summary, getTabForIssue) {
+  const bySection = { firms: [], traders: [], system: [] };
+  if (!summary?.issues?.length) return bySection;
+  for (const item of summary.issues) {
+    const msg = typeof item === "string" ? item : item.msg;
+    const severity = typeof item === "string" ? "warning" : item.severity;
+    const target = getTabForIssue(msg);
+    const main = target?.main;
+    if (main && bySection[main]) bySection[main].push({ msg, severity });
+  }
+  return bySection;
 }
 
 function metricsToCSV(data) {
@@ -180,32 +164,64 @@ export default function AdminDashboardPage() {
   const [classifyRunResult, setClassifyRunResult] = useState(null);
   const [classifyRunLoading, setClassifyRunLoading] = useState(false);
   const [classifyLimit, setClassifyLimit] = useState(40);
-  const [activeTab, setActiveTab] = useState("system");
+  const [activeTab, setActiveTab] = useState("firms");
+  const [firmsSub, setFirmsSub] = useState("payouts");
+  const [firmsDailyTab, setFirmsDailyTab] = useState("daily1");
+  const [firmsWeeklyTab, setFirmsWeeklyTab] = useState("weekly1");
 
   const summary = getSummaryStatus(data);
-  const TAB_IDS = ["system", "traders", "daily1", "daily2", "daily3", "weekly1", "weekly2", "payouts"];
-  /** Map summary issue text to tab id for "go to" links. */
+  const MAIN_TAB_IDS = ["firms", "traders", "system"];
+  const MAIN_TAB_LABELS = { firms: "Firms", traders: "Traders", system: "System" };
+  const FIRMS_SUB_IDS = ["payouts", "daily", "weekly"];
+  const FIRMS_SUB_LABELS = { payouts: "Payouts & data", daily: "Daily jobs", weekly: "Weekly" };
+  const DAILY_TAB_IDS = ["daily1", "daily2", "daily3"];
+  const DAILY_TAB_LABELS = { daily1: "Daily 1 – Scrape", daily2: "Daily 2 – Classify", daily3: "Daily 3 – Incidents" };
+  const WEEKLY_TAB_IDS = ["weekly1", "weekly2"];
+  const WEEKLY_TAB_LABELS = { weekly1: "Weekly 1 – Reports", weekly2: "Weekly 2 – Digest" };
+
+  /** Map summary issue text to { mainTab, firmsSub?, firmsDailyTab?, firmsWeeklyTab? } for "go to" links. */
   const getTabForIssue = (msg) => {
     if (!msg) return null;
-    if (msg.startsWith("Daily 1") || msg.includes("Scraper")) return "daily1";
-    if (msg.startsWith("Daily 2") || msg.includes("Classifier")) return "daily2";
-    if (msg.startsWith("Daily 3")) return "daily3";
-    if (msg.startsWith("Weekly 1")) return "weekly1";
-    if (msg.startsWith("Weekly 2") || msg.includes("email")) return "weekly2";
-    if (msg.includes("Prop firms") || msg.includes("Arbiscan") || msg.includes("File size")) return "payouts";
-    if (msg.includes("Traders") || msg.includes("trader") || msg.includes("backfill") || msg.includes("sync")) return "traders";
-    if (msg.includes("Database")) return "system";
+    if (msg.startsWith("Daily 1") || msg.includes("Scraper")) return { main: "firms", firmsSub: "daily", firmsDailyTab: "daily1" };
+    if (msg.startsWith("Daily 2") || msg.includes("Classifier")) return { main: "firms", firmsSub: "daily", firmsDailyTab: "daily2" };
+    if (msg.startsWith("Daily 3")) return { main: "firms", firmsSub: "daily", firmsDailyTab: "daily3" };
+    if (msg.startsWith("Weekly 1")) return { main: "firms", firmsSub: "weekly", firmsWeeklyTab: "weekly1" };
+    if (msg.startsWith("Weekly 2") || msg.includes("email")) return { main: "firms", firmsSub: "weekly", firmsWeeklyTab: "weekly2" };
+    if (msg.includes("Prop firms") || msg.includes("Arbiscan") || msg.includes("File size")) return { main: "firms", firmsSub: "payouts" };
+    if (msg.includes("Traders") || msg.includes("trader") || msg.includes("backfill") || msg.includes("sync")) return { main: "traders" };
+    if (msg.includes("Database")) return { main: "system" };
     return null;
   };
-  const TAB_LABELS = {
-    system: "System",
-    traders: "Traders",
-    daily1: "Daily 1 – Scrape",
-    daily2: "Daily 2 – Classify",
-    daily3: "Daily 3 – Incidents",
-    weekly1: "Weekly 1 – Reports",
-    weekly2: "Weekly 2 – Digest",
-    payouts: "Payouts & data",
+
+  const issuesBySection = getIssuesBySection(summary, getTabForIssue);
+  const getSectionStatus = (main) => {
+    const issues = issuesBySection[main] || [];
+    const hasCritical = issues.some((i) => i.severity === "critical");
+    const hasWarning = issues.some((i) => i.severity === "warning");
+    return hasCritical ? "critical" : hasWarning ? "warning" : null;
+  };
+
+  /** Resolve issue target to a short label for the summary link. */
+  const getIssueTargetLabel = (target) => {
+    if (!target) return "";
+    if (target.main === "traders") return "Traders";
+    if (target.main === "system") return "System";
+    if (target.main === "firms") {
+      if (target.firmsSub === "payouts") return "Firms › Payouts & data";
+      if (target.firmsSub === "daily" && target.firmsDailyTab) return `Firms › ${DAILY_TAB_LABELS[target.firmsDailyTab]}`;
+      if (target.firmsSub === "weekly" && target.firmsWeeklyTab) return `Firms › ${WEEKLY_TAB_LABELS[target.firmsWeeklyTab]}`;
+      return "Firms";
+    }
+    return "";
+  };
+  const goToIssueTarget = (target) => {
+    if (!target) return;
+    setActiveTab(target.main);
+    if (target.main === "firms") {
+      if (target.firmsSub) setFirmsSub(target.firmsSub);
+      if (target.firmsDailyTab) setFirmsDailyTab(target.firmsDailyTab);
+      if (target.firmsWeeklyTab) setFirmsWeeklyTab(target.firmsWeeklyTab);
+    }
   };
   /** Tab ids that show "Last run" under the tab label. */
   const STEP_TAB_IDS = ["daily1", "daily2", "daily3", "weekly1", "weekly2"];
@@ -396,92 +412,203 @@ export default function AdminDashboardPage() {
           <div className="text-slate-600">No metrics available.</div>
         )}
 
-        {/* Overall status summary */}
+        {/* Overall status: "All good" only when no issues; section indicators/banners show issues */}
         {data && (
           <div className="mb-6">
-            <div
-              className={`rounded-2xl border p-4 sm:p-5 ${
-                summary.status === "critical"
-                  ? "border-red-300 bg-red-50"
-                  : summary.status === "warning"
-                    ? "border-amber-300 bg-amber-50"
-                    : "border-emerald-200 bg-emerald-50"
-              }`}
-            >
-              <div className="flex flex-wrap items-center gap-4">
-                <span
-                  className={`text-xl font-bold ${
-                    summary.status === "critical"
-                      ? "text-red-700"
-                      : summary.status === "warning"
-                        ? "text-amber-700"
-                        : "text-emerald-700"
-                  }`}
-                >
-                  {summary.status === "critical" ? "🔴 Critical" : summary.status === "warning" ? "🟡 Warning" : "🟢 All good"}
-                </span>
+            {summary.issues.length === 0 && (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex items-center gap-3">
+                <span className="text-emerald-700 font-bold">🟢 All good</span>
                 <span className="text-slate-700 font-medium">{summary.label}</span>
-                {summary.issues.length > 0 && (
-                  <ul className="list-disc list-inside text-sm text-slate-600 mt-1 flex-1 space-y-0.5">
-                    {summary.issues.slice(0, 6).map((msg, i) => {
-                      const tabId = getTabForIssue(msg);
-                      return (
-                        <li key={i}>
-                          {tabId ? (
-                            <button
-                              type="button"
-                              onClick={() => setActiveTab(tabId)}
-                              className="text-left font-medium text-slate-700 underline-offset-2 hover:underline hover:text-slate-900"
-                            >
-                              {msg}
-                              <span className="ml-1 text-xs text-slate-500">→ {TAB_LABELS[tabId]}</span>
-                            </button>
-                          ) : (
-                            msg
-                          )}
-                        </li>
-                      );
-                    })}
-                    {summary.issues.length > 6 && <li>… and {summary.issues.length - 6} more</li>}
-                  </ul>
-                )}
               </div>
-            </div>
-            {/* Navigation tabs */}
+            )}
+            {/* Main sections: Firms / Traders / System (with status bulbs) */}
             <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-6 mb-2">Sections</p>
-            <nav role="tablist" aria-label="Dashboard sections" className="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-xl">
-              {TAB_IDS.map((id) => {
-                const lastRun = getTabLastRun(id);
+            <nav role="tablist" aria-label="Main sections" className="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-xl">
+              {MAIN_TAB_IDS.map((id) => {
+                const sectionStatus = getSectionStatus(id);
                 return (
                   <button
                     key={id}
                     role="tab"
                     type="button"
                     aria-selected={activeTab === id}
-                    className={`min-w-0 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors flex flex-col items-center gap-0.5 ${
+                    aria-label={MAIN_TAB_LABELS[id] + (sectionStatus ? ` ${sectionStatus} issues` : " healthy")}
+                    className={`min-w-0 px-5 py-2.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-2.5 ${
                       activeTab === id
                         ? "bg-white text-slate-900 shadow-sm border border-slate-200"
                         : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
                     }`}
                     onClick={() => setActiveTab(id)}
                   >
-                    <span>{TAB_LABELS[id]}</span>
-                    {(STEP_TAB_IDS.includes(id) && (lastRun != null ? (
-                      <span className={`text-[10px] font-normal ${activeTab === id ? "text-slate-500" : "text-slate-400"}`} title={lastRun ? new Date(lastRun).toLocaleString() : ""}>
-                        Last: {formatLastRun(lastRun)}
-                      </span>
-                    ) : (
-                      <span className={`text-[10px] font-normal ${activeTab === id ? "text-slate-400" : "text-slate-400"}`}>Last: —</span>
-                    ))) || null}
+                    <span
+                      className={`inline-block w-3.5 h-3.5 rounded-full shrink-0 ring-2 ring-white/80 shadow-md ${
+                        sectionStatus === "critical"
+                          ? "bg-red-500 shadow-red-500/50"
+                          : sectionStatus === "warning"
+                            ? "bg-amber-500 shadow-amber-500/50"
+                            : "bg-emerald-500 shadow-emerald-500/50"
+                      }`}
+                      title={sectionStatus === "critical" ? "Critical issues" : sectionStatus === "warning" ? "Warnings" : "Healthy"}
+                      aria-hidden
+                    />
+                    {MAIN_TAB_LABELS[id]}
                   </button>
                 );
               })}
             </nav>
+            {/* Firms sub-nav: Payouts & data | Daily jobs | Weekly */}
+            {activeTab === "firms" && data && (
+              <div className="mt-4 space-y-4">
+                <nav role="tablist" aria-label="Firms subsections" className="flex flex-wrap gap-1 p-1 bg-slate-50 rounded-xl border border-slate-200 max-w-2xl">
+                  {FIRMS_SUB_IDS.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={`min-w-0 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        firmsSub === id
+                          ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                      }`}
+                      onClick={() => setFirmsSub(id)}
+                    >
+                      {FIRMS_SUB_LABELS[id]}
+                    </button>
+                  ))}
+                </nav>
+                {firmsSub === "daily" && (
+                  <div className="flex flex-wrap gap-1 p-1 bg-slate-50/80 rounded-lg border border-slate-100 max-w-xl">
+                    {DAILY_TAB_IDS.map((id) => {
+                      const lastRun = getTabLastRun(id);
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          className={`min-w-0 px-3 py-2 text-sm font-medium rounded-md transition-colors flex flex-col items-center gap-0.5 ${
+                            firmsDailyTab === id
+                              ? "bg-white text-slate-900 shadow border border-slate-200"
+                              : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                          }`}
+                          onClick={() => setFirmsDailyTab(id)}
+                        >
+                          <span>{DAILY_TAB_LABELS[id].replace(" – ", ": ")}</span>
+                          {lastRun != null ? (
+                            <span className={`text-[10px] font-normal ${firmsDailyTab === id ? "text-slate-500" : "text-slate-400"}`} title={new Date(lastRun).toLocaleString()}>
+                              Last: {formatLastRun(lastRun)}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-400">Last: —</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {firmsSub === "weekly" && (
+                  <div className="flex flex-wrap gap-1 p-1 bg-slate-50/80 rounded-lg border border-slate-100 max-w-xl">
+                    {WEEKLY_TAB_IDS.map((id) => {
+                      const lastRun = getTabLastRun(id);
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          className={`min-w-0 px-3 py-2 text-sm font-medium rounded-md transition-colors flex flex-col items-center gap-0.5 ${
+                            firmsWeeklyTab === id
+                              ? "bg-white text-slate-900 shadow border border-slate-200"
+                              : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                          }`}
+                          onClick={() => setFirmsWeeklyTab(id)}
+                        >
+                          <span>{WEEKLY_TAB_LABELS[id].replace(" – ", ": ")}</span>
+                          {lastRun != null ? (
+                            <span className={`text-[10px] font-normal ${firmsWeeklyTab === id ? "text-slate-500" : "text-slate-400"}`} title={new Date(lastRun).toLocaleString()}>
+                              Last: {formatLastRun(lastRun)}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-400">Last: —</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* Firms section: warning/critical banner only for the active sub-section */}
+                {(() => {
+                  const firmsIssuesInThisSub = (issuesBySection.firms || []).filter((item) => {
+                    const target = getTabForIssue(item.msg);
+                    return target?.main === "firms" && target?.firmsSub === firmsSub;
+                  });
+                  if (firmsIssuesInThisSub.length === 0) return null;
+                  const hasCritical = firmsIssuesInThisSub.some((i) => i.severity === "critical");
+                  return (
+                    <div
+                      className={`rounded-2xl border p-4 ${hasCritical ? "border-red-300 bg-red-50" : "border-amber-300 bg-amber-50"}`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        {hasCritical ? <span className="text-red-700 font-bold">🔴 Critical</span> : <span className="text-amber-700 font-bold">🟡 Warning</span>}
+                        <span className="text-slate-700 font-medium">Firms › {FIRMS_SUB_LABELS[firmsSub]}</span>
+                      </div>
+                      <ul className="list-disc list-inside text-sm text-slate-600 space-y-0.5">
+                        {firmsIssuesInThisSub.map((item, i) => {
+                          const target = getTabForIssue(item.msg);
+                          const label = getIssueTargetLabel(target);
+                          return (
+                            <li key={i}>
+                              {target ? (
+                                <button type="button" onClick={() => goToIssueTarget(target)} className="text-left font-medium text-slate-700 underline-offset-2 hover:underline hover:text-slate-900">
+                                  {item.msg}
+                                  <span className="ml-1 text-xs text-slate-500">→ {label}</span>
+                                </button>
+                              ) : (
+                                item.msg
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
         )}
 
         {data?.traders && activeTab === "traders" && (
           <div className="space-y-8">
+            {issuesBySection.traders.length > 0 && (
+              <div
+                className={`rounded-2xl border p-4 ${
+                  issuesBySection.traders.some((i) => i.severity === "critical") ? "border-red-300 bg-red-50" : "border-amber-300 bg-amber-50"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  {issuesBySection.traders.some((i) => i.severity === "critical") ? (
+                    <span className="text-red-700 font-bold">🔴 Critical</span>
+                  ) : (
+                    <span className="text-amber-700 font-bold">🟡 Warning</span>
+                  )}
+                  <span className="text-slate-700 font-medium">Traders</span>
+                </div>
+                <ul className="list-disc list-inside text-sm text-slate-600 space-y-0.5">
+                  {issuesBySection.traders.map((item, i) => {
+                    const target = getTabForIssue(item.msg);
+                    const label = getIssueTargetLabel(target);
+                    return (
+                      <li key={i}>
+                        {target ? (
+                          <button type="button" onClick={() => goToIssueTarget(target)} className="text-left font-medium text-slate-700 underline-offset-2 hover:underline hover:text-slate-900">
+                            {item.msg}
+                            <span className="ml-1 text-xs text-slate-500">→ {label}</span>
+                          </button>
+                        ) : (
+                          item.msg
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
             <section className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
               <div className="p-6 border-b border-slate-100">
                 <h2 className="text-lg font-semibold text-slate-900 mb-2">Trader monitoring</h2>
@@ -614,6 +741,40 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
+        {activeTab === "system" && issuesBySection.system.length > 0 && (
+          <div
+            className={`rounded-2xl border p-4 mb-6 ${
+              issuesBySection.system.some((i) => i.severity === "critical") ? "border-red-300 bg-red-50" : "border-amber-300 bg-amber-50"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              {issuesBySection.system.some((i) => i.severity === "critical") ? (
+                <span className="text-red-700 font-bold">🔴 Critical</span>
+              ) : (
+                <span className="text-amber-700 font-bold">🟡 Warning</span>
+              )}
+              <span className="text-slate-700 font-medium">System</span>
+            </div>
+            <ul className="list-disc list-inside text-sm text-slate-600 space-y-0.5">
+              {issuesBySection.system.map((item, i) => {
+                const target = getTabForIssue(item.msg);
+                const label = getIssueTargetLabel(target);
+                return (
+                  <li key={i}>
+                    {target ? (
+                      <button type="button" onClick={() => goToIssueTarget(target)} className="text-left font-medium text-slate-700 underline-offset-2 hover:underline hover:text-slate-900">
+                        {item.msg}
+                        <span className="ml-1 text-xs text-slate-500">→ {label}</span>
+                      </button>
+                    ) : (
+                      item.msg
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
         {data?.alerts && activeTab === "system" && (
           <section className="mb-8">
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
@@ -876,7 +1037,7 @@ export default function AdminDashboardPage() {
           </section>
         )}
 
-        {data && activeTab === "payouts" && (
+        {data && activeTab === "firms" && firmsSub === "payouts" && (
           <div className="space-y-8">
             {/* Prop firms payout data – chart table: cols = firms, rows = time ranges */}
             {data.propfirmsData ? (
@@ -1078,7 +1239,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {data && activeTab === "daily2" && (
+        {data && activeTab === "firms" && firmsSub === "daily" && firmsDailyTab === "daily2" && (
           <div className="space-y-8">
             {/* Daily 2: Classify */}
             <section>
@@ -1174,7 +1335,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {data && activeTab === "daily3" && (
+        {data && activeTab === "firms" && firmsSub === "daily" && firmsDailyTab === "daily3" && (
           <div className="space-y-8">
             {data.incidentDetection ? (
             <section>
@@ -1231,7 +1392,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {data && activeTab === "weekly1" && (
+        {data && activeTab === "firms" && firmsSub === "weekly" && firmsWeeklyTab === "weekly1" && (
           <div className="space-y-8">
             {/* Weekly 1: Generate weekly reports – monitoring */}
             <section>
@@ -1312,7 +1473,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {data && activeTab === "weekly2" && (
+        {data && activeTab === "firms" && firmsSub === "weekly" && firmsWeeklyTab === "weekly2" && (
           <div className="space-y-8">
             {/* Intelligence feed (weekly reports + digest readiness) */}
             {data.intelligenceFeed && (
@@ -1449,7 +1610,7 @@ export default function AdminDashboardPage() {
             </div>
         )}
 
-        {data && activeTab === "daily1" && (
+        {data && activeTab === "firms" && firmsSub === "daily" && firmsDailyTab === "daily1" && (
           <div className="space-y-8">
             {data.trustpilotScraper?.firms?.length > 0 ? (
             <section>
