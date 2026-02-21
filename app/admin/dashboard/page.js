@@ -1101,6 +1101,92 @@ export default function AdminDashboardPage() {
 
         {data && activeTab === "firms" && firmsSection === "payouts" && (
           <div className="mt-6 space-y-8">
+            {/* Daily firm payout sync – last 7 days (GitHub Actions); 1 day missing = warning, 2+ consecutive = critical */}
+            {data.firmPayoutSyncDaily?.days?.length > 0 && (
+              <section className="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm mb-10">
+                <div className="flex flex-wrap items-start justify-between gap-4 px-6 pt-6 pb-2">
+                  <div>
+                    <h2 className="text-lg font-bold leading-none text-slate-900">Daily payout sync</h2>
+                    <p className="mt-2 text-sm text-slate-500">
+                      GitHub Actions runs once a day to sync firm history data. Last 7 days — one day missing = warning, two consecutive = critical.
+                    </p>
+                  </div>
+                  {(() => {
+                    const critical = data.firmPayoutSyncDaily.firms?.filter((f) => f.status === "critical").length ?? 0;
+                    const warning = data.firmPayoutSyncDaily.firms?.filter((f) => f.status === "warning").length ?? 0;
+                    if (critical + warning === 0) return null;
+                    const parts = [];
+                    if (critical) parts.push(`${critical} critical`);
+                    if (warning) parts.push(`${warning} warning`);
+                    return (
+                      <span className="inline-flex shrink-0 items-center rounded-full bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-800">
+                        {parts.join(", ")}
+                      </span>
+                    );
+                  })()}
+                </div>
+                <div className="px-6 pb-6 pt-2">
+                  {data.firmPayoutSyncDaily.error && (
+                    <p className="text-amber-700 text-sm mb-4">{data.firmPayoutSyncDaily.error}</p>
+                  )}
+                  <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-200">
+                          <th className="h-10 w-[140px] bg-white px-4 py-3 text-left font-bold text-slate-900">Firm</th>
+                          {data.firmPayoutSyncDaily.days.map((d) => (
+                            <th key={d.date} className="h-10 min-w-[72px] bg-white px-2 py-3 text-center font-bold text-slate-900">
+                              {d.label}
+                            </th>
+                          ))}
+                          <th className="h-10 w-[100px] bg-white px-2 py-3 text-left font-bold text-slate-900">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.firmPayoutSyncDaily.firms?.map((firm) => (
+                          <tr key={firm.firmId} className="border-b border-slate-100 last:border-b-0">
+                            <td className="bg-white px-4 py-3 font-medium text-slate-900">
+                              {firm.firmName}
+                              {firm.message && (
+                                <span className="block text-xs font-normal text-slate-500 mt-0.5">{firm.message}</span>
+                              )}
+                            </td>
+                            {data.firmPayoutSyncDaily.days.map((d) => (
+                              <td key={d.date} className="bg-white px-2 py-3 text-center align-middle">
+                                {firm.byDate[d.date]?.updated ? (
+                                  <span className="inline-flex items-center justify-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800" title={`Updated ${d.date}`}>
+                                    ✓
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-300" title={`No update ${d.date}`}>—</span>
+                                )}
+                              </td>
+                            ))}
+                            <td className="bg-white px-2 py-3 align-middle">
+                              <span
+                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                  firm.status === "critical"
+                                    ? "bg-red-100 text-red-800"
+                                    : firm.status === "warning"
+                                      ? "bg-amber-100 text-amber-800"
+                                      : "bg-emerald-100 text-emerald-800"
+                                }`}
+                              >
+                                {firm.status === "ok" ? "ok" : firm.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="mt-3 text-xs text-slate-400">
+                    Based on file mtime in data/propfirms. Each column = one calendar day (UTC). Green = sync updated that day; — = no update.
+                  </p>
+                </div>
+              </section>
+            )}
+
             {/* Prop firms payout data – chart table: cols = firms, rows = time ranges */}
             {data.propfirmsData ? (
             <section className="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm mb-10">

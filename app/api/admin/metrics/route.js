@@ -369,6 +369,98 @@ async function getPropfirmsPayoutCounts(supabase) {
   return { firmsWithIssues, overallStatus };
 }
 
+/**
+ * Daily firm payout sync status: last 7 days per firm (file mtime in data/propfirms).
+ * One day missing = warning, two consecutive days missing = critical.
+ */
+async function getFirmPayoutSyncDaily(supabase) {
+  const DAYS = 7;
+  const now = new Date();
+  const days = [];
+  for (let i = 0; i < DAYS; i++) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
+    const dateStr = d.toISOString().slice(0, 10);
+    let label = i === 0 ? 'Today' : i === 1 ? 'Yesterday' : null;
+    if (label == null) label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    days.push({ date: dateStr, label });
+  }
+
+  let firms = [];
+  try {
+    const { data: firmsRows } = await supabase.from('firm_profiles').select('id, name');
+    firms = firmsRows || [];
+  } catch {
+    return { days, firms: [], error: 'Failed to load firms' };
+  }
+
+  const exists = await fs.promises.access(PAYOUTS_DIR).then(() => true).catch(() => false);
+  if (!exists) {
+    return {
+      days,
+      firms: firms.map((f) => ({ firmId: f.id, firmName: f.name || f.id, byDate: {}, status: 'warning', message: 'No payout data dir' })),
+      error: null,
+    };
+  }
+
+  const firmDirs = await fs.promises.readdir(PAYOUTS_DIR).catch(() => []);
+  const dateSetByFirm = new Map();
+
+  for (const firm of firms) {
+    const firmPath = path.join(PAYOUTS_DIR, firm.id);
+    const stat = await fs.promises.stat(firmPath).catch(() => null);
+    if (!stat?.isDirectory()) {
+      dateSetByFirm.set(firm.id, new Set());
+      continue;
+    }
+    const entries = await fs.promises.readdir(firmPath, { withFileTypes: true }).catch(() => []);
+    const dates = new Set();
+    for (const ent of entries) {
+      if (!ent.isFile() || !ent.name.endsWith('.json')) continue;
+      const filePath = path.join(firmPath, ent.name);
+      const fileStat = await fs.promises.stat(filePath).catch(() => null);
+      if (!fileStat?.mtime) continue;
+      const m = new Date(fileStat.mtime);
+      dates.add(m.toISOString().slice(0, 10));
+    }
+    dateSetByFirm.set(firm.id, dates);
+  }
+
+  const dayDates = days.map((d) => d.date);
+  const result = firms.map((firm) => {
+    const datesSet = dateSetByFirm.get(firm.id) || new Set();
+    const byDate = {};
+    for (let i = 0; i < dayDates.length; i++) {
+      const date = dayDates[i];
+      byDate[date] = { updated: datesSet.has(date) };
+    }
+    const totalEmptyFromToday = (() => {
+      let c = 0;
+      for (let i = 0; i < dayDates.length; i++) {
+        if (!byDate[dayDates[i]].updated) c++; else break;
+      }
+      return c;
+    })();
+    let status = 'ok';
+    let message = null;
+    if (totalEmptyFromToday >= 2) {
+      status = 'critical';
+      message = `${totalEmptyFromToday} consecutive days missing`;
+    } else if (totalEmptyFromToday === 1) {
+      status = 'warning';
+      message = '1 day missing';
+    }
+    return {
+      firmId: firm.id,
+      firmName: firm.name || firm.id,
+      byDate,
+      status,
+      message,
+    };
+  });
+
+  return { days, firms: result, error: null };
+}
+
 /** Trader monitoring: sign-up, wallet link, backfill, realtime sync status and errors. */
 async function getTraderMonitoringStatus() {
   try {
@@ -455,7 +547,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed, generateWeeklyReportsRun, weeklyEmailLastRun, traderMonitoring] = await Promise.all([
+  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed, generateWeeklyReportsRun, weeklyEmailLastRun, traderMonitoring, firmPayoutSyncDaily] = await Promise.all([
     getFileStats(),
     getDbStats(supabase),
     getPropfirmsPayoutCounts(supabase),
@@ -464,6 +556,7 @@ export async function GET() {
     getGenerateWeeklyReportsLastRun(supabase),
     getWeeklyEmailLastRun(supabase),
     getTraderMonitoringStatus(),
+    getFirmPayoutSyncDaily(supabase),
   ]);
 
   const incidentDetection = await getIncidentDetectionStatus(supabase, trustpilotScraperFirms);
@@ -573,6 +666,7 @@ export async function GET() {
       firmsWithIssues: propfirmsData.firmsWithIssues,
       overallStatus: propfirmsData.overallStatus,
     },
+    firmPayoutSyncDaily: firmPayoutSyncDaily ?? { days: [], firms: [], error: null },
     trustpilotScraper: {
       firms: trustpilotScraperFirms,
       note: 'Updated by daily GitHub Actions (daily-step1-sync-firm-trustpilot-reviews). Refresh to see latest run.',
