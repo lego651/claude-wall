@@ -13,6 +13,7 @@ import { getFirmLogoUrl } from "@/lib/logoUtils";
 import MetricsCards from "@/components/common/MetricsCards";
 import MonthlyPayoutChart from "@/components/common/MonthlyPayoutChart";
 import ConnectWalletModal from "@/components/user/dashboard/ConnectWalletModal";
+import SubscriptionStatsPanel from "@/components/user/dashboard/SubscriptionStatsPanel";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -22,7 +23,8 @@ export default function Dashboard() {
   const [backfillStatus, setBackfillStatus] = useState(null);
   const [syncBannerDismissed, setSyncBannerDismissed] = useState(false);
   const [firmLogosMap, setFirmLogosMap] = useState({});
-
+  const [subscriptionStats, setSubscriptionStats] = useState(null);
+  const [loadingSubscriptionStats, setLoadingSubscriptionStats] = useState(true);
   // Get wallet address from profile
   const walletAddress = profile?.wallet_address;
   const hasNoWallet = profile !== null && !profile?.wallet_address?.trim();
@@ -67,6 +69,31 @@ export default function Dashboard() {
 
     loadUserData();
   }, []);
+
+  // Fetch subscription stats for Weekly Digest panel
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    async function load() {
+      setLoadingSubscriptionStats(true);
+      try {
+        const res = await fetch("/api/user/subscription-stats");
+        if (cancelled) return;
+        if (res.ok) {
+          const data = await res.json();
+          setSubscriptionStats(data);
+        } else {
+          setSubscriptionStats({ subscribedCount: 0, nextDigestDate: null, firms: [] });
+        }
+      } catch {
+        if (!cancelled) setSubscriptionStats({ subscribedCount: 0, nextDigestDate: null, firms: [] });
+      } finally {
+        if (!cancelled) setLoadingSubscriptionStats(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [user]);
 
   // Fetch firm logos from DB (firm_profiles) for verified payouts card
   useEffect(() => {
@@ -358,6 +385,11 @@ export default function Dashboard() {
             <ActiveLinksCard
               verifiedFirms={verifiedFirms}
               loading={transactionsLoading}
+            />
+
+            <SubscriptionStatsPanel
+              stats={subscriptionStats}
+              loading={loadingSubscriptionStats}
             />
           </div>
 

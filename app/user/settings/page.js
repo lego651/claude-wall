@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import apiClient from "@/lib/api";
 import config from "@/config";
@@ -16,7 +16,16 @@ const SECTIONS = [
 export default function SettingsPage() {
   const supabase = createClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeSection, setActiveSection] = useState("account");
+
+  // Open tab from URL e.g. /user/settings?tab=subscriptions
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && SECTIONS.some((s) => s.id === tab)) {
+      setActiveSection(tab);
+    }
+  }, [searchParams]);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);

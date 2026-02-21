@@ -20,10 +20,10 @@
 | S7-006 | Combined data loader tests | ✅ Done |
 | S7-007 | Auto-subscribe new users | ✅ Done (DB trigger) |
 | S7-008 | Bulk subscribe/unsubscribe UI | ✅ Done |
-| S7-009 | Subscription stats panel | 🔲 Pending |
+| S7-009 | Subscription stats panel | ✅ Done |
 | S7-010 | Rate limits & scaling docs | 🔲 Pending |
 
-**Next:** S7-009 (subscription stats panel) or S7-010 (rate limits & scaling docs).
+**Next:** S7-010 (rate limits & scaling docs).
 
 ---
 
@@ -961,7 +961,7 @@ async function handleUnsubscribeAll() {
 
 ### TICKET-S7-009: Add Subscription Stats to Dashboard 🟢 LOW
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done (2026-02-21 — /api/user/subscription-stats, SubscriptionStatsPanel, dashboard + settings ?tab=subscriptions)
 **Priority:** P3 (Low)
 **Story Points:** 2
 **Assignee:** Full-stack Engineer
