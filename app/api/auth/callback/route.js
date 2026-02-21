@@ -204,6 +204,51 @@ export async function GET(request) {
 }
 
 /**
+ * Mark backfill as successful: set backfilled_at, clear backfill_error
+ */
+async function updateBackfillSuccess(userId) {
+  try {
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+      process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+      { auth: { persistSession: false } }
+    );
+    await serviceClient
+      .from("user_profiles")
+      .update({
+        backfilled_at: new Date().toISOString(),
+        backfill_error: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+  } catch (err) {
+    console.error("[OAuth Backfill] Failed to update backfilled_at:", err);
+  }
+}
+
+/**
+ * Store backfill error in profile for debugging; user can retry from dashboard
+ */
+async function updateBackfillError(userId, errorMessage) {
+  try {
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+      process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+      { auth: { persistSession: false } }
+    );
+    await serviceClient
+      .from("user_profiles")
+      .update({
+        backfill_error: errorMessage,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+  } catch (err) {
+    console.error("[OAuth Backfill] Failed to update backfill_error:", err);
+  }
+}
+
+/**
  * Trigger backfill for a newly linked wallet
  * Runs in background, doesn't block the OAuth redirect
  */
@@ -211,66 +256,41 @@ async function triggerBackfill(walletAddress, userId) {
   try {
     console.log(`[OAuth Backfill] Triggering backfill for wallet: ${walletAddress}`);
 
-    // Check if ARBISCAN_API_KEY is available
     if (!process.env.ARBISCAN_API_KEY) {
-      console.error('[OAuth Backfill] ARBISCAN_API_KEY not found - skipping backfill');
+      console.error("[OAuth Backfill] ARBISCAN_API_KEY not found - skipping backfill");
+      await updateBackfillError(userId, "Missing ARBISCAN_API_KEY");
       return;
     }
 
-    // Run backfill script in background (fire-and-forget)
-    // Use npx tsx so @/ imports and ESM resolve (same as firm backfill script)
-    const scriptPath = 'scripts/backfill-trader-history.js';
+    const scriptPath = "scripts/backfill-trader-history.js";
     const command = `npx tsx ${scriptPath} ${walletAddress}`;
 
     console.log(`[OAuth Backfill] Executing: ${command}`);
 
-    // Execute without awaiting (fire-and-forget)
-    // This runs in background and doesn't block the OAuth redirect
     execPromise(command, {
       timeout: 300000, // 5 minutes max
       maxBuffer: 10 * 1024 * 1024, // 10MB buffer
     })
-      .then(({ stdout, stderr }) => {
-        if (stdout) {
-          console.log('[OAuth Backfill] Script output:', stdout);
-        }
-        if (stderr) {
-          console.warn('[OAuth Backfill] Script warnings:', stderr);
-        }
-
-        // Update profile to mark backfill as complete
-        const serviceClient = createServiceClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-          process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-          { auth: { persistSession: false } }
-        );
-
-        serviceClient
-          .from("user_profiles")
-          .update({
-            backfilled_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", userId)
-          .then(() => {
-            console.log(`[OAuth Backfill] ✅ Backfill complete for ${walletAddress}`);
-          })
-          .catch((err) => {
-            console.error('[OAuth Backfill] Failed to update backfilled_at:', err);
-          });
+      .then(async ({ stdout, stderr }) => {
+        if (stdout) console.log("[OAuth Backfill] Script output:", stdout);
+        if (stderr) console.warn("[OAuth Backfill] Script warnings:", stderr);
+        await updateBackfillSuccess(userId);
+        console.log(`[OAuth Backfill] ✅ Backfill complete for ${walletAddress}`);
       })
-      .catch((execError) => {
-        console.error('[OAuth Backfill] Script execution error:', execError.message);
-
-        // Don't fail the OAuth flow - backfill can be retried later
+      .catch(async (execError) => {
+        console.error("[OAuth Backfill] Script execution error:", execError.message);
+        const message = execError.killed
+          ? "Timeout: too many transactions"
+          : execError.message || String(execError);
+        await updateBackfillError(userId, message);
         if (execError.killed) {
-          console.error('[OAuth Backfill] Timeout - wallet may have too many transactions');
+          console.error("[OAuth Backfill] Timeout - wallet may have too many transactions");
         }
       });
 
-    console.log('[OAuth Backfill] ✅ Backfill job queued (running in background)');
+    console.log("[OAuth Backfill] ✅ Backfill job queued (running in background)");
   } catch (error) {
-    console.error('[OAuth Backfill] Unexpected error:', error);
-    // Don't throw - we don't want to break the OAuth flow
+    console.error("[OAuth Backfill] Unexpected error:", error);
+    await updateBackfillError(userId, error?.message || String(error));
   }
 }

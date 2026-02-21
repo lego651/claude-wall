@@ -14,7 +14,7 @@
 |--------|--------|--------|
 | S7-001 | Test both auth flows | ✅ Done |
 | S7-002 | Backfill script exists & works | ✅ Done |
-| S7-003 | OAuth callback error handling (`backfill_error`) | 🔲 Pending |
+| S7-003 | OAuth callback error handling (`backfill_error`) | ✅ Done |
 | S7-004 | DB tables verified | ✅ Done |
 | S7-005 | Test real-time sync (Inngest) | 🔲 Pending |
 | S7-006 | Combined data loader tests | 🔲 Pending |
@@ -23,7 +23,7 @@
 | S7-009 | Subscription stats panel | 🔲 Pending |
 | S7-010 | Rate limits & scaling docs | 🔲 Pending |
 
-**Next:** S7-003 (OAuth callback error handling) or S7-005 (real-time sync testing).
+**Next:** S7-005 (real-time sync testing).
 
 ---
 
@@ -306,7 +306,7 @@ cat data/traders/0x1c969652d758f8fc23c443758f8911086f676216/2024-06.json
 
 ### TICKET-S7-003: Add Error Handling to OAuth Callback 🟡 HIGH
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done (2026-02-21 — backfill_error column, updateBackfillSuccess/updateBackfillError)
 **Priority:** P1 (High)
 **Story Points:** 3
 **Assignee:** Backend Engineer
