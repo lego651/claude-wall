@@ -1,31 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import apiClient from "@/lib/api";
 import config from "@/config";
-import SubscriptionsSection from "@/components/user/settings/SubscriptionsSection";
-
-const SECTIONS = [
-  { id: "account", label: "Account" },
-  { id: "subscriptions", label: "Subscriptions" },
-];
+import PropProofLayout from "@/components/common/PropProofLayout";
 
 export default function SettingsPage() {
   const supabase = createClient();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [activeSection, setActiveSection] = useState("account");
-
-  // Open tab from URL e.g. /user/settings?tab=subscriptions
-  useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab && SECTIONS.some((s) => s.id === tab)) {
-      setActiveSection(tab);
-    }
-  }, [searchParams]);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -245,52 +231,34 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-200/60 p-8 pb-24">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="p-2 hover:bg-slate-200 rounded-full transition-colors"
-            aria-label="Back"
-          >
-            <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">User Settings</h1>
-            <p className="text-sm text-slate-500">
-              Manage your profile, preferences, and news subscriptions.
-            </p>
+    <PropProofLayout>
+      {/* Header - same style as My Dashboard */}
+      <div className="bg-white border-b border-slate-200 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">User Settings</h1>
+              <p className="text-sm text-slate-500">
+                Manage your profile and preferences.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Link
+                href="/user/dashboard"
+                className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                Back to Dashboard
+              </Link>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Navigation sidebar */}
-          <nav className="md:col-span-1 space-y-2" aria-label="Settings sections">
-            {SECTIONS.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setActiveSection(id)}
-                className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                  activeSection === id
-                    ? "bg-primary/10 text-primary shadow-sm"
-                    : "text-slate-500 hover:bg-slate-100"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </nav>
-
-          {/* Content */}
-          <div className="md:col-span-3 space-y-6">
-            {activeSection === "account" && (
-              <>
-
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-8">
+        <div className="space-y-6">
         {/* Profile Links Section */}
         <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
           <div className="flex items-center gap-2 mb-6">
@@ -539,12 +507,8 @@ export default function SettingsPage() {
             )}
           </button>
         </div>
-            </>
-            )}
-            {activeSection === "subscriptions" && <SubscriptionsSection />}
-          </div>
         </div>
       </div>
-    </main>
+    </PropProofLayout>
   );
 }

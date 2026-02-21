@@ -48,7 +48,7 @@ export default function SubscriptionStatsPanel({ stats, loading }) {
         </p>
       )}
       <Link
-        href="/user/settings?tab=subscriptions"
+        href="/user/subscriptions"
         className="inline-flex items-center gap-2 text-sm font-semibold hover:underline"
         style={{ color: "#635BFF" }}
       >

@@ -25,7 +25,7 @@ describe("SubscriptionStatsPanel", () => {
     expect(screen.getByText(/Next digest:/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Manage subscriptions/i })).toHaveAttribute(
       "href",
-      "/user/settings?tab=subscriptions"
+      "/user/subscriptions"
     );
   });
 
