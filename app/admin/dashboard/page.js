@@ -165,19 +165,32 @@ export default function AdminDashboardPage() {
   const [classifyRunLoading, setClassifyRunLoading] = useState(false);
   const [classifyLimit, setClassifyLimit] = useState(40);
   const [activeTab, setActiveTab] = useState("firms");
-  const [firmsSub, setFirmsSub] = useState("payouts");
-  const [firmsDailyTab, setFirmsDailyTab] = useState("daily1");
-  const [firmsWeeklyTab, setFirmsWeeklyTab] = useState("weekly1");
+  const [firmsSection, setFirmsSection] = useState("payouts");
 
   const summary = getSummaryStatus(data);
   const MAIN_TAB_IDS = ["firms", "traders", "system"];
   const MAIN_TAB_LABELS = { firms: "Firms", traders: "Traders", system: "System" };
-  const FIRMS_SUB_IDS = ["payouts", "daily", "weekly"];
-  const FIRMS_SUB_LABELS = { payouts: "Payouts & data", daily: "Daily jobs", weekly: "Weekly" };
+  /** Single row of 6 Firms sections: payouts + daily1–3 + weekly1–2 */
+  const FIRMS_SECTION_IDS = ["payouts", "daily1", "daily2", "daily3", "weekly1", "weekly2"];
+  const FIRMS_SECTION_LABELS = {
+    payouts: "Payouts & data",
+    daily1: "Daily 1 – Scrape",
+    daily2: "Daily 2 – Classify",
+    daily3: "Daily 3 – Incidents",
+    weekly1: "Weekly 1 – Reports",
+    weekly2: "Weekly 2 – Digest",
+  };
   const DAILY_TAB_IDS = ["daily1", "daily2", "daily3"];
   const DAILY_TAB_LABELS = { daily1: "Daily 1 – Scrape", daily2: "Daily 2 – Classify", daily3: "Daily 3 – Incidents" };
   const WEEKLY_TAB_IDS = ["weekly1", "weekly2"];
   const WEEKLY_TAB_LABELS = { weekly1: "Weekly 1 – Reports", weekly2: "Weekly 2 – Digest" };
+  /** Map firmsSection to firmsSub for issue filtering: payouts | daily | weekly */
+  const getFirmsSubFromSection = (section) => {
+    if (section === "payouts") return "payouts";
+    if (DAILY_TAB_IDS.includes(section)) return "daily";
+    if (WEEKLY_TAB_IDS.includes(section)) return "weekly";
+    return "payouts";
+  };
 
   /** Map summary issue text to { mainTab, firmsSub?, firmsDailyTab?, firmsWeeklyTab? } for "go to" links. */
   const getTabForIssue = (msg) => {
@@ -218,9 +231,9 @@ export default function AdminDashboardPage() {
     if (!target) return;
     setActiveTab(target.main);
     if (target.main === "firms") {
-      if (target.firmsSub) setFirmsSub(target.firmsSub);
-      if (target.firmsDailyTab) setFirmsDailyTab(target.firmsDailyTab);
-      if (target.firmsWeeklyTab) setFirmsWeeklyTab(target.firmsWeeklyTab);
+      if (target.firmsSub === "payouts") setFirmsSection("payouts");
+      if (target.firmsDailyTab) setFirmsSection(target.firmsDailyTab);
+      if (target.firmsWeeklyTab) setFirmsSection(target.firmsWeeklyTab);
     }
   };
   /** Tab ids that show "Last run" under the tab label. */
@@ -414,157 +427,134 @@ export default function AdminDashboardPage() {
 
         {/* Overall status: "All good" only when no issues; section indicators/banners show issues */}
         {data && (
-          <div className="mb-6">
+          <div className="space-y-6">
             {summary.issues.length === 0 && (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex items-center gap-3">
-                <span className="text-emerald-700 font-bold">🟢 All good</span>
-                <span className="text-slate-700 font-medium">{summary.label}</span>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-center gap-3 text-sm">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600" aria-hidden>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </span>
+                <span className="font-semibold text-emerald-800">All good</span>
+                <span className="text-emerald-700/90">{summary.label}</span>
               </div>
             )}
-            {/* Main sections: Firms / Traders / System (with status bulbs) */}
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-6 mb-2">Sections</p>
-            <nav role="tablist" aria-label="Main sections" className="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-xl">
-              {MAIN_TAB_IDS.map((id) => {
-                const sectionStatus = getSectionStatus(id);
-                return (
-                  <button
-                    key={id}
-                    role="tab"
-                    type="button"
-                    aria-selected={activeTab === id}
-                    aria-label={MAIN_TAB_LABELS[id] + (sectionStatus ? ` ${sectionStatus} issues` : " healthy")}
-                    className={`min-w-0 px-5 py-2.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-2.5 ${
-                      activeTab === id
-                        ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                    }`}
-                    onClick={() => setActiveTab(id)}
-                  >
-                    <span
-                      className={`inline-block w-3.5 h-3.5 rounded-full shrink-0 ring-2 ring-white/80 shadow-md ${
-                        sectionStatus === "critical"
-                          ? "bg-red-500 shadow-red-500/50"
-                          : sectionStatus === "warning"
-                            ? "bg-amber-500 shadow-amber-500/50"
-                            : "bg-emerald-500 shadow-emerald-500/50"
-                      }`}
-                      title={sectionStatus === "critical" ? "Critical issues" : sectionStatus === "warning" ? "Warnings" : "Healthy"}
-                      aria-hidden
-                    />
-                    {MAIN_TAB_LABELS[id]}
-                  </button>
-                );
-              })}
-            </nav>
-            {/* Firms sub-nav: Payouts & data | Daily jobs | Weekly */}
-            {activeTab === "firms" && data && (
-              <div className="mt-4 space-y-4">
-                <nav role="tablist" aria-label="Firms subsections" className="flex flex-wrap gap-1 p-1 bg-slate-50 rounded-xl border border-slate-200 max-w-2xl">
-                  {FIRMS_SUB_IDS.map((id) => (
+            {/* Main sections: Firms / Traders / System (major section selector) */}
+            <div className="space-y-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Sections</h2>
+              <nav role="tablist" aria-label="Main sections" className="grid w-full max-w-md grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1.5">
+                {MAIN_TAB_IDS.map((id) => {
+                  const sectionStatus = getSectionStatus(id);
+                  return (
                     <button
                       key={id}
+                      role="tab"
                       type="button"
-                      className={`min-w-0 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                        firmsSub === id
-                          ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                      aria-selected={activeTab === id}
+                      aria-label={MAIN_TAB_LABELS[id] + (sectionStatus ? ` ${sectionStatus} issues` : " healthy")}
+                      className={`flex min-w-0 items-center justify-center gap-2 rounded-lg px-4 py-3 text-base font-bold transition-colors ${
+                        activeTab === id
+                          ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80"
+                          : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
                       }`}
-                      onClick={() => setFirmsSub(id)}
+                      onClick={() => setActiveTab(id)}
                     >
-                      {FIRMS_SUB_LABELS[id]}
+                      <span
+                        className={`inline-block h-2 w-2 shrink-0 rounded-full ${
+                          sectionStatus === "critical"
+                            ? "bg-red-500"
+                            : sectionStatus === "warning"
+                              ? "bg-amber-500"
+                              : "bg-emerald-500"
+                        }`}
+                        title={sectionStatus === "critical" ? "Critical issues" : sectionStatus === "warning" ? "Warnings" : "Healthy"}
+                        aria-hidden
+                      />
+                      {MAIN_TAB_LABELS[id]}
                     </button>
-                  ))}
-                </nav>
-                {firmsSub === "daily" && (
-                  <div className="flex flex-wrap gap-1 p-1 bg-slate-50/80 rounded-lg border border-slate-100 max-w-xl">
-                    {DAILY_TAB_IDS.map((id) => {
-                      const lastRun = getTabLastRun(id);
-                      return (
-                        <button
-                          key={id}
-                          type="button"
-                          className={`min-w-0 px-3 py-2 text-sm font-medium rounded-md transition-colors flex flex-col items-center gap-0.5 ${
-                            firmsDailyTab === id
-                              ? "bg-white text-slate-900 shadow border border-slate-200"
-                              : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                          }`}
-                          onClick={() => setFirmsDailyTab(id)}
-                        >
-                          <span>{DAILY_TAB_LABELS[id].replace(" – ", ": ")}</span>
-                          {lastRun != null ? (
-                            <span className={`text-[10px] font-normal ${firmsDailyTab === id ? "text-slate-500" : "text-slate-400"}`} title={new Date(lastRun).toLocaleString()}>
-                              Last: {formatLastRun(lastRun)}
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-slate-400">Last: —</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                {firmsSub === "weekly" && (
-                  <div className="flex flex-wrap gap-1 p-1 bg-slate-50/80 rounded-lg border border-slate-100 max-w-xl">
-                    {WEEKLY_TAB_IDS.map((id) => {
-                      const lastRun = getTabLastRun(id);
-                      return (
-                        <button
-                          key={id}
-                          type="button"
-                          className={`min-w-0 px-3 py-2 text-sm font-medium rounded-md transition-colors flex flex-col items-center gap-0.5 ${
-                            firmsWeeklyTab === id
-                              ? "bg-white text-slate-900 shadow border border-slate-200"
-                              : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                          }`}
-                          onClick={() => setFirmsWeeklyTab(id)}
-                        >
-                          <span>{WEEKLY_TAB_LABELS[id].replace(" – ", ": ")}</span>
-                          {lastRun != null ? (
-                            <span className={`text-[10px] font-normal ${firmsWeeklyTab === id ? "text-slate-500" : "text-slate-400"}`} title={new Date(lastRun).toLocaleString()}>
-                              Last: {formatLastRun(lastRun)}
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-slate-400">Last: —</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                {/* Firms section: warning/critical banner only for the active sub-section */}
+                  );
+                })}
+              </nav>
+            </div>
+            {/* Firms: single row of 6 sections (pill buttons, reference-style) */}
+            {activeTab === "firms" && data && (
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {FIRMS_SECTION_IDS.map((id) => {
+                    const lastRun = STEP_TAB_IDS.includes(id) ? getTabLastRun(id) : null;
+                    const isActive = firmsSection === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        className={`inline-flex flex-col items-start rounded-full px-4 py-2.5 text-sm font-medium transition-colors leading-tight ${
+                          isActive
+                            ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80"
+                            : "text-slate-500 hover:bg-white/80 hover:text-slate-700"
+                        }`}
+                        onClick={() => setFirmsSection(id)}
+                      >
+                        <span>{FIRMS_SECTION_LABELS[id].replace(" – ", ": ")}</span>
+                        {lastRun != null ? (
+                          <span className={`text-[10px] ${isActive ? "text-slate-500" : "opacity-60"}`} title={new Date(lastRun).toLocaleString()}>
+                            Last: {formatLastRun(lastRun)}
+                          </span>
+                        ) : id !== "payouts" ? (
+                          <span className="text-[10px] opacity-50">Last: —</span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Firms section: warning/critical alert (reference Alert style with icon) */}
                 {(() => {
+                  const firmsSubForFilter = getFirmsSubFromSection(firmsSection);
                   const firmsIssuesInThisSub = (issuesBySection.firms || []).filter((item) => {
                     const target = getTabForIssue(item.msg);
-                    return target?.main === "firms" && target?.firmsSub === firmsSub;
+                    return target?.main === "firms" && target?.firmsSub === firmsSubForFilter;
                   });
                   if (firmsIssuesInThisSub.length === 0) return null;
                   const hasCritical = firmsIssuesInThisSub.some((i) => i.severity === "critical");
+                  const isDestructive = hasCritical;
                   return (
                     <div
-                      className={`rounded-2xl border p-4 ${hasCritical ? "border-red-300 bg-red-50" : "border-amber-300 bg-amber-50"}`}
+                      role="alert"
+                      className={`relative flex gap-3 rounded-xl border px-4 py-3 text-sm ${
+                        isDestructive
+                          ? "border-red-200 bg-red-50 text-red-900"
+                          : "border-amber-200 bg-amber-50 text-amber-900"
+                      }`}
                     >
-                      <div className="flex items-center gap-2 mb-2">
-                        {hasCritical ? <span className="text-red-700 font-bold">🔴 Critical</span> : <span className="text-amber-700 font-bold">🟡 Warning</span>}
-                        <span className="text-slate-700 font-medium">Firms › {FIRMS_SUB_LABELS[firmsSub]}</span>
+                      <span className="shrink-0 pt-0.5" aria-hidden>
+                        {isDestructive ? (
+                          <svg className="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        ) : (
+                          <svg className="h-4 w-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        )}
+                      </span>
+                      <div className="min-w-0 flex-1 grid gap-1">
+                        <div className="font-semibold tracking-tight">
+                          {isDestructive ? "Critical" : "Warning"}: Firms › {FIRMS_SECTION_LABELS[firmsSection]}
+                        </div>
+                        <ul className="text-[13px] text-slate-600 space-y-0.5 [&_button]:text-left [&_button]:font-medium [&_button]:text-slate-700 [&_button]:underline-offset-2 hover:[&_button]:underline">
+                          {firmsIssuesInThisSub.map((item, i) => {
+                            const target = getTabForIssue(item.msg);
+                            const label = getIssueTargetLabel(target);
+                            return (
+                              <li key={i}>
+                                {target ? (
+                                  <button type="button" onClick={() => goToIssueTarget(target)}>
+                                    {item.msg}
+                                    <span className="ml-1 text-xs text-slate-500">→ {label}</span>
+                                  </button>
+                                ) : (
+                                  item.msg
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
                       </div>
-                      <ul className="list-disc list-inside text-sm text-slate-600 space-y-0.5">
-                        {firmsIssuesInThisSub.map((item, i) => {
-                          const target = getTabForIssue(item.msg);
-                          const label = getIssueTargetLabel(target);
-                          return (
-                            <li key={i}>
-                              {target ? (
-                                <button type="button" onClick={() => goToIssueTarget(target)} className="text-left font-medium text-slate-700 underline-offset-2 hover:underline hover:text-slate-900">
-                                  {item.msg}
-                                  <span className="ml-1 text-xs text-slate-500">→ {label}</span>
-                                </button>
-                              ) : (
-                                item.msg
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
                     </div>
                   );
                 })()}
@@ -577,42 +567,45 @@ export default function AdminDashboardPage() {
           <div className="space-y-8">
             {issuesBySection.traders.length > 0 && (
               <div
-                className={`rounded-2xl border p-4 ${
-                  issuesBySection.traders.some((i) => i.severity === "critical") ? "border-red-300 bg-red-50" : "border-amber-300 bg-amber-50"
+                role="alert"
+                className={`relative flex gap-3 rounded-xl border px-4 py-3 text-sm ${
+                  issuesBySection.traders.some((i) => i.severity === "critical") ? "border-red-200 bg-red-50 text-red-900" : "border-amber-200 bg-amber-50 text-amber-900"
                 }`}
               >
-                <div className="flex items-center gap-2 mb-2">
+                <span className="shrink-0 pt-0.5" aria-hidden>
                   {issuesBySection.traders.some((i) => i.severity === "critical") ? (
-                    <span className="text-red-700 font-bold">🔴 Critical</span>
+                    <svg className="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   ) : (
-                    <span className="text-amber-700 font-bold">🟡 Warning</span>
+                    <svg className="h-4 w-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   )}
-                  <span className="text-slate-700 font-medium">Traders</span>
+                </span>
+                <div className="min-w-0 flex-1 grid gap-1">
+                  <div className="font-semibold tracking-tight">Traders</div>
+                  <ul className="text-[13px] text-slate-600 space-y-0.5 [&_button]:text-left [&_button]:font-medium [&_button]:text-slate-700 [&_button]:underline-offset-2 hover:[&_button]:underline">
+                    {issuesBySection.traders.map((item, i) => {
+                      const target = getTabForIssue(item.msg);
+                      const label = getIssueTargetLabel(target);
+                      return (
+                        <li key={i}>
+                          {target ? (
+                            <button type="button" onClick={() => goToIssueTarget(target)}>
+                              {item.msg}
+                              <span className="ml-1 text-xs text-slate-500">→ {label}</span>
+                            </button>
+                          ) : (
+                            item.msg
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
-                <ul className="list-disc list-inside text-sm text-slate-600 space-y-0.5">
-                  {issuesBySection.traders.map((item, i) => {
-                    const target = getTabForIssue(item.msg);
-                    const label = getIssueTargetLabel(target);
-                    return (
-                      <li key={i}>
-                        {target ? (
-                          <button type="button" onClick={() => goToIssueTarget(target)} className="text-left font-medium text-slate-700 underline-offset-2 hover:underline hover:text-slate-900">
-                            {item.msg}
-                            <span className="ml-1 text-xs text-slate-500">→ {label}</span>
-                          </button>
-                        ) : (
-                          item.msg
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
               </div>
             )}
-            <section className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-slate-100">
-                <h2 className="text-lg font-semibold text-slate-900 mb-2">Trader monitoring</h2>
-                <p className="text-sm text-slate-500">
+            <section className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 bg-slate-50/50 px-6 pb-4 pt-6">
+                <h2 className="text-lg font-bold leading-none text-slate-900">Trader monitoring</h2>
+                <p className="mt-2 text-sm text-slate-500">
                   Sign-up, wallet linking, historical backfill, and real-time payout sync status per trader.
                 </p>
               </div>
@@ -743,36 +736,39 @@ export default function AdminDashboardPage() {
 
         {activeTab === "system" && issuesBySection.system.length > 0 && (
           <div
-            className={`rounded-2xl border p-4 mb-6 ${
-              issuesBySection.system.some((i) => i.severity === "critical") ? "border-red-300 bg-red-50" : "border-amber-300 bg-amber-50"
+            role="alert"
+            className={`relative mb-6 flex gap-3 rounded-xl border px-4 py-3 text-sm ${
+              issuesBySection.system.some((i) => i.severity === "critical") ? "border-red-200 bg-red-50 text-red-900" : "border-amber-200 bg-amber-50 text-amber-900"
             }`}
           >
-            <div className="flex items-center gap-2 mb-2">
+            <span className="shrink-0 pt-0.5" aria-hidden>
               {issuesBySection.system.some((i) => i.severity === "critical") ? (
-                <span className="text-red-700 font-bold">🔴 Critical</span>
+                <svg className="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
               ) : (
-                <span className="text-amber-700 font-bold">🟡 Warning</span>
+                <svg className="h-4 w-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
               )}
-              <span className="text-slate-700 font-medium">System</span>
+            </span>
+            <div className="min-w-0 flex-1 grid gap-1">
+              <div className="font-semibold tracking-tight">System</div>
+              <ul className="text-[13px] text-slate-600 space-y-0.5 [&_button]:text-left [&_button]:font-medium [&_button]:text-slate-700 [&_button]:underline-offset-2 hover:[&_button]:underline">
+                {issuesBySection.system.map((item, i) => {
+                  const target = getTabForIssue(item.msg);
+                  const label = getIssueTargetLabel(target);
+                  return (
+                    <li key={i}>
+                      {target ? (
+                        <button type="button" onClick={() => goToIssueTarget(target)}>
+                          {item.msg}
+                          <span className="ml-1 text-xs text-slate-500">→ {label}</span>
+                        </button>
+                      ) : (
+                        item.msg
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
-            <ul className="list-disc list-inside text-sm text-slate-600 space-y-0.5">
-              {issuesBySection.system.map((item, i) => {
-                const target = getTabForIssue(item.msg);
-                const label = getIssueTargetLabel(target);
-                return (
-                  <li key={i}>
-                    {target ? (
-                      <button type="button" onClick={() => goToIssueTarget(target)} className="text-left font-medium text-slate-700 underline-offset-2 hover:underline hover:text-slate-900">
-                        {item.msg}
-                        <span className="ml-1 text-xs text-slate-500">→ {label}</span>
-                      </button>
-                    ) : (
-                      item.msg
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
           </div>
         )}
         {data?.alerts && activeTab === "system" && (
@@ -1037,62 +1033,60 @@ export default function AdminDashboardPage() {
           </section>
         )}
 
-        {data && activeTab === "firms" && firmsSub === "payouts" && (
-          <div className="space-y-8">
+        {data && activeTab === "firms" && firmsSection === "payouts" && (
+          <div className="mt-6 space-y-8">
             {/* Prop firms payout data – chart table: cols = firms, rows = time ranges */}
             {data.propfirmsData ? (
-            <section className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-slate-100">
-                  <h2 className="text-lg font-semibold text-slate-900 mb-2">Prop firms payout data</h2>
+            <section className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                {/* Card header: white background, title + description left, badge right */}
+                <div className="flex flex-wrap items-start justify-between gap-4 px-6 pt-6 pb-2">
+                  <div>
+                    <h2 className="text-lg font-bold leading-none text-slate-900">Prop firms payout data</h2>
+                    <p className="mt-2 text-sm text-slate-500">Real-time monitoring of payout consistency and reporting</p>
+                  </div>
+                  {data.propfirmsData.firmsWithIssues?.length > 0 && (
+                    <span className="inline-flex shrink-0 items-center rounded-full border border-amber-200 bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
+                      {data.propfirmsData.firmsWithIssues.length} warning{data.propfirmsData.firmsWithIssues.length !== 1 ? "s" : ""} active
+                    </span>
+                  )}
                 </div>
-                <div className="p-6">
+                <div className="p-6 pt-4">
                     {!data.propfirmsData.firmsWithIssues?.length ? (
                       <p className="text-slate-600">No prop firms with payout data issues.</p>
                     ) : (
                       <>
-                        {/* Summary: counts + why only these firms + top 3 messages */}
+                        {/* What's wrong (top 3): rounded box with icon, numbered list */}
                         {(() => {
-                          const issues = data.propfirmsData.firmsWithIssues;
-                          const critical = issues.filter((f) => f.status === "critical").length;
-                          const warning = issues.filter((f) => f.status === "warning").length;
-                          const allMessages = issues.flatMap((f) => (f.flags || []).map((flag) => ({ firm: f.firmName ?? f.firmId, message: flag.message })));
+                          const allMessages = data.propfirmsData.firmsWithIssues.flatMap((f) => (f.flags || []).map((flag) => ({ firm: f.firmName ?? f.firmId, message: flag.message })));
                           const top3 = allMessages.slice(0, 3);
+                          if (top3.length === 0) return null;
                           return (
-                            <div className="mb-4 space-y-3">
-                              <div className="flex flex-wrap items-center gap-4 p-3 rounded-lg bg-slate-100">
-                                <span className="font-medium">
-                                  {issues.length} firm(s) with issues below — all other firms are ok.
-                                </span>
-                                {critical > 0 && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">{critical} critical</span>
-                                )}
-                                {warning > 0 && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">{warning} warning</span>
-                                )}
-                              </div>
-                              {top3.length > 0 && (
-                                <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
-                                  <div className="text-sm font-medium text-slate-700 mb-1">What&apos;s wrong (top 3):</div>
-                                  <ol className="list-decimal list-inside text-sm text-slate-600 space-y-0.5">
-                                    {top3.map((item, i) => (
-                                      <li key={i}>
-                                        <span className="font-medium text-slate-800">{item.firm}:</span> {item.message}
-                                      </li>
-                                    ))}
-                                  </ol>
-                                </div>
-                              )}
+                            <div className="mb-6 rounded-lg border border-slate-200 bg-slate-100/50 p-4">
+                              <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
+                                <svg className="h-4 w-4 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                What&apos;s wrong (top 3):
+                              </h4>
+                              <ul className="space-y-2 text-sm text-slate-600">
+                                {top3.map((item, i) => (
+                                  <li key={i} className="flex items-start gap-2">
+                                    <span className="font-semibold text-slate-900">{i + 1}. {item.firm}:</span>
+                                    <span>{item.message}</span>
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
                           );
                         })()}
-                        {/* Table: rows = 24h, 7d, 30d; columns = firms */}
-                        <div className="overflow-x-auto relative">
-                          <table className="table table-sm w-full">
+                        {/* Table: wrapped in rounded border container, header bg-slate-50, badge-style cells */}
+                        <div className="overflow-x-auto rounded-xl border border-slate-200">
+                          <table className="w-full text-sm">
                             <thead>
-                              <tr>
-                                <th className="w-20 sticky left-0 bg-white z-10">Period</th>
+                              <tr className="border-b border-slate-200 bg-slate-50">
+                                <th className="sticky left-0 z-10 h-10 w-[100px] bg-slate-50 px-2 text-left font-bold text-slate-900">Period</th>
                                 {data.propfirmsData.firmsWithIssues.map((f) => (
-                                  <th key={f.firmId} className="text-center min-w-[100px] font-medium">
+                                  <th key={f.firmId} className="h-10 px-2 text-left font-bold text-slate-900 min-w-[100px]">
                                     {f.firmName ?? f.firmId}
                                   </th>
                                 ))}
@@ -1100,8 +1094,8 @@ export default function AdminDashboardPage() {
                             </thead>
                             <tbody>
                               {["24h", "7d", "30d"].map((period) => (
-                                <tr key={period}>
-                                  <td className="sticky left-0 bg-white z-10 font-medium">{period}</td>
+                                <tr key={period} className="border-b border-slate-100 last:border-b-0">
+                                  <td className="sticky left-0 z-10 bg-white px-2 py-2 font-medium text-slate-900">{period}</td>
                                   {data.propfirmsData.firmsWithIssues.map((f) => {
                                     const cellStatus = f.statusByPeriod?.[period] ?? "ok";
                                     const messages = f.messagesByPeriod?.[period] ?? [];
@@ -1110,7 +1104,7 @@ export default function AdminDashboardPage() {
                                     return (
                                       <td
                                         key={f.firmId}
-                                        className="p-1 text-center align-middle"
+                                        className="px-2 py-2 text-left align-middle"
                                         onMouseEnter={() =>
                                           hasTip
                                             ? setPropfirmsTooltip({
@@ -1123,17 +1117,17 @@ export default function AdminDashboardPage() {
                                         }
                                         onMouseLeave={() => setPropfirmsTooltip(null)}
                                       >
-                                        <div
-                                          className={`inline-flex items-center justify-center min-w-[72px] min-h-[32px] rounded cursor-default ${
+                                        <span
+                                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
                                             cellStatus === "critical"
-                                              ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-300 dark:border-red-700"
+                                              ? "border-red-200 bg-red-100 text-red-700"
                                               : cellStatus === "warning"
-                                                ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-300 dark:border-amber-700"
-                                                : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border border-green-300 dark:border-green-700"
+                                                ? "border-amber-200 bg-amber-100 text-amber-700"
+                                                : "border-emerald-200 bg-emerald-100 text-emerald-700"
                                           }`}
                                         >
                                           {cellStatus === "ok" ? "ok" : cellStatus}
-                                        </div>
+                                        </span>
                                       </td>
                                     );
                                   })}
@@ -1142,10 +1136,10 @@ export default function AdminDashboardPage() {
                             </tbody>
                           </table>
                         </div>
-                        {/* Visible hover tooltip (below table so it never clips) */}
+                        {/* Hover tooltip */}
                         {propfirmsTooltip && (
                           <div
-                            className="mt-3 p-3 rounded-lg shadow-lg border border-slate-200 bg-white text-left text-sm"
+                            className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-left text-sm shadow-lg"
                             role="tooltip"
                           >
                             <div className="font-medium text-slate-900">
@@ -1154,15 +1148,15 @@ export default function AdminDashboardPage() {
                                 <span className="ml-2 text-slate-500">Count: {propfirmsTooltip.count}</span>
                               )}
                             </div>
-                            <p className="text-slate-600 mt-1">Why this is warning/critical:</p>
-                            <ul className="list-disc list-inside mt-0.5 text-slate-700 space-y-0.5">
+                            <p className="mt-1 text-slate-600">Why this is warning/critical:</p>
+                            <ul className="mt-0.5 list-disc list-inside space-y-0.5 text-slate-700">
                               {propfirmsTooltip.messages.map((msg, i) => (
                                 <li key={i}>{msg}</li>
                               ))}
                             </ul>
                           </div>
                         )}
-                        <p className="text-xs text-slate-500 mt-3">
+                        <p className="mt-3 text-[11px] italic text-slate-400">
                           Each column is a firm; rows are time ranges. Green = ok, yellow = warning, red = critical. Hover a yellow or red cell to see why.
                         </p>
                       </>
@@ -1170,31 +1164,39 @@ export default function AdminDashboardPage() {
                 </div>
               </section>
             ) : null}
-            {/* Arbiscan */}
-            <section>
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Arbiscan API</h2>
+            {/* Arbiscan API */}
+            <section className="border-t border-slate-200 pt-8">
+              <h2 className="mb-4 text-lg font-bold text-slate-900">Arbiscan API</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Calls today</div>
-                  <div className="text-2xl font-bold mt-1" style={{ color: "#635BFF" }}>{data.arbiscan?.calls ?? "—"}</div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Calls today</div>
+                  <div className="mt-1 text-3xl font-bold text-indigo-600">{data.arbiscan?.calls ?? "0"}</div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Daily limit</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">{data.arbiscan?.limit ?? "—"}</div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Daily limit</div>
+                  <div className="mt-1 text-3xl font-bold text-slate-900">
+                    {data.arbiscan?.limit != null ? Number(data.arbiscan.limit).toLocaleString() : "—"}
+                  </div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Usage %</div>
-                  <div className={`text-2xl font-bold mt-1 ${(data.arbiscan?.percentage ?? 0) >= 80 ? "text-red-600" : "text-slate-900"}`}>
-                    {data.arbiscan?.percentage != null ? `${data.arbiscan.percentage}%` : "—"}
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Usage %</div>
+                  <div className="mt-1 text-3xl font-bold text-slate-900">
+                    {data.arbiscan?.percentage != null ? `${data.arbiscan.percentage}%` : "0%"}
+                  </div>
+                  <div className="mb-1 mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-50">
+                    <div
+                      className="h-full rounded-full bg-indigo-500 transition-all"
+                      style={{ width: `${Math.min(100, Math.max(0, data.arbiscan?.percentage ?? 0))}%` }}
+                    />
                   </div>
                 </div>
               </div>
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="mt-4 max-w-3xl text-xs leading-relaxed text-slate-400">
                 Count is per process (in-memory). On serverless, this often shows 0 because the instance serving this page may not have made any Arbiscan requests today. Sync/cron runs that call Arbiscan run in other instances.
               </p>
             </section>
             {/* Payout files */}
-            <section>
+            <section className="border-t border-slate-200 pt-8">
               <h2 className="text-lg font-semibold mb-4">Payout files (data/propfirms)</h2>
               <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
                 <div className="p-6">
@@ -1239,7 +1241,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {data && activeTab === "firms" && firmsSub === "daily" && firmsDailyTab === "daily2" && (
+        {data && activeTab === "firms" && firmsSection === "daily2" && (
           <div className="space-y-8">
             {/* Daily 2: Classify */}
             <section>
@@ -1335,7 +1337,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {data && activeTab === "firms" && firmsSub === "daily" && firmsDailyTab === "daily3" && (
+        {data && activeTab === "firms" && firmsSection === "daily3" && (
           <div className="space-y-8">
             {data.incidentDetection ? (
             <section>
@@ -1392,7 +1394,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {data && activeTab === "firms" && firmsSub === "weekly" && firmsWeeklyTab === "weekly1" && (
+        {data && activeTab === "firms" && firmsSection === "weekly1" && (
           <div className="space-y-8">
             {/* Weekly 1: Generate weekly reports – monitoring */}
             <section>
@@ -1473,7 +1475,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {data && activeTab === "firms" && firmsSub === "weekly" && firmsWeeklyTab === "weekly2" && (
+        {data && activeTab === "firms" && firmsSection === "weekly2" && (
           <div className="space-y-8">
             {/* Intelligence feed (weekly reports + digest readiness) */}
             {data.intelligenceFeed && (
@@ -1610,7 +1612,7 @@ export default function AdminDashboardPage() {
             </div>
         )}
 
-        {data && activeTab === "firms" && firmsSub === "daily" && firmsDailyTab === "daily1" && (
+        {data && activeTab === "firms" && firmsSection === "daily1" && (
           <div className="space-y-8">
             {data.trustpilotScraper?.firms?.length > 0 ? (
             <section>
