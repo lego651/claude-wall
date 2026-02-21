@@ -19,11 +19,11 @@
 | S7-005 | Test real-time sync (Inngest) | ✅ Done |
 | S7-006 | Combined data loader tests | ✅ Done |
 | S7-007 | Auto-subscribe new users | ✅ Done (DB trigger) |
-| S7-008 | Bulk subscribe/unsubscribe UI | 🔲 Pending |
+| S7-008 | Bulk subscribe/unsubscribe UI | ✅ Done |
 | S7-009 | Subscription stats panel | 🔲 Pending |
 | S7-010 | Rate limits & scaling docs | 🔲 Pending |
 
-**Next:** S7-008 (bulk subscribe/unsubscribe UI) or S7-009 (subscription stats panel).
+**Next:** S7-009 (subscription stats panel) or S7-010 (rate limits & scaling docs).
 
 ---
 
@@ -832,7 +832,7 @@ ORDER BY firm_id;
 
 ### TICKET-S7-008: Add Bulk Subscribe/Unsubscribe UI 🟢 MEDIUM
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done (2026-02-21 — Subscribe to All / Unsubscribe from All with confirm, toasts, loading)
 **Priority:** P2 (Medium)
 **Story Points:** 3
 **Assignee:** Frontend Engineer

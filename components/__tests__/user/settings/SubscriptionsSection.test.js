@@ -2,7 +2,16 @@
  * @jest-environment jsdom
  */
 import { render, screen, fireEvent } from "@testing-library/react";
+import toast from "react-hot-toast";
 import SubscriptionsSection from "@/components/user/settings/SubscriptionsSection";
+
+jest.mock("react-hot-toast", () => ({
+  __esModule: true,
+  default: {
+    success: jest.fn(),
+    error: jest.fn(),
+  },
+}));
 
 describe("SubscriptionsSection", () => {
   const mockFirms = {
@@ -18,6 +27,7 @@ describe("SubscriptionsSection", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     global.fetch = jest.fn();
+    window.confirm = jest.fn();
   });
 
   it("shows loading spinner initially", () => {
@@ -123,6 +133,134 @@ describe("SubscriptionsSection", () => {
     render(<SubscriptionsSection />);
     await screen.findByText("Firm Newsletters");
     await screen.findByText("No firms found");
+    spy.mockRestore();
+  });
+
+  it("renders Subscribe to All and Unsubscribe from All buttons", async () => {
+    global.fetch
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockFirms) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSubscriptions) });
+    render(<SubscriptionsSection />);
+    await screen.findByText("Firm Newsletters");
+    expect(screen.getByRole("button", { name: /Subscribe to All/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Unsubscribe from All/i })).toBeInTheDocument();
+  });
+
+  it("Subscribe to All calls POST for each unsubscribed firm and shows success toast", async () => {
+    global.fetch
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockFirms) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSubscriptions) })
+      .mockResolvedValue({ ok: true });
+    render(<SubscriptionsSection />);
+    await screen.findByText("Firm One");
+    fireEvent.click(screen.getByRole("button", { name: /Subscribe to All/i }));
+    await screen.findByText("Firm One");
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/subscriptions",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ firm_id: "f2" }),
+      })
+    );
+    expect(toast.success).toHaveBeenCalledWith("Subscribed to all 1 firms.");
+  });
+
+  it("Subscribe to All shows error toast when some requests fail", async () => {
+    global.fetch
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockFirms) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSubscriptions) })
+      .mockResolvedValue({ ok: false });
+    render(<SubscriptionsSection />);
+    await screen.findByText("Firm One");
+    fireEvent.click(screen.getByRole("button", { name: /Subscribe to All/i }));
+    await screen.findByText("Firm One");
+    expect(toast.error).toHaveBeenCalledWith("Subscribed to most; 1 failed.");
+  });
+
+  it("Subscribe to All shows error toast when fetch rejects (allSettled reports failures)", async () => {
+    global.fetch
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockFirms) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSubscriptions) })
+      .mockRejectedValue(new Error("Network error"));
+    render(<SubscriptionsSection />);
+    await screen.findByText("Firm One");
+    fireEvent.click(screen.getByRole("button", { name: /Subscribe to All/i }));
+    await screen.findByText("Firm One");
+    expect(toast.error).toHaveBeenCalledWith("Subscribed to most; 1 failed.");
+  });
+
+  it("Unsubscribe from All does nothing when confirm is false", async () => {
+    window.confirm.mockReturnValue(false);
+    global.fetch
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockFirms) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSubscriptions) });
+    render(<SubscriptionsSection />);
+    await screen.findByText("Firm One");
+    const deleteCount = global.fetch.mock.calls.length;
+    fireEvent.click(screen.getByRole("button", { name: /Unsubscribe from All/i }));
+    expect(window.confirm).toHaveBeenCalledWith(
+      "Unsubscribe from all firms? You will stop receiving weekly digests."
+    );
+    expect(global.fetch.mock.calls.length).toBe(deleteCount);
+  });
+
+  it("Unsubscribe from All calls DELETE for each subscribed firm and shows success toast", async () => {
+    window.confirm.mockReturnValue(true);
+    global.fetch
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockFirms) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSubscriptions) })
+      .mockResolvedValue({ ok: true });
+    render(<SubscriptionsSection />);
+    await screen.findByText("Firm One");
+    fireEvent.click(screen.getByRole("button", { name: /Unsubscribe from All/i }));
+    await screen.findByText("Firm One");
+    expect(global.fetch).toHaveBeenCalledWith("/api/subscriptions/f1", { method: "DELETE" });
+    expect(toast.success).toHaveBeenCalledWith("Unsubscribed from all firms.");
+  });
+
+  it("Unsubscribe from All shows error toast when some requests fail", async () => {
+    window.confirm.mockReturnValue(true);
+    global.fetch
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockFirms) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSubscriptions) })
+      .mockResolvedValue({ ok: false });
+    render(<SubscriptionsSection />);
+    await screen.findByText("Firm One");
+    fireEvent.click(screen.getByRole("button", { name: /Unsubscribe from All/i }));
+    await screen.findByText("Firm One");
+    expect(toast.error).toHaveBeenCalledWith("Unsubscribed from most; 1 failed.");
+  });
+
+  it("Unsubscribe from All shows error toast when fetch rejects (allSettled reports failures)", async () => {
+    window.confirm.mockReturnValue(true);
+    global.fetch
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockFirms) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSubscriptions) })
+      .mockRejectedValue(new Error("Network error"));
+    render(<SubscriptionsSection />);
+    await screen.findByText("Firm One");
+    fireEvent.click(screen.getByRole("button", { name: /Unsubscribe from All/i }));
+    await screen.findByText("Firm One");
+    expect(toast.error).toHaveBeenCalledWith("Unsubscribed from most; 1 failed.");
+  });
+
+  it("handles subscriptions API error in load", async () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+    global.fetch
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockFirms) })
+      .mockResolvedValueOnce({ ok: false });
+    render(<SubscriptionsSection />);
+    await screen.findByText("Firm Newsletters");
+    expect(screen.getByText("Firm One")).toBeInTheDocument();
+    spy.mockRestore();
+  });
+
+  it("handles load fetch throw", async () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+    global.fetch.mockRejectedValue(new Error("Network error"));
+    render(<SubscriptionsSection />);
+    await screen.findByText("Firm Newsletters");
+    expect(screen.getByText("No firms found")).toBeInTheDocument();
     spy.mockRestore();
   });
 });

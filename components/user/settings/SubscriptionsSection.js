@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
+import toast from "react-hot-toast";
 import { getFirmLogoUrl, DEFAULT_LOGO_URL } from "@/lib/logoUtils";
 
 /**
@@ -15,6 +15,7 @@ export default function SubscriptionsSection() {
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState(null);
+  const [loadingBulk, setLoadingBulk] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -98,6 +99,59 @@ export default function SubscriptionsSection() {
     }
   }
 
+  async function handleSubscribeAll() {
+    const unsubscribed = firmsWithSubscribed.filter((f) => !f.subscribed);
+    if (unsubscribed.length === 0) return;
+    setLoadingBulk(true);
+    try {
+      const results = await Promise.allSettled(
+        unsubscribed.map((firm) =>
+          fetch("/api/subscriptions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ firm_id: firm.id }),
+          })
+        )
+      );
+      const failed = results.filter((r) => r.status === "rejected" || (r.status === "fulfilled" && !r.value?.ok));
+      if (failed.length > 0) {
+        toast.error(`Subscribed to most; ${failed.length} failed.`);
+      } else {
+        setSubscribedIds(new Set(firms.map((f) => f.id)));
+        toast.success(`Subscribed to all ${unsubscribed.length} firms.`);
+      }
+    } catch (err) {
+      console.error("[SubscriptionsSection] subscribe all", err);
+      toast.error("Failed to subscribe to all.");
+    } finally {
+      setLoadingBulk(false);
+    }
+  }
+
+  async function handleUnsubscribeAll() {
+    const subscribed = firmsWithSubscribed.filter((f) => f.subscribed);
+    if (subscribed.length === 0) return;
+    if (!confirm("Unsubscribe from all firms? You will stop receiving weekly digests.")) return;
+    setLoadingBulk(true);
+    try {
+      const results = await Promise.allSettled(
+        subscribed.map((firm) => fetch(`/api/subscriptions/${firm.id}`, { method: "DELETE" }))
+      );
+      const failed = results.filter((r) => r.status === "rejected" || (r.status === "fulfilled" && !r.value?.ok));
+      if (failed.length > 0) {
+        toast.error(`Unsubscribed from most; ${failed.length} failed.`);
+      } else {
+        setSubscribedIds(new Set());
+        toast.success("Unsubscribed from all firms.");
+      }
+    } catch (err) {
+      console.error("[SubscriptionsSection] unsubscribe all", err);
+      toast.error("Failed to unsubscribe from all.");
+    } finally {
+      setLoadingBulk(false);
+    }
+  }
+
   function getLogoUrl(firm) {
     return getFirmLogoUrl({
       firm_id: firm.id,
@@ -160,6 +214,39 @@ export default function SubscriptionsSection() {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3 mb-6">
+        <button
+          type="button"
+          onClick={handleSubscribeAll}
+          disabled={loadingBulk || subscribedCount === firms.length || firms.length === 0}
+          className="btn btn-primary btn-sm gap-2"
+        >
+          {loadingBulk ? (
+            <span className="loading loading-spinner loading-sm" />
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          )}
+          Subscribe to All
+        </button>
+        <button
+          type="button"
+          onClick={handleUnsubscribeAll}
+          disabled={loadingBulk || subscribedCount === 0}
+          className="btn btn-outline btn-sm gap-2"
+        >
+          {loadingBulk ? (
+            <span className="loading loading-spinner loading-sm" />
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+            </svg>
+          )}
+          Unsubscribe from All
+        </button>
       </div>
 
       <div className="space-y-4">
