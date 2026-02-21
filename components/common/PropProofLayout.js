@@ -73,7 +73,7 @@ const PropProofLayout = ({ children }) => {
       {/* Header - match screenshot: PropPulse, nav pills, user + logout */}
       <header className="bg-white border-b border-slate-100 py-4 px-6 sticky top-0 z-50">
         <div className="container mx-auto max-w-7xl flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-6">
             <Link href="/propfirms" className="flex items-center gap-2 group">
               <div className="bg-indigo-600 p-2 rounded-lg">
                 <svg className="text-white w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,29 +82,28 @@ const PropProofLayout = ({ children }) => {
               </div>
               <span className="text-xl font-extrabold tracking-tight text-slate-900">PropPulse</span>
             </Link>
+            <nav className="hidden md:flex items-center gap-1">
+              {navItems.map((item) => {
+                const isActive = pathname === item.path ||
+                  (item.path === "/propfirms" && pathname?.startsWith("/propfirms")) ||
+                  (item.path === "/traders" && pathname?.startsWith("/traders")) ||
+                  (item.path === "/study" && pathname?.startsWith("/study"));
+                return (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
+                      isActive
+                        ? "text-indigo-600 bg-white rounded-md shadow-sm"
+                        : "text-slate-500 hover:text-slate-900"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
-
-          <nav className="hidden md:flex items-center bg-slate-50 rounded-lg p-1">
-            {navItems.map((item) => {
-              const isActive = pathname === item.path ||
-                (item.path === "/propfirms" && pathname?.startsWith("/propfirms")) ||
-                (item.path === "/traders" && pathname?.startsWith("/traders")) ||
-                (item.path === "/study" && pathname?.startsWith("/study"));
-              return (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
-                    isActive
-                      ? "text-indigo-600 bg-white rounded-md shadow-sm"
-                      : "text-slate-500 hover:text-slate-900"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
 
           <div className="flex items-center gap-4">
             {!loading && (
