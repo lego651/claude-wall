@@ -16,14 +16,14 @@
 | S7-002 | Backfill script exists & works | ✅ Done |
 | S7-003 | OAuth callback error handling (`backfill_error`) | ✅ Done |
 | S7-004 | DB tables verified | ✅ Done |
-| S7-005 | Test real-time sync (Inngest) | 🔲 Pending |
+| S7-005 | Test real-time sync (Inngest) | ✅ Done |
 | S7-006 | Combined data loader tests | 🔲 Pending |
 | S7-007 | Auto-subscribe new users | ✅ Done (DB trigger) |
 | S7-008 | Bulk subscribe/unsubscribe UI | 🔲 Pending |
 | S7-009 | Subscription stats panel | 🔲 Pending |
 | S7-010 | Rate limits & scaling docs | 🔲 Pending |
 
-**Next:** S7-005 (real-time sync testing).
+**Next:** S7-006 (combined data loader tests).
 
 ---
 
@@ -550,7 +550,7 @@ psql $DATABASE_URL -c "\d trader_records"
 
 ### TICKET-S7-005: Test Real-time Sync End-to-End 🔴 CRITICAL
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done (2026-02-21 — unit tests for traderRealtimeSyncService + Inngest registration verified)
 **Priority:** P0 (Blocker)
 **Story Points:** 5
 **Assignee:** Backend Engineer
