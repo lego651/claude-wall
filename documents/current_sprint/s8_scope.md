@@ -1,6 +1,8 @@
 # S8 Scope: Twitter / X Monitoring Pipeline
 
-**Goal:** Add a Twitter/X monitoring pipeline similar to the Trustpilot pipeline: fetch tweets via Apify → AI categorize/summarize → queue as draft in `firm_content_items` (firm-specific) or `industry_news_items` (industry) → admin reviews in existing queue → included in weekly digest.
+**Goal:** Fetch tweets via Apify → **batch** AI categorize with **importance score** → store firm tweets in dedicated **`firm_twitter_tweets`** table → weekly digest shows **up to 3 most important tweets per firm per week** (no per-tweet admin approval). Industry tweets → `industry_news_items` (unchanged).
+
+**Design details:** [s8_twitter-design-decisions.md](./s8_twitter-design-decisions.md) – batch like Trustpilot (20/call), dedicated table, importance_score, top-3-per-firm-per-week.
 
 **Provider:** Apify (recommended in [TWITTER-API-PROVIDERS-FREE-TRIALS-AND-CHOICE.md](../spikes/TWITTER-API-PROVIDERS-FREE-TRIALS-AND-CHOICE.md)). Actor: e.g. Kaito “Twitter/X Tweet Scraper (Pay-Per-Result, Cheapest)” – search by query, $0.25/1k tweets, trigger via REST API from cron.
 
@@ -8,17 +10,16 @@
 
 ---
 
-## 1. Reference: How the Trustpilot Pipeline Works
+## 1. Reference: How the Trustpilot Pipeline Works (and how Twitter differs)
 
-| Step | Trustpilot | Twitter (target) |
-|------|------------|------------------|
-| **1. Fetch** | Daily 3 AM PST: Playwright scrapes Trustpilot per firm → rows into `firm_trustpilot_reviews` (raw, `classified_at` NULL). | Daily (or 2×/day): Cron calls Apify API with search terms per firm + industry → Apify returns tweet dataset. |
-| **2. Store raw** | Dedupe by `trustpilot_url`; insert new reviews. | Normalize tweets; **dedupe by tweet URL** (or tweet ID) so we don’t insert same tweet twice. |
-| **3. Classify** | Daily 4 AM PST: Select rows where `classified_at IS NULL` → OpenAI per review → write back category, summary, etc. | For each **new** tweet: run existing **AI categorizer** (`lib/ai/categorize-content.ts`) → get category, summary, confidence, tags (and for industry: `mentioned_firm_ids`). |
-| **4. Queue** | Reviews live in `firm_trustpilot_reviews`; incidents derived later. | Insert into **`firm_content_items`** (firm tweets) or **`industry_news_items`** (industry tweets) with `source_type = 'twitter'`, `source_url = tweet URL`, **`published = false`** (draft). |
-| **5. Publish** | N/A (reviews are always “published” for incident logic). | **Admin** uses existing **content review queue** (`/admin/content/review`) to approve/delete; approved items appear in weekly digest. |
+| Step | Trustpilot | Twitter (this pipeline) |
+|------|------------|--------------------------|
+| **1. Fetch** | Daily 3 AM PST: Playwright scrapes Trustpilot per firm → `firm_trustpilot_reviews` (raw). | Daily: Cron calls Apify with search terms per firm + industry → raw tweet list. |
+| **2. Classify** | **Batch:** 20 reviews per OpenAI call → category, severity, summary. | **Batch:** ~20 tweets per OpenAI call → category, summary, **importance_score (0–1)**. Same pattern as Trustpilot. |
+| **3. Store** | Write back to `firm_trustpilot_reviews`. Incidents = 3–5 same category per day. | Firm tweets → **`firm_twitter_tweets`** (dedicated table). Industry tweets → **`industry_news_items`** with `source_type = 'twitter'`. |
+| **4. Digest** | Incidents derived from review counts; report includes incident summary. | **Per firm:** query `firm_twitter_tweets` for the week, **ORDER BY importance_score DESC, LIMIT 3**. Show “Top tweets” (up to 3). No admin approval step. |
 
-So: **fetch (Apify) → normalize + dedupe → AI categorize → insert as draft → admin approve**. Same content pipeline as manual upload and (future) email; only the **source** is Twitter.
+So: **fetch → dedupe → batch categorize (with importance) → store in `firm_twitter_tweets` / `industry_news_items` → digest picks top 3 per firm by importance**. We do **not** put firm tweets into `firm_content_items` or the review queue; importance drives what appears in the report.
 
 ---
 
@@ -78,16 +79,18 @@ One or more Apify runs with these queries; each tweet is categorized by AI as in
 Apify (search terms per firm + industry terms)
     → Raw tweet dataset (id, text, author, url, date, …)
     → Normalize & dedupe (by tweet id / source_url)
-    → For each new tweet:
-        - If from firm run  → firm_id known → AI categorize → insert firm_content_items (draft)
-        - If from industry run → AI categorize (industry_news + mentioned_firms) → insert industry_news_items (draft)
-    → Admin reviews in /admin/content/review
-    → Approved items in weekly digest (existing flow)
+    → Firm tweets: batch AI (e.g. 20 per call) → category, summary, importance_score
+        → Insert into firm_twitter_tweets (dedupe by firm_id + url)
+    → Industry tweets: batch AI → category, summary, mentioned_firm_ids
+        → Insert into industry_news_items (source_type = 'twitter'; optional importance later)
+    → Weekly digest: per firm, select top 3 from firm_twitter_tweets by importance_score for the week
 ```
 
-**Dedupe:** Before insert, check if `source_url` (tweet permalink) already exists in `firm_content_items` (for that firm) or in `industry_news_items`. Skip if exists.
+**Dedupe:** Before insert, check `firm_twitter_tweets` for (firm_id, url) and `industry_news_items` for source_url. Skip if exists.
 
-**Cost:** Apify free tier $5/month ≈ 20k tweets at $0.25/1k. With 3 firms × a few terms × 30–50 tweets/run and one industry run, we stay well under for testing.
+**Importance:** AI scores each tweet 0–1 (“how important for the firm’s subscribers?”). Digest shows **up to 3** per firm per week (can be 1 or 2 if fewer are above threshold or we simply take top 3).
+
+**Cost:** Apify free tier $5/month ≈ 20k tweets at $0.25/1k. Batch OpenAI (20 tweets/call) keeps token cost low (~same order as Trustpilot classify).
 
 ---
 
@@ -96,15 +99,16 @@ Apify (search terms per firm + industry terms)
 - Adding more than 3 firms (expand later).
 - Reddit or other social sources (separate scope).
 - S9 email pipeline and public timelines (separate; do later).
-- Changing weekly digest format (Twitter items use same firm content / industry news sections as today).
+- Per-tweet admin approval queue for firm tweets (we use importance_score and top-3 instead).
 
 ---
 
 ## 7. Success Criteria
 
-1. **Config** – List of 3 firms + search terms per firm; list of industry keywords. (Code or DB table.)
-2. **Apify integration** – Script or job that runs the chosen Actor (e.g. Kaito) with configurable search terms and max items, returns normalized tweet list.
-3. **Ingest** – For each new tweet: run existing AI categorizer, insert into `firm_content_items` or `industry_news_items` as draft, `source_type = 'twitter'`, `source_url` set; dedupe by URL.
-4. **Cron** – Daily (or 2× daily) run of fetch + ingest (e.g. GitHub Actions or Vercel cron).
-5. **Admin** – Twitter-sourced items appear in existing `/admin/content/review`; admin can approve/delete as for manual uploads.
-6. **Runbook** – Short doc: how to set `APIFY_TOKEN`, which Actor ID, where to edit firm/industry terms, and how to run the job manually.
+1. **Config** – List of 3 firms + search terms per firm; list of industry keywords. (Done: config file.)
+2. **Apify integration** – Job runs Actor, returns normalized tweet list. (Done: lib/apify/twitter-scraper.)
+3. **Dedicated table** – `firm_twitter_tweets` with tweet id, firm_id, url, text, author, tweeted_at, category, ai_summary, **importance_score**; dedupe by (firm_id, url).
+4. **Batch ingest** – Firm tweets: batch AI (e.g. 20/call) → category, summary, importance_score → insert into `firm_twitter_tweets`. Industry tweets: batch AI → insert into `industry_news_items` with source_type = 'twitter'.
+5. **Cron** – Daily run of fetch + ingest (e.g. GitHub Actions).
+6. **Digest** – Weekly report includes “Top tweets” per firm: up to 3 from `firm_twitter_tweets` for the week, ordered by importance_score DESC.
+7. **Runbook** – How to set `APIFY_TOKEN`, Actor ID, config, manual run, troubleshooting.

@@ -1,7 +1,8 @@
 # S8 Tickets: Twitter / X Monitoring Pipeline
 
 **Scope:** [s8_scope.md](./s8_scope.md)  
-**Order:** Implement in ticket order below. Config and Apify client first, then ingest, then cron and runbook.
+**Design:** [s8_twitter-design-decisions.md](./s8_twitter-design-decisions.md) (batch categorization, dedicated table, importance_score, top-3-per-firm-per-week).  
+**Order:** Config → Apify client → Fetch job → **Migration** (firm_twitter_tweets) → **Batch AI + ingest** → Cron → **Digest integration** → Runbook.
 
 ---
 
@@ -21,8 +22,8 @@
 
 **Acceptance:**
 
-- [ ] Config or table exists and is used by the fetch job (S8-TW-002) so we can add/change terms without code change.
-- [ ] At least 3–5 terms per firm and 5+ industry keywords as in scope.
+- [x] Config or table exists and is used by the fetch job (S8-TW-002) so we can add/change terms without code change.
+- [x] At least 3–5 terms per firm and 5+ industry keywords as in scope.
 
 ---
 
@@ -39,8 +40,8 @@
 
 **Acceptance:**
 
-- [ ] Unit or integration test: mock Apify response and assert normalized output shape.
-- [ ] Readme or runbook: how to get `APIFY_TOKEN`, which Actor ID is used, and how to run the client manually (e.g. small script that runs for one firm and logs tweets).
+- [x] Unit or integration test: mock Apify response and assert normalized output shape.
+- [x] Readme or runbook: how to get `APIFY_TOKEN`, which Actor ID is used, and how to run the client manually (e.g. small script that runs for one firm and logs tweets). (.env.example documents APIFY_TOKEN; Actor ID in lib/apify/twitter-scraper.ts DEFAULT_ACTOR_ID; runbook in S8-TW-006.)
 
 ---
 
@@ -62,27 +63,53 @@
 
 ---
 
-## S8-TW-004: Ingest – normalize tweet → AI categorize → insert draft (firm or industry)
+## S8-TW-003b: Migration – create `firm_twitter_tweets` table
 
-**Goal:** For each tweet from the fetch job: (1) skip if we already have this tweet in DB (dedupe by `source_url`), (2) run existing AI categorizer (`lib/ai/categorize-content.ts`), (3) insert into `firm_content_items` (firm tweets) or `industry_news_items` (industry tweets) as **draft** (`published = false`), with `source_type = 'twitter'`, `source_url = tweet permalink`, `content_date` from tweet date.
+**Goal:** Dedicated table for firm-level tweets with importance scoring. Digest will query “top 3 per firm per week” from this table (see design doc).
+
+**Schema (proposed):**
+
+- `id` SERIAL PRIMARY KEY
+- `firm_id` TEXT NOT NULL REFERENCES firm_profiles(id)
+- `tweet_id` TEXT NOT NULL (external X id)
+- `url` TEXT NOT NULL (tweet permalink)
+- `text` TEXT NOT NULL
+- `author_username` TEXT
+- `tweeted_at` DATE NOT NULL (date of the tweet)
+- `category` TEXT (from AI: company_news, rule_change, promotion, complaint, off_topic, etc.)
+- `ai_summary` TEXT
+- `importance_score` FLOAT CHECK (importance_score >= 0 AND importance_score <= 1)
+- `created_at` TIMESTAMPTZ DEFAULT NOW()
+- UNIQUE (firm_id, url) for dedupe
 
 **Tasks:**
 
-1. **Dedupe** – Before insert, check:
-    - Firm: `firm_content_items` where `firm_id = X` and `source_url = tweetUrl`. Skip if exists.
-    - Industry: `industry_news_items` where `source_url = tweetUrl`. Skip if exists.
-2. **Title** – Use AI-returned title; fallback to truncated tweet text (e.g. first 80 chars).
-3. **Firm content** – Insert into `firm_content_items`: `firm_id`, `raw_content = tweet text`, `source_url`, `source_type = 'twitter'`, `content_type` from AI (or map to company_news/rule_change/promotion/other), `ai_summary`, `ai_category`, `ai_confidence`, `ai_tags`, `content_date` (from tweet), `published = false`.
-4. **Industry news** – Insert into `industry_news_items`: `title`, `raw_content`, `source_url`, `source_type = 'twitter'`, AI fields, `mentioned_firm_ids` from AI, `content_date`, `published = false`.
-5. **Idempotency** – Re-running the same fetch output should not create duplicate rows (dedupe by `source_url`).
-6. **Rate limit** – Optionally throttle AI calls (e.g. 1 req/sec) to avoid OpenAI rate limits when ingesting many tweets.
+- Add migration in `migrations/` (e.g. `28_firm_twitter_tweets.sql`): create table, indexes (firm_id, tweeted_at; firm_id, importance_score DESC), RLS if needed (e.g. service role only for cron; optional read for admin).
 
 **Acceptance:**
 
-- [ ] New tweets from fetch job are inserted as draft; existing tweet URL is skipped.
-- [ ] Firm tweets appear in `firm_content_items` with correct `firm_id` and `source_type = 'twitter'`.
-- [ ] Industry tweets appear in `industry_news_items` with `source_type = 'twitter'` and `mentioned_firm_ids` when AI returns them.
-- [ ] Admin can see and approve/delete these items in existing `/admin/content/review`.
+- [ ] Table exists; ingest job can insert and digest can query by firm_id and week with ORDER BY importance_score DESC LIMIT 3.
+
+---
+
+## S8-TW-004: Batch AI + ingest – tweets → firm_twitter_tweets / industry_news_items
+
+**Goal:** (1) Skip tweets already in DB (dedupe by url). (2) **Batch** categorize tweets (e.g. 20 per OpenAI call, like Trustpilot) and get **category, summary, importance_score** per tweet. (3) Insert firm tweets into **`firm_twitter_tweets`**; industry tweets into **`industry_news_items`** with `source_type = 'twitter'`.
+
+**Tasks:**
+
+1. **Batch AI** – New function (e.g. in `lib/ai/`) that accepts an array of tweet objects `{ text, url?, author? }`, builds a single prompt for up to ~20 tweets, returns array of `{ category, summary, importance_score }` in same order. Prompt must define categories (company_news, rule_change, promotion, complaint, off_topic, other) and ask for importance_score 0–1 (“How important is this tweet for the firm’s subscribers?”). Batch size configurable (default 20, max e.g. 25).
+2. **Dedupe** – Firm: skip if (firm_id, url) exists in `firm_twitter_tweets`. Industry: skip if source_url exists in `industry_news_items`.
+3. **Firm tweets** – Insert into `firm_twitter_tweets`: firm_id, tweet_id, url, text, author_username, tweeted_at (from tweet date), category, ai_summary, importance_score. No `published` flag; digest selects by importance.
+4. **Industry tweets** – Insert into `industry_news_items`: title (truncated text or AI), raw_content, source_url, source_type = 'twitter', ai_summary, ai_category, mentioned_firm_ids from AI, content_date, published = false (industry can keep review flow if desired, or set true by default for Twitter).
+5. **Idempotency** – Re-run produces no duplicate rows (dedupe by url / (firm_id, url)).
+
+**Acceptance:**
+
+- [ ] New tweets are categorized in **batches** (e.g. 20 per OpenAI call); each result includes importance_score.
+- [ ] Firm tweets are stored in `firm_twitter_tweets` with importance_score; no duplicates for same (firm_id, url).
+- [ ] Industry tweets are stored in `industry_news_items` with source_type = 'twitter'.
+- [ ] Batch size is configurable (env or constant); same pattern as Trustpilot’s CLASSIFY_AI_BATCH_SIZE.
 
 ---
 
@@ -100,7 +127,7 @@
 **Acceptance:**
 
 - [ ] Cron runs at least once per day (e.g. 6 AM UTC or after Trustpilot classify).
-- [ ] On success, new Twitter-sourced drafts appear in the content review queue; no duplicate rows for same tweet URL.
+- [ ] On success, new firm tweets appear in `firm_twitter_tweets`, industry in `industry_news_items`; no duplicate rows.
 - [ ] On failure (Apify down, token invalid), job fails visibly (log/alert) and does not corrupt DB.
 
 ---
@@ -117,7 +144,7 @@
 4. **Running manually** – How to run the fetch + ingest script locally or via a one-off API call (if implemented).
 5. **Cron** – Where the schedule is defined (workflow file or Vercel cron), and how to change frequency.
 6. **Troubleshooting** – Common errors (invalid token, Apify timeout, OpenAI rate limit); where to see logs; how to temporarily disable (e.g. comment out workflow or flip a flag).
-7. **Cost** – Reminder: Apify $5 free credits/month; approximate tweet volume for current config; link to spike doc for provider choice.
+7. **Cost** – Reminder: Apify $5 free credits/month; batch OpenAI (20 tweets/call); link to spike doc.
 
 **Acceptance:**
 
@@ -126,19 +153,30 @@
 
 ---
 
-## S8-TW-007 (optional): Admin UX hint for Twitter source
+## S8-TW-006b: Digest – include “Top tweets” per firm (up to 3 per week)
 
-**Goal:** In the content review queue, make it easy to see that an item came from Twitter (e.g. badge or filter).
+**Goal:** Weekly digest shows **up to 3 most important tweets per firm** for the report week, selected by importance_score (no admin approval step for firm tweets).
 
 **Tasks:**
 
-- In `/admin/content/review`, show **source_type** (e.g. “Twitter”) and **source_url** (link) for each row so admins can open the tweet. If the list already shows source type/URL, ensure “twitter” is displayed clearly.
-- Optional: filter by `source_type = 'twitter'` to review only Twitter-sourced items.
+1. **Data** – In content aggregator (or digest generator), for each firm: query `firm_twitter_tweets` where `firm_id = X` and `tweeted_at` in the report week, ORDER BY importance_score DESC, LIMIT 3.
+2. **Digest payload** – Add a field per firm, e.g. `topTweets: { firmId: string; tweets: { url, text, authorUsername, tweeted_at, ai_summary, importance_score }[] }` (or reuse existing structure if one fits).
+3. **Email template** – Add a “Top tweets” or “Notable mentions” block per firm in the weekly digest HTML (e.g. 1–3 items with link, summary, date). If a firm has 0 tweets in the week, omit the block.
 
 **Acceptance:**
 
-- [ ] Review queue shows source type and clickable source URL; Twitter items are clearly identifiable.
-- [ ] Optional filter by source = Twitter works if implemented.
+- [ ] Weekly report generation includes top 3 tweets per firm from `firm_twitter_tweets` for the week.
+- [ ] Digest email displays them per firm (up to 3); subscribers see the block when data exists.
+
+---
+
+## S8-TW-007 (optional): Admin UX for tweets
+
+**Goal:** Optional admin view to see recent firm tweets (e.g. from `firm_twitter_tweets`) or filter industry news by source = Twitter. Not required for “top 3 in digest” flow.
+
+**Tasks:** e.g. list recent rows from `firm_twitter_tweets` per firm; or in industry news review, show/filter by source_type = 'twitter'.
+
+**Acceptance:** Admin can inspect or filter Twitter-sourced data if implemented.
 
 ---
 
@@ -146,18 +184,21 @@
 
 | Order | Ticket | What |
 |-------|--------|------|
-| 1 | S8-TW-001 | Config: firms + industry keywords |
-| 2 | S8-TW-002 | Apify client: run Actor, normalize tweets |
+| 1 | S8-TW-001 | Config: firms + industry keywords ✅ |
+| 2 | S8-TW-002 | Apify client: run Actor, normalize tweets ✅ |
 | 3 | S8-TW-003 | Fetch job: run Apify for 3 firms + industry, dedupe |
-| 4 | S8-TW-004 | Ingest: AI categorize → insert draft (firm_content_items / industry_news_items) |
+| 3b | S8-TW-003b | Migration: create firm_twitter_tweets table |
+| 4 | S8-TW-004 | Batch AI + ingest: firm_twitter_tweets / industry_news_items (with importance_score) |
 | 5 | S8-TW-005 | Cron: schedule fetch + ingest daily |
 | 6 | S8-TW-006 | Runbook for Twitter monitoring |
-| 7 | S8-TW-007 | (Optional) Admin UX: show Twitter source in review queue |
+| 6b | S8-TW-006b | Digest: top 3 tweets per firm per week (from firm_twitter_tweets) |
+| 7 | S8-TW-007 | (Optional) Admin UX for tweets |
 
 ---
 
 ## Notes
 
-- **Dedupe key:** Use tweet permalink as `source_url`; unique per tweet. No schema change required if we “select before insert” by `source_url` (+ `firm_id` for firm content). If we later want to enforce at DB level, we can add a unique constraint on `(firm_id, source_url)` for `firm_content_items` and on `source_url` for `industry_news_items` (migration).
-- **Actor ID:** Kaito Cheapest Actor ID (Apify) – document in runbook; e.g. `kaitoeasyapi/twitter-x-data-tweet-scraper-pay-per-result-cheapest`. Can be overridden via env for testing.
+- **Batch:** Trustpilot uses 20 reviews per OpenAI call; we do the same for tweets (batch prompt → category, summary, importance_score).
+- **Dedupe:** Unique on (firm_id, url) in firm_twitter_tweets; source_url in industry_news_items. Enforced in migration for firm_twitter_tweets.
+- **Actor ID:** Kaito Cheapest – document in runbook; override via APIFY_TWITTER_ACTOR_ID if needed.
 - **S9:** Email pipeline and public timelines remain in s9_scope / s9_tickets; do after this Twitter batch if desired.
