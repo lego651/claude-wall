@@ -1,0 +1,40 @@
+# Daily — Twitter/X fetch + ingest (S8-TW-005)
+#
+# Runs the Twitter pipeline once per day: Apify fetch → batch AI categorize → insert into
+# firm_twitter_tweets and industry_news_items. Same logic as scripts/twitter-fetch-job.ts.
+#
+# Schedule: 6 AM PST (14:00 UTC), after Trustpilot daily steps (11–13 UTC).
+# Requires repo secrets: APIFY_TOKEN, OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+
+name: Daily – Twitter Fetch + Ingest
+
+on:
+  schedule:
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+jobs:
+  twitter-fetch-ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run Twitter fetch + ingest
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/twitter-fetch-job.ts

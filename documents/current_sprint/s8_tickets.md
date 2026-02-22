@@ -127,6 +127,13 @@
 
 **Goal:** Run the Twitter pipeline automatically (fetch → ingest) on a schedule without manual steps.
 
+**Implemented:**
+
+- **Cron entrypoint:** `scripts/twitter-fetch-job.ts` already does fetch (S8-TW-003) then ingest (S8-TW-004) in one run.
+- **GitHub Actions:** `.github/workflows/daily-step-twitter-fetch-ingest.yml` – runs at 14:00 UTC daily (6 AM PST), after Trustpilot steps (11–13 UTC). `workflow_dispatch` for manual run.
+- **Secrets:** `APIFY_TOKEN`, `OPENAI_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (same as other daily workflows).
+- **Logging:** Script logs start/end, fetch counts, insert/skip counts; errors (e.g. Apify/OpenAI) surface as step failure in Actions (no tokens logged).
+
 **Tasks:**
 
 - Add a **cron entrypoint** that: (1) runs the fetch job (S8-TW-003), (2) runs the ingest step (S8-TW-004) on the fetched tweets. Can be one script that does both, or two steps in one workflow.
@@ -136,9 +143,9 @@
 
 **Acceptance:**
 
-- [ ] Cron runs at least once per day (e.g. 6 AM UTC or after Trustpilot classify).
-- [ ] On success, new firm tweets appear in `firm_twitter_tweets`, industry in `industry_news_items`; no duplicate rows.
-- [ ] On failure (Apify down, token invalid), job fails visibly (log/alert) and does not corrupt DB.
+- [x] Cron runs at least once per day (e.g. 6 AM UTC or after Trustpilot classify).
+- [x] On success, new firm tweets appear in `firm_twitter_tweets`, industry in `industry_news_items`; no duplicate rows.
+- [x] On failure (Apify down, token invalid), job fails visibly (log/alert) and does not corrupt DB.
 
 ---
 
