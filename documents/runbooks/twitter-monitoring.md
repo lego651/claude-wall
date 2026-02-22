@@ -295,8 +295,36 @@ How to verify the full pipeline from GA to inbox.
 | OpenAI rate limit / 429 | Too many batch calls in a short time | Wait and re-run; or lower `TWITTER_AI_BATCH_SIZE` (e.g. 10). |
 | No rows inserted | All tweets already in DB (dedupe) | Expected if you re-run soon after a run. Check `firm_twitter_tweets` / `industry_news_items` for recent `source_url` / `url`. |
 | Duplicate key / insert error | Unique on (firm_id, url) or source_url | Usually means a race or partial retry; safe to re-run (dedupe skips existing). |
-| “Created 0 topic group(s)” | No group has ≥3 tweets with same topic_title in that week | Normal if few industry tweets or topics are spread out. Check `industry_news_items` for the week: `source_type='twitter'`, `content_date` in week, and `topic_title` not null. Add more industry terms or wait for more data. |
+| “Created 0 topic group(s)” | No group has ≥3 tweets with same topic_title in that week | See **Why is twitter_topic_groups empty?** below. |
 | Topic groups not on weekly-review | Wrong week or job not run | Ensure you ran “Weekly Step 0 – Twitter Topic Groups” for the **current week** (offset 0). On weekly-review, select the same week (Mon–Sun) that the job used. |
+
+### Why is twitter_topic_groups empty?
+
+The job only inserts rows when **at least one topic has ≥3 industry tweets** in the selected week. Two common cases:
+
+1. **Existing rows have no topic_title** – Rows ingested *before* we added `topic_title` to the AI/ingest have `topic_title = NULL`. The job **excludes** them (`.not("topic_title", "is", null)`). So only tweets ingested *after* the topic_title change count. **Fix:** Run **Daily – Twitter Fetch + Ingest** so new tweets get `topic_title`; then run **Weekly Step 0 – Twitter Topic Groups** again. Existing rows can stay as-is (they still show in the flat “Industry News” list on weekly-review).
+2. **No cluster of 3+ same topic** – Even with `topic_title` set, we need **≥3 tweets with the same normalized topic_title** in that week. If every topic has 1 or 2 tweets, we create 0 groups. **Fix:** Wait for more data, or temporarily lower the threshold in code (e.g. `MIN_ITEMS_PER_GROUP = 2` in `lib/digest/twitter-topic-groups.ts`) for testing.
+
+**Verify in Supabase (SQL Editor):**
+
+```sql
+-- Current week bounds (Mon–Sun UTC); adjust dates to your week
+-- Example for week 2026-02-17 to 2026-02-23:
+SELECT
+  topic_title,
+  COUNT(*) AS cnt
+FROM industry_news_items
+WHERE source_type = 'twitter'
+  AND content_date >= '2026-02-17'
+  AND content_date <= '2026-02-23'
+  AND topic_title IS NOT NULL
+GROUP BY topic_title
+ORDER BY cnt DESC;
+```
+
+- If this returns no rows → no industry Twitter items in that week have `topic_title` (likely old data). Run the daily fetch to ingest new tweets with topic_title.
+- If it returns rows but all `cnt < 3` → topics are spread out; no group meets the ≥3 threshold. Either wait for more data or lower the threshold for testing.
+- If some rows have `cnt >= 3` → the job should have created groups; re-run the workflow and check GA logs for errors.
 
 **Where to see logs:**
 

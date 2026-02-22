@@ -68,6 +68,7 @@ psql "postgresql://postgres:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:54
 - `22_rename_weekly_tables_and_firm_weekly_reports_dates.sql` - Rename `weekly_incidents` → `firm_daily_incidents`; replace `weekly_reports` with `firm_weekly_reports` (week_from_date, week_to_date). All UTC; digest Sunday 8:00 UTC.
 - `29_firm_twitter_tweets.sql` - **S8-TW-003b** - Table for firm-level Twitter/X tweets with importance_score; digest uses top 3 per firm per week.
 - `30_twitter_topic_grouping.sql` - **TG-001** - Add `topic_title` to `industry_news_items`; create `twitter_topic_groups` for grouped industry tweet review (1–3 topic cards per week).
+- `31_industry_tweets_in_firm_twitter_tweets.sql` - Industry tweets stored in `firm_twitter_tweets` with `firm_id='industry'`; `firm_profiles` row for industry; `topic_title`, `published`, `published_at` on `firm_twitter_tweets`.
 
 ## Alpha Intelligence Schema
 

@@ -15,7 +15,7 @@ import type {
   FirmTopTweet,
   IndustryNewsItem,
 } from './content-aggregator';
-import { getTopTweetsForFirms } from './content-aggregator';
+import { getTopTweetsForFirms, getIndustryNewsForWeek } from './content-aggregator';
 
 interface WeeklyDigestCache {
   weekKey: string; // "2026-W08"
@@ -138,10 +138,10 @@ async function fetchAllWeeklyDigestData(
 
   const allFirmIds = ((firms || []) as { id: string }[]).map((f) => f.id);
 
-  // Fetch all published content for the week + top tweets (S8-TW-006b)
+  // Fetch all published content for the week + industry news (industry_news_items + firm_twitter_tweets industry) + top tweets
   const [
     { data: firmContentItems, error: firmContentError },
-    { data: industryNewsItems, error: industryNewsError },
+    industryNewsItems,
     topTweets,
   ] = await Promise.all([
     supabase
@@ -153,14 +153,7 @@ async function fetchAllWeeklyDigestData(
       .lte('content_date', weekEndDate)
       .order('content_date', { ascending: false }),
 
-    supabase
-      .from('industry_news_items')
-      .select('*')
-      .eq('published', true) // Only published content
-      .gte('content_date', weekStartDate)
-      .lte('content_date', weekEndDate)
-      .order('content_date', { ascending: false })
-      .limit(10),
+    getIndustryNewsForWeek(weekStartDate, weekEndDate, 10),
 
     getTopTweetsForFirms(allFirmIds, weekStartDate, weekEndDate),
   ]);
@@ -168,11 +161,6 @@ async function fetchAllWeeklyDigestData(
   if (firmContentError) {
     console.error('[Weekly Cache] Failed to fetch firm content:', firmContentError);
     throw new Error(`Failed to fetch firm content: ${firmContentError.message}`);
-  }
-
-  if (industryNewsError) {
-    console.error('[Weekly Cache] Failed to fetch industry news:', industryNewsError);
-    throw new Error(`Failed to fetch industry news: ${industryNewsError.message}`);
   }
 
   // Group firm content by firm ID and type
@@ -211,7 +199,7 @@ async function fetchAllWeeklyDigestData(
 
   return {
     firmContent: firmContentMap,
-    industryNews: (industryNewsItems || []) as unknown as IndustryNewsItem[],
+    industryNews: industryNewsItems || [],
     topTweets,
   };
 }

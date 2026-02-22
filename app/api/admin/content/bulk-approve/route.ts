@@ -101,19 +101,20 @@ export async function POST(req: Request) {
       firmContentApproved = firmResults?.length || 0;
     }
 
-    // Approve industry news items
+    // Approve industry tweets (firm_twitter_tweets firm_id='industry')
     if (industryNews.length > 0) {
       const { data: industryResults, error: industryError } = await supabase
-        .from('industry_news_items')
+        .from('firm_twitter_tweets')
         .update({
           published: true,
           published_at: now,
         })
+        .eq('firm_id', 'industry')
         .in('id', industryNews)
         .select('id');
 
       if (industryError) {
-        throw new Error(`Industry news update failed: ${industryError.message}`);
+        throw new Error(`Industry tweets update failed: ${industryError.message}`);
       }
 
       industryNewsApproved = industryResults?.length || 0;
@@ -158,13 +159,14 @@ export async function POST(req: Request) {
 
       if (allItemIds.size > 0) {
         const { data: industryResults, error: industryError } = await supabase
-          .from('industry_news_items')
+          .from('firm_twitter_tweets')
           .update({ published: true, published_at: now })
+          .eq('firm_id', 'industry')
           .in('id', Array.from(allItemIds))
           .select('id');
 
         if (industryError) {
-          throw new Error(`Industry news (topic group) update failed: ${industryError.message}`);
+          throw new Error(`Industry tweets (topic group) update failed: ${industryError.message}`);
         }
         industryNewsApproved += industryResults?.length || 0;
       }

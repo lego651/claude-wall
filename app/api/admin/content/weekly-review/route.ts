@@ -100,13 +100,14 @@ export async function GET(req: Request) {
         .lte('content_date', weekEndIso)
         .order('content_date', { ascending: false }),
 
-      // Industry news (both published and unpublished)
+      // Industry tweets (firm_twitter_tweets firm_id='industry') for the week; mapped to same shape as legacy industry news
       supabase
-        .from('industry_news_items')
-        .select('*')
-        .gte('content_date', weekStartIso)
-        .lte('content_date', weekEndIso)
-        .order('content_date', { ascending: false }),
+        .from('firm_twitter_tweets')
+        .select('id, text, url, ai_summary, tweeted_at, published')
+        .eq('firm_id', 'industry')
+        .gte('tweeted_at', weekStartIso)
+        .lte('tweeted_at', weekEndIso)
+        .order('tweeted_at', { ascending: false }),
 
       // Trustpilot incidents for the week
       supabase
@@ -131,7 +132,20 @@ export async function GET(req: Request) {
     if (incidentsError) throw incidentsError;
     if (topicGroupsError) throw topicGroupsError;
 
-    // Resolve topic group item_ids to { id, title, source_url } for links (TG-005)
+    // Map industry tweets to shape expected by UI (title, content_date, ai_confidence, etc.)
+    const industryTweetsRows = (industryNewsItems || []) as { id: number; text: string; url: string; ai_summary: string | null; tweeted_at: string; published: boolean | null }[];
+    const allIndustryNews = industryTweetsRows.map((r) => ({
+      id: r.id,
+      title: (r.text || '').slice(0, 200).trim() || 'Tweet',
+      ai_summary: r.ai_summary || '',
+      content_date: r.tweeted_at,
+      published: r.published === true,
+      ai_confidence: 0.8,
+      mentioned_firm_ids: [] as string[],
+      source_url: r.url,
+    }));
+
+    // Resolve topic group item_ids from firm_twitter_tweets (industry tweet ids)
     type TopicGroupRow = { id: number; topic_title: string; summary: string | null; item_ids?: number[]; published: boolean; week_number: number; year: number };
     const topicGroups = (topicGroupsRows || []) as TopicGroupRow[];
     const allTopicGroupItemIds = topicGroups.flatMap((row) => (Array.isArray(row.item_ids) ? row.item_ids : []));
@@ -139,12 +153,13 @@ export async function GET(req: Request) {
     let itemIdToDisplay: Record<number, { id: number; title: string; source_url: string | null }> = {};
     if (uniqueItemIds.length > 0) {
       const { data: resolvedItems } = await supabase
-        .from('industry_news_items')
-        .select('id, title, source_url')
+        .from('firm_twitter_tweets')
+        .select('id, text, url')
+        .eq('firm_id', 'industry')
         .in('id', uniqueItemIds);
       if (resolvedItems) {
-        for (const r of resolvedItems as { id: number; title: string; source_url: string | null }[]) {
-          itemIdToDisplay[r.id] = { id: r.id, title: r.title || '', source_url: r.source_url };
+        for (const r of resolvedItems as { id: number; text: string; url: string }[]) {
+          itemIdToDisplay[r.id] = { id: r.id, title: (r.text || '').slice(0, 100), source_url: r.url };
         }
       }
     }
@@ -201,9 +216,8 @@ export async function GET(req: Request) {
       };
     });
 
-    // Calculate overall stats
+    // Calculate overall stats (allIndustryNews already defined above as mapped industry tweets)
     const allFirmContent = firmContentItems || [];
-    const allIndustryNews = industryNewsItems || [];
     const allIncidents = incidents || [];
 
     const totalFirmContent = allFirmContent.length;

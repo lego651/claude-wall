@@ -2,7 +2,7 @@
  * Twitter ingest (S8-TW-004)
  *
  * Dedupes fetched tweets against DB, batch-categorizes with AI, inserts
- * firm tweets into firm_twitter_tweets and industry tweets into industry_news_items.
+ * firm tweets and industry tweets into firm_twitter_tweets (industry = firm_id 'industry').
  */
 
 import { createServiceClient } from "@/lib/supabase/service";
@@ -29,10 +29,12 @@ function toDateOnly(dateStr: string): string {
   return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : new Date(dateStr).toISOString().slice(0, 10);
 }
 
+const INDUSTRY_FIRM_ID = "industry";
+
 /**
  * Dedupe: return tweets that are not already in DB.
  * Firm: (firm_id, url) in firm_twitter_tweets.
- * Industry: source_url in industry_news_items.
+ * Industry: (firm_id='industry', url) in firm_twitter_tweets.
  */
 async function filterNewTweets(
   tweets: FetchedTweet[],
@@ -61,12 +63,13 @@ async function filterNewTweets(
 
   if (industryUrls.length > 0) {
     const { data } = await supabase
-      .from("industry_news_items")
-      .select("source_url")
-      .in("source_url", industryUrls);
+      .from("firm_twitter_tweets")
+      .select("url")
+      .eq("firm_id", INDUSTRY_FIRM_ID)
+      .in("url", industryUrls);
     if (data) {
-      for (const r of data as { source_url: string | null }[]) {
-        if (r.source_url) existingIndustry.add(r.source_url);
+      for (const r of data as { url: string }[]) {
+        existingIndustry.add(r.url);
       }
     }
   }
@@ -134,7 +137,7 @@ export async function ingestTweets(fetched: FetchedTweet[]): Promise<IngestResul
     }
   }
 
-  // Process industry tweets in batches
+  // Process industry tweets: insert into firm_twitter_tweets with firm_id='industry', published=false
   const industryChunks = chunk(industry, batchSize);
   for (const batch of industryChunks) {
     const inputs: TweetCategorizeInput[] = batch.map((t) => ({
@@ -147,21 +150,18 @@ export async function ingestTweets(fetched: FetchedTweet[]): Promise<IngestResul
       const t = batch[i];
       const r = results[i] as TweetCategorizeResult | undefined;
       if (!r) continue;
-      const title = (t.text || "").slice(0, 200).trim() || "Twitter post";
-      const contentDate = toDateOnly(t.date);
-      const { error } = await supabase.from("industry_news_items").insert({
-        title,
-        raw_content: t.text,
-        source_url: t.url,
-        source_type: "twitter",
+      const { error } = await supabase.from("firm_twitter_tweets").insert({
+        firm_id: INDUSTRY_FIRM_ID,
+        tweet_id: t.tweetId,
+        url: t.url,
+        text: t.text,
+        author_username: t.author || null,
+        tweeted_at: toDateOnly(t.date),
+        category: r.category || "other",
         ai_summary: r.summary || null,
-        ai_category: r.category || "other",
-        ai_confidence: 0.8,
-        ai_tags: [],
-        mentioned_firm_ids: r.mentioned_firm_ids ?? [],
+        importance_score: r.importance_score ?? 0.5,
         topic_title: r.topic_title?.trim()?.slice(0, 200) || null,
         published: false,
-        content_date: contentDate,
       });
       if (!error) industryInserted++;
     }

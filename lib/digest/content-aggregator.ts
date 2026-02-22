@@ -92,7 +92,8 @@ export async function getFirmContentForWeek(
 
 /**
  * Fetch industry news for the week (published only).
- * Returns top N most recent items.
+ * Includes industry_news_items (manual, etc.) and industry tweets from firm_twitter_tweets (firm_id='industry').
+ * Returns top N most recent items merged and sorted by date.
  */
 export async function getIndustryNewsForWeek(
   weekStartDate: string,
@@ -101,21 +102,56 @@ export async function getIndustryNewsForWeek(
 ): Promise<IndustryNewsItem[]> {
   const supabase = createServiceClient();
 
-  const { data: items, error } = await supabase
-    .from('industry_news_items')
-    .select('*')
-    .eq('published', true)
-    .gte('content_date', weekStartDate)
-    .lte('content_date', weekEndDate)
-    .order('content_date', { ascending: false })
-    .limit(limit);
+  const [
+    { data: newsItems, error: newsError },
+    { data: tweetRows, error: tweetError },
+  ] = await Promise.all([
+    supabase
+      .from('industry_news_items')
+      .select('*')
+      .eq('published', true)
+      .gte('content_date', weekStartDate)
+      .lte('content_date', weekEndDate)
+      .order('content_date', { ascending: false }),
+    supabase
+      .from('firm_twitter_tweets')
+      .select('id, text, url, ai_summary, tweeted_at')
+      .eq('firm_id', 'industry')
+      .eq('published', true)
+      .gte('tweeted_at', weekStartDate)
+      .lte('tweeted_at', weekEndDate)
+      .order('tweeted_at', { ascending: false }),
+  ]);
 
-  if (error) {
-    console.error('[Content Aggregator] Error fetching industry news:', error);
-    return [];
+  if (newsError) {
+    console.error('[Content Aggregator] Error fetching industry_news_items:', newsError);
+  }
+  if (tweetError) {
+    console.error('[Content Aggregator] Error fetching industry tweets:', tweetError);
   }
 
-  return (items || []) as unknown as IndustryNewsItem[];
+  const fromNews = (newsItems || []) as unknown as IndustryNewsItem[];
+  const fromTweets = ((tweetRows || []) as { id: number; text: string; url: string; ai_summary: string | null; tweeted_at: string }[]).map(
+    (r) =>
+      ({
+        id: r.id,
+        title: (r.text || '').slice(0, 200).trim() || 'Tweet',
+        ai_summary: r.ai_summary || '',
+        ai_category: 'other',
+        ai_confidence: 0.8,
+        ai_tags: [],
+        mentioned_firm_ids: [],
+        source_url: r.url,
+        screenshot_url: null,
+        content_date: r.tweeted_at,
+        published_at: r.tweeted_at,
+      }) as IndustryNewsItem
+  );
+
+  const merged = [...fromNews, ...fromTweets].sort(
+    (a, b) => (b.content_date || '').localeCompare(a.content_date || '')
+  );
+  return merged.slice(0, limit);
 }
 
 /**

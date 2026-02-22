@@ -111,7 +111,7 @@ describe("ingestTweets", () => {
     expect(result.firmSkipped).toBe(1);
   });
 
-  it("inserts industry tweets with source_type twitter", async () => {
+  it("inserts industry tweets into firm_twitter_tweets with firm_id industry", async () => {
     const fetched: FetchedTweet[] = [
       {
         tweetId: "5",
@@ -133,29 +133,29 @@ describe("ingestTweets", () => {
       expect.any(Array),
       expect.objectContaining({ isIndustry: true })
     );
-    expect(mock.from).toHaveBeenCalledWith("industry_news_items");
+    expect(mock.from).toHaveBeenCalledWith("firm_twitter_tweets");
     expect(mock.insert).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: "Industry update",
-        raw_content: "Industry update",
-        source_url: "https://x.com/e/5",
-        source_type: "twitter",
+        firm_id: "industry",
+        tweet_id: "5",
+        url: "https://x.com/e/5",
+        text: "Industry update",
+        tweeted_at: "2024-01-16",
         ai_summary: "Industry summary",
-        ai_category: "other",
+        category: "other",
+        importance_score: 0.5,
         topic_title: "Industry update",
-        mentioned_firm_ids: ["fundednext"],
         published: false,
-        content_date: "2024-01-16",
       })
     );
     expect(result.industryInserted).toBe(1);
     expect(result.industrySkipped).toBe(0);
   });
 
-  it("skips industry tweets whose source_url already exists", async () => {
-    // Only industry tweets → only industry_news_items .in() is called (firm query skipped)
+  it("skips industry tweets whose url already exists in firm_twitter_tweets (industry)", async () => {
+    // Industry dedupe: firm_twitter_tweets firm_id=industry .in('url', ...)
     mock.in.mockResolvedValueOnce({
-      data: [{ source_url: "https://x.com/e/5" }],
+      data: [{ url: "https://x.com/e/5" }],
       error: null,
     });
 
@@ -285,7 +285,7 @@ describe("ingestTweets", () => {
     expect(mock.insert).toHaveBeenCalledTimes(1);
   });
 
-  it("uses title Twitter post when industry tweet text is empty", async () => {
+  it("inserts industry tweet with empty text into firm_twitter_tweets", async () => {
     const fetched: FetchedTweet[] = [
       {
         tweetId: "6",
@@ -306,8 +306,9 @@ describe("ingestTweets", () => {
     expect(result.industryInserted).toBe(1);
     expect(mock.insert).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: "Twitter post",
-        raw_content: "",
+        firm_id: "industry",
+        text: "",
+        url: "https://x.com/f/6",
       })
     );
   });
@@ -333,9 +334,9 @@ describe("ingestTweets", () => {
     expect(result.firmSkipped).toBe(0);
   });
 
-  it("skips industry row with null source_url in dedupe data", async () => {
+  it("skips industry row when url already in firm_twitter_tweets, inserts new", async () => {
     mock.in.mockResolvedValueOnce({
-      data: [{ source_url: "https://x.com/e/5" }, { source_url: null }],
+      data: [{ url: "https://x.com/e/5" }, { url: null }],
       error: null,
     });
 
@@ -362,5 +363,88 @@ describe("ingestTweets", () => {
 
     expect(result.industrySkipped).toBe(1);
     expect(result.industryInserted).toBe(1);
+  });
+
+  it("treats industry dedupe null data as no existing urls (branch coverage)", async () => {
+    mock.in.mockResolvedValueOnce({ data: null, error: null });
+
+    const fetched: FetchedTweet[] = [
+      {
+        tweetId: "i1",
+        text: "Industry one",
+        url: "https://x.com/i/1",
+        author: "i",
+        date: "2024-01-16",
+        source: "industry",
+      },
+    ];
+
+    const result = await ingestTweets(fetched);
+
+    expect(result.industrySkipped).toBe(0);
+    expect(result.industryInserted).toBe(1);
+    expect(categorizeTweetBatch).toHaveBeenCalled();
+  });
+
+  it("skips industry row when batch result is missing (continue branch)", async () => {
+    (categorizeTweetBatch as jest.Mock).mockResolvedValue([
+      { category: "other", summary: "First", importance_score: 0.5, topic_title: "First" },
+      // second result missing
+    ]);
+
+    const fetched: FetchedTweet[] = [
+      {
+        tweetId: "i1",
+        text: "First",
+        url: "https://x.com/i/1",
+        author: "i",
+        date: "2024-01-16",
+        source: "industry",
+      },
+      {
+        tweetId: "i2",
+        text: "Second",
+        url: "https://x.com/i/2",
+        author: "i",
+        date: "2024-01-16",
+        source: "industry",
+      },
+    ];
+
+    const result = await ingestTweets(fetched);
+
+    expect(result.industryInserted).toBe(1);
+    expect(mock.insert).toHaveBeenCalledTimes(1);
+    expect(mock.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ tweet_id: "i1", url: "https://x.com/i/1" })
+    );
+  });
+
+  it("inserts industry tweet with topic_title null when AI returns none", async () => {
+    (categorizeTweetBatch as jest.Mock).mockResolvedValue([
+      { category: "other", summary: "Summary", importance_score: 0.5, topic_title: undefined },
+    ]);
+
+    const fetched: FetchedTweet[] = [
+      {
+        tweetId: "i9",
+        text: "Misc",
+        url: "https://x.com/i/9",
+        author: "i",
+        date: "2024-01-16",
+        source: "industry",
+      },
+    ];
+
+    const result = await ingestTweets(fetched);
+
+    expect(result.industryInserted).toBe(1);
+    expect(mock.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        firm_id: "industry",
+        topic_title: null,
+        published: false,
+      })
+    );
   });
 });

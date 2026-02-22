@@ -35,8 +35,10 @@ function normalizeTopicTitle(s: string | null): string {
   return s.trim().toLowerCase().slice(0, 200);
 }
 
+const INDUSTRY_FIRM_ID = "industry";
+
 /**
- * Fetch industry Twitter items for the week and group by normalized topic_title.
+ * Fetch industry tweets (firm_twitter_tweets firm_id='industry') for the week and group by normalized topic_title.
  * Returns groups with ≥ MIN_ITEMS_PER_GROUP items.
  */
 export async function buildIndustryTopicGroups(
@@ -48,11 +50,11 @@ export async function buildIndustryTopicGroups(
   const weekEndStr = weekEnd.toISOString().slice(0, 10);
 
   const { data: rows, error } = await supabase
-    .from("industry_news_items")
+    .from("firm_twitter_tweets")
     .select("id, topic_title, ai_summary")
-    .eq("source_type", "twitter")
-    .gte("content_date", weekStartStr)
-    .lte("content_date", weekEndStr)
+    .eq("firm_id", INDUSTRY_FIRM_ID)
+    .gte("tweeted_at", weekStartStr)
+    .lte("tweeted_at", weekEndStr)
     .not("topic_title", "is", null);
 
   if (error) throw new Error(`Failed to fetch industry tweets: ${error.message}`);
