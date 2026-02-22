@@ -69,6 +69,34 @@ export default function AdminPage() {
             />
           </div>
 
+          {/* Content Management Section */}
+          <div className="flex flex-col items-center gap-3 pt-8">
+            <div className="px-4 py-1 rounded-full border text-[10px] font-black uppercase tracking-[0.2em]" style={{ ...themeStyles.badge }}>
+              Weekly Digest Content
+            </div>
+            <h2 className="text-3xl font-black text-gray-900">Manage Firm Intelligence</h2>
+          </div>
+
+          {/* Content Management Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <MenuCard
+              title="Weekly Review"
+              description="Review all firm content, industry news, and incidents before sending weekly digest. Bulk approve in one place."
+              icon="📅"
+              href="/admin/content/weekly-review"
+              badge="New"
+              color="bg-white"
+            />
+            <MenuCard
+              title="Upload Content"
+              description="Add firm news, rule changes, promotions, or industry news with AI-powered categorization and summary."
+              icon="📝"
+              href="/admin/content/upload"
+              badge="New"
+              color="bg-white"
+            />
+          </div>
+
           {/* Secondary Buttons Row - Trading Strategies and Prop Firms */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto pt-4">
             <Link

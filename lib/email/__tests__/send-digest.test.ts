@@ -12,6 +12,10 @@ jest.mock('@/lib/email/weekly-digest-html', () => ({
 jest.mock('@/lib/email/unsubscribe-token', () => ({
   createUnsubscribeToken: jest.fn(() => 'mock-token'),
 }));
+const mockCachedData = { firmContent: new Map(), industryNews: [] };
+jest.mock('@/lib/digest/weekly-cache', () => ({
+  getCachedWeeklyDigestData: jest.fn(),
+}));
 jest.mock('@/lib/supabase/service', () => ({
   createServiceClient: jest.fn(() => ({
     from: jest.fn().mockReturnValue({
@@ -40,6 +44,8 @@ describe('sendWeeklyDigest', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env = { ...originalEnv, RESEND_API_KEY: 'key' };
+    const { getCachedWeeklyDigestData } = require('@/lib/digest/weekly-cache');
+    (getCachedWeeklyDigestData as jest.Mock).mockResolvedValue(mockCachedData);
   });
 
   afterEach(() => {

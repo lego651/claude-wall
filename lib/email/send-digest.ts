@@ -7,6 +7,7 @@ import { sendEmail } from "@/lib/resend";
 import { buildWeeklyDigestHtml, type DigestReportInput } from "@/lib/email/weekly-digest-html";
 import { createUnsubscribeToken } from "@/lib/email/unsubscribe-token";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getCachedWeeklyDigestData } from "@/lib/digest/weekly-cache";
 
 /** Shape of report_json from weekly_reports (matches WeeklyReportJson from generator). */
 export interface WeeklyReportJson {
@@ -89,13 +90,45 @@ export async function sendWeeklyDigest(
   const token = createUnsubscribeToken(user.id);
   const unsubscribeUrl = `${base}/api/unsubscribe?token=${encodeURIComponent(token)}`;
 
-  const digestReports: DigestReportInput[] = reports.map(mapReportToInput);
+  // TICKET-S8-009: Fetch firm content and industry news for this week (CACHED!)
+  // This uses in-memory cache to avoid fetching same data for every user
+  const { firmContent: allFirmContent, industryNews } =
+    await getCachedWeeklyDigestData(weekStart, weekEnd);
+
+  // Filter cached data to only user's subscribed firms
+  const userFirmIds = reports.map(r => r.firmId);
+  const firmContentMap = new Map();
+  for (const firmId of userFirmIds) {
+    firmContentMap.set(firmId, allFirmContent.get(firmId) || {
+      company_news: [],
+      rule_change: [],
+      promotion: [],
+    });
+  }
+
+  // Map reports and attach firm content
+  const digestReports: DigestReportInput[] = reports.map(report => ({
+    ...mapReportToInput(report),
+    content: firmContentMap.get(report.firmId) || {
+      company_news: [],
+      rule_change: [],
+      promotion: [],
+    },
+  }));
+
   const html = buildWeeklyDigestHtml(digestReports, {
     weekStart,
     weekEnd,
     manageSubscriptionsUrl,
     unsubscribeUrl,
     baseUrl: base,
+    industryNews: industryNews.map(item => ({
+      title: item.title,
+      ai_summary: item.ai_summary,
+      mentioned_firm_ids: item.mentioned_firm_ids,
+      source_url: item.source_url,
+      content_date: item.content_date,
+    })),
   });
 
   const weekLabel = weekStart.slice(0, 10);

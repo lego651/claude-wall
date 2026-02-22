@@ -4,6 +4,13 @@
  * Inline CSS for email clients; mobile-responsive (max-width: 600px).
  */
 
+export interface FirmContentItem {
+  title: string;
+  ai_summary: string;
+  source_url: string | null;
+  content_date: string;
+}
+
 export interface DigestReportInput {
   firmId: string;
   firmName?: string;
@@ -30,6 +37,20 @@ export interface DigestReportInput {
     review_count: number;
   }>;
   ourTake: string;
+  // NEW: Firm content (TICKET-S8-010)
+  content?: {
+    company_news: FirmContentItem[];
+    rule_change: FirmContentItem[];
+    promotion: FirmContentItem[];
+  };
+}
+
+export interface IndustryNewsItem {
+  title: string;
+  ai_summary: string;
+  mentioned_firm_ids: string[];
+  source_url: string | null;
+  content_date: string;
 }
 
 export interface DigestEmailOptions {
@@ -38,6 +59,8 @@ export interface DigestEmailOptions {
   manageSubscriptionsUrl: string;
   unsubscribeUrl: string;
   baseUrl: string;
+  // NEW: Industry news (TICKET-S8-010)
+  industryNews?: IndustryNewsItem[];
 }
 
 function severityColor(severity: string): string {
@@ -90,6 +113,40 @@ export function buildWeeklyDigestHtml(
           ? Math.round((r.trustpilot.sentiment.negative / r.trustpilot.reviewCount) * 100)
           : 0;
 
+      // Firm content cards (TICKET-S8-010)
+      const companyNewsCards = (r.content?.company_news || [])
+        .map(
+          (item) => `
+    <div style="background:#ecfdf5;border-left:4px solid #10b981;padding:16px;margin:12px 0;">
+      <h3 style="margin:0 0 8px 0;color:#047857;font-size:16px;">📢 ${escapeHtml(item.title)}</h3>
+      <p style="color:#065f46;margin:0;font-size:14px;">${escapeHtml(item.ai_summary)}</p>
+      ${item.source_url ? `<p style="margin:8px 0 0 0;"><a href="${item.source_url}" style="color:#059669;font-size:12px;text-decoration:none;">View source →</a></p>` : ''}
+    </div>`
+        )
+        .join('');
+
+      const ruleChangeCards = (r.content?.rule_change || [])
+        .map(
+          (item) => `
+    <div style="background:#fef2f2;border-left:4px solid #ef4444;padding:16px;margin:12px 0;">
+      <h3 style="margin:0 0 8px 0;color:#b91c1c;font-size:16px;">⚠️ ${escapeHtml(item.title)}</h3>
+      <p style="color:#7f1d1d;margin:0;font-size:14px;">${escapeHtml(item.ai_summary)}</p>
+      ${item.source_url ? `<p style="margin:8px 0 0 0;"><a href="${item.source_url}" style="color:#dc2626;font-size:12px;text-decoration:none;">View source →</a></p>` : ''}
+    </div>`
+        )
+        .join('');
+
+      const promotionCards = (r.content?.promotion || [])
+        .map(
+          (item) => `
+    <div style="background:#faf5ff;border-left:4px solid #a855f7;padding:16px;margin:12px 0;">
+      <h3 style="margin:0 0 8px 0;color:#7e22ce;font-size:16px;">🎁 ${escapeHtml(item.title)}</h3>
+      <p style="color:#6b21a8;margin:0;font-size:14px;">${escapeHtml(item.ai_summary)}</p>
+      ${item.source_url ? `<p style="margin:8px 0 0 0;"><a href="${item.source_url}" style="color:#7c3aed;font-size:12px;text-decoration:none;">View offer →</a></p>` : ''}
+    </div>`
+        )
+        .join('');
+
       const incidentCards = r.incidents
         .map(
           (i) => `
@@ -110,13 +167,32 @@ export function buildWeeklyDigestHtml(
       <tr><td style="padding:12px 0 0 0;"><strong>💬 Trustpilot</strong></td></tr>
       <tr><td style="padding:4px 0;color:#374151;">${r.trustpilot.avgRating.toFixed(1)}/5 ${changeRating} · ${r.trustpilot.reviewCount} reviews · 😊 ${pctPos}% positive · 😐 ${pctNeu}% neutral · 😟 ${pctNeg}% negative</td></tr>
     </table>
-    ${r.incidents.length > 0 ? `<p style="margin:0 0 8px 0;"><strong>🚨 Incidents (${r.incidents.length})</strong></p>${incidentCards}` : ''}
+    ${companyNewsCards ? `<p style="margin:0 0 8px 0;"><strong>📢 Company News</strong></p>${companyNewsCards}` : ''}
+    ${ruleChangeCards ? `<p style="margin:16px 0 8px 0;"><strong>⚠️ Rule Changes</strong></p>${ruleChangeCards}` : ''}
+    ${promotionCards ? `<p style="margin:16px 0 8px 0;"><strong>🎁 Promotions</strong></p>${promotionCards}` : ''}
+    ${r.incidents.length > 0 ? `<p style="margin:16px 0 8px 0;"><strong>🚨 Trustpilot Incidents (${r.incidents.length})</strong></p>${incidentCards}` : ''}
     <p style="margin:16px 0 0 0;"><strong>⚖️ PropProof Analysis</strong></p>
     <p style="color:#374151;margin:8px 0 0 0;font-size:14px;line-height:1.5;">${escapeHtml(r.ourTake)}</p>
     <p style="margin:16px 0 0 0;"><a href="${firmUrl}" style="display:inline-block;background:#7c3aed;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">View On-Chain Proof</a></p>
   </div>`;
     })
     .join('');
+
+  // Industry news section (TICKET-S8-010)
+  const industryNewsSection = (options.industryNews && options.industryNews.length > 0)
+    ? `
+    <div style="padding:24px;background:#eff6ff;border-bottom:1px solid #bfdbfe;">
+      <h2 style="margin:0 0 16px 0;font-size:20px;color:#1e40af;">📰 Industry News</h2>
+      ${options.industryNews.map((item) => `
+        <div style="background:#fff;border-left:4px solid #3b82f6;padding:16px;margin:12px 0;border-radius:4px;">
+          <h3 style="margin:0 0 8px 0;color:#1e3a8a;font-size:16px;">${escapeHtml(item.title)}</h3>
+          <p style="color:#1e40af;margin:0;font-size:14px;line-height:1.5;">${escapeHtml(item.ai_summary)}</p>
+          ${item.mentioned_firm_ids.length > 0 ? `<p style="margin:8px 0 0 0;font-size:12px;color:#60a5fa;">Mentioned: ${item.mentioned_firm_ids.join(', ')}</p>` : ''}
+          ${item.source_url ? `<p style="margin:8px 0 0 0;"><a href="${item.source_url}" style="color:#2563eb;font-size:12px;text-decoration:none;">Read more →</a></p>` : ''}
+        </div>
+      `).join('')}
+    </div>
+    ` : '';
 
   return `<!DOCTYPE html>
 <html>
@@ -131,6 +207,7 @@ export function buildWeeklyDigestHtml(
       <h1 style="color:#fff;margin:0;font-size:24px;">Your Weekly Digest</h1>
       <p style="color:rgba(255,255,255,0.9);margin:8px 0 0 0;font-size:14px;">${weekLabel}</p>
     </div>
+    ${industryNewsSection}
     ${firmSections}
     <div style="padding:24px;text-align:center;border-top:1px solid #e5e7eb;">
       <p style="color:#9ca3af;font-size:12px;margin:0;">

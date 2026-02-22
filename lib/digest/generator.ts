@@ -216,7 +216,29 @@ export async function generateWeeklyReport(
     sentiment,
   };
 
-  const incidents = await detectIncidents(firmId, weekStart, weekEnd);
+  // Get published incidents for this week (filtered by published=true for digest)
+  const supabase = createServiceClient();
+  const { data: incidentsData, error: incidentsError } = await supabase
+    .from('firm_daily_incidents')
+    .select('*')
+    .eq('firm_id', firmId)
+    .eq('week_number', weekNumber)
+    .eq('year', year)
+    .eq('published', true) // Only include approved incidents in digest
+    .order('created_at', { ascending: false });
+
+  if (incidentsError) {
+    console.error('[Generator] Failed to fetch published incidents:', incidentsError);
+  }
+
+  const incidents = (incidentsData || []).map(inc => ({
+    incident_type: inc.incident_type,
+    severity: inc.severity,
+    title: inc.title,
+    summary: inc.summary,
+    review_count: inc.review_count,
+  }));
+
   const ourTake = await generateOurTake(firmId, payouts, trustpilot, incidents);
 
   const reportJson: WeeklyReportJson = {
@@ -234,7 +256,6 @@ export async function generateWeeklyReport(
 
   const weekFromDate = weekStart.toISOString().slice(0, 10);
   const weekToDate = weekEnd.toISOString().slice(0, 10);
-  const supabase = createServiceClient();
   await supabase.from('firm_weekly_reports').upsert(
     {
       firm_id: firmId,
