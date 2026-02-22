@@ -2,7 +2,7 @@
 
 How to run and debug the **daily Trustpilot scraper**, **weekly incidents** (incident detection), and **weekly email reports**: manual triggers, debugging failures, email delivery logs, and adding new firms.
 
-**See also:** [Intelligence Feed System Architecture](./intelligence-feed-system-architecture.md) for pipeline overview and data flow. **To test Step 4 (digest) end-to-end:** [Test Step 4 – Weekly Digest](./test-step4-weekly-digest.md).
+**See also:** [Intelligence Feed System Architecture](./intelligence-feed-system-architecture.md) for pipeline overview and data flow. **Twitter/X monitoring** (fetch + ingest, cron, config): [Twitter monitoring runbook](./twitter-monitoring.md). **To test Step 4 (digest) end-to-end:** [Test Step 4 – Weekly Digest](./test-step4-weekly-digest.md).
 
 ---
 

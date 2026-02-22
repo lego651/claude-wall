@@ -153,6 +153,8 @@
 
 **Goal:** Short runbook so anyone can operate and tune the Twitter pipeline.
 
+**Implemented:** `documents/runbooks/twitter-monitoring.md` with Overview, Prerequisites (APIFY_TOKEN, Actor ID), Config (`config/twitter-monitoring.ts`), Running manually (`npx tsx scripts/twitter-fetch-job.ts`), Cron (workflow + how to change schedule), Troubleshooting, Cost. Linked from README (Intelligence Feed + Documentation) and from [daily-scraper-weekly-incidents-reports-operations.md](../runbooks/daily-scraper-weekly-incidents-reports-operations.md).
+
 **Contents:**
 
 1. **Overview** – What the pipeline does (fetch from Apify → ingest as draft → admin approves).
@@ -165,8 +167,8 @@
 
 **Acceptance:**
 
-- [ ] Runbook lives in `documents/runbooks/` (e.g. `twitter-monitoring.md`) and is linked from main README or intelligence-feed runbook.
-- [ ] New dev can follow it to set up token, run one manual fetch, and understand where to edit keywords.
+- [x] Runbook lives in `documents/runbooks/` (e.g. `twitter-monitoring.md`) and is linked from main README or intelligence-feed runbook.
+- [x] New dev can follow it to set up token, run one manual fetch, and understand where to edit keywords.
 
 ---
 

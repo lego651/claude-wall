@@ -49,7 +49,7 @@ Compare up to 5 firms on:
 Leaderboard + verified payout data.
 
 ### ✔ Intelligence Feed (Alpha)
-Curated signals from Trustpilot reviews: scraped daily, classified with AI, aggregated into weekly incidents, and optional email digests. Pipeline: **scrape → classify → incidents → weekly email**. Firm content and industry news (manual upload, AI categorization, admin review) are included in the same weekly digest. See [Intelligence Feed runbook](documents/runbooks/intelligence-feed-system-architecture.md), [Content pipeline runbook](documents/runbooks/content-pipeline.md), and [Daily scraper + weekly incidents & reports](documents/runbooks/daily-scraper-weekly-incidents-reports-operations.md).
+Curated signals from Trustpilot reviews: scraped daily, classified with AI, aggregated into weekly incidents, and optional email digests. Pipeline: **scrape → classify → incidents → weekly email**. Firm content and industry news (manual upload, AI categorization, admin review) are included in the same weekly digest. Twitter/X monitoring (fetch → ingest → top tweets in digest) is documented in [Twitter monitoring runbook](documents/runbooks/twitter-monitoring.md). See also [Intelligence Feed runbook](documents/runbooks/intelligence-feed-system-architecture.md), [Content pipeline runbook](documents/runbooks/content-pipeline.md), and [Daily scraper + weekly incidents & reports](documents/runbooks/daily-scraper-weekly-incidents-reports-operations.md).
 
 ### ✔ Discount Aggregator (v2)
 Track all current prop firm discounts.
@@ -129,6 +129,7 @@ See [daily-scraper-weekly-incidents-reports-operations.md](documents/runbooks/da
 **Intelligence Feed:**
 - [intelligence-feed-system-architecture.md](documents/runbooks/intelligence-feed-system-architecture.md) - Pipeline, data flow, monitoring
 - [daily-scraper-weekly-incidents-reports-operations.md](documents/runbooks/daily-scraper-weekly-incidents-reports-operations.md) - Daily scraper, weekly incidents & reports: manual triggers, debugging, email logs, adding firms
+- [twitter-monitoring.md](documents/runbooks/twitter-monitoring.md) - Twitter/X fetch + ingest: token setup, config, cron, troubleshooting
 
 **Database Schema & Architecture:**
 - [EXECUTIVE_SUMMARY.md](documents/EXECUTIVE_SUMMARY.md) - High-level overview and key decisions
