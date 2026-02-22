@@ -270,6 +270,67 @@ async function getWeeklyEmailLastRun(supabase) {
   }
 }
 
+/** Content pipeline stats (TICKET-S8-012): firm_content_items and industry_news_items. */
+async function getContentStats(supabase) {
+  try {
+    const now = new Date();
+    const { weekStart, weekEnd } = getWeekBoundsUtc(now);
+    const weekStartIso = weekStart.toISOString().slice(0, 10);
+    const weekEndIso = weekEnd.toISOString().slice(0, 10);
+
+    const [
+      { count: firmPending },
+      { count: firmPublishedThisWeek },
+      { count: industryPending },
+      { count: industryPublishedThisWeek },
+    ] = await Promise.all([
+      supabase.from('firm_content_items').select('*', { count: 'exact', head: true }).eq('published', false),
+      supabase
+        .from('firm_content_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('published', true)
+        .gte('content_date', weekStartIso)
+        .lte('content_date', weekEndIso),
+      supabase.from('industry_news_items').select('*', { count: 'exact', head: true }).eq('published', false),
+      supabase
+        .from('industry_news_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('published', true)
+        .gte('content_date', weekStartIso)
+        .lte('content_date', weekEndIso),
+    ]);
+
+    const { data: byType } = await supabase
+      .from('firm_content_items')
+      .select('content_type')
+      .eq('published', true)
+      .gte('content_date', weekStartIso)
+      .lte('content_date', weekEndIso);
+
+    const typeCount = {};
+    for (const item of byType || []) {
+      const t = item.content_type;
+      if (t != null) typeCount[t] = (typeCount[t] || 0) + 1;
+    }
+
+    return {
+      firm_content_pending: firmPending ?? 0,
+      firm_content_published_this_week: firmPublishedThisWeek ?? 0,
+      industry_news_pending: industryPending ?? 0,
+      industry_news_published_this_week: industryPublishedThisWeek ?? 0,
+      by_type: typeCount,
+    };
+  } catch {
+    return {
+      firm_content_pending: null,
+      firm_content_published_this_week: null,
+      industry_news_pending: null,
+      industry_news_published_this_week: null,
+      by_type: {},
+    };
+  }
+}
+
 /** Firms with Trustpilot URL and their last scraper run status (for admin dashboard). */
 async function getTrustpilotScraperStatus(supabase) {
   try {
@@ -547,7 +608,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed, generateWeeklyReportsRun, weeklyEmailLastRun, traderMonitoring, firmPayoutSyncDaily] = await Promise.all([
+  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed, generateWeeklyReportsRun, weeklyEmailLastRun, traderMonitoring, firmPayoutSyncDaily, contentStats] = await Promise.all([
     getFileStats(),
     getDbStats(supabase),
     getPropfirmsPayoutCounts(supabase),
@@ -557,6 +618,7 @@ export async function GET() {
     getWeeklyEmailLastRun(supabase),
     getTraderMonitoringStatus(),
     getFirmPayoutSyncDaily(supabase),
+    getContentStats(supabase),
   ]);
 
   const incidentDetection = await getIncidentDetectionStatus(supabase, trustpilotScraperFirms);
@@ -718,6 +780,7 @@ export async function GET() {
         },
     apiLatency: { note: 'See Vercel Analytics for P50/P95/P99 by route' },
     errorRates: { note: 'See Vercel Analytics or logs for error rates by endpoint' },
+    contentStats: contentStats ?? null,
     fetchedAt: new Date().toISOString(),
   };
 

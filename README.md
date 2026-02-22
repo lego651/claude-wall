@@ -49,7 +49,7 @@ Compare up to 5 firms on:
 Leaderboard + verified payout data.
 
 ### ✔ Intelligence Feed (Alpha)
-Curated signals from Trustpilot reviews: scraped daily, classified with AI, aggregated into weekly incidents, and optional email digests. Pipeline: **scrape → classify → incidents → weekly email**. See [Intelligence Feed runbook](documents/runbooks/intelligence-feed-system-architecture.md) and [Daily scraper + weekly incidents & reports](documents/runbooks/daily-scraper-weekly-incidents-reports-operations.md).
+Curated signals from Trustpilot reviews: scraped daily, classified with AI, aggregated into weekly incidents, and optional email digests. Pipeline: **scrape → classify → incidents → weekly email**. Firm content and industry news (manual upload, AI categorization, admin review) are included in the same weekly digest. See [Intelligence Feed runbook](documents/runbooks/intelligence-feed-system-architecture.md), [Content pipeline runbook](documents/runbooks/content-pipeline.md), and [Daily scraper + weekly incidents & reports](documents/runbooks/daily-scraper-weekly-incidents-reports-operations.md).
 
 ### ✔ Discount Aggregator (v2)
 Track all current prop firm discounts.

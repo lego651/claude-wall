@@ -12,7 +12,7 @@
 
 ### TICKET-S8-001: Create firm_content_items Table 🔴 CRITICAL
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0 (Blocker)
 **Story Points:** 3
 **Assignee:** Database Engineer
@@ -23,25 +23,25 @@ Create `firm_content_items` table to store firm-specific content (company news, 
 
 **Acceptance Criteria:**
 
-- [ ] Create migration `26_firm_content_items.sql`
-- [ ] Table includes all fields from schema:
-  - [ ] `id` (SERIAL PRIMARY KEY)
-  - [ ] `firm_id` (TEXT, FK to firm_profiles)
-  - [ ] `content_type` (TEXT CHECK)
-  - [ ] `title`, `raw_content`, `source_url`, `source_type`
-  - [ ] AI fields: `ai_summary`, `ai_category`, `ai_confidence`, `ai_tags`
-  - [ ] `screenshot_url`, `attachment_urls`
-  - [ ] `published`, `published_at`
-  - [ ] `ingested_at`, `content_date`
-  - [ ] `admin_notes`
-- [ ] Create indexes:
-  - [ ] `idx_firm_content_firm_date` on (firm_id, content_date DESC)
-  - [ ] `idx_firm_content_published` on (published, content_date DESC) WHERE published = true
-  - [ ] `idx_firm_content_type` on (firm_id, content_type, content_date DESC)
-- [ ] Enable RLS with policies:
-  - [ ] Public read for published content
-  - [ ] Admin-only write
-- [ ] Add updated_at trigger
+- [x] Create migration `26_firm_content_items.sql`
+- [x] Table includes all fields from schema:
+  - [x] `id` (SERIAL PRIMARY KEY)
+  - [x] `firm_id` (TEXT, FK to firm_profiles)
+  - [x] `content_type` (TEXT CHECK)
+  - [x] `title`, `raw_content`, `source_url`, `source_type`
+  - [x] AI fields: `ai_summary`, `ai_category`, `ai_confidence`, `ai_tags`
+  - [x] `screenshot_url`, `attachment_urls`
+  - [x] `published`, `published_at`
+  - [x] `ingested_at`, `content_date`
+  - [x] `admin_notes`
+- [x] Create indexes:
+  - [x] `idx_firm_content_firm_date` on (firm_id, content_date DESC)
+  - [x] `idx_firm_content_published` on (published, content_date DESC) WHERE published = true
+  - [x] `idx_firm_content_type` on (firm_id, content_type, content_date DESC)
+- [x] Enable RLS with policies:
+  - [x] Public read for published content
+  - [x] Admin-only write
+- [x] Add updated_at trigger
 
 **Migration SQL:**
 
@@ -159,7 +159,7 @@ SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'firm_content_items
 
 ### TICKET-S8-002: Create industry_news_items Table 🔴 CRITICAL
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0 (Blocker)
 **Story Points:** 3
 **Assignee:** Database Engineer
@@ -293,7 +293,7 @@ SELECT * FROM industry_news_items WHERE 'fundingpips' = ANY(mentioned_firm_ids);
 
 ### TICKET-S8-003: Implement AI Content Categorization Service 🔴 CRITICAL
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0 (Blocker)
 **Story Points:** 5
 **Assignee:** Backend Engineer
@@ -546,7 +546,7 @@ describe('categorizeContent', () => {
 
 ### TICKET-S8-004: Implement Firm Content Upload API 🔴 CRITICAL
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0 (Blocker)
 **Story Points:** 5
 **Assignee:** Backend Engineer
@@ -772,7 +772,7 @@ curl -X POST http://localhost:3000/api/admin/content/firm \
 
 ### TICKET-S8-005: Implement Industry News Upload API 🔴 CRITICAL
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0 (Blocker)
 **Story Points:** 3
 **Assignee:** Backend Engineer
@@ -946,7 +946,7 @@ curl -X POST http://localhost:3000/api/admin/content/industry \
 
 ### TICKET-S8-006: Implement Content Approval API 🟡 HIGH
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P1 (High)
 **Story Points:** 2
 **Assignee:** Backend Engineer
@@ -1125,7 +1125,7 @@ curl -X DELETE http://localhost:3000/api/admin/content/firm/123
 
 ### TICKET-S8-007: Build Admin Content Upload UI 🟡 HIGH
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P1 (High)
 **Story Points:** 5
 **Assignee:** Frontend Engineer
@@ -1430,7 +1430,7 @@ export default function AdminContentUpload() {
 
 ### TICKET-S8-008: Build Content Review Queue UI 🟢 MEDIUM
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P2 (Medium)
 **Story Points:** 3
 **Assignee:** Frontend Engineer
@@ -1645,7 +1645,7 @@ export default function AdminContentReview() {
 
 ### TICKET-S8-009: Update Weekly Digest Query to Include Firm Content 🔴 CRITICAL
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0 (Blocker)
 **Story Points:** 5
 **Assignee:** Backend Engineer
@@ -1818,7 +1818,7 @@ digest.firmReports.forEach(report => {
 
 ### TICKET-S8-010: Update Weekly Email Template 🔴 CRITICAL
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0 (Blocker)
 **Story Points:** 5
 **Assignee:** Full-stack Engineer
@@ -2008,7 +2008,7 @@ Update email template to render industry news and firm content sections.
 
 ### TICKET-S8-011: End-to-End Testing of Content Pipeline 🟡 HIGH
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P1 (High)
 **Story Points:** 3
 **Assignee:** QA Engineer
@@ -2074,7 +2074,7 @@ Test the complete workflow from content upload to weekly digest delivery.
 
 ### TICKET-S8-012: Update Admin Dashboard Metrics 🟢 MEDIUM
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P2 (Medium)
 **Story Points:** 2
 **Assignee:** Backend Engineer
@@ -2188,7 +2188,7 @@ const contentStats = await getContentStats(supabase);
 
 ### TICKET-S8-013: Documentation & Runbook 📄 DOCUMENTATION
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P2 (Medium)
 **Story Points:** 2
 **Assignee:** Tech Lead

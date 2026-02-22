@@ -9,7 +9,7 @@
 
 import { createServiceClient } from '@/lib/supabase/service';
 import { getWeekNumberUtc, getYearUtc } from '@/lib/digest/week-utils';
-import type { FirmContentByType, IndustryNewsItem } from './content-aggregator';
+import type { FirmContentByType, FirmContentItem, IndustryNewsItem } from './content-aggregator';
 
 interface WeeklyDigestCache {
   weekKey: string; // "2026-W08"
@@ -123,7 +123,7 @@ async function fetchAllWeeklyDigestData(
     throw new Error(`Failed to fetch firms: ${firmsError.message}`);
   }
 
-  const allFirmIds = (firms || []).map((f) => f.id);
+  const allFirmIds = ((firms || []) as { id: string }[]).map((f) => f.id);
 
   // Fetch all published content for the week
   const [
@@ -172,7 +172,8 @@ async function fetchAllWeeklyDigestData(
   }
 
   // Populate with actual content
-  for (const item of firmContentItems || []) {
+  const firmItems = (firmContentItems || []) as unknown as FirmContentItem[];
+  for (const item of firmItems) {
     const firmContent = firmContentMap.get(item.firm_id);
     if (!firmContent) continue;
 
@@ -193,7 +194,7 @@ async function fetchAllWeeklyDigestData(
 
   return {
     firmContent: firmContentMap,
-    industryNews: (industryNewsItems || []) as IndustryNewsItem[],
+    industryNews: (industryNewsItems || []) as unknown as IndustryNewsItem[],
   };
 }
 

@@ -5,7 +5,7 @@
 
 import { createServiceClient } from '@/lib/supabase/service';
 import { getOpenAIClient } from '@/lib/ai/openai-client';
-import { detectIncidents, type DetectedIncident } from './incident-aggregator';
+import { type DetectedIncident } from './incident-aggregator';
 import { getWeekNumberUtc, getYearUtc, getWeekBoundsUtc } from './week-utils';
 import { loadMonthlyData } from '@/lib/services/payoutDataLoader';
 import {
@@ -237,7 +237,7 @@ export async function generateWeeklyReport(
     title: inc.title,
     summary: inc.summary,
     review_count: inc.review_count,
-  }));
+  })) as unknown as DetectedIncident[];
 
   const ourTake = await generateOurTake(firmId, payouts, trustpilot, incidents);
 

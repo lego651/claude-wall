@@ -141,6 +141,13 @@ function metricsToCSV(data) {
     rows.push(`weeklyEmail_weekStart,${data.weeklyEmailReport.weekStart ?? ""}`);
     rows.push(`weeklyEmail_weekEnd,${data.weeklyEmailReport.weekEnd ?? ""}`);
   }
+  if (data?.contentStats) {
+    const cs = data.contentStats;
+    rows.push(`content_firm_content_pending,${cs.firm_content_pending ?? ""}`);
+    rows.push(`content_firm_content_published_this_week,${cs.firm_content_published_this_week ?? ""}`);
+    rows.push(`content_industry_news_pending,${cs.industry_news_pending ?? ""}`);
+    rows.push(`content_industry_news_published_this_week,${cs.industry_news_published_this_week ?? ""}`);
+  }
   if (data?.traders?.summary) {
     const s = data.traders.summary;
     rows.push(`traders_totalProfiles,${s.totalProfiles ?? ""}`);
@@ -1687,6 +1694,54 @@ export default function AdminDashboardPage() {
                     {(!data.intelligenceFeed.lastWeek?.firmIdsWithReport?.length && !data.intelligenceFeed.lastWeek?.firmIdsWithoutReport?.length) && (
                       <p className="text-slate-500 text-sm">No firms with Trustpilot URL, or no data for last week.</p>
                     )}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Content pipeline (TICKET-S8-012): firm content + industry news */}
+            {data.contentStats != null && (
+              <section>
+                <h2 className="text-lg font-semibold mb-4">Content pipeline</h2>
+                <p className="text-sm text-slate-500 mb-3">
+                  Firm content and industry news for the weekly digest. Pending items need review before they appear in emails.
+                </p>
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex flex-wrap gap-6 mb-4">
+                      <div>
+                        <span className="text-slate-500 text-sm">Pending review</span>
+                        <p className="text-2xl font-bold">
+                          {(data.contentStats.firm_content_pending ?? 0) + (data.contentStats.industry_news_pending ?? 0)}
+                        </p>
+                        <p className="text-xs text-slate-500">firm + industry</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 text-sm">Published this week</span>
+                        <p className="text-2xl font-bold">
+                          {(data.contentStats.firm_content_published_this_week ?? 0) + (data.contentStats.industry_news_published_this_week ?? 0)}
+                        </p>
+                        <p className="text-xs text-slate-500">in digest</p>
+                      </div>
+                      {data.contentStats.by_type && Object.keys(data.contentStats.by_type).length > 0 && (
+                        <div>
+                          <span className="text-slate-500 text-sm">By type (this week)</span>
+                          <p className="font-mono text-sm">
+                            {Object.entries(data.contentStats.by_type)
+                              .map(([k, v]) => `${k}: ${v}`)
+                              .join(", ")}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <a href="/admin/content/review" className="btn btn-sm btn-outline">
+                        Review queue →
+                      </a>
+                      <a href="/admin/content/upload" className="btn btn-sm btn-ghost">
+                        Upload content
+                      </a>
+                    </div>
                   </div>
                 </div>
               </section>

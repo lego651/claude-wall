@@ -33,12 +33,12 @@ async function checkAdminAuth() {
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authCheck = await checkAdminAuth();
   if (!authCheck.authorized) return authCheck.error;
 
-  const { id } = params;
+  const { id } = await params;
   const body = await req.json();
 
   const updateData: any = {};
@@ -84,13 +84,13 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authCheck = await checkAdminAuth();
   if (!authCheck.authorized) return authCheck.error;
 
-  const { id } = params;
+  const { id } = await params;
 
   const serviceClient = createServiceClient();
   const { error } = await serviceClient

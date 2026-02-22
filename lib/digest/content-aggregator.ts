@@ -71,7 +71,7 @@ export async function getFirmContentForWeek(
     };
   }
 
-  const content = items || [];
+  const content = (items || []) as unknown as FirmContentItem[];
 
   return {
     company_news: content.filter((item) => item.content_type === 'company_news'),
@@ -105,7 +105,7 @@ export async function getIndustryNewsForWeek(
     return [];
   }
 
-  return items || [];
+  return (items || []) as unknown as IndustryNewsItem[];
 }
 
 /**
@@ -137,7 +137,7 @@ export async function getBulkFirmContent(
     return new Map();
   }
 
-  const content = items || [];
+  const content = (items || []) as unknown as FirmContentItem[];
   const contentByFirm = new Map<string, FirmContentByType>();
 
   // Initialize all firms with empty arrays
