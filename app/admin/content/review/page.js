@@ -11,22 +11,31 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function AdminContentReviewPage() {
-  const [items, setItems] = useState({ firm_content: [], industry_news: [] });
+  const [items, setItems] = useState({ firm_content: [], industry_news: [], firm_tweets: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState('pending');
+  const [industrySourceType, setIndustrySourceType] = useState(''); // '' = all, 'twitter' = Twitter only (S8-TW-007)
+  const [showFirmTweets, setShowFirmTweets] = useState(false); // S8-TW-007: recent firm_twitter_tweets
 
   const loadContent = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/content/review?status=${status}`);
+      const params = new URLSearchParams({ status });
+      if (industrySourceType) params.set('industry_source_type', industrySourceType);
+      if (showFirmTweets) params.set('include_firm_tweets', '1');
+      const res = await fetch(`/api/admin/content/review?${params.toString()}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load');
-      setItems({ firm_content: data.firm_content || [], industry_news: data.industry_news || [] });
+      setItems({
+        firm_content: data.firm_content || [],
+        industry_news: data.industry_news || [],
+        firm_tweets: data.firm_tweets || [],
+      });
     } catch (err) {
       setError(err.message);
-      setItems({ firm_content: [], industry_news: [] });
+      setItems({ firm_content: [], industry_news: [], firm_tweets: [] });
     } finally {
       setLoading(false);
     }
@@ -34,7 +43,7 @@ export default function AdminContentReviewPage() {
 
   useEffect(() => {
     loadContent();
-  }, [status]);
+  }, [status, industrySourceType, showFirmTweets]);
 
   const handleApprove = async (type, id) => {
     if (!confirm('Approve and publish this content?')) return;
@@ -85,6 +94,24 @@ export default function AdminContentReviewPage() {
             <option value="published">Published</option>
             <option value="all">All</option>
           </select>
+          <select
+            className="select select-bordered select-sm"
+            value={industrySourceType}
+            onChange={(e) => setIndustrySourceType(e.target.value)}
+            title="Filter industry news by source"
+          >
+            <option value="">Industry: All</option>
+            <option value="twitter">Industry: Twitter only</option>
+          </select>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              className="checkbox checkbox-sm"
+              checked={showFirmTweets}
+              onChange={(e) => setShowFirmTweets(e.target.checked)}
+            />
+            <span className="text-sm">Firm tweets</span>
+          </label>
           <Link href="/admin/content/upload" className="btn btn-ghost btn-sm">
             + Upload
           </Link>
@@ -170,6 +197,50 @@ export default function AdminContentReviewPage() {
               </table>
             </div>
           </div>
+
+          {showFirmTweets && (
+            <div>
+              <h2 className="text-lg font-bold mb-3">Firm tweets (recent, read-only) ({items.firm_tweets.length})</h2>
+              {items.firm_tweets.length === 0 ? (
+                <p className="text-base-content/60">No firm tweets in DB. Run the Twitter fetch + ingest job to populate.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="table table-zebra">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Firm</th>
+                        <th>Author</th>
+                        <th>Summary</th>
+                        <th>Importance</th>
+                        <th>Link</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.firm_tweets.map((t) => (
+                        <tr key={t.id}>
+                          <td>{t.tweeted_at}</td>
+                          <td>{t.firm_id}</td>
+                          <td>{t.author_username ? `@${t.author_username}` : '—'}</td>
+                          <td className="max-w-xs truncate" title={t.ai_summary || t.text}>
+                            {t.ai_summary || (t.text && t.text.slice(0, 80)) || '—'}
+                          </td>
+                          <td>{t.importance_score != null ? `${Math.round(t.importance_score * 100)}%` : '—'}</td>
+                          <td>
+                            {t.url ? (
+                              <a href={t.url} target="_blank" rel="noopener noreferrer" className="link link-hover text-sm">
+                                View
+                              </a>
+                            ) : '—'}
+                            </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
 
           <div>
             <h2 className="text-lg font-bold mb-3">Industry News ({items.industry_news.length})</h2>

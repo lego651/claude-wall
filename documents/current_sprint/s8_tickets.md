@@ -193,6 +193,8 @@
 
 ## S8-TW-007 (optional): Admin UX for tweets
 
+**Implemented:** Review API: `industry_source_type=twitter`, `include_firm_tweets=1`. Review page: Industry dropdown (All | Twitter), Firm tweets checkbox with read-only table.
+
 **Goal:** Optional admin view to see recent firm tweets (e.g. from `firm_twitter_tweets`) or filter industry news by source = Twitter. Not required for “top 3 in digest” flow.
 
 **Tasks:** e.g. list recent rows from `firm_twitter_tweets` per firm; or in industry news review, show/filter by source_type = 'twitter'.

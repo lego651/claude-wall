@@ -2,7 +2,7 @@
 
 How to operate and tune the **Twitter pipeline**: fetch tweets via Apify → batch AI (category, summary, importance) → store in `firm_twitter_tweets` and `industry_news_items`. The weekly digest can show up to 3 top tweets per firm per week (S8-TW-006b).
 
-**See also:** [Intelligence Feed System Architecture](./intelligence-feed-system-architecture.md), [Content pipeline](./content-pipeline.md), [Daily scraper + weekly incidents & reports](./daily-scraper-weekly-incidents-reports-operations.md).
+**See also:** [Twitter & weekly workflow (diagrams)](./twitter-and-weekly-workflow.md), [Intelligence Feed System Architecture](./intelligence-feed-system-architecture.md), [Content pipeline](./content-pipeline.md), [Daily scraper + weekly incidents & reports](./daily-scraper-weekly-incidents-reports-operations.md).
 
 ---
 
@@ -60,6 +60,37 @@ Firms and search terms are defined in code (no DB table).
 3. Deploy (or run the script locally). The next fetch will include the new firm.
 
 **Adding industry keywords:** Append to `TWITTER_INDUSTRY_SEARCH_TERMS` in the same file.
+
+---
+
+## Usage
+
+### 1. Per run: how many tweets we fetch
+
+Each daily run (or manual `npx tsx scripts/twitter-fetch-job.ts`) fetches tweets in two ways:
+
+| Stream | What runs | Default cap | Env override |
+|--------|-----------|-------------|---------------|
+| **Per firm** | One Apify run per firm in `TWITTER_MONITORING_FIRMS`. Each run uses that firm’s `searchTerms`; Apify returns up to **max per term** and we cap **total per firm**. | **150 tweets max per firm** (across all its terms). Up to **50 per search term**. | `TWITTER_MAX_ITEMS_PER_FIRM`, `TWITTER_MAX_ITEMS_PER_TERM` |
+| **Industry** | One Apify run for all `TWITTER_INDUSTRY_SEARCH_TERMS`. | **100 tweets max total** for the industry run. Up to **50 per search term**. | `TWITTER_MAX_ITEMS_INDUSTRY`, `TWITTER_MAX_ITEMS_PER_TERM` |
+
+- **Example (defaults):** 3 firms × up to 150 = up to 450 firm tweets; 1 industry run = up to 100 industry tweets. After merge and dedupe by tweet ID, total can be lower.
+- Set the env vars in `.env` (local) or in the GitHub Action / Vercel env to change these limits.
+
+### 2. How the AI classifier works (batch)
+
+The classifier runs **only on new tweets** (after DB dedupe). It is **batched**, not one call per tweet.
+
+| Aspect | Detail |
+|--------|--------|
+| **Where** | `lib/ai/categorize-tweets.ts` – `categorizeTweetBatch(tweets, { isIndustry })` |
+| **Batch size** | **20 tweets per OpenAI call** (default). Configurable via `TWITTER_AI_BATCH_SIZE` (env); max 25. Same idea as Trustpilot’s batch classify. |
+| **Flow** | Ingest splits new tweets into chunks of `TWITTER_AI_BATCH_SIZE`. Each chunk is sent in **one** request; the model returns **one array** of results in the same order (category, summary, importance_score per tweet). |
+| **Firm tweets** | One prompt per batch; response: `{ category, summary, importance_score }` per tweet. No `mentioned_firm_ids` (not needed for firm tweets). |
+| **Industry tweets** | Same batching; response also includes `mentioned_firm_ids` per tweet (which firms are mentioned). |
+| **Model** | `gpt-4o-mini`. Retries with backoff on failure. |
+
+So: e.g. 45 new firm tweets → 3 batch calls (20 + 20 + 5). Fewer API calls and lower cost than one call per tweet.
 
 ---
 

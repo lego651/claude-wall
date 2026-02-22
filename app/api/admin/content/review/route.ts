@@ -41,6 +41,8 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status') || 'pending'; // pending | published | all
+  const industrySourceType = searchParams.get('industry_source_type') || ''; // e.g. 'twitter' (S8-TW-007)
+  const includeFirmTweets = searchParams.get('include_firm_tweets') === '1';
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || String(LIMIT), 10)));
   const offset = (page - 1) * limit;
@@ -68,11 +70,29 @@ export async function GET(req: Request) {
       .range(offset, offset + limit - 1);
     if (status === 'pending') q = q.eq('published', false);
     else if (status === 'published') q = q.eq('published', true);
+    if (industrySourceType) q = q.eq('source_type', industrySourceType);
     return q;
   };
 
   try {
-    const [firmRes, industryRes] = await Promise.all([buildFirmQuery(), buildIndustryQuery()]);
+    const firmPromise = buildFirmQuery();
+    const industryPromise = buildIndustryQuery();
+    const tweetsPromise = includeFirmTweets
+      ? supabase
+          .from('firm_twitter_tweets')
+          .select('id, firm_id, tweet_id, url, text, author_username, tweeted_at, category, ai_summary, importance_score')
+          .order('tweeted_at', { ascending: false })
+          .limit(50)
+      : null;
+
+    const results = await Promise.all([
+      firmPromise,
+      industryPromise,
+      ...(tweetsPromise ? [tweetsPromise] : []),
+    ]);
+    const firmRes = results[0] as Awaited<ReturnType<typeof buildFirmQuery>>;
+    const industryRes = results[1] as Awaited<ReturnType<typeof buildIndustryQuery>>;
+    const firmTweetsRes = includeFirmTweets ? (results[2] as unknown as { data?: unknown[]; error?: { message: string } | null }) : null;
 
     if (firmRes.error) {
       console.error('[Content Review] firm_content_items', firmRes.error);
@@ -85,10 +105,13 @@ export async function GET(req: Request) {
 
     const firm_content = firmRes.data || [];
     const industry_news = industryRes.data || [];
+    const firm_tweets =
+      includeFirmTweets && firmTweetsRes && !firmTweetsRes.error ? (firmTweetsRes.data || []) : undefined;
 
     return NextResponse.json({
       firm_content,
       industry_news,
+      firm_tweets,
       pagination: {
         page,
         limit,

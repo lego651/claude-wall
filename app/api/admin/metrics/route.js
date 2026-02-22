@@ -346,6 +346,87 @@ async function getTrustpilotScraperStatus(supabase) {
   }
 }
 
+/** Tweet scan stats: per firm from firm_twitter_tweets, industry from industry_news_items (source_type=twitter), last run from cron_last_run (S8-TW-007). */
+async function getTwitterTweetsStats(supabase) {
+  try {
+    const now = new Date();
+    const { weekStart, weekEnd } = getWeekBoundsUtc(now);
+    const weekStartStr = weekStart.toISOString().slice(0, 10);
+    const weekEndStr = weekEnd.toISOString().slice(0, 10);
+
+    const [firmResult, industryRowsResult, lastRunResult] = await Promise.all([
+      supabase
+        .from('firm_twitter_tweets')
+        .select('firm_id, tweeted_at')
+        .order('tweeted_at', { ascending: false })
+        .limit(10000),
+      supabase
+        .from('industry_news_items')
+        .select('content_date')
+        .eq('source_type', 'twitter'),
+      supabase
+        .from('cron_last_run')
+        .select('last_run_at')
+        .eq('job_name', 'twitter_fetch_ingest')
+        .maybeSingle(),
+    ]);
+
+    const { data: rows, error } = firmResult;
+    if (error) return { firms: [], industry: null, lastRunAt: null, error: error.message };
+
+    const byFirm = new Map();
+    for (const r of rows || []) {
+      const id = r.firm_id;
+      if (!id) continue;
+      let rec = byFirm.get(id);
+      if (!rec) {
+        rec = { total: 0, lastTweetedAt: null, thisWeek: 0 };
+        byFirm.set(id, rec);
+      }
+      rec.total += 1;
+      if (!rec.lastTweetedAt && r.tweeted_at) rec.lastTweetedAt = r.tweeted_at;
+      if (r.tweeted_at >= weekStartStr && r.tweeted_at <= weekEndStr) rec.thisWeek += 1;
+    }
+
+    const firmIds = [...byFirm.keys()];
+    const { data: profiles } = await supabase.from('firm_profiles').select('id, name').in('id', firmIds);
+    const nameById = new Map((profiles || []).map((p) => [p.id, p.name || p.id]));
+
+    const firms = firmIds.map((firmId) => {
+      const rec = byFirm.get(firmId);
+      return {
+        firmId,
+        firmName: nameById.get(firmId) || firmId,
+        totalTweets: rec.total,
+        lastTweetedAt: rec.lastTweetedAt || null,
+        thisWeek: rec.thisWeek,
+      };
+    }).sort((a, b) => (b.totalTweets - a.totalTweets));
+
+    let industry = null;
+    if (!industryRowsResult.error && industryRowsResult.data?.length) {
+      const dates = industryRowsResult.data.map((r) => r.content_date).filter(Boolean);
+      const total = dates.length;
+      const thisWeek = dates.filter((d) => d >= weekStartStr && d <= weekEndStr).length;
+      const lastContentDate = dates.length ? dates.reduce((a, b) => (a > b ? a : b), dates[0]) : null;
+      industry = { total, thisWeek, lastContentDate };
+    } else {
+      industry = { total: 0, thisWeek: 0, lastContentDate: null };
+    }
+
+    const lastRunAt = lastRunResult.data?.last_run_at ?? null;
+
+    return {
+      firms,
+      industry,
+      lastRunAt,
+      note: 'Daily run via GitHub Actions (daily-step-twitter-fetch-ingest).',
+    };
+  } catch (e) {
+    return { firms: [], industry: null, lastRunAt: null, error: e.message };
+  }
+}
+
 /** Per-firm payout counts (24h, 7d, 30d) and erratic detection. Returns only firms with warning or critical. */
 async function getPropfirmsPayoutCounts(supabase) {
   const now = Date.now();
@@ -608,7 +689,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed, generateWeeklyReportsRun, weeklyEmailLastRun, traderMonitoring, firmPayoutSyncDaily, contentStats] = await Promise.all([
+  const [fileStats, dbResult, propfirmsData, trustpilotScraperFirms, intelligenceFeed, generateWeeklyReportsRun, weeklyEmailLastRun, traderMonitoring, firmPayoutSyncDaily, contentStats, twitterTweets] = await Promise.all([
     getFileStats(),
     getDbStats(supabase),
     getPropfirmsPayoutCounts(supabase),
@@ -619,6 +700,7 @@ export async function GET() {
     getTraderMonitoringStatus(),
     getFirmPayoutSyncDaily(supabase),
     getContentStats(supabase),
+    getTwitterTweetsStats(supabase),
   ]);
 
   const incidentDetection = await getIncidentDetectionStatus(supabase, trustpilotScraperFirms);
@@ -732,6 +814,13 @@ export async function GET() {
     trustpilotScraper: {
       firms: trustpilotScraperFirms,
       note: 'Updated by daily GitHub Actions (daily-step1-sync-firm-trustpilot-reviews). Refresh to see latest run.',
+    },
+    twitterTweets: {
+      firms: twitterTweets.firms || [],
+      industry: twitterTweets.industry ?? null,
+      lastRunAt: twitterTweets.lastRunAt ?? null,
+      note: twitterTweets.note || null,
+      error: twitterTweets.error || null,
     },
     intelligenceFeed: {
       lastWeek: intelligenceFeed.lastWeek,

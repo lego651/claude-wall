@@ -141,6 +141,13 @@ function metricsToCSV(data) {
     rows.push(`weeklyEmail_weekStart,${data.weeklyEmailReport.weekStart ?? ""}`);
     rows.push(`weeklyEmail_weekEnd,${data.weeklyEmailReport.weekEnd ?? ""}`);
   }
+  if (data?.twitterTweets?.firms?.length) {
+    data.twitterTweets.firms.forEach((f) => {
+      rows.push(`twitter_${f.firmId}_totalTweets,${f.totalTweets ?? ""}`);
+      rows.push(`twitter_${f.firmId}_thisWeek,${f.thisWeek ?? ""}`);
+      rows.push(`twitter_${f.firmId}_lastTweetedAt,${f.lastTweetedAt ?? ""}`);
+    });
+  }
   if (data?.contentStats) {
     const cs = data.contentStats;
     rows.push(`content_firm_content_pending,${cs.firm_content_pending ?? ""}`);
@@ -177,8 +184,8 @@ export default function AdminDashboardPage() {
   const summary = getSummaryStatus(data);
   const MAIN_TAB_IDS = ["firms", "traders", "system"];
   const MAIN_TAB_LABELS = { firms: "Firms", traders: "Traders", system: "System" };
-  /** Single row of 6 Firms sections: payouts + daily1–3 + weekly1–2 */
-  const FIRMS_SECTION_IDS = ["payouts", "daily1", "daily2", "daily3", "weekly1", "weekly2"];
+  /** Single row of 7 Firms sections: payouts + daily1–3 + weekly1–2 + twitter */
+  const FIRMS_SECTION_IDS = ["payouts", "daily1", "daily2", "daily3", "weekly1", "weekly2", "twitter"];
   const FIRMS_SECTION_LABELS = {
     payouts: "Payouts & data",
     daily1: "Daily 1 – Scrape",
@@ -186,14 +193,16 @@ export default function AdminDashboardPage() {
     daily3: "Daily 3 – Incidents",
     weekly1: "Weekly 1 – Reports",
     weekly2: "Weekly 2 – Digest",
+    twitter: "Twitter",
   };
   const DAILY_TAB_IDS = ["daily1", "daily2", "daily3"];
   const DAILY_TAB_LABELS = { daily1: "Daily 1 – Scrape", daily2: "Daily 2 – Classify", daily3: "Daily 3 – Incidents" };
   const WEEKLY_TAB_IDS = ["weekly1", "weekly2"];
   const WEEKLY_TAB_LABELS = { weekly1: "Weekly 1 – Reports", weekly2: "Weekly 2 – Digest" };
-  /** Map firmsSection to firmsSub for issue filtering: payouts | daily | weekly */
+  /** Map firmsSection to firmsSub for issue filtering: payouts | daily | weekly | twitter */
   const getFirmsSubFromSection = (section) => {
     if (section === "payouts") return "payouts";
+    if (section === "twitter") return "twitter";
     if (DAILY_TAB_IDS.includes(section)) return "daily";
     if (WEEKLY_TAB_IDS.includes(section)) return "weekly";
     return "payouts";
@@ -230,6 +239,7 @@ export default function AdminDashboardPage() {
       if (target.firmsSub === "payouts") return "Firms › Payouts & data";
       if (target.firmsSub === "daily" && target.firmsDailyTab) return `Firms › ${DAILY_TAB_LABELS[target.firmsDailyTab]}`;
       if (target.firmsSub === "weekly" && target.firmsWeeklyTab) return `Firms › ${WEEKLY_TAB_LABELS[target.firmsWeeklyTab]}`;
+      if (target.firmsSub === "twitter") return "Firms › Twitter";
       return "Firms";
     }
     return "";
@@ -239,12 +249,13 @@ export default function AdminDashboardPage() {
     setActiveTab(target.main);
     if (target.main === "firms") {
       if (target.firmsSub === "payouts") setFirmsSection("payouts");
+      if (target.firmsSub === "twitter") setFirmsSection("twitter");
       if (target.firmsDailyTab) setFirmsSection(target.firmsDailyTab);
       if (target.firmsWeeklyTab) setFirmsSection(target.firmsWeeklyTab);
     }
   };
   /** Tab ids that show "Last run" under the tab label. */
-  const STEP_TAB_IDS = ["daily1", "daily2", "daily3", "weekly1", "weekly2"];
+  const STEP_TAB_IDS = ["daily1", "daily2", "daily3", "weekly1", "weekly2", "twitter"];
 
   /** Icons for firms nav segments (Heroicons-style). Active payouts uses purple. */
   const FIRMS_SECTION_ICONS = {
@@ -278,6 +289,11 @@ export default function AdminDashboardPage() {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
       </svg>
     ),
+    twitter: (
+      <svg className="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      </svg>
+    ),
   };
 
   /** Format last run for tab: relative (e.g. "2h ago") or short date if older. */
@@ -306,6 +322,7 @@ export default function AdminDashboardPage() {
     if (tabId === "daily3") return data.incidentDetection?.lastRunAt ?? null;
     if (tabId === "weekly1") return data.generateWeeklyReportsRun?.lastRunAt ?? null;
     if (tabId === "weekly2") return data.weeklyEmailReport?.lastRunAt ?? null;
+    if (tabId === "twitter") return data.twitterTweets?.lastRunAt ?? null;
     return null;
   };
 
@@ -1889,6 +1906,98 @@ export default function AdminDashboardPage() {
             ) : (
               <p className="text-slate-500">No firms with Trustpilot URL. Configure firms to see scraper runs.</p>
             )}
+          </div>
+        )}
+
+        {data && activeTab === "firms" && firmsSection === "twitter" && (
+          <div className="space-y-8">
+            <section>
+              <h2 className="text-lg font-semibold mb-4">Twitter – Tweet scan stats</h2>
+              <p className="text-sm text-slate-500 mb-3">
+                {data.twitterTweets?.note || "Firm tweets from firm_twitter_tweets (ingested by daily Twitter fetch + ingest)."}
+              </p>
+              {data.twitterTweets?.lastRunAt && (
+                <p className="text-sm text-slate-600 mb-3">
+                  Last run:{" "}
+                  <span className="font-medium">
+                    {new Date(data.twitterTweets.lastRunAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
+                  </span>
+                </p>
+              )}
+              {data.twitterTweets?.error ? (
+                <div className="alert alert-warning">
+                  <span>{data.twitterTweets.error}</span>
+                </div>
+              ) : !data.twitterTweets?.firms?.length ? (
+                <p className="text-slate-500">No firm tweets in DB yet. Run the Twitter fetch + ingest job to populate.</p>
+              ) : (
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="table table-sm w-full">
+                      <thead>
+                        <tr>
+                          <th className="font-medium">Firm</th>
+                          <th className="text-right">Total tweets</th>
+                          <th className="text-right">This week</th>
+                          <th className="text-right">Last tweeted</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.twitterTweets?.firms?.map((f) => (
+                          <tr key={f.firmId}>
+                            <td className="font-medium">{f.firmName ?? f.firmId}</td>
+                            <td className="text-right tabular-nums">{f.totalTweets ?? 0}</td>
+                            <td className="text-right tabular-nums">{f.thisWeek ?? 0}</td>
+                            <td className="text-right text-slate-600 tabular-nums">
+                              {f.lastTweetedAt
+                                ? new Date(f.lastTweetedAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
+                                : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {data.twitterTweets?.industry && (
+                <div className="mt-6 pt-6 border-t border-slate-200">
+                  <h3 className="text-base font-semibold mb-3">Industry scan</h3>
+                  <p className="text-sm text-slate-500 mb-3">
+                    Industry-wide tweets (source_type=twitter) stored in industry_news_items.
+                  </p>
+                  <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden max-w-md">
+                    <table className="table table-sm w-full">
+                      <thead>
+                        <tr>
+                          <th className="font-medium">Metric</th>
+                          <th className="text-right">Value</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="font-medium">Total items</td>
+                          <td className="text-right tabular-nums">{data.twitterTweets.industry.total ?? 0}</td>
+                        </tr>
+                        <tr>
+                          <td className="font-medium">This week</td>
+                          <td className="text-right tabular-nums">{data.twitterTweets.industry.thisWeek ?? 0}</td>
+                        </tr>
+                        <tr>
+                          <td className="font-medium">Last content date</td>
+                          <td className="text-right text-slate-600 tabular-nums">
+                            {data.twitterTweets.industry.lastContentDate
+                              ? new Date(data.twitterTweets.industry.lastContentDate).toLocaleDateString(undefined, { dateStyle: "short" })
+                              : "—"}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </section>
           </div>
         )}
 
