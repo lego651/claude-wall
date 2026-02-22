@@ -48,19 +48,19 @@ export async function POST(req: Request) {
     );
   }
 
-  const { firmContent = [], industryNews = [], incidents = [], weekNumber, year } = body;
+  const { firmContent = [], industryNews = [], incidents = [], topicGroups = [], weekNumber, year } = body;
 
-  if (!Array.isArray(firmContent) || !Array.isArray(industryNews) || !Array.isArray(incidents)) {
+  if (!Array.isArray(firmContent) || !Array.isArray(industryNews) || !Array.isArray(incidents) || !Array.isArray(topicGroups)) {
     return NextResponse.json(
       {
         error: 'Invalid request format',
-        expected: { firmContent: 'number[]', industryNews: 'number[]', incidents: 'number[]' },
+        expected: { firmContent: 'number[]', industryNews: 'number[]', incidents: 'number[]', topicGroups: 'number[]' },
       },
       { status: 400 }
     );
   }
 
-  if (firmContent.length === 0 && industryNews.length === 0 && incidents.length === 0) {
+  if (firmContent.length === 0 && industryNews.length === 0 && incidents.length === 0 && topicGroups.length === 0) {
     return NextResponse.json(
       { error: 'No items to approve' },
       { status: 400 }
@@ -71,6 +71,7 @@ export async function POST(req: Request) {
     firmContent: firmContent.length,
     industryNews: industryNews.length,
     incidents: incidents.length,
+    topicGroups: topicGroups.length,
   });
 
   const supabase = createServiceClient();
@@ -80,6 +81,7 @@ export async function POST(req: Request) {
     let firmContentApproved = 0;
     let industryNewsApproved = 0;
     let incidentsApproved = 0;
+    let topicGroupsApproved = 0;
 
     // Approve firm content items
     if (firmContent.length > 0) {
@@ -135,6 +137,47 @@ export async function POST(req: Request) {
       incidentsApproved = incidentResults?.length || 0;
     }
 
+    // TG-007: Approve topic groups = publish all industry_news_items in group + mark group published
+    if (topicGroups.length > 0) {
+      const { data: groups, error: groupsError } = await supabase
+        .from('twitter_topic_groups')
+        .select('id, item_ids')
+        .in('id', topicGroups);
+
+      if (groupsError) {
+        throw new Error(`Topic groups fetch failed: ${groupsError.message}`);
+      }
+
+      const allItemIds = new Set<number>();
+      const groupIdsToPublish: number[] = [];
+      for (const g of groups || []) {
+        const ids = Array.isArray((g as { item_ids?: number[] }).item_ids) ? (g as { item_ids: number[] }).item_ids : [];
+        ids.forEach((id) => allItemIds.add(id));
+        groupIdsToPublish.push((g as { id: number }).id);
+      }
+
+      if (allItemIds.size > 0) {
+        const { data: industryResults, error: industryError } = await supabase
+          .from('industry_news_items')
+          .update({ published: true, published_at: now })
+          .in('id', Array.from(allItemIds))
+          .select('id');
+
+        if (industryError) {
+          throw new Error(`Industry news (topic group) update failed: ${industryError.message}`);
+        }
+        industryNewsApproved += industryResults?.length || 0;
+      }
+
+      if (groupIdsToPublish.length > 0) {
+        await supabase
+          .from('twitter_topic_groups')
+          .update({ published: true, published_at: now })
+          .in('id', groupIdsToPublish);
+        topicGroupsApproved = groupIdsToPublish.length;
+      }
+    }
+
     // IMPORTANT: Also un-approve incidents that were unchecked for this week
     if (weekNumber && year) {
       const { data: allWeekIncidents } = await supabase
@@ -162,6 +205,7 @@ export async function POST(req: Request) {
       firmContentApproved,
       industryNewsApproved,
       incidentsApproved,
+      topicGroupsApproved,
       totalApproved,
     });
 
@@ -176,6 +220,7 @@ export async function POST(req: Request) {
         firmContent: firmContentApproved,
         industryNews: industryNewsApproved,
         incidents: incidentsApproved,
+        topicGroups: topicGroupsApproved,
       },
     });
   } catch (error) {

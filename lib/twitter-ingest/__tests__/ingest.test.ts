@@ -46,6 +46,7 @@ describe("ingestTweets", () => {
           category: "company_news",
           summary: "Summary",
           importance_score: 0.7,
+          topic_title: "Company news",
           mentioned_firm_ids: [],
         }))
       )
@@ -123,7 +124,7 @@ describe("ingestTweets", () => {
     ];
 
     (categorizeTweetBatch as jest.Mock).mockResolvedValue([
-      { category: "other", summary: "Industry summary", importance_score: 0.5, mentioned_firm_ids: ["fundednext"] },
+      { category: "other", summary: "Industry summary", importance_score: 0.5, topic_title: "Industry update", mentioned_firm_ids: ["fundednext"] },
     ]);
 
     const result = await ingestTweets(fetched);
@@ -141,6 +142,7 @@ describe("ingestTweets", () => {
         source_type: "twitter",
         ai_summary: "Industry summary",
         ai_category: "other",
+        topic_title: "Industry update",
         mentioned_firm_ids: ["fundednext"],
         published: false,
         content_date: "2024-01-16",
@@ -252,7 +254,7 @@ describe("ingestTweets", () => {
 
   it("skips firm row when batch result is missing (continue branch)", async () => {
     (categorizeTweetBatch as jest.Mock).mockResolvedValue([
-      { category: "other", summary: "Only first", importance_score: 0.5 },
+      { category: "other", summary: "Only first", importance_score: 0.5, topic_title: "Other" },
       // second result missing
     ]);
 
@@ -296,7 +298,7 @@ describe("ingestTweets", () => {
     ];
 
     (categorizeTweetBatch as jest.Mock).mockResolvedValue([
-      { category: "other", summary: "No text", importance_score: 0.3 },
+      { category: "other", summary: "No text", importance_score: 0.3, topic_title: "Other" },
     ]);
 
     const result = await ingestTweets(fetched);

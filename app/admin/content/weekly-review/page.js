@@ -20,6 +20,7 @@ export default function WeeklyReviewPage() {
     firmContent: new Set(),
     industryNews: new Set(),
     incidents: new Set(),
+    topicGroups: new Set(),
   });
   const [bulkApproving, setBulkApproving] = useState(false);
 
@@ -45,10 +46,11 @@ export default function WeeklyReviewPage() {
 
       setData(json);
 
-      // Auto-select all published items (including auto-approved incidents)
+      // Auto-select all published items (including auto-approved incidents and topic groups)
       const firmContentIds = new Set();
       const industryNewsIds = new Set();
       const incidentIds = new Set();
+      const topicGroupIds = new Set();
 
       json.firmReviews.forEach((firm) => {
         ['company_news', 'rule_change', 'promotion'].forEach((type) => {
@@ -59,7 +61,6 @@ export default function WeeklyReviewPage() {
           });
         });
 
-        // Auto-select incidents (published defaults to true)
         firm.incidents.forEach((incident) => {
           if (incident.published !== false) {
             incidentIds.add(incident.id);
@@ -73,7 +74,13 @@ export default function WeeklyReviewPage() {
         }
       });
 
-      setSelectedItems({ firmContent: firmContentIds, industryNews: industryNewsIds, incidents: incidentIds });
+      (json.industryTopicGroups || []).forEach((g) => {
+        if (g.published) {
+          topicGroupIds.add(g.id);
+        }
+      });
+
+      setSelectedItems({ firmContent: firmContentIds, industryNews: industryNewsIds, incidents: incidentIds, topicGroups: topicGroupIds });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -117,6 +124,18 @@ export default function WeeklyReviewPage() {
     });
   };
 
+  const toggleTopicGroup = (id) => {
+    setSelectedItems((prev) => {
+      const newSet = new Set(prev.topicGroups);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return { ...prev, topicGroups: newSet };
+    });
+  };
+
   const selectAllForFirm = (firm) => {
     setSelectedItems((prev) => {
       const firmContentSet = new Set(prev.firmContent);
@@ -137,7 +156,7 @@ export default function WeeklyReviewPage() {
   };
 
   const handleBulkApprove = async () => {
-    const totalSelected = selectedItems.firmContent.size + selectedItems.industryNews.size + selectedItems.incidents.size;
+    const totalSelected = selectedItems.firmContent.size + selectedItems.industryNews.size + selectedItems.incidents.size + selectedItems.topicGroups.size;
 
     if (totalSelected === 0) {
       alert('No items selected');
@@ -158,6 +177,7 @@ export default function WeeklyReviewPage() {
           firmContent: Array.from(selectedItems.firmContent),
           industryNews: Array.from(selectedItems.industryNews),
           incidents: Array.from(selectedItems.incidents),
+          topicGroups: Array.from(selectedItems.topicGroups),
           weekNumber: data?.weekNumber,
           year: data?.year,
         }),
@@ -198,7 +218,7 @@ export default function WeeklyReviewPage() {
     );
   }
 
-  const selectedCount = selectedItems.firmContent.size + selectedItems.industryNews.size + selectedItems.incidents.size;
+  const selectedCount = selectedItems.firmContent.size + selectedItems.industryNews.size + selectedItems.incidents.size + selectedItems.topicGroups.size;
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
@@ -242,7 +262,7 @@ export default function WeeklyReviewPage() {
           <div className="card card-border bg-base-100 shadow">
             <div className="card-body p-4">
               <div className="text-2xl font-bold text-success">
-                {data?.overallStats.firmContent.approved + data?.overallStats.industryNews.approved + (data?.overallStats.incidents?.approved || 0)}
+                {data?.overallStats.firmContent.approved + data?.overallStats.industryNews.approved + (data?.overallStats.incidents?.approved || 0) + (data?.overallStats.topicGroups?.approved || 0)}
               </div>
               <div className="text-sm text-base-content/60">Already Approved</div>
             </div>
@@ -250,7 +270,7 @@ export default function WeeklyReviewPage() {
           <div className="card card-border bg-base-100 shadow">
             <div className="card-body p-4">
               <div className="text-2xl font-bold text-warning">
-                {data?.overallStats.firmContent.pending + data?.overallStats.industryNews.pending + (data?.overallStats.incidents?.pending || 0)}
+                {data?.overallStats.firmContent.pending + data?.overallStats.industryNews.pending + (data?.overallStats.incidents?.pending || 0) + (data?.overallStats.topicGroups?.pending || 0)}
               </div>
               <div className="text-sm text-base-content/60">Pending Review</div>
             </div>
@@ -303,7 +323,68 @@ export default function WeeklyReviewPage() {
         </div>
       )}
 
-      {/* Industry News Section */}
+      {/* Industry Topic Groups (TG-006): grouped tweets like Trustpilot incidents */}
+      {data?.industryTopicGroups && data.industryTopicGroups.length > 0 && (
+        <div className="card card-border bg-base-100 shadow mb-6">
+          <div className="card-body">
+            <h2 className="text-2xl font-bold mb-4">🐦 Industry Topic Groups ({data.industryTopicGroups.length})</h2>
+            <div className="text-xs text-base-content/50 mb-2">
+              Tweets grouped by topic (≥3 same topic). Check to approve; links open each tweet.
+            </div>
+            <div className="space-y-3">
+              {data.industryTopicGroups.map((group) => (
+                <div
+                  key={group.id}
+                  className={`p-4 border rounded-lg ${
+                    selectedItems.topicGroups.has(group.id)
+                      ? 'border-primary bg-primary/5'
+                      : 'border-base-300'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-primary mt-1"
+                      checked={selectedItems.topicGroups.has(group.id)}
+                      onChange={() => toggleTopicGroup(group.id)}
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-bold capitalize">{group.topic_title}</h3>
+                        {group.published && <span className="badge badge-success badge-sm">Published</span>}
+                      </div>
+                      <p className="text-sm text-base-content/70 mb-2">{group.summary}</p>
+                      <div className="text-xs text-base-content/50 mb-2">
+                        {group.item_ids?.length || 0} tweets • Week {group.week_number}, {group.year}
+                      </div>
+                      {group.items && group.items.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {group.items.slice(0, 8).map((item) => (
+                            <a
+                              key={item.id}
+                              href={item.source_url || '#'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="badge badge-outline badge-xs hover:badge-primary"
+                            >
+                              Tweet #{item.id}
+                            </a>
+                          ))}
+                          {group.items.length > 8 && (
+                            <span className="badge badge-ghost badge-xs">+{group.items.length - 8} more</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Industry News Section (ungrouped / all when no topic groups) */}
       {data?.industryNews && data.industryNews.length > 0 && (
         <div className="card card-border bg-base-100 shadow mb-6">
           <div className="card-body">

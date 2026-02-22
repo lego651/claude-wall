@@ -1,6 +1,6 @@
 # Twitter/X Monitoring — Operations (S8)
 
-How to operate and tune the **Twitter pipeline**: fetch tweets via Apify → batch AI (category, summary, importance) → store in `firm_twitter_tweets` and `industry_news_items`. The weekly digest can show up to 3 top tweets per firm per week (S8-TW-006b).
+How to operate and tune the **Twitter pipeline**: fetch tweets via Apify → batch AI (category, summary, importance, topic_title) → store in `firm_twitter_tweets` and `industry_news_items`. Industry tweets are grouped by topic for review; the weekly digest shows up to 3 top tweets per firm and published industry news (including topic groups).
 
 **See also:** [Twitter & weekly workflow (diagrams)](./twitter-and-weekly-workflow.md), [Intelligence Feed System Architecture](./intelligence-feed-system-architecture.md), [Content pipeline](./content-pipeline.md), [Daily scraper + weekly incidents & reports](./daily-scraper-weekly-incidents-reports-operations.md).
 
@@ -9,10 +9,121 @@ How to operate and tune the **Twitter pipeline**: fetch tweets via Apify → bat
 ## Overview
 
 1. **Fetch** – Apify runs a Twitter/X scraper (Kaito “Cheapest” Actor) for each monitored firm and once for industry search terms. Tweets are merged and deduped by ID.
-2. **Ingest** – New tweets are deduped against the DB, then sent to OpenAI in batches (~20 per call) for category, summary, and importance score. Firm tweets → `firm_twitter_tweets`; industry tweets → `industry_news_items` with `source_type = 'twitter'` (saved as draft; admin can publish).
-3. **Digest** – Up to 3 most important tweets per firm per week can be included in the weekly digest (by `importance_score`).
+2. **Ingest** – New tweets are deduped against the DB, then sent to OpenAI in batches (~20 per call) for category, summary, importance score, and **topic_title** (short headline for grouping). Firm tweets → `firm_twitter_tweets`; industry tweets → `industry_news_items` with `source_type = 'twitter'` (saved as draft).
+3. **Topic grouping (weekly)** – A weekly job groups industry tweets with the same topic_title (≥3 per topic) into 1–3 **topic groups** in `twitter_topic_groups`, so admins see topic cards instead of 180+ items.
+4. **Review** – Admin uses **Weekly Digest Review** (`/admin/content/weekly-review`): approves topic groups (and/or individual industry items); approving a topic group publishes all tweets in that group.
+5. **Digest** – Up to 3 most important tweets per firm (by `importance_score`) plus published industry news (including items from approved topic groups) appear in the weekly digest email.
 
-No manual approval is required for firm tweets to appear in the “top tweets” digest slot; industry Twitter items use the same review flow as other industry news if you want to gate them.
+No manual approval is required for **firm** tweets (they go straight to “top tweets” in the digest). **Industry** tweets only appear after admin publishes them (via topic groups or individual approval).
+
+---
+
+## Step-by-step pipeline (how it works)
+
+End-to-end flow from daily fetch to digest email:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│  STEP 1 — DAILY (14:00 UTC)                                                        │
+│  GitHub Action: "Daily – Twitter Fetch + Ingest"                                   │
+└──────────────────────────────────────────────────────────────────────────────────┘
+    │
+    │  1a. Apify: run scraper per firm + once for industry → raw tweets
+    │  1b. Dedupe by tweet ID in memory
+    │  1c. Dedupe vs DB: skip existing (firm_id+url) / (source_url)
+    │  1d. Batch AI (OpenAI): category, summary, importance_score, topic_title
+    │  1e. Insert: firm → firm_twitter_tweets | industry → industry_news_items
+    ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│  STEP 2 — WEEKLY (Sunday 06:00 UTC)                                                │
+│  GitHub Action: "Weekly Step 0 – Twitter Topic Groups"                            │
+└──────────────────────────────────────────────────────────────────────────────────┘
+    │
+    │  2a. Read industry_news_items (source_type=twitter) for current week
+    │  2b. Group by normalized topic_title; keep groups with ≥3 tweets
+    │  2c. Batch AI: one summary per group
+    │  2d. Replace twitter_topic_groups rows for that week
+    ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│  STEP 3 — ADMIN REVIEW (any time before send)                                      │
+│  Page: /admin/content/weekly-review                                                │
+└──────────────────────────────────────────────────────────────────────────────────┘
+    │
+    │  3a. Admin selects week → sees Industry Topic Groups (1–3 cards) + Industry News
+    │  3b. Checks topic groups / items to publish → Clicks "Approve & Publish"
+    │  3c. Backend: sets published=true on selected industry_news_items and topic groups
+    ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│  STEP 4 — WEEKLY (Sunday 07:00 + 08:00 UTC)                                        │
+│  Weekly Step 1: Generate reports | Weekly Step 2: Send digest                      │
+└──────────────────────────────────────────────────────────────────────────────────┘
+    │
+    │  4a. Digest build reads: firm_twitter_tweets (top 3 per firm), industry_news_items (published)
+    │  4b. Email sent to subscribers with firm content + industry news (incl. from topic groups)
+    ▼
+   Subscriber inbox
+```
+
+**Diagram — Daily ingest (Step 1):**
+
+```mermaid
+flowchart LR
+  subgraph A[Config]
+    C1[Firms + industry terms]
+  end
+  subgraph B[Apify]
+    C2[Fetch tweets]
+  end
+  subgraph C[Dedupe + AI]
+    C3[DB dedupe]
+    C4[Batch OpenAI: category, summary, importance, topic_title]
+  end
+  subgraph D[DB]
+    C5[(firm_twitter_tweets)]
+    C6[(industry_news_items)]
+  end
+  C1 --> C2 --> C3 --> C4 --> C5
+  C4 --> C6
+```
+
+**Diagram — Weekly topic grouping (Step 2):**
+
+```mermaid
+flowchart LR
+  subgraph A[DB]
+    D1[(industry_news_items with topic_title)]
+  end
+  subgraph B[Group]
+    D2[Group by topic_title, keep ≥3]
+    D3[Batch AI: summary per group]
+  end
+  subgraph C[DB]
+    D4[(twitter_topic_groups)]
+  end
+  D1 --> D2 --> D3 --> D4
+```
+
+**Diagram — Review & digest (Steps 3–4):**
+
+```mermaid
+flowchart LR
+  subgraph A[Admin]
+    E1[Weekly Review page]
+    E2[Approve topic groups / items]
+  end
+  subgraph B[DB]
+    E3[(industry_news_items published)]
+    E4[(firm_twitter_tweets)]
+  end
+  subgraph C[Digest]
+    E5[Build cache]
+    E6[Send email]
+  end
+  E1 --> E2 --> E3
+  E3 --> E5
+  E4 --> E5
+  E5 --> E6
+```
 
 ---
 
@@ -87,7 +198,8 @@ The classifier runs **only on new tweets** (after DB dedupe). It is **batched**,
 | **Batch size** | **20 tweets per OpenAI call** (default). Configurable via `TWITTER_AI_BATCH_SIZE` (env); max 25. Same idea as Trustpilot’s batch classify. |
 | **Flow** | Ingest splits new tweets into chunks of `TWITTER_AI_BATCH_SIZE`. Each chunk is sent in **one** request; the model returns **one array** of results in the same order (category, summary, importance_score per tweet). |
 | **Firm tweets** | One prompt per batch; response: `{ category, summary, importance_score }` per tweet. No `mentioned_firm_ids` (not needed for firm tweets). |
-| **Industry tweets** | Same batching; response also includes `mentioned_firm_ids` per tweet (which firms are mentioned). |
+| **Industry tweets** | Same batching; response includes `mentioned_firm_ids` and **topic_title** (short headline for grouping). |
+| **topic_title** | Short headline (3–8 words) per tweet; same phrasing for same topic so weekly job can group ≥3 tweets into one topic card. |
 | **Model** | `gpt-4o-mini`. Retries with backoff on failure. |
 
 So: e.g. 45 new firm tweets → 3 batch calls (20 + 20 + 5). Fewer API calls and lower cost than one call per tweet.
@@ -117,23 +229,60 @@ Uses the first industry term by default; useful to confirm Apify and token work 
 
 ---
 
-## Cron
+## Cron (GitHub Actions)
 
-- **Workflow:** `.github/workflows/daily-step-twitter-fetch-ingest.yml`
-- **Schedule:** Daily at **14:00 UTC** (6 AM PST), after Trustpilot daily steps (11–13 UTC).
-- **Manual run:** GitHub → Actions → “Daily – Twitter Fetch + Ingest” → Run workflow → choose branch → Run.
+| Job | Workflow file | Schedule | What it does |
+|-----|----------------|----------|--------------|
+| **Daily – Twitter Fetch + Ingest** | `daily-step-twitter-fetch-ingest.yml` | Daily **14:00 UTC** | Apify fetch → dedupe → batch AI → insert firm_twitter_tweets + industry_news_items (with topic_title). |
+| **Weekly Step 0 – Twitter Topic Groups** | `weekly-step0-twitter-topic-groups.yml` | Sunday **06:00 UTC** | Groups industry tweets for **current week** by topic_title (≥3 per topic) → writes twitter_topic_groups. Same week semantics as Trustpilot incidents. |
 
-**Changing frequency:** Edit the workflow file:
+**Manual run (trigger from GA):**
 
-```yaml
-on:
-  schedule:
-    - cron: "0 14 * * *"   # daily 14:00 UTC
-```
+1. GitHub → **Actions** → select the workflow (e.g. “Daily – Twitter Fetch + Ingest” or “Weekly Step 0 – Twitter Topic Groups”).
+2. **Run workflow** → choose branch (e.g. `main`) → **Run workflow**.
+3. Open the run to see logs (fetch counts, ingest inserted/skipped, or “Created N topic group(s)”).
 
-Examples: `"0 6,18 * * *"` = 06:00 and 18:00 UTC; `"0 */12 * * *"` = every 12 hours. See [GitHub schedule syntax](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule).
+**Secrets required:** `APIFY_TOKEN` (daily only), `OPENAI_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 
-**Secrets required for cron:** `APIFY_TOKEN`, `OPENAI_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+---
+
+## Topic grouping (weekly)
+
+- **Script:** `scripts/run-twitter-topic-groups.ts`
+- **Default week:** **Current week** (offset 0), same as Trustpilot incidents. We run by end of week (e.g. Sunday 6:00 UTC).
+- **Override:** `npx tsx scripts/run-twitter-topic-groups.ts -1` for last week; or set `TWITTER_TOPIC_GROUP_WEEK_OFFSET=0` (default) in env.
+- **Logic:** Reads `industry_news_items` (source_type=twitter, content_date in week); groups by normalized `topic_title`; keeps groups with **≥3** tweets; generates one AI summary per group; replaces `twitter_topic_groups` rows for that week.
+- **Result:** Admin sees 1–3 “Industry Topic Groups” cards on weekly-review instead of 180+ individual items; approving a group publishes all its tweets.
+
+---
+
+## Verification: GitHub Actions → Admin → Emails
+
+How to verify the full pipeline from GA to inbox.
+
+### 1. Trigger and check GitHub Actions
+
+1. **Daily fetch + ingest:** Actions → “Daily – Twitter Fetch + Ingest” → Run workflow. In the run log you should see e.g. `[Twitter fetch] Done ... Total: N (firm: X, industry: Y)` and `[Twitter ingest] ... Firm: A inserted, B skipped. Industry: C inserted, D skipped.`
+2. **Topic grouping:** Actions → “Weekly Step 0 – Twitter Topic Groups” → Run workflow. Log should show `[Topic groups] Running for week YYYY-MM-DD – YYYY-MM-DD (offset 0)...` and `Created N topic group(s).` (N can be 0 if that week has no group with ≥3 same topic_title.)
+
+### 2. Check admin Weekly Review page
+
+1. Open **Weekly Digest Review:** `https://<your-app>/admin/content/weekly-review` (e.g. `https://claude-wall.vercel.app/admin/content/weekly-review`).
+2. Select the **current week** (or the week you ran topic grouping for). The page shows:
+   - **Industry Topic Groups** – If the weekly topic-group job created groups, you see 1–3 cards with topic title, summary, “N tweets”, and “Tweet #id” links. Check the boxes you want to publish → **Approve & Publish**.
+   - **Industry News** – Flat list of all industry items for the week (including Twitter); you can approve individually if not in a topic group.
+   - **Firm content** and **Trustpilot Incidents** – As before.
+3. After approving, published industry items (and topic groups) are included in the next digest send.
+
+### 3. Check digest email
+
+1. **Weekly send** runs Sunday 8:00 UTC (Actions → “Weekly Step 2 – Send Firm Weekly Reports”, or via cron). Alternatively trigger the send endpoint if you have a manual cron.
+2. Subscribers receive one email per user with:
+   - **Per-firm:** Top 3 tweets (from `firm_twitter_tweets`), firm content, Trustpilot incidents.
+   - **Industry:** Published `industry_news_items` (including those from approved topic groups).
+3. Open a test subscriber inbox and confirm the email contains the expected firm sections and industry news.
+
+**Quick checklist:** GA daily run logs → industry rows in DB with topic_title → GA weekly topic groups run → topic groups visible on weekly-review → approve → next digest email contains published industry content.
 
 ---
 
@@ -146,6 +295,8 @@ Examples: `"0 6,18 * * *"` = 06:00 and 18:00 UTC; `"0 */12 * * *"` = every 12 ho
 | OpenAI rate limit / 429 | Too many batch calls in a short time | Wait and re-run; or lower `TWITTER_AI_BATCH_SIZE` (e.g. 10). |
 | No rows inserted | All tweets already in DB (dedupe) | Expected if you re-run soon after a run. Check `firm_twitter_tweets` / `industry_news_items` for recent `source_url` / `url`. |
 | Duplicate key / insert error | Unique on (firm_id, url) or source_url | Usually means a race or partial retry; safe to re-run (dedupe skips existing). |
+| “Created 0 topic group(s)” | No group has ≥3 tweets with same topic_title in that week | Normal if few industry tweets or topics are spread out. Check `industry_news_items` for the week: `source_type='twitter'`, `content_date` in week, and `topic_title` not null. Add more industry terms or wait for more data. |
+| Topic groups not on weekly-review | Wrong week or job not run | Ensure you ran “Weekly Step 0 – Twitter Topic Groups” for the **current week** (offset 0). On weekly-review, select the same week (Mon–Sun) that the job used. |
 
 **Where to see logs:**
 

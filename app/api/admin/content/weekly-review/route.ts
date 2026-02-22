@@ -84,11 +84,12 @@ export async function GET(req: Request) {
 
     const firmIds = (firms || []).map((f) => f.id);
 
-    // Fetch all content for the week in parallel
+    // Fetch all content for the week in parallel (TG-005: add topic groups)
     const [
       { data: firmContentItems, error: firmContentError },
       { data: industryNewsItems, error: industryNewsError },
       { data: incidents, error: incidentsError },
+      { data: topicGroupsRows, error: topicGroupsError },
     ] = await Promise.all([
       // Firm content (both published and unpublished)
       supabase
@@ -114,11 +115,51 @@ export async function GET(req: Request) {
         .eq('week_number', weekNumber)
         .eq('year', year)
         .order('created_at', { ascending: false }),
+
+      // Twitter topic groups for the week (industry only)
+      supabase
+        .from('twitter_topic_groups')
+        .select('id, topic_title, summary, item_ids, published, week_number, year')
+        .eq('week_start', weekStartIso)
+        .eq('item_type', 'industry')
+        .is('firm_id', null)
+        .order('id', { ascending: true }),
     ]);
 
     if (firmContentError) throw firmContentError;
     if (industryNewsError) throw industryNewsError;
     if (incidentsError) throw incidentsError;
+    if (topicGroupsError) throw topicGroupsError;
+
+    // Resolve topic group item_ids to { id, title, source_url } for links (TG-005)
+    const allTopicGroupItemIds = (topicGroupsRows || []).flatMap(
+      (row: { item_ids?: number[] }) => (Array.isArray(row.item_ids) ? row.item_ids : [])
+    );
+    const uniqueItemIds = [...new Set(allTopicGroupItemIds)];
+    let itemIdToDisplay: Record<number, { id: number; title: string; source_url: string | null }> = {};
+    if (uniqueItemIds.length > 0) {
+      const { data: resolvedItems } = await supabase
+        .from('industry_news_items')
+        .select('id, title, source_url')
+        .in('id', uniqueItemIds);
+      if (resolvedItems) {
+        for (const r of resolvedItems as { id: number; title: string; source_url: string | null }[]) {
+          itemIdToDisplay[r.id] = { id: r.id, title: r.title || '', source_url: r.source_url };
+        }
+      }
+    }
+    const industryTopicGroups = (topicGroupsRows || []).map(
+      (row: { id: number; topic_title: string; summary: string | null; item_ids?: number[]; published: boolean; week_number: number; year: number }) => ({
+        id: row.id,
+        topic_title: row.topic_title,
+        summary: row.summary || '',
+        item_ids: Array.isArray(row.item_ids) ? row.item_ids : [],
+        published: row.published,
+        week_number: row.week_number,
+        year: row.year,
+        items: (Array.isArray(row.item_ids) ? row.item_ids : []).map((id) => itemIdToDisplay[id] || { id, title: '', source_url: null }),
+      })
+    );
 
     // Group firm content by firm
     const firmReviews = firms?.map((firm) => {
@@ -179,6 +220,10 @@ export async function GET(req: Request) {
     const approvedIncidents = allIncidents.filter((i) => i.published !== false).length;
     const pendingIncidents = totalIncidents - approvedIncidents;
 
+    const totalTopicGroups = industryTopicGroups.length;
+    const approvedTopicGroups = industryTopicGroups.filter((g) => g.published).length;
+    const pendingTopicGroups = totalTopicGroups - approvedTopicGroups;
+
     const response = {
       weekStart: weekStartIso,
       weekEnd: weekEndIso,
@@ -186,7 +231,7 @@ export async function GET(req: Request) {
       year,
       weekLabel: `Week ${weekNumber}, ${year}`,
       overallStats: {
-        totalItems: totalFirmContent + totalIndustryNews + totalIncidents,
+        totalItems: totalFirmContent + totalIndustryNews + totalIncidents + totalTopicGroups,
         firmContent: {
           total: totalFirmContent,
           approved: approvedFirmContent,
@@ -202,8 +247,14 @@ export async function GET(req: Request) {
           approved: approvedIncidents,
           pending: pendingIncidents,
         },
+        topicGroups: {
+          total: totalTopicGroups,
+          approved: approvedTopicGroups,
+          pending: pendingTopicGroups,
+        },
       },
       industryNews: allIndustryNews,
+      industryTopicGroups,
       firmReviews: firmReviews || [],
     };
 

@@ -159,6 +159,7 @@ export async function ingestTweets(fetched: FetchedTweet[]): Promise<IngestResul
         ai_confidence: 0.8,
         ai_tags: [],
         mentioned_firm_ids: r.mentioned_firm_ids ?? [],
+        topic_title: r.topic_title?.trim()?.slice(0, 200) || null,
         published: false,
         content_date: contentDate,
       });

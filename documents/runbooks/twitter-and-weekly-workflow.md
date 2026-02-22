@@ -30,6 +30,8 @@ How **per-firm tweets** and **industry tweets** flow from daily fetch into the w
 
 **Important:** Per-firm tweets go straight into the digest (top 3 per firm). Industry tweets from Twitter are stored as **draft** (`published = false`); they only appear in the digest after an admin publishes them (same as other industry news).
 
+**Topic grouping (implemented):** Industry tweets are **grouped** into 1–3 topic cards per week (like Trustpilot incidents). A weekly job (Sunday 6:00 UTC, GA “Weekly Step 0 – Twitter Topic Groups”) groups by `topic_title` (≥3 per topic) and writes to `twitter_topic_groups`. Admin approves at the group level on weekly-review. See [twitter-monitoring.md](./twitter-monitoring.md) and [s8_twitter-topic-grouping-replan.md](../current_sprint/s8_twitter-topic-grouping-replan.md).
+
 ---
 
 ## 2. Daily Twitter job: per-firm vs industry
@@ -82,7 +84,7 @@ flowchart TB
 
   subgraph ai["Batch AI (OpenAI, ~20 per call)"]
     AI1[category, summary, importance_score]
-    AI2[+ mentioned_firm_ids for industry]
+    AI2[+ mentioned_firm_ids, topic_title for industry]
   end
 
   subgraph tables["Supabase tables"]
@@ -155,11 +157,49 @@ flowchart TB
 
 So:
 - **Per-firm tweets** from `firm_twitter_tweets` are selected by week and importance; no publish flag.
-- **Industry tweets** in `industry_news_items` only show up after an admin publishes them (e.g. in Content Review).
+- **Industry tweets** in `industry_news_items` only show up after an admin publishes them (e.g. in Content Review or Weekly Review).
 
 ---
 
-## 4. End-to-end flow (daily + weekly)
+## 4. Topic grouping for review
+
+To avoid 180+ individual items on the weekly-review page, industry tweets will be **grouped by topic** (same idea as Trustpilot incidents).
+
+```mermaid
+flowchart LR
+  subgraph stored["After ingest"]
+    INI[(industry_news_items)]
+  end
+
+  subgraph grouping["Weekly topic grouping job"]
+    JOB[Group by topic_title]
+    JOB --> GROUPS[(twitter_topic_groups)]
+  end
+
+  subgraph review["Weekly-review page"]
+    CARD1["Topic card 1: title + summary + N tweet links"]
+    CARD2["Topic card 2: ..."]
+    CARD3["Topic card 3: ..."]
+  end
+
+  INI -->|"topic_title on each row"| JOB
+  GROUPS -->|"1–3 groups per week"| CARD1
+  GROUPS --> CARD2
+  GROUPS --> CARD3
+```
+
+| Step | What |
+|------|------|
+| **Ingest** | Batch AI adds **topic_title** (short headline) per tweet; stored on `industry_news_items`. |
+| **Weekly job** | **Sunday 6:00 UTC** (GA “Weekly Step 0 – Twitter Topic Groups”): group industry tweets for **current week** by normalized topic_title; where **≥3 tweets** share a topic, create one row in **twitter_topic_groups** (title, summary, item_ids, week). Same week semantics as Trustpilot incidents. |
+| **Weekly-review API** | Returns **topic groups** for the week; each group has links to each tweet (like “Review #7676” for incidents). |
+| **Weekly-review UI** | Admin sees 1–3 topic cards; one checkbox per group; approve group → publish all items in that group. |
+
+Result: admin reviews 1–3 grouped topics instead of 180+ items, with links to each source tweet for verification. See [twitter-monitoring.md](./twitter-monitoring.md).
+
+---
+
+## 5. End-to-end flow (daily + weekly)
 
 ```mermaid
 flowchart TB
@@ -170,7 +210,8 @@ flowchart TB
     SPLIT -->|industry| INI[(industry_news_items)]
   end
 
-  subgraph weekly["Weekly (Sun 07:00 + 08:00 UTC)"]
+  subgraph weekly["Weekly (Sun 06:00 / 07:00 / 08:00 UTC)"]
+    TOPIC["Topic grouping (Sun 6:00): group industry tweets → twitter_topic_groups"]
     GEN[Weekly 1: Generate reports]
     GEN --> WR[(firm_weekly_reports)]
     CACHE[Weekly 2: Build digest cache]
@@ -180,13 +221,15 @@ flowchart TB
     CACHE --> SEND[Send digest email]
   end
 
+  INI -.-> TOPIC
+  TOPIC -.->|"1–3 groups for weekly-review page"| REVIEW[Weekly-review UI]
   FTT -.->|"top 3 per firm, by importance"| CACHE
   INI -.->|"only published"| CACHE
 ```
 
 ---
 
-## 5. Summary table
+## 6. Summary table
 
 | What | Daily job | Table | Weekly digest |
 |------|-----------|--------|----------------|
@@ -194,3 +237,5 @@ flowchart TB
 | **Industry tweets** | Fetch (industry terms) → ingest | industry_news_items (source_type=twitter, published=false) | Only if admin sets published=true |
 
 **Cron:** One daily workflow runs fetch + ingest together (`scripts/twitter-fetch-job.ts` or GitHub Action `daily-step-twitter-fetch-ingest.yml`). Weekly steps are separate (Weekly 1 → Weekly 2) and already run on Sunday; they read from these tables when building the digest.
+
+**Review UX:** The weekly topic-grouping job (Sun 6:00 UTC) creates 1–3 **topic groups** from industry tweets (≥3 same topic → one group). The weekly-review page shows these groups (like Trustpilot incidents) with links to each tweet. See §4 and [twitter-monitoring.md](./twitter-monitoring.md).

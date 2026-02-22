@@ -39,6 +39,8 @@ export interface TweetCategorizeResult {
   category: string;
   summary: string;
   importance_score: number;
+  /** Short headline (3–8 words) for grouping; same topic = same phrasing (TG-002) */
+  topic_title: string;
   mentioned_firm_ids?: string[];
 }
 
@@ -55,7 +57,9 @@ Importance: 0-1 score. How relevant/important is this tweet for the firm's subsc
 - 0.3-0.7: Relevant mention, minor update
 - 0-0.2: Off-topic, spam, generic praise
 
-If industry tweets: also extract mentioned_firm_ids (array of firm ids: fundingpips, fundednext, ftmo, topstep, etc.)`;
+If industry tweets: also extract mentioned_firm_ids (array of firm ids: fundingpips, fundednext, ftmo, topstep, etc.)
+
+For every tweet also provide topic_title: a short headline (3-8 words) for the main theme, e.g. "Prop firm payout delays", "FundingPips rule change". Use consistent phrasing for tweets about the same topic so they can be grouped later.`;
 
 function buildBatchPrompt(tweets: TweetCategorizeInput[], isIndustry: boolean): string {
   const parts = tweets.map((t, i) => {
@@ -68,7 +72,7 @@ ${parts.join("\n\n")}
 
 ${CATEGORY_INSTRUCTIONS}
 
-Respond with a JSON object: {"results": [{"category":"...","summary":"1-2 sentence summary","importance_score":0.9${isIndustry ? ',"mentioned_firm_ids":["fundingpips"]' : ""}}, ...]}
+Respond with a JSON object: {"results": [{"category":"...","summary":"1-2 sentence summary","importance_score":0.9,"topic_title":"Short headline 3-8 words"${isIndustry ? ',"mentioned_firm_ids":["fundingpips"]' : ""}}, ...]}
 Exactly ${tweets.length} objects in results array. No other text.`;
 }
 
@@ -109,10 +113,12 @@ export async function categorizeTweetBatch(
         const summary = typeof item?.summary === "string" ? item.summary.trim() : "";
         let importance_score = typeof item?.importance_score === "number" ? item.importance_score : 0.5;
         importance_score = Math.max(0, Math.min(1, importance_score));
+        let topic_title = typeof item?.topic_title === "string" ? item.topic_title.trim().slice(0, 200) : "";
+        if (!topic_title) topic_title = "Other";
         const mentioned_firm_ids = Array.isArray(item?.mentioned_firm_ids)
           ? (item.mentioned_firm_ids as string[]).filter((x) => typeof x === "string")
           : undefined;
-        results.push({ category, summary, importance_score, mentioned_firm_ids });
+        results.push({ category, summary, importance_score, topic_title, mentioned_firm_ids });
       }
       return results;
     } catch (err) {
