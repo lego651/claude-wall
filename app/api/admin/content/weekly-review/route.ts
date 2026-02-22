@@ -132,9 +132,9 @@ export async function GET(req: Request) {
     if (topicGroupsError) throw topicGroupsError;
 
     // Resolve topic group item_ids to { id, title, source_url } for links (TG-005)
-    const allTopicGroupItemIds = (topicGroupsRows || []).flatMap(
-      (row: { item_ids?: number[] }) => (Array.isArray(row.item_ids) ? row.item_ids : [])
-    );
+    type TopicGroupRow = { id: number; topic_title: string; summary: string | null; item_ids?: number[]; published: boolean; week_number: number; year: number };
+    const topicGroups = (topicGroupsRows || []) as TopicGroupRow[];
+    const allTopicGroupItemIds = topicGroups.flatMap((row) => (Array.isArray(row.item_ids) ? row.item_ids : []));
     const uniqueItemIds = [...new Set(allTopicGroupItemIds)];
     let itemIdToDisplay: Record<number, { id: number; title: string; source_url: string | null }> = {};
     if (uniqueItemIds.length > 0) {
@@ -148,18 +148,16 @@ export async function GET(req: Request) {
         }
       }
     }
-    const industryTopicGroups = (topicGroupsRows || []).map(
-      (row: { id: number; topic_title: string; summary: string | null; item_ids?: number[]; published: boolean; week_number: number; year: number }) => ({
-        id: row.id,
-        topic_title: row.topic_title,
-        summary: row.summary || '',
-        item_ids: Array.isArray(row.item_ids) ? row.item_ids : [],
-        published: row.published,
-        week_number: row.week_number,
-        year: row.year,
-        items: (Array.isArray(row.item_ids) ? row.item_ids : []).map((id) => itemIdToDisplay[id] || { id, title: '', source_url: null }),
-      })
-    );
+    const industryTopicGroups = topicGroups.map((row) => ({
+      id: row.id,
+      topic_title: row.topic_title,
+      summary: row.summary || '',
+      item_ids: Array.isArray(row.item_ids) ? row.item_ids : [],
+      published: row.published,
+      week_number: row.week_number,
+      year: row.year,
+      items: (Array.isArray(row.item_ids) ? row.item_ids : []).map((id) => itemIdToDisplay[id] || { id, title: '', source_url: null }),
+    }));
 
     // Group firm content by firm
     const firmReviews = firms?.map((firm) => {
