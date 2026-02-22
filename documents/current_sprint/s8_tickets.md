@@ -58,8 +58,10 @@
 
 **Acceptance:**
 
-- [ ] Running the script with valid `APIFY_TOKEN` and config produces a list of tweets; no duplicate tweet IDs in the list; firm tweets have `firmId`, industry tweets have `source: 'industry'`.
-- [ ] Configurable max items per firm/industry to avoid blowing Apify credits (env or config).
+- [x] Running the script with valid `APIFY_TOKEN` and config produces a list of tweets; no duplicate tweet IDs in the list; firm tweets have `firmId`, industry tweets have `source: 'industry'`.
+- [x] Configurable max items per firm/industry to avoid blowing Apify credits (env or config). (Env: `TWITTER_MAX_ITEMS_PER_FIRM`, `TWITTER_MAX_ITEMS_INDUSTRY`, `TWITTER_MAX_ITEMS_PER_TERM`.)
+
+**Implemented:** `lib/twitter-fetch/fetch-job.ts` (`runTwitterFetchJob()`), `scripts/twitter-fetch-job.ts` (runnable script), tests in `lib/twitter-fetch/__tests__/fetch-job.test.ts`.
 
 ---
 
