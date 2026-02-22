@@ -1,17 +1,19 @@
 /**
- * Twitter fetch job script (S8-TW-003)
+ * Twitter fetch + ingest script (S8-TW-003 + S8-TW-004)
  *
- * Runs Apify for all monitored firms + industry, dedupes, outputs list.
- * Used by cron (S8-TW-005) or manually. Ingest (S8-TW-004) consumes this output.
+ * Runs Apify for all monitored firms + industry, dedupes, then batch-AI categorizes
+ * and ingests into firm_twitter_tweets and industry_news_items.
  *
  * Usage:
  *   npx tsx scripts/twitter-fetch-job.ts
  *
- * Env: APIFY_TOKEN (from .env). Optional: TWITTER_MAX_ITEMS_PER_FIRM, TWITTER_MAX_ITEMS_INDUSTRY, TWITTER_MAX_ITEMS_PER_TERM.
+ * Env: APIFY_TOKEN, OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
+ * Optional: TWITTER_MAX_ITEMS_*, TWITTER_AI_BATCH_SIZE.
  */
 
 import "dotenv/config";
 import { runTwitterFetchJob } from "@/lib/twitter-fetch/fetch-job";
+import { ingestTweets } from "@/lib/twitter-ingest/ingest";
 
 async function main() {
   if (!process.env.APIFY_TOKEN?.trim()) {
@@ -34,7 +36,6 @@ async function main() {
     process.exit(0);
   }
 
-  // Log summary per firm
   const byFirm = new Map<string, number>();
   for (const t of tweets) {
     if (t.source === "firm" && t.firmId) {
@@ -48,7 +49,12 @@ async function main() {
     console.log(`  industry: ${industryCount}`);
   }
 
-  // Output is in memory; ingest (S8-TW-004) will call runTwitterFetchJob() and process tweets.
+  console.log("[Twitter ingest] Deduping and batch categorizing...");
+  const ingestStart = Date.now();
+  const result = await ingestTweets(tweets);
+  console.log(
+    `[Twitter ingest] Done in ${((Date.now() - ingestStart) / 1000).toFixed(1)}s. Firm: ${result.firmInserted} inserted, ${result.firmSkipped} skipped. Industry: ${result.industryInserted} inserted, ${result.industrySkipped} skipped.`
+  );
   process.exit(0);
 }
 

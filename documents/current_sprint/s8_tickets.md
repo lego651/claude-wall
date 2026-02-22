@@ -100,6 +100,12 @@
 
 **Goal:** (1) Skip tweets already in DB (dedupe by url). (2) **Batch** categorize tweets (e.g. 20 per OpenAI call, like Trustpilot) and get **category, summary, importance_score** per tweet. (3) Insert firm tweets into **`firm_twitter_tweets`**; industry tweets into **`industry_news_items`** with `source_type = 'twitter'`.
 
+**Implemented:**
+
+- **Batch AI:** `lib/ai/categorize-tweets.ts` – `categorizeTweetBatch(tweets, { isIndustry })` returns `{ category, summary, importance_score, mentioned_firm_ids? }[]`; categories company_news, rule_change, promotion, complaint, off_topic, other; batch size from `TWITTER_AI_BATCH_SIZE` (env, default 20, max 25).
+- **Ingest:** `lib/twitter-ingest/ingest.ts` – `ingestTweets(fetched)` dedupes (one query per table), runs batch AI in chunks, inserts firm → `firm_twitter_tweets`, industry → `industry_news_items` (source_type = 'twitter', title = truncated text, published = false).
+- **Script:** `scripts/twitter-fetch-job.ts` runs fetch then ingest (cron can use same script). Env: APIFY_TOKEN, OPENAI_API_KEY, Supabase keys; optional TWITTER_AI_BATCH_SIZE.
+
 **Tasks:**
 
 1. **Batch AI** – New function (e.g. in `lib/ai/`) that accepts an array of tweet objects `{ text, url?, author? }`, builds a single prompt for up to ~20 tweets, returns array of `{ category, summary, importance_score }` in same order. Prompt must define categories (company_news, rule_change, promotion, complaint, off_topic, other) and ask for importance_score 0–1 (“How important is this tweet for the firm’s subscribers?”). Batch size configurable (default 20, max e.g. 25).
@@ -110,10 +116,10 @@
 
 **Acceptance:**
 
-- [ ] New tweets are categorized in **batches** (e.g. 20 per OpenAI call); each result includes importance_score.
-- [ ] Firm tweets are stored in `firm_twitter_tweets` with importance_score; no duplicates for same (firm_id, url).
-- [ ] Industry tweets are stored in `industry_news_items` with source_type = 'twitter'.
-- [ ] Batch size is configurable (env or constant); same pattern as Trustpilot’s CLASSIFY_AI_BATCH_SIZE.
+- [x] New tweets are categorized in **batches** (e.g. 20 per OpenAI call); each result includes importance_score.
+- [x] Firm tweets are stored in `firm_twitter_tweets` with importance_score; no duplicates for same (firm_id, url).
+- [x] Industry tweets are stored in `industry_news_items` with source_type = 'twitter'.
+- [x] Batch size is configurable (env or constant); same pattern as Trustpilot’s CLASSIFY_AI_BATCH_SIZE.
 
 ---
 
