@@ -90,7 +90,9 @@
 
 **Acceptance:**
 
-- [ ] Table exists; ingest job can insert and digest can query by firm_id and week with ORDER BY importance_score DESC LIMIT 3.
+- [x] Table exists; ingest job can insert and digest can query by firm_id and week with ORDER BY importance_score DESC LIMIT 3.
+
+**Implemented:** `migrations/29_firm_twitter_tweets.sql` (table, unique on (firm_id, url), indexes for firm/tweeted_at/importance, RLS for admins).
 
 ---
 

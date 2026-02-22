@@ -66,6 +66,7 @@ psql "postgresql://postgres:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:54
 - `20_rename_firm_subscriptions_to_user_subscriptions.sql` - Rename `firm_subscriptions` → `user_subscriptions` (user-centric naming)
 - `21_cron_last_run.sql` - `cron_last_run` table for admin dashboard (last run per job)
 - `22_rename_weekly_tables_and_firm_weekly_reports_dates.sql` - Rename `weekly_incidents` → `firm_daily_incidents`; replace `weekly_reports` with `firm_weekly_reports` (week_from_date, week_to_date). All UTC; digest Sunday 8:00 UTC.
+- `29_firm_twitter_tweets.sql` - **S8-TW-003b** - Table for firm-level Twitter/X tweets with importance_score; digest uses top 3 per firm per week.
 
 ## Alpha Intelligence Schema
 
