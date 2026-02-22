@@ -43,6 +43,15 @@ export interface DigestReportInput {
     rule_change: FirmContentItem[];
     promotion: FirmContentItem[];
   };
+  // S8-TW-006b: Top tweets per firm (up to 3 per week)
+  topTweets?: Array<{
+    url: string;
+    text: string;
+    author_username: string | null;
+    tweeted_at: string;
+    ai_summary: string | null;
+    importance_score: number;
+  }>;
 }
 
 export interface IndustryNewsItem {
@@ -147,6 +156,18 @@ export function buildWeeklyDigestHtml(
         )
         .join('');
 
+      // Top tweets (S8-TW-006b): up to 3 per firm per week
+      const topTweetsCards = (r.topTweets || [])
+        .map(
+          (t) => `
+    <div style="background:#f0f9ff;border-left:4px solid #0ea5e9;padding:16px;margin:12px 0;">
+      <p style="color:#0c4a6e;margin:0;font-size:14px;line-height:1.5;">${escapeHtml(t.ai_summary || t.text.slice(0, 200))}</p>
+      ${t.author_username ? `<p style="margin:8px 0 0 0;font-size:12px;color:#0369a1;">@${escapeHtml(t.author_username)} · ${t.tweeted_at}</p>` : `<p style="margin:8px 0 0 0;font-size:12px;color:#0369a1;">${t.tweeted_at}</p>`}
+      ${t.url ? `<p style="margin:8px 0 0 0;"><a href="${t.url}" style="color:#0284c7;font-size:12px;text-decoration:none;">View tweet →</a></p>` : ''}
+    </div>`
+        )
+        .join('');
+
       const incidentCards = r.incidents
         .map(
           (i) => `
@@ -170,6 +191,7 @@ export function buildWeeklyDigestHtml(
     ${companyNewsCards ? `<p style="margin:0 0 8px 0;"><strong>📢 Company News</strong></p>${companyNewsCards}` : ''}
     ${ruleChangeCards ? `<p style="margin:16px 0 8px 0;"><strong>⚠️ Rule Changes</strong></p>${ruleChangeCards}` : ''}
     ${promotionCards ? `<p style="margin:16px 0 8px 0;"><strong>🎁 Promotions</strong></p>${promotionCards}` : ''}
+    ${topTweetsCards ? `<p style="margin:16px 0 8px 0;"><strong>🐦 Top Tweets</strong></p>${topTweetsCards}` : ''}
     ${r.incidents.length > 0 ? `<p style="margin:16px 0 8px 0;"><strong>🚨 Trustpilot Incidents (${r.incidents.length})</strong></p>${incidentCards}` : ''}
     <p style="margin:16px 0 0 0;"><strong>⚖️ PropProof Analysis</strong></p>
     <p style="color:#374151;margin:8px 0 0 0;font-size:14px;line-height:1.5;">${escapeHtml(r.ourTake)}</p>

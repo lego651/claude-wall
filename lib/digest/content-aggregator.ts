@@ -42,6 +42,16 @@ export interface FirmContentByType {
   promotion: FirmContentItem[];
 }
 
+/** Top tweet for digest (S8-TW-006b): up to 3 per firm per week by importance_score */
+export interface FirmTopTweet {
+  url: string;
+  text: string;
+  author_username: string | null;
+  tweeted_at: string;
+  ai_summary: string | null;
+  importance_score: number;
+}
+
 /**
  * Fetch firm content for a specific firm within a date range (published only).
  * Groups content by type for easy template rendering.
@@ -164,4 +174,72 @@ export async function getBulkFirmContent(
   }
 
   return contentByFirm;
+}
+
+const TOP_TWEETS_PER_FIRM = 3;
+
+/**
+ * Fetch top tweets per firm for the report week (S8-TW-006b).
+ * For each firm: up to 3 tweets with tweeted_at in [weekStartDate, weekEndDate],
+ * ordered by importance_score DESC.
+ */
+export async function getTopTweetsForFirms(
+  firmIds: string[],
+  weekStartDate: string,
+  weekEndDate: string
+): Promise<Map<string, FirmTopTweet[]>> {
+  if (firmIds.length === 0) {
+    return new Map();
+  }
+
+  const supabase = createServiceClient();
+
+  const { data: rows, error } = await supabase
+    .from('firm_twitter_tweets')
+    .select('firm_id, url, text, author_username, tweeted_at, ai_summary, importance_score')
+    .in('firm_id', firmIds)
+    .gte('tweeted_at', weekStartDate)
+    .lte('tweeted_at', weekEndDate);
+
+  if (error) {
+    console.error('[Content Aggregator] Error fetching top tweets:', error);
+    return new Map();
+  }
+
+  const items = (rows || []) as Array<{
+    firm_id: string;
+    url: string;
+    text: string;
+    author_username: string | null;
+    tweeted_at: string;
+    ai_summary: string | null;
+    importance_score: number;
+  }>;
+
+  // Group by firm, then take top 3 by importance_score per firm
+  const grouped = new Map<string, typeof items>();
+  for (const row of items) {
+    const list = grouped.get(row.firm_id) ?? [];
+    list.push(row);
+    grouped.set(row.firm_id, list);
+  }
+
+  const byFirm = new Map<string, FirmTopTweet[]>();
+  for (const firmId of firmIds) {
+    const list = grouped.get(firmId) ?? [];
+    const top = list
+      .sort((a, b) => (b.importance_score ?? 0) - (a.importance_score ?? 0))
+      .slice(0, TOP_TWEETS_PER_FIRM)
+      .map((row) => ({
+        url: row.url,
+        text: row.text,
+        author_username: row.author_username ?? null,
+        tweeted_at: row.tweeted_at,
+        ai_summary: row.ai_summary ?? null,
+        importance_score: row.importance_score ?? 0,
+      }));
+    byFirm.set(firmId, top);
+  }
+
+  return byFirm;
 }

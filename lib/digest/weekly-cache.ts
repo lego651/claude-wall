@@ -9,12 +9,19 @@
 
 import { createServiceClient } from '@/lib/supabase/service';
 import { getWeekNumberUtc, getYearUtc } from '@/lib/digest/week-utils';
-import type { FirmContentByType, FirmContentItem, IndustryNewsItem } from './content-aggregator';
+import type {
+  FirmContentByType,
+  FirmContentItem,
+  FirmTopTweet,
+  IndustryNewsItem,
+} from './content-aggregator';
+import { getTopTweetsForFirms } from './content-aggregator';
 
 interface WeeklyDigestCache {
   weekKey: string; // "2026-W08"
   firmContent: Map<string, FirmContentByType>;
   industryNews: IndustryNewsItem[];
+  topTweets: Map<string, FirmTopTweet[]>;
   cachedAt: number;
   expiresAt: number;
 }
@@ -50,6 +57,7 @@ export async function getCachedWeeklyDigestData(
 ): Promise<{
   firmContent: Map<string, FirmContentByType>;
   industryNews: IndustryNewsItem[];
+  topTweets: Map<string, FirmTopTweet[]>;
 }> {
   const weekKey = getWeekKey(weekStart);
   const now = Date.now();
@@ -63,6 +71,7 @@ export async function getCachedWeeklyDigestData(
     return {
       firmContent: cache.firmContent,
       industryNews: cache.industryNews,
+      topTweets: cache.topTweets,
     };
   }
 
@@ -76,6 +85,7 @@ export async function getCachedWeeklyDigestData(
     weekKey,
     firmContent: data.firmContent,
     industryNews: data.industryNews,
+    topTweets: data.topTweets,
     cachedAt: now,
     expiresAt: now + TTL_MS,
   };
@@ -83,12 +93,14 @@ export async function getCachedWeeklyDigestData(
   console.log('[Weekly Cache] Cached new data:', weekKey, {
     firms: cache.firmContent.size,
     industryNews: cache.industryNews.length,
+    topTweetsFirms: cache.topTweets.size,
     expiresIn: Math.round(TTL_MS / 1000),
   });
 
   return {
     firmContent: cache.firmContent,
     industryNews: cache.industryNews,
+    topTweets: cache.topTweets,
   };
 }
 
@@ -102,6 +114,7 @@ async function fetchAllWeeklyDigestData(
 ): Promise<{
   firmContent: Map<string, FirmContentByType>;
   industryNews: IndustryNewsItem[];
+  topTweets: Map<string, FirmTopTweet[]>;
 }> {
   const supabase = createServiceClient();
   const weekStartDate = weekStart.slice(0, 10);
@@ -125,10 +138,11 @@ async function fetchAllWeeklyDigestData(
 
   const allFirmIds = ((firms || []) as { id: string }[]).map((f) => f.id);
 
-  // Fetch all published content for the week
+  // Fetch all published content for the week + top tweets (S8-TW-006b)
   const [
     { data: firmContentItems, error: firmContentError },
     { data: industryNewsItems, error: industryNewsError },
+    topTweets,
   ] = await Promise.all([
     supabase
       .from('firm_content_items')
@@ -147,6 +161,8 @@ async function fetchAllWeeklyDigestData(
       .lte('content_date', weekEndDate)
       .order('content_date', { ascending: false })
       .limit(10),
+
+    getTopTweetsForFirms(allFirmIds, weekStartDate, weekEndDate),
   ]);
 
   if (firmContentError) {
@@ -190,11 +206,13 @@ async function fetchAllWeeklyDigestData(
     firms: firmContentMap.size,
     firmContentItems: firmContentItems?.length || 0,
     industryNews: industryNewsItems?.length || 0,
+    topTweetsFirms: topTweets.size,
   });
 
   return {
     firmContent: firmContentMap,
     industryNews: (industryNewsItems || []) as unknown as IndustryNewsItem[],
+    topTweets,
   };
 }
 
@@ -226,6 +244,7 @@ export function getWeeklyCacheStats() {
     weekKey: cache.weekKey,
     firmCount: cache.firmContent.size,
     industryNewsCount: cache.industryNews.length,
+    topTweetsFirmCount: cache.topTweets.size,
     ageSeconds: Math.round(age / 1000),
     remainingSeconds: Math.max(0, Math.round(remaining / 1000)),
     expired: remaining <= 0,

@@ -91,12 +91,12 @@ export async function sendWeeklyDigest(
   const unsubscribeUrl = `${base}/api/unsubscribe?token=${encodeURIComponent(token)}`;
 
   // TICKET-S8-009: Fetch firm content and industry news for this week (CACHED!)
-  // This uses in-memory cache to avoid fetching same data for every user
-  const { firmContent: allFirmContent, industryNews } =
+  // S8-TW-006b: Top tweets per firm (cached)
+  const { firmContent: allFirmContent, industryNews, topTweets: allTopTweets } =
     await getCachedWeeklyDigestData(weekStart, weekEnd);
 
   // Filter cached data to only user's subscribed firms
-  const userFirmIds = reports.map(r => r.firmId);
+  const userFirmIds = reports.map((r) => r.firmId);
   const firmContentMap = new Map();
   for (const firmId of userFirmIds) {
     firmContentMap.set(firmId, allFirmContent.get(firmId) || {
@@ -106,14 +106,15 @@ export async function sendWeeklyDigest(
     });
   }
 
-  // Map reports and attach firm content
-  const digestReports: DigestReportInput[] = reports.map(report => ({
+  // Map reports and attach firm content + top tweets
+  const digestReports: DigestReportInput[] = reports.map((report) => ({
     ...mapReportToInput(report),
     content: firmContentMap.get(report.firmId) || {
       company_news: [],
       rule_change: [],
       promotion: [],
     },
+    topTweets: allTopTweets.get(report.firmId) || [],
   }));
 
   const html = buildWeeklyDigestHtml(digestReports, {

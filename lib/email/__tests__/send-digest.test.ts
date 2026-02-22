@@ -12,7 +12,7 @@ jest.mock('@/lib/email/weekly-digest-html', () => ({
 jest.mock('@/lib/email/unsubscribe-token', () => ({
   createUnsubscribeToken: jest.fn(() => 'mock-token'),
 }));
-const mockCachedData = { firmContent: new Map(), industryNews: [] };
+const mockCachedData = { firmContent: new Map(), industryNews: [], topTweets: new Map() };
 jest.mock('@/lib/digest/weekly-cache', () => ({
   getCachedWeeklyDigestData: jest.fn(),
 }));

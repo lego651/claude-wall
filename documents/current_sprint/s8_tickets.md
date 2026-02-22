@@ -176,6 +176,8 @@
 
 **Goal:** Weekly digest shows **up to 3 most important tweets per firm** for the report week, selected by importance_score (no admin approval step for firm tweets).
 
+**Implemented:** `content-aggregator.getTopTweetsForFirms()`; weekly-cache fetches and caches `topTweets`; send-digest passes per report; weekly-digest-html "Top Tweets" block per firm (up to 3 cards). Empty when no tweets.
+
 **Tasks:**
 
 1. **Data** – In content aggregator (or digest generator), for each firm: query `firm_twitter_tweets` where `firm_id = X` and `tweeted_at` in the report week, ORDER BY importance_score DESC, LIMIT 3.
@@ -184,8 +186,8 @@
 
 **Acceptance:**
 
-- [ ] Weekly report generation includes top 3 tweets per firm from `firm_twitter_tweets` for the week.
-- [ ] Digest email displays them per firm (up to 3); subscribers see the block when data exists.
+- [x] Weekly report generation includes top 3 tweets per firm from `firm_twitter_tweets` for the week.
+- [x] Digest email displays them per firm (up to 3); subscribers see the block when data exists.
 
 ---
 
