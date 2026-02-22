@@ -6,7 +6,7 @@
 
 import { createServiceClient } from "@/lib/supabase/service";
 import { getOpenAIClient } from "@/lib/ai/openai-client";
-import { getWeekBoundsUtc, getWeekNumberUtc, getYearUtc } from "./week-utils";
+import { getWeekNumberUtc, getYearUtc } from "./week-utils";
 
 const MIN_ITEMS_PER_GROUP = 3;
 
