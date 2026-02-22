@@ -2,8 +2,8 @@
  * Weekly Digest Review API
  * GET /api/admin/content/weekly-review?week=2026-02-17
  *
- * Returns all content (firm content, industry news, incidents) for a specific week
- * for admin to review before sending weekly digest.
+ * Returns firm content and Trustpilot incidents for a specific week for admin review.
+ * Industry news is no longer shown on this page.
  */
 
 import { NextResponse } from 'next/server';
@@ -84,14 +84,11 @@ export async function GET(req: Request) {
 
     const firmIds = (firms || []).map((f) => f.id);
 
-    // Fetch all content for the week in parallel (TG-005: add topic groups)
+    // Fetch firm content and incidents for the week (industry news no longer shown)
     const [
       { data: firmContentItems, error: firmContentError },
-      { data: industryNewsItems, error: industryNewsError },
       { data: incidents, error: incidentsError },
-      { data: topicGroupsRows, error: topicGroupsError },
     ] = await Promise.all([
-      // Firm content (both published and unpublished)
       supabase
         .from('firm_content_items')
         .select('*')
@@ -100,79 +97,16 @@ export async function GET(req: Request) {
         .lte('content_date', weekEndIso)
         .order('content_date', { ascending: false }),
 
-      // Industry tweets (firm_twitter_tweets firm_id='industry') for the week; mapped to same shape as legacy industry news
-      supabase
-        .from('firm_twitter_tweets')
-        .select('id, text, url, ai_summary, tweeted_at, published')
-        .eq('firm_id', 'industry')
-        .gte('tweeted_at', weekStartIso)
-        .lte('tweeted_at', weekEndIso)
-        .order('tweeted_at', { ascending: false }),
-
-      // Trustpilot incidents for the week
       supabase
         .from('firm_daily_incidents')
         .select('*')
         .eq('week_number', weekNumber)
         .eq('year', year)
         .order('created_at', { ascending: false }),
-
-      // Twitter topic groups for the week (industry only)
-      supabase
-        .from('twitter_topic_groups')
-        .select('id, topic_title, summary, item_ids, published, week_number, year')
-        .eq('week_start', weekStartIso)
-        .eq('item_type', 'industry')
-        .is('firm_id', null)
-        .order('id', { ascending: true }),
     ]);
 
     if (firmContentError) throw firmContentError;
-    if (industryNewsError) throw industryNewsError;
     if (incidentsError) throw incidentsError;
-    if (topicGroupsError) throw topicGroupsError;
-
-    // Map industry tweets to shape expected by UI (title, content_date, ai_confidence, etc.)
-    const industryTweetsRows = (industryNewsItems || []) as { id: number; text: string; url: string; ai_summary: string | null; tweeted_at: string; published: boolean | null }[];
-    const allIndustryNews = industryTweetsRows.map((r) => ({
-      id: r.id,
-      title: (r.text || '').slice(0, 200).trim() || 'Tweet',
-      ai_summary: r.ai_summary || '',
-      content_date: r.tweeted_at,
-      published: r.published === true,
-      ai_confidence: 0.8,
-      mentioned_firm_ids: [] as string[],
-      source_url: r.url,
-    }));
-
-    // Resolve topic group item_ids from firm_twitter_tweets (industry tweet ids)
-    type TopicGroupRow = { id: number; topic_title: string; summary: string | null; item_ids?: number[]; published: boolean; week_number: number; year: number };
-    const topicGroups = (topicGroupsRows || []) as TopicGroupRow[];
-    const allTopicGroupItemIds = topicGroups.flatMap((row) => (Array.isArray(row.item_ids) ? row.item_ids : []));
-    const uniqueItemIds = [...new Set(allTopicGroupItemIds)];
-    let itemIdToDisplay: Record<number, { id: number; title: string; source_url: string | null }> = {};
-    if (uniqueItemIds.length > 0) {
-      const { data: resolvedItems } = await supabase
-        .from('firm_twitter_tweets')
-        .select('id, text, url')
-        .eq('firm_id', 'industry')
-        .in('id', uniqueItemIds);
-      if (resolvedItems) {
-        for (const r of resolvedItems as { id: number; text: string; url: string }[]) {
-          itemIdToDisplay[r.id] = { id: r.id, title: (r.text || '').slice(0, 100), source_url: r.url };
-        }
-      }
-    }
-    const industryTopicGroups = topicGroups.map((row) => ({
-      id: row.id,
-      topic_title: row.topic_title,
-      summary: row.summary || '',
-      item_ids: Array.isArray(row.item_ids) ? row.item_ids : [],
-      published: row.published,
-      week_number: row.week_number,
-      year: row.year,
-      items: (Array.isArray(row.item_ids) ? row.item_ids : []).map((id) => itemIdToDisplay[id] || { id, title: '', source_url: null }),
-    }));
 
     // Group firm content by firm
     const firmReviews = firms?.map((firm) => {
@@ -216,7 +150,7 @@ export async function GET(req: Request) {
       };
     });
 
-    // Calculate overall stats (allIndustryNews already defined above as mapped industry tweets)
+    // Calculate overall stats (industry news no longer included)
     const allFirmContent = firmContentItems || [];
     const allIncidents = incidents || [];
 
@@ -224,17 +158,9 @@ export async function GET(req: Request) {
     const approvedFirmContent = allFirmContent.filter((c) => c.published).length;
     const pendingFirmContent = totalFirmContent - approvedFirmContent;
 
-    const totalIndustryNews = allIndustryNews.length;
-    const approvedIndustryNews = allIndustryNews.filter((n) => n.published).length;
-    const pendingIndustryNews = totalIndustryNews - approvedIndustryNews;
-
     const totalIncidents = allIncidents.length;
     const approvedIncidents = allIncidents.filter((i) => i.published !== false).length;
     const pendingIncidents = totalIncidents - approvedIncidents;
-
-    const totalTopicGroups = industryTopicGroups.length;
-    const approvedTopicGroups = industryTopicGroups.filter((g) => g.published).length;
-    const pendingTopicGroups = totalTopicGroups - approvedTopicGroups;
 
     const response = {
       weekStart: weekStartIso,
@@ -243,30 +169,18 @@ export async function GET(req: Request) {
       year,
       weekLabel: `Week ${weekNumber}, ${year}`,
       overallStats: {
-        totalItems: totalFirmContent + totalIndustryNews + totalIncidents + totalTopicGroups,
+        totalItems: totalFirmContent + totalIncidents,
         firmContent: {
           total: totalFirmContent,
           approved: approvedFirmContent,
           pending: pendingFirmContent,
-        },
-        industryNews: {
-          total: totalIndustryNews,
-          approved: approvedIndustryNews,
-          pending: pendingIndustryNews,
         },
         incidents: {
           total: totalIncidents,
           approved: approvedIncidents,
           pending: pendingIncidents,
         },
-        topicGroups: {
-          total: totalTopicGroups,
-          approved: approvedTopicGroups,
-          pending: pendingTopicGroups,
-        },
       },
-      industryNews: allIndustryNews,
-      industryTopicGroups,
       firmReviews: firmReviews || [],
     };
 

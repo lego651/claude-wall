@@ -270,7 +270,7 @@ async function getWeeklyEmailLastRun(supabase) {
   }
 }
 
-/** Content pipeline stats (TICKET-S8-012): firm_content_items and industry_news_items. */
+/** Content pipeline stats (TICKET-S8-012): firm_content_items only. Industry news no longer shown on weekly-review. */
 async function getContentStats(supabase) {
   try {
     const now = new Date();
@@ -281,19 +281,10 @@ async function getContentStats(supabase) {
     const [
       { count: firmPending },
       { count: firmPublishedThisWeek },
-      { count: industryPending },
-      { count: industryPublishedThisWeek },
     ] = await Promise.all([
       supabase.from('firm_content_items').select('*', { count: 'exact', head: true }).eq('published', false),
       supabase
         .from('firm_content_items')
-        .select('*', { count: 'exact', head: true })
-        .eq('published', true)
-        .gte('content_date', weekStartIso)
-        .lte('content_date', weekEndIso),
-      supabase.from('industry_news_items').select('*', { count: 'exact', head: true }).eq('published', false),
-      supabase
-        .from('industry_news_items')
         .select('*', { count: 'exact', head: true })
         .eq('published', true)
         .gte('content_date', weekStartIso)
@@ -316,16 +307,12 @@ async function getContentStats(supabase) {
     return {
       firm_content_pending: firmPending ?? 0,
       firm_content_published_this_week: firmPublishedThisWeek ?? 0,
-      industry_news_pending: industryPending ?? 0,
-      industry_news_published_this_week: industryPublishedThisWeek ?? 0,
       by_type: typeCount,
     };
   } catch {
     return {
       firm_content_pending: null,
       firm_content_published_this_week: null,
-      industry_news_pending: null,
-      industry_news_published_this_week: null,
       by_type: {},
     };
   }
@@ -346,7 +333,7 @@ async function getTrustpilotScraperStatus(supabase) {
   }
 }
 
-/** Tweet scan stats: per firm from firm_twitter_tweets, industry from industry_news_items (source_type=twitter), last run from cron_last_run (S8-TW-007). */
+/** Tweet scan stats: per firm from firm_twitter_tweets (excl. industry), last run from cron_last_run (S8-TW-007). Industry no longer shown on weekly-review. */
 async function getTwitterTweetsStats(supabase) {
   try {
     const now = new Date();
@@ -354,16 +341,13 @@ async function getTwitterTweetsStats(supabase) {
     const weekStartStr = weekStart.toISOString().slice(0, 10);
     const weekEndStr = weekEnd.toISOString().slice(0, 10);
 
-    const [firmResult, industryRowsResult, lastRunResult] = await Promise.all([
+    const [firmResult, lastRunResult] = await Promise.all([
       supabase
         .from('firm_twitter_tweets')
         .select('firm_id, tweeted_at')
+        .neq('firm_id', 'industry')
         .order('tweeted_at', { ascending: false })
         .limit(10000),
-      supabase
-        .from('industry_news_items')
-        .select('content_date')
-        .eq('source_type', 'twitter'),
       supabase
         .from('cron_last_run')
         .select('last_run_at')
@@ -372,7 +356,7 @@ async function getTwitterTweetsStats(supabase) {
     ]);
 
     const { data: rows, error } = firmResult;
-    if (error) return { firms: [], industry: null, lastRunAt: null, error: error.message };
+    if (error) return { firms: [], lastRunAt: null, error: error.message };
 
     const byFirm = new Map();
     for (const r of rows || []) {
@@ -403,27 +387,15 @@ async function getTwitterTweetsStats(supabase) {
       };
     }).sort((a, b) => (b.totalTweets - a.totalTweets));
 
-    let industry = null;
-    if (!industryRowsResult.error && industryRowsResult.data?.length) {
-      const dates = industryRowsResult.data.map((r) => r.content_date).filter(Boolean);
-      const total = dates.length;
-      const thisWeek = dates.filter((d) => d >= weekStartStr && d <= weekEndStr).length;
-      const lastContentDate = dates.length ? dates.reduce((a, b) => (a > b ? a : b), dates[0]) : null;
-      industry = { total, thisWeek, lastContentDate };
-    } else {
-      industry = { total: 0, thisWeek: 0, lastContentDate: null };
-    }
-
     const lastRunAt = lastRunResult.data?.last_run_at ?? null;
 
     return {
       firms,
-      industry,
       lastRunAt,
       note: 'Daily run via GitHub Actions (daily-step-twitter-fetch-ingest).',
     };
   } catch (e) {
-    return { firms: [], industry: null, lastRunAt: null, error: e.message };
+    return { firms: [], lastRunAt: null, error: e.message };
   }
 }
 
@@ -817,7 +789,6 @@ export async function GET() {
     },
     twitterTweets: {
       firms: twitterTweets.firms || [],
-      industry: twitterTweets.industry ?? null,
       lastRunAt: twitterTweets.lastRunAt ?? null,
       note: twitterTweets.note || null,
       error: twitterTweets.error || null,

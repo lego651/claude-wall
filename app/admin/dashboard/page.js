@@ -152,8 +152,6 @@ function metricsToCSV(data) {
     const cs = data.contentStats;
     rows.push(`content_firm_content_pending,${cs.firm_content_pending ?? ""}`);
     rows.push(`content_firm_content_published_this_week,${cs.firm_content_published_this_week ?? ""}`);
-    rows.push(`content_industry_news_pending,${cs.industry_news_pending ?? ""}`);
-    rows.push(`content_industry_news_published_this_week,${cs.industry_news_published_this_week ?? ""}`);
   }
   if (data?.traders?.summary) {
     const s = data.traders.summary;
@@ -1729,14 +1727,14 @@ export default function AdminDashboardPage() {
                       <div>
                         <span className="text-slate-500 text-sm">Pending review</span>
                         <p className="text-2xl font-bold">
-                          {(data.contentStats.firm_content_pending ?? 0) + (data.contentStats.industry_news_pending ?? 0)}
+                          {data.contentStats.firm_content_pending ?? 0}
                         </p>
-                        <p className="text-xs text-slate-500">firm + industry</p>
+                        <p className="text-xs text-slate-500">firm content</p>
                       </div>
                       <div>
                         <span className="text-slate-500 text-sm">Published this week</span>
                         <p className="text-2xl font-bold">
-                          {(data.contentStats.firm_content_published_this_week ?? 0) + (data.contentStats.industry_news_published_this_week ?? 0)}
+                          {data.contentStats.firm_content_published_this_week ?? 0}
                         </p>
                         <p className="text-xs text-slate-500">in digest</p>
                       </div>

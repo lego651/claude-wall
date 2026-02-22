@@ -4,8 +4,8 @@
  * Weekly Digest Review Page
  * /admin/content/weekly-review
  *
- * Unified page for admin to review ALL content before sending weekly digest.
- * Includes firm content, industry news, and Trustpilot incidents.
+ * Unified page for admin to review firm content and Trustpilot incidents before sending weekly digest.
+ * Industry news is no longer shown on this page.
  */
 
 import { useState, useEffect } from 'react';
@@ -18,9 +18,7 @@ export default function WeeklyReviewPage() {
   const [selectedWeek, setSelectedWeek] = useState('');
   const [selectedItems, setSelectedItems] = useState({
     firmContent: new Set(),
-    industryNews: new Set(),
     incidents: new Set(),
-    topicGroups: new Set(),
   });
   const [bulkApproving, setBulkApproving] = useState(false);
 
@@ -46,11 +44,9 @@ export default function WeeklyReviewPage() {
 
       setData(json);
 
-      // Auto-select all published items (including auto-approved incidents and topic groups)
+      // Auto-select all published items (including auto-approved incidents)
       const firmContentIds = new Set();
-      const industryNewsIds = new Set();
       const incidentIds = new Set();
-      const topicGroupIds = new Set();
 
       json.firmReviews.forEach((firm) => {
         ['company_news', 'rule_change', 'promotion'].forEach((type) => {
@@ -68,19 +64,7 @@ export default function WeeklyReviewPage() {
         });
       });
 
-      json.industryNews.forEach((item) => {
-        if (item.published) {
-          industryNewsIds.add(item.id);
-        }
-      });
-
-      (json.industryTopicGroups || []).forEach((g) => {
-        if (g.published) {
-          topicGroupIds.add(g.id);
-        }
-      });
-
-      setSelectedItems({ firmContent: firmContentIds, industryNews: industryNewsIds, incidents: incidentIds, topicGroups: topicGroupIds });
+      setSelectedItems({ firmContent: firmContentIds, incidents: incidentIds });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -100,18 +84,6 @@ export default function WeeklyReviewPage() {
     });
   };
 
-  const toggleIndustryNews = (id) => {
-    setSelectedItems((prev) => {
-      const newSet = new Set(prev.industryNews);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return { ...prev, industryNews: newSet };
-    });
-  };
-
   const toggleIncident = (id) => {
     setSelectedItems((prev) => {
       const newSet = new Set(prev.incidents);
@@ -121,18 +93,6 @@ export default function WeeklyReviewPage() {
         newSet.add(id);
       }
       return { ...prev, incidents: newSet };
-    });
-  };
-
-  const toggleTopicGroup = (id) => {
-    setSelectedItems((prev) => {
-      const newSet = new Set(prev.topicGroups);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return { ...prev, topicGroups: newSet };
     });
   };
 
@@ -156,7 +116,7 @@ export default function WeeklyReviewPage() {
   };
 
   const handleBulkApprove = async () => {
-    const totalSelected = selectedItems.firmContent.size + selectedItems.industryNews.size + selectedItems.incidents.size + selectedItems.topicGroups.size;
+    const totalSelected = selectedItems.firmContent.size + selectedItems.incidents.size;
 
     if (totalSelected === 0) {
       alert('No items selected');
@@ -175,9 +135,7 @@ export default function WeeklyReviewPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           firmContent: Array.from(selectedItems.firmContent),
-          industryNews: Array.from(selectedItems.industryNews),
           incidents: Array.from(selectedItems.incidents),
-          topicGroups: Array.from(selectedItems.topicGroups),
           weekNumber: data?.weekNumber,
           year: data?.year,
         }),
@@ -218,7 +176,7 @@ export default function WeeklyReviewPage() {
     );
   }
 
-  const selectedCount = selectedItems.firmContent.size + selectedItems.industryNews.size + selectedItems.incidents.size + selectedItems.topicGroups.size;
+  const selectedCount = selectedItems.firmContent.size + selectedItems.incidents.size;
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
@@ -262,7 +220,7 @@ export default function WeeklyReviewPage() {
           <div className="card card-border bg-base-100 shadow">
             <div className="card-body p-4">
               <div className="text-2xl font-bold text-success">
-                {data?.overallStats.firmContent.approved + data?.overallStats.industryNews.approved + (data?.overallStats.incidents?.approved || 0) + (data?.overallStats.topicGroups?.approved || 0)}
+                {data?.overallStats.firmContent.approved + (data?.overallStats.incidents?.approved || 0)}
               </div>
               <div className="text-sm text-base-content/60">Already Approved</div>
             </div>
@@ -270,7 +228,7 @@ export default function WeeklyReviewPage() {
           <div className="card card-border bg-base-100 shadow">
             <div className="card-body p-4">
               <div className="text-2xl font-bold text-warning">
-                {data?.overallStats.firmContent.pending + data?.overallStats.industryNews.pending + (data?.overallStats.incidents?.pending || 0) + (data?.overallStats.topicGroups?.pending || 0)}
+                {data?.overallStats.firmContent.pending + (data?.overallStats.incidents?.pending || 0)}
               </div>
               <div className="text-sm text-base-content/60">Pending Review</div>
             </div>
@@ -312,123 +270,13 @@ export default function WeeklyReviewPage() {
             <div className="text-6xl mb-4">📭</div>
             <h3 className="text-2xl font-bold mb-2">No Content This Week</h3>
             <p className="text-base-content/60 mb-6">
-              There's no firm content, industry news, or incidents for {data?.weekLabel}.
+              There's no firm content or incidents for {data?.weekLabel}.
               <br />
               Upload some content to get started!
             </p>
             <Link href="/admin/content/upload" className="btn btn-primary">
               + Upload Content
             </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Industry Topic Groups (TG-006): grouped tweets like Trustpilot incidents */}
-      {data?.industryTopicGroups && data.industryTopicGroups.length > 0 && (
-        <div className="card card-border bg-base-100 shadow mb-6">
-          <div className="card-body">
-            <h2 className="text-2xl font-bold mb-4">🐦 Industry Topic Groups ({data.industryTopicGroups.length})</h2>
-            <div className="text-xs text-base-content/50 mb-2">
-              Tweets grouped by topic (≥3 same topic). Check to approve; links open each tweet.
-            </div>
-            <div className="space-y-3">
-              {data.industryTopicGroups.map((group) => (
-                <div
-                  key={group.id}
-                  className={`p-4 border rounded-lg ${
-                    selectedItems.topicGroups.has(group.id)
-                      ? 'border-primary bg-primary/5'
-                      : 'border-base-300'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-primary mt-1"
-                      checked={selectedItems.topicGroups.has(group.id)}
-                      onChange={() => toggleTopicGroup(group.id)}
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-bold capitalize">{group.topic_title}</h3>
-                        {group.published && <span className="badge badge-success badge-sm">Published</span>}
-                      </div>
-                      <p className="text-sm text-base-content/70 mb-2">{group.summary}</p>
-                      <div className="text-xs text-base-content/50 mb-2">
-                        {group.item_ids?.length || 0} tweets • Week {group.week_number}, {group.year}
-                      </div>
-                      {group.items && group.items.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {group.items.slice(0, 8).map((item) => (
-                            <a
-                              key={item.id}
-                              href={item.source_url || '#'}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="badge badge-outline badge-xs hover:badge-primary"
-                            >
-                              Tweet #{item.id}
-                            </a>
-                          ))}
-                          {group.items.length > 8 && (
-                            <span className="badge badge-ghost badge-xs">+{group.items.length - 8} more</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Industry News Section (ungrouped / all when no topic groups) */}
-      {data?.industryNews && data.industryNews.length > 0 && (
-        <div className="card card-border bg-base-100 shadow mb-6">
-          <div className="card-body">
-            <h2 className="text-2xl font-bold mb-4">📰 Industry News ({data.industryNews.length})</h2>
-            <div className="space-y-3">
-              {data.industryNews.map((item) => (
-                <div
-                  key={item.id}
-                  className={`p-4 border rounded-lg ${
-                    selectedItems.industryNews.has(item.id)
-                      ? 'border-primary bg-primary/5'
-                      : 'border-base-300'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-primary mt-1"
-                      checked={selectedItems.industryNews.has(item.id)}
-                      onChange={() => toggleIndustryNews(item.id)}
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-bold">{item.title}</h3>
-                        {item.published && <span className="badge badge-success badge-sm">Published</span>}
-                        <span className="badge badge-outline badge-sm">
-                          {(item.ai_confidence * 100).toFixed(0)}% confidence
-                        </span>
-                      </div>
-                      <p className="text-sm text-base-content/70 mb-2">{item.ai_summary}</p>
-                      <div className="flex gap-2 text-xs text-base-content/50">
-                        <span>📅 {item.content_date}</span>
-                        {item.mentioned_firm_ids?.length > 0 && (
-                          <span>• 🏢 {item.mentioned_firm_ids.join(', ')}</span>
-                        )}
-                        {item.ai_tags?.length > 0 && (
-                          <span>• 🏷️ {item.ai_tags.join(', ')}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       )}
