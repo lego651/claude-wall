@@ -2,12 +2,12 @@
   "firmId": "instantfunding",
   "period": "2026-02",
   "timezone": "UTC",
-  "generatedAt": "2026-02-24T11:36:33.619Z",
+  "generatedAt": "2026-02-25T11:35:43.782Z",
   "summary": {
-    "totalPayouts": 298807,
-    "payoutCount": 34,
+    "totalPayouts": 326027,
+    "payoutCount": 36,
     "largestPayout": 27000,
-    "avgPayout": 8788
+    "avgPayout": 9056
   },
   "dailyBuckets": [
     {
@@ -128,9 +128,34 @@
       "rise": 2822,
       "crypto": 17000,
       "wire": 0
+    },
+    {
+      "date": "2026-02-25",
+      "total": 27220,
+      "rise": 3220,
+      "crypto": 24000,
+      "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0x2e6384b357aaf0948752084b3704ef5fd5878465a2b15f164b87a0efe5d25029",
+      "firm_id": "instantfunding",
+      "amount": 3220.2,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T07:29:49.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x61df7e9fcc73afaf30ace6946917e732252efcf5"
+    },
+    {
+      "tx_hash": "0xc2a23662383248eab4c2ab72c89fd02197b1b8b1814e56872e4cfa4e8d6c20f0",
+      "firm_id": "instantfunding",
+      "amount": 24000,
+      "payment_method": "crypto",
+      "timestamp": "2026-02-25T07:25:01.000Z",
+      "from_address": "0xa3f21b162fa5a523e12590f2915ca418587cf626",
+      "to_address": "0x72f297966471967ecef425e3de6f3eccc6d31e31"
+    },
     {
       "tx_hash": "0xeca304fecba380669e5e28e6bbd1dbcdd6ef8f5b83fa4b90ed004a17c013b4c4",
       "firm_id": "instantfunding",
