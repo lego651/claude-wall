@@ -2,12 +2,12 @@
   "firmId": "alphacapitalgroup",
   "period": "2026-02",
   "timezone": "UTC",
-  "generatedAt": "2026-02-25T11:36:22.393Z",
+  "generatedAt": "2026-02-26T11:35:53.191Z",
   "summary": {
-    "totalPayouts": 2142331,
-    "payoutCount": 1285,
+    "totalPayouts": 2261451,
+    "payoutCount": 1350,
     "largestPayout": 27030,
-    "avgPayout": 1667
+    "avgPayout": 1675
   },
   "dailyBuckets": [
     {
@@ -128,9 +128,608 @@
       "rise": 86966,
       "crypto": 0,
       "wire": 0
+    },
+    {
+      "date": "2026-02-25",
+      "total": 91980,
+      "rise": 91980,
+      "crypto": 0,
+      "wire": 0
+    },
+    {
+      "date": "2026-02-26",
+      "total": 27140,
+      "rise": 27140,
+      "crypto": 0,
+      "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0xf0dd29d060a4beb4e66118bbc57a003c20c037dfc32d557e2a1ef0ffa0836b8c",
+      "firm_id": "alphacapitalgroup",
+      "amount": 136,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T11:30:20.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xc7b5e091f6746f16bedacc76deef32c0668f1933"
+    },
+    {
+      "tx_hash": "0xd1d6e6f9568821f6ddb00c8a71b53437b672ce4d7d1c1bf5ee3ae745df1663fd",
+      "firm_id": "alphacapitalgroup",
+      "amount": 2119,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T11:28:44.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x92644040678d534ed8afd998e9d41c55910db452"
+    },
+    {
+      "tx_hash": "0x6e42cf9a778dd04cbafe8711fb22e4806417352f6fdcd12d9c5634a7e262a323",
+      "firm_id": "alphacapitalgroup",
+      "amount": 312,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T11:26:25.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x3ad56f8abb3b687cd402849259d810803dd53788"
+    },
+    {
+      "tx_hash": "0x5fac6c56759f626676c4bf8b4df8fcb393d810c82741b7ac45f231e7e2f151b1",
+      "firm_id": "alphacapitalgroup",
+      "amount": 203.3,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T11:24:55.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x30990fcd87ae141c577cb762db83b07f63598791"
+    },
+    {
+      "tx_hash": "0xce01512df654a5be8d6ec2c615464ed947a028557a792a6ec85e28ce03243e50",
+      "firm_id": "alphacapitalgroup",
+      "amount": 175,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T11:19:01.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x8c4a3aa121670f821c4978544ac2ddf46c7e181e"
+    },
+    {
+      "tx_hash": "0x7deb433918837eec89f94e267df7bd7ac80970db479d29f9c187e3fbcbcac1d2",
+      "firm_id": "alphacapitalgroup",
+      "amount": 429,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T11:17:58.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x3dd85de8522e7d7613dbdbf81c56e62a026e7311"
+    },
+    {
+      "tx_hash": "0xe818bd0936a98aecbf60e688fa5e940db50922fa4e8bbb2f29d45df51efd12a0",
+      "firm_id": "alphacapitalgroup",
+      "amount": 6315,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T11:16:02.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x0c01fc9550db5aa7da6748ec23baa522e2475f2a"
+    },
+    {
+      "tx_hash": "0x5e9dea777e521be4e7866a2e4832ea464cb4d3941312d620d70334a165088f35",
+      "firm_id": "alphacapitalgroup",
+      "amount": 10784,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T11:14:51.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x001a6976568aa37738492f0926b3bcfdd8347201"
+    },
+    {
+      "tx_hash": "0xc70973f80d526196be97727fba6505253246f09ea638c37b99e82b7b90b0c3c9",
+      "firm_id": "alphacapitalgroup",
+      "amount": 809.9,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T11:12:43.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xd9478ede25b668a2bdecd617bc2a2849982a455f"
+    },
+    {
+      "tx_hash": "0xbf76af75b6b3d6331671043613d072e495b175be49ba6fa8084b6565e0b46d92",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1077,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T11:10:17.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x994daa0592771b303a67b7a1d125c736870d59ea"
+    },
+    {
+      "tx_hash": "0xa77c05daa2192cb97991f1b9593ec3cecbfc8bb8d60a6803ad45241e6234cbeb",
+      "firm_id": "alphacapitalgroup",
+      "amount": 4780,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T11:07:42.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x1c8c80ef76aeb29fddd415c9c21195d49901610c"
+    },
+    {
+      "tx_hash": "0xae920b62b5336d9caf0eafff8abf6bbefe46247f474326a382775608c6c2b976",
+      "firm_id": "alphacapitalgroup",
+      "amount": 400,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T17:22:10.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xf52c9a6a0b1e6a1a4f3fed295d7f81f8aa8e8bd9"
+    },
+    {
+      "tx_hash": "0x6542cc9953fd1c8d7d61639179ea78fbbb033afbcc3a2e746ff80b2e83627e4d",
+      "firm_id": "alphacapitalgroup",
+      "amount": 564.82,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T17:19:33.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x63ecec484b5480d21eedd48dc6eb1600c2255a49"
+    },
+    {
+      "tx_hash": "0x42cbeb7aab539ddcec73bbfe969f9c55845119fd1fba47f48752a3cf858bbaba",
+      "firm_id": "alphacapitalgroup",
+      "amount": 686.7,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T17:12:47.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xf69e9e5074f11325dde0f112beec8c9c28756c4c"
+    },
+    {
+      "tx_hash": "0xd2225a0ca2197f27a246f8d6f09210a8aa98ec14955f961fbc04806c2575bb36",
+      "firm_id": "alphacapitalgroup",
+      "amount": 798,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T17:10:40.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x15643e713fda098e4a741f0b0d5d5a6a73aaca9d"
+    },
+    {
+      "tx_hash": "0x2c7616378d812eac284746dc6c9cdac13aa9f386a999b4fbd9bd4ccf5e896c67",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1620,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T17:08:44.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x4077d71b0f87322f98aebecbe04d475e94694b51"
+    },
+    {
+      "tx_hash": "0x0e987b5e5698937ee27dbad25ea02c761590b84e5a0f045c0b86c03d165143b7",
+      "firm_id": "alphacapitalgroup",
+      "amount": 91,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T17:06:15.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x6e1631a56ffea4db659e17d15662963cf9e21183"
+    },
+    {
+      "tx_hash": "0xb8d4b31a63e49e76ba186e411e6ed743324d21406e4beffe50494ba1e96d2f30",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1789.02,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T16:56:58.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x1a01badd7da70c6c2a600f19bea700bc2ac3394c"
+    },
+    {
+      "tx_hash": "0xf4544b8c1a911d989ad560067ec2f13b10ec04180cb17887c2508a181e2d2f14",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1500,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:54:21.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x0995ee0a9e3a61ab5f827f1a59c330610d2732ea"
+    },
+    {
+      "tx_hash": "0x2949f1ff5149ba2496e60fa2f375d6b4bd8199106be983908310a360cf733738",
+      "firm_id": "alphacapitalgroup",
+      "amount": 5027,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:52:44.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xd1c1dc324265ec72bd912e8232497905471e10bf"
+    },
+    {
+      "tx_hash": "0x0d65ed3d5f9d5eb1e5c128fb629c1ebbece70aad0c72cdec271aa84ec4d9a6fa",
+      "firm_id": "alphacapitalgroup",
+      "amount": 125.3,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:51:02.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x510accde9661dda264362d5b2f274273045e8b11"
+    },
+    {
+      "tx_hash": "0x7011f977f5a8a1806c341c34cfc37cc636dbbf48ff084b674b4a9b54c454c3fc",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1306,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:49:27.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x2cf815f62ae79faee63f3ab844e976261e6e0a6f"
+    },
+    {
+      "tx_hash": "0x807a8f1376847af35dcdfbe5151f5970e86b7e86ebbbd234c32ee318090b3510",
+      "firm_id": "alphacapitalgroup",
+      "amount": 232.46,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:47:53.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x20fc6ce92c1b46cbf76ed6bfbc3129bc4a371973"
+    },
+    {
+      "tx_hash": "0xd03ec62313508d96f14650ad24a96244b68c0e5942870620768c27928944f946",
+      "firm_id": "alphacapitalgroup",
+      "amount": 8418,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:46:37.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xf633aaf928275ffda23e1f39b7934121b79d2bb8"
+    },
+    {
+      "tx_hash": "0xa02af80c1a28833a3784e1fa5b69b22bcf0d79dccd0217463ed946ce21a53e17",
+      "firm_id": "alphacapitalgroup",
+      "amount": 175,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:28:34.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x1c77f63bdde2955d8bb7d003a83bd4e02bb66898"
+    },
+    {
+      "tx_hash": "0xac535ddfea86c6be0adb370ac69b8a7f9f53bff5beaf3a51c955647b9fffcd15",
+      "firm_id": "alphacapitalgroup",
+      "amount": 932,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:26:11.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x5be05f1833442e93c57628e789f942e87b9503b8"
+    },
+    {
+      "tx_hash": "0x2c1aa37706a68e5ef687cb142dba6602d93445e960f69a706894b0a82316aacc",
+      "firm_id": "alphacapitalgroup",
+      "amount": 515.04,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:18:57.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x29d812c7313577b1cb372c038a7b511e7788ae3c"
+    },
+    {
+      "tx_hash": "0x21bcca9ca1e85762f61fb847513d8916d02ede910e7b1bb57424f3eb1f0f2807",
+      "firm_id": "alphacapitalgroup",
+      "amount": 771,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:14:27.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xf229d884f590aaa91e63fabec914e3b97b08fa33"
+    },
+    {
+      "tx_hash": "0x0d32ae10f21be1290fd7b78932248cdd674ae18587fbf77597fb449b35b83ee8",
+      "firm_id": "alphacapitalgroup",
+      "amount": 2000,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:13:09.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xeb4d667e66280e14178990ebeaaf969700ce22b3"
+    },
+    {
+      "tx_hash": "0x183e00bad72c9a11554ef06d931a818d2fc5575129e835f1e344286f12ef0cc3",
+      "firm_id": "alphacapitalgroup",
+      "amount": 908,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:11:52.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xfd55e06f49ca1013b2283fc8189688fc66eabd19"
+    },
+    {
+      "tx_hash": "0x95c661d430baac213a2692e92c4981549822543a31ec35490d7a97f4773c05b2",
+      "firm_id": "alphacapitalgroup",
+      "amount": 361.95,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:09:23.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x92e40b91507361dc54757c563f3ca70a4e4380e4"
+    },
+    {
+      "tx_hash": "0x909f0c0d571414fa2fda0b3d8390bd4af4c59a31917d6e67861d5e7da2eb4644",
+      "firm_id": "alphacapitalgroup",
+      "amount": 199,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:07:26.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x1a438ccb74bf69fa149db9aa78145a3f4f719ae8"
+    },
+    {
+      "tx_hash": "0xf8834269fef8180c87da5f5ebee1e1fe4a5cd15f22119ca58b573ab0dd09c5c8",
+      "firm_id": "alphacapitalgroup",
+      "amount": 2460,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:05:22.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xc0cfd43ba60b7ec85472ee53c6dfda266a3d2af2"
+    },
+    {
+      "tx_hash": "0x1e84d410cd7bae9eb8eb3a826deba39a4841cafd160fbd81ccc8014e41684cea",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1527,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T14:03:53.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xd6d027ccc6bc0c40ebfcbace4687e21c6a877d62"
+    },
+    {
+      "tx_hash": "0xecc8e64c98604f53b674d8c188d93873c92abb699ac3331e7f976eb46f758fc9",
+      "firm_id": "alphacapitalgroup",
+      "amount": 222,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:57:18.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x529a48171fb318d754719969c88b412b4a70530f"
+    },
+    {
+      "tx_hash": "0xa7530503544815795cbeb24daf710132315ef2dac691c9363df763f07aabff32",
+      "firm_id": "alphacapitalgroup",
+      "amount": 2964,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:54:06.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x6a135f84aff857438392dfe1c5a4e77dfb88c1e9"
+    },
+    {
+      "tx_hash": "0x06f2fa76ecaac6b986d6bb4b9c9978106632deb60cc669c210e1efea5fdfadec",
+      "firm_id": "alphacapitalgroup",
+      "amount": 600,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:52:21.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x7c6fc7865b46c280e3c15d0b452e6eacc3844dcd"
+    },
+    {
+      "tx_hash": "0x3ad7deaa8f31a72a67edefaf42d9099d21f56db0fc158a1fb521efb5e487c11c",
+      "firm_id": "alphacapitalgroup",
+      "amount": 166,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:51:11.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xfa5e12fc253bf1174748dbe147cc32fcd58d6a8c"
+    },
+    {
+      "tx_hash": "0xf7a61c429a2ead2aa27e2fb01414b41f84d74cb2c5236221e8ccfa372a33cbf7",
+      "firm_id": "alphacapitalgroup",
+      "amount": 97.36,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:49:46.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x40f8d7ed74010562d2fc788a16b35f4f8b0e7bb3"
+    },
+    {
+      "tx_hash": "0xf890bda35001b1bf449bb91bce2341d15166964947179feb5b8b5aef85cefbf8",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1894.4,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:48:08.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x63f09fa1d7d0862d7f326e623f699f46bce6770c"
+    },
+    {
+      "tx_hash": "0xe48b9dd026741256c3efb21bef75128ccea93344842b8e5a41d4fc3128f2a41b",
+      "firm_id": "alphacapitalgroup",
+      "amount": 642,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:46:59.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x967e93dbc863f4fc9e38ab9e4f5796500a6b1161"
+    },
+    {
+      "tx_hash": "0x4ed75a8909f946a5150a49abedabaf2951314d44820cef3a6b95d55b7f2f65b4",
+      "firm_id": "alphacapitalgroup",
+      "amount": 3165,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:45:37.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xeca9a2488fe9b6c823e1b21d32f4042add19ef78"
+    },
+    {
+      "tx_hash": "0x5a0c6b8adba011318685df6643503b710276e2bf7a8360750b469a0407a0e71b",
+      "firm_id": "alphacapitalgroup",
+      "amount": 259.98,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:44:14.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xf3f363e3fa69e99ccb72baebd6370ef90ae4b451"
+    },
+    {
+      "tx_hash": "0x831574372350b5527cc93522a06d360b103761f487dd80c8cb72a7910b9aeb11",
+      "firm_id": "alphacapitalgroup",
+      "amount": 490.33,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:41:06.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x5a73dbf9e3c6c55944a7b4125f22dd45d8306bb0"
+    },
+    {
+      "tx_hash": "0x121a456448d6d9eb011c3fc57a61868dcfb9130b798edb67043bcda5021af9c5",
+      "firm_id": "alphacapitalgroup",
+      "amount": 549.3,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:38:26.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x6d7b4022e112f805e60923d5af141131ef2861a8"
+    },
+    {
+      "tx_hash": "0xb9507dc12897ea99a02e4cddba5a3f34e42b4eb06712a852acc8ec21afe6d772",
+      "firm_id": "alphacapitalgroup",
+      "amount": 5028.8,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:35:12.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x9c64e14b982afd98b2748f4137972cdda216a761"
+    },
+    {
+      "tx_hash": "0x1541c8d78d0e55e9ca9f4aae76805996ad23e7c10f4163622550c179479c39be",
+      "firm_id": "alphacapitalgroup",
+      "amount": 4087,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:33:42.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xf3cd79d1ff7b0e66205473d4cb88986e7da61c4e"
+    },
+    {
+      "tx_hash": "0x1a15b080846fd66255dbc213f69886d4e15573d9c7271050780a9ffbd370b792",
+      "firm_id": "alphacapitalgroup",
+      "amount": 5600,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:30:09.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x31d1705d1717571d80dacbfc419276a28018613d"
+    },
+    {
+      "tx_hash": "0xc9a628ff6b3f3621e2d34d51f00fe6d3bb39f6d5f5b5fe1f0ce3e52e7e8c0f39",
+      "firm_id": "alphacapitalgroup",
+      "amount": 115,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:28:56.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x10179cd24e5af88a83bcd0c4d73352979067d1f7"
+    },
+    {
+      "tx_hash": "0x52f4ab5c068463c85723022b3ede95b154f3b429cbf0479166d5ecd585a50399",
+      "firm_id": "alphacapitalgroup",
+      "amount": 3492,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:25:53.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x450b9a77c0d881629135003ec4395c34a9e3f1ad"
+    },
+    {
+      "tx_hash": "0x528c7be37eb3508d3a40d4c407772bb144d250740b75d1ece9458b95f3a4a58a",
+      "firm_id": "alphacapitalgroup",
+      "amount": 4045,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:22:43.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x01297c0b596de8de212fdfe4ac8bcb1dbc76b098"
+    },
+    {
+      "tx_hash": "0x0f96a29956f1771f1f9f12f293cf0275ff830b30d79ccf7e1222faf4902659ac",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1359,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:18:05.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x3200b4929be378c018d2552758839ce4bea7cacc"
+    },
+    {
+      "tx_hash": "0x326fb36a279b7aec4e0677144e28665aeaefdf96113324370837a413869498a3",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1974,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:15:54.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xd22799aa7223067a0d1a611d3525b3567bb76517"
+    },
+    {
+      "tx_hash": "0x4f0faf519619e52ebeecfe9c3e72a155ec019ca9d1d14f996cd4105bc33c1b6e",
+      "firm_id": "alphacapitalgroup",
+      "amount": 5643,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:13:42.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xcd1466c55d652f5b05d063d88155597b422a9075"
+    },
+    {
+      "tx_hash": "0x382b2e0c3750f04fad1d4717fc8a3b314b77fe6bfe8ef2bf1c113d69e306b6ba",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1863,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:11:25.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x9ae88c4ca350c350f80ab004d94ba6fdce19d039"
+    },
+    {
+      "tx_hash": "0x18a69e9c4e23dca835f00b671119041c7602d6e4e679d9ce21c49e3132147843",
+      "firm_id": "alphacapitalgroup",
+      "amount": 222,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:08:48.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x1ff563de00f905ee3b868295755cededa715fd39"
+    },
+    {
+      "tx_hash": "0x4a750487126e6f957ace5dd819dc128627be926b345900023d669b4a56e62d7d",
+      "firm_id": "alphacapitalgroup",
+      "amount": 237.6,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:03:23.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xd32df2e085b7913e425d4c08231fce1c2bab87bf"
+    },
+    {
+      "tx_hash": "0x6c0d9167781130217e327ae6e8391cef3006bc02a002e90940514a5b759b8484",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1444,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T13:00:12.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xfd5f6d770f375eb2304dc1feb0aed537d8aa8de8"
+    },
+    {
+      "tx_hash": "0x35239f74b8f002248181d2d27fe5a0de82cb78df77ba149a75f77b2cad72656e",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1019.85,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T12:48:52.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x3f92cf999a25629320beffa3aa2275d27e90da8f"
+    },
+    {
+      "tx_hash": "0x9f4990febd57967df496ab6b0cf4cc979ad853cc7f1bb6d3f1e35133826f5a7b",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1923,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T12:45:41.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xc4c87c5b51d2c7f3e4975e0a8a90be94c91fc65b"
+    },
+    {
+      "tx_hash": "0xfefef75a3e9d4484c9baf65732a7608c865a6f99cbe19a732e95ed6f25b71963",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1115,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T12:41:10.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xffea265039d9b179bf2aaf0f01330f94912f3732"
+    },
+    {
+      "tx_hash": "0x3a41267a7407f50a0ea6f36ae3018f5b597a5ed20c895d573671a75a3b05ab36",
+      "firm_id": "alphacapitalgroup",
+      "amount": 4821.76,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T12:38:16.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xcf067c6f7bfd0e4bc3461630633b6c59129db8af"
+    },
+    {
+      "tx_hash": "0xfd50d31f3f5a2bd60af00109b87210b84234d3dafb5825936fb2a210bc4748a7",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1346,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T12:35:56.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xde0e46a658c06d47ce26266fbf77a2488a61321f"
+    },
+    {
+      "tx_hash": "0xc6e994c66bf624c24254ed405677a73b46ab6f833d5a4782621ac1effc58e258",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1607.06,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T12:32:42.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0x9c248de3a81abc51d9fe5ca9737d119fa1b2d4d4"
+    },
+    {
+      "tx_hash": "0x165f10b6a36c4471eb1d7d348b2aa0cdbf988263049b369888a6788ba2c424a0",
+      "firm_id": "alphacapitalgroup",
+      "amount": 1579.11,
+      "payment_method": "rise",
+      "timestamp": "2026-02-25T12:28:49.000Z",
+      "from_address": "0xd172b9c227361fcf6151e802e1f09c084964bdcd",
+      "to_address": "0xee9f6f1745b3aded319e51f6570c53f6f470e5cb"
+    },
     {
       "tx_hash": "0x4ab0a768fd947164ee26594d1b846289f3e7a271f082b97a9db70cbfcbd6b8ae",
       "firm_id": "alphacapitalgroup",
