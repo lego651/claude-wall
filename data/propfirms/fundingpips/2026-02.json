@@ -2,12 +2,12 @@
   "firmId": "fundingpips",
   "period": "2026-02",
   "timezone": "UTC",
-  "generatedAt": "2026-02-26T11:35:28.746Z",
+  "generatedAt": "2026-02-27T11:27:24.339Z",
   "summary": {
-    "totalPayouts": 3052272,
-    "payoutCount": 1516,
+    "totalPayouts": 3111522,
+    "payoutCount": 1552,
     "largestPayout": 32600,
-    "avgPayout": 2013
+    "avgPayout": 2005
   },
   "dailyBuckets": [
     {
@@ -180,13 +180,344 @@
     },
     {
       "date": "2026-02-26",
-      "total": 93664,
-      "rise": 93664,
+      "total": 118671,
+      "rise": 118671,
+      "crypto": 0,
+      "wire": 0
+    },
+    {
+      "date": "2026-02-27",
+      "total": 34243,
+      "rise": 34243,
       "crypto": 0,
       "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0x924613139342bae11762475cbbc08e91d3650c2d9529b39a92c2178e76ab88f0",
+      "firm_id": "fundingpips",
+      "amount": 946,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T09:43:31.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x94b595fda4a060d8aa965029c543b235a603a7bc"
+    },
+    {
+      "tx_hash": "0x0cf8e0ebfbed5fd958b13fe7fd0d4dddf54a5f1a57b4deaf03e7ed2aa8f65eaf",
+      "firm_id": "fundingpips",
+      "amount": 1132,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T09:40:40.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x8ce7f6affe143c389f809848c3047a3f206cc122"
+    },
+    {
+      "tx_hash": "0xd80a4edc7dbb63ee87df962fa42219dec44d1d661e392595c8c371dfc0e5bab2",
+      "firm_id": "fundingpips",
+      "amount": 500,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T09:31:43.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x84e6793b6f05fabe190262a691b9d7b213027b91"
+    },
+    {
+      "tx_hash": "0x3429a90e89560b6ef518c91ce1044449dadc51497b500a06ca6b661e465c2734",
+      "firm_id": "fundingpips",
+      "amount": 398,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T09:29:42.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x7de2b1ddbd71ce2026fbd0b606ee39584a67a6e5"
+    },
+    {
+      "tx_hash": "0x551d24c6f6204c278348d963c31457c5a12227add503da50a0d9a8f785297bc9",
+      "firm_id": "fundingpips",
+      "amount": 1811,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T09:01:44.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x043bc4ca416d76cbe192a8d0c983e93c0c10d17f"
+    },
+    {
+      "tx_hash": "0x46a090f1133e7cae9715f319aacb80d60e1dcf5fcb0834d59900a78b27dc1ed6",
+      "firm_id": "fundingpips",
+      "amount": 2004,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T08:52:39.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x837717c953c83beaca7ca7b10880b5e040d1e645"
+    },
+    {
+      "tx_hash": "0x65183b450b2520a6fefabeb3a655d17b4b3efafd7932e24976ce485f8abb639e",
+      "firm_id": "fundingpips",
+      "amount": 1431,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T08:47:00.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x9fe9a686490df8b292cd601c5e91739a0e78e124"
+    },
+    {
+      "tx_hash": "0x4744586b69c12253c23ff585802dbc1b319274bdd7f79d8190928e4842ff9d9b",
+      "firm_id": "fundingpips",
+      "amount": 1520,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T07:55:33.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x760a97bde6991119d885d958bb18d7cca0539179"
+    },
+    {
+      "tx_hash": "0x21b061706c94dd8a3739f65833357868cadb543c8c06f7f942e3a85e60a00d56",
+      "firm_id": "fundingpips",
+      "amount": 17930,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T07:46:35.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x330ca95fd95b58db2d67e548f9e826569b2161c8"
+    },
+    {
+      "tx_hash": "0xe49e15e8eddd220482e3a691a222f21ded3e73bcffd7b6cf4e9eb5cbe9c0641d",
+      "firm_id": "fundingpips",
+      "amount": 416,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T07:32:34.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x57529d428c47127bee227cc20dc335322a43332c"
+    },
+    {
+      "tx_hash": "0xa1e50f107690c4e7d24c9bf54eb756f7c217ba8790c1d0f4a59089a696909eb2",
+      "firm_id": "fundingpips",
+      "amount": 980,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T06:55:35.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x85311350f9c51784287d1b14a18c78af2024d288"
+    },
+    {
+      "tx_hash": "0x232a535410d099b950ec3dc10e768acb8044d043b1a4ef30a9fa36443ddcba47",
+      "firm_id": "fundingpips",
+      "amount": 1636,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T04:52:57.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0xe2c7795a339096d7d5aa42fc8c54ced1350b653a"
+    },
+    {
+      "tx_hash": "0xce1bd577bfb3b4dfa71dfd03ded94e480c7bba6d6820ad6c3c29e59583553961",
+      "firm_id": "fundingpips",
+      "amount": 974,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T01:19:57.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x24516b4c577b923397517bc66e93af243b2d89e4"
+    },
+    {
+      "tx_hash": "0x969b7e0afe2bd0ceb9c2df4a15ccfbe12ffed3671449556a5f29d6a8fe4d7104",
+      "firm_id": "fundingpips",
+      "amount": 1420,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T01:01:49.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x98a59afd98dc9e5396814e784a75511d8fd351eb"
+    },
+    {
+      "tx_hash": "0x85ce4ee82edfcf5b8677aa00130bbb7a94a70562e41a09ec16378ae677329a27",
+      "firm_id": "fundingpips",
+      "amount": 753,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T00:35:46.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x97ffd579c30f218332e75e2af75f602f21ae8619"
+    },
+    {
+      "tx_hash": "0x3776c4179f303f50eaa2df638f0e378e3322390fd41f5f63b479ff7682da09fd",
+      "firm_id": "fundingpips",
+      "amount": 392,
+      "payment_method": "rise",
+      "timestamp": "2026-02-27T00:08:13.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x12e9ad4e82bab24fea6fac3ede8b106e4b752717"
+    },
+    {
+      "tx_hash": "0x9de4e381672ed79ce33d3bf6d001b951c6f9f316a93d08d6e204b6668cb37a9d",
+      "firm_id": "fundingpips",
+      "amount": 2481,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T23:28:35.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0xb3a9eccb24c599f07240dba62bce6f164325f58a"
+    },
+    {
+      "tx_hash": "0x1f85ca5b53b25ca38403792ecc19257b987171cabdbd9fcbbe7db09a0d0a387a",
+      "firm_id": "fundingpips",
+      "amount": 1368,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T19:08:05.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x3330ca8d88af5f2dff58f00b374b86ead8e73c59"
+    },
+    {
+      "tx_hash": "0x957b3aefad1f1ee117ed88771ace8070462c8e1443ef8b64c24261c257814a87",
+      "firm_id": "fundingpips",
+      "amount": 49,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T17:50:51.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x160e9f4fb88c27f134adc95149e8322867c14cbe"
+    },
+    {
+      "tx_hash": "0x85891f8b51e4c5ae4519ffc15ba47fa50dbd10025c66ff8f27ebc2037f0f3984",
+      "firm_id": "fundingpips",
+      "amount": 294,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T16:23:30.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x419dbab4ab494fe75bf168bd887c112d58053a59"
+    },
+    {
+      "tx_hash": "0x888f0dfc71e8e39b9554b5422f9d0418dcfedaba10f5ed6e54fa5e775e9556c2",
+      "firm_id": "fundingpips",
+      "amount": 1016,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T16:10:39.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x0204c02bdd097d6e3c4217a25b187c58ae214708"
+    },
+    {
+      "tx_hash": "0x6590f68a50b8dec1abaab2f44c0f811edabce6b2f4a5441603288f5a719debbf",
+      "firm_id": "fundingpips",
+      "amount": 509,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T16:04:53.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x5f6a0820c79b3d271f4ab5fe5e21c56e65bcfae7"
+    },
+    {
+      "tx_hash": "0xfc91c220454ff131aaa72c750eaefc201499eb3e5dd5220f821db15d973d7056",
+      "firm_id": "fundingpips",
+      "amount": 949,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T15:09:11.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x870da0e1aee909d7ae4388cdb340820c14a198e5"
+    },
+    {
+      "tx_hash": "0x214f6744b4fc80400b49029a3ae1e1870d530935351905d2ad62834d1f6eafd3",
+      "firm_id": "fundingpips",
+      "amount": 458,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T14:50:44.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x89e42167ad78a7faecfb27c7e1db370738626f07"
+    },
+    {
+      "tx_hash": "0x85f392656178197f3efe25f2aa31a35688c2a70272af5a37b8e4755a0206607b",
+      "firm_id": "fundingpips",
+      "amount": 626,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T14:49:41.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0xd7c95083da0d524a7beb034fe814a227e704bafa"
+    },
+    {
+      "tx_hash": "0x2cd4ffe960e7dfb7f46a0e3787821d448b86e32948f2583e14b858420e474f01",
+      "firm_id": "fundingpips",
+      "amount": 1967,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T14:47:45.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x651c9d21b118b5a7dbc09de6fe19aaf3c4e18e75"
+    },
+    {
+      "tx_hash": "0xb728d14112e576646b4e5cb6a35bc83779613c93995abff3e300fef01c26a7ed",
+      "firm_id": "fundingpips",
+      "amount": 746,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T14:42:00.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x25542e7c30dcf0ed8c69d587b73a03eaebf8b3d1"
+    },
+    {
+      "tx_hash": "0x05028ae45295d8cd30d1d977020dc071ea27ee95b4938dca68c954707c488db6",
+      "firm_id": "fundingpips",
+      "amount": 800,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T14:37:41.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0xf65bad7e12e9894f3727d4d83b0bfdd30599138b"
+    },
+    {
+      "tx_hash": "0xc29fade3ca6283e66ecff6c238ad3d40ce96214ae47e2cff4de4bdf08473d7d9",
+      "firm_id": "fundingpips",
+      "amount": 397,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T14:25:54.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0xa1408f001d75ad42206943380119007e4330ff4f"
+    },
+    {
+      "tx_hash": "0xea126cef7b3d1ceaa004308296bd318230677506b6fb07fea906f28c83ba676d",
+      "firm_id": "fundingpips",
+      "amount": 561,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T13:57:32.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0xc5f2727204ace640e036d30f37fd4718abdf4eeb"
+    },
+    {
+      "tx_hash": "0x027f8668365197993d7738f7a9da3f40e1daae7451b494d2a8d14246d732a14a",
+      "firm_id": "fundingpips",
+      "amount": 623,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T13:48:28.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0xd749eb92cf7115c7821e0fd0a7579541cdc0560e"
+    },
+    {
+      "tx_hash": "0x3519f36929438c2f5e2a82480d3f31b753d5b974e99c4427cd56bc5cb1831424",
+      "firm_id": "fundingpips",
+      "amount": 2816,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T13:34:44.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0xc702674e7f1d593f3ae33dfa0cdaa6ffa2ddb35e"
+    },
+    {
+      "tx_hash": "0x141d7aab53432c60f5ebbf9ab6205948bf1bb34c0475f29981943ca27fcfe75b",
+      "firm_id": "fundingpips",
+      "amount": 2139,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T12:46:43.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0xe8fd74bc922bec559fa2163e69bc1c4007046dbb"
+    },
+    {
+      "tx_hash": "0x17a84fb8fd3157837a319d3328fa850f613d1a8761707ce4c41a224e01bac593",
+      "firm_id": "fundingpips",
+      "amount": 1965,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T12:40:42.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x957f3423cc6b993d2895a2e6d98a2a75dc270bda"
+    },
+    {
+      "tx_hash": "0xc940b16ec96ec3f339ac17ae2c6d5f2e5cb36a9a0b68f79d1a66565860ccf429",
+      "firm_id": "fundingpips",
+      "amount": 3696,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T12:34:57.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x8b7a1d695ff5ee3b3200683c3d8c66b7d58cd63b"
+    },
+    {
+      "tx_hash": "0xb4708f6f1400711f2258036f1d1fb5d9bbdef6975e187c0491999904f01197a7",
+      "firm_id": "fundingpips",
+      "amount": 1547,
+      "payment_method": "rise",
+      "timestamp": "2026-02-26T12:24:00.000Z",
+      "from_address": "0x1e198ad0608476efa952de1cd8e574db68df5f16",
+      "to_address": "0x64d06598b667ae73463c408d205c72c326ffc308"
+    },
     {
       "tx_hash": "0xa932a98bf6cbe6fb2cc3c8e36fca8bcf6528b1111bd474c6df1c0ba495d5372a",
       "firm_id": "fundingpips",
