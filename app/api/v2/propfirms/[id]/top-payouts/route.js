@@ -95,7 +95,8 @@ export async function GET(request, { params }) {
     }
 
     // Get top payouts from JSON files (Rise only)
-    const payouts = await getTopPayoutsFromFiles(firmId, period, 5000)
+    const allPayouts = await getTopPayoutsFromFiles(firmId, period, 5000);
+    const payouts = allPayouts
       .filter(p => p.paymentMethod === 'rise')
       .slice(0, 10);
 
