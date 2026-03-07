@@ -142,6 +142,6 @@ describe("SubscriptionSettings", () => {
     const logoImg = container.querySelector('img[src="https://example.com/bad.png"]');
     expect(logoImg).toBeTruthy();
     fireEvent.error(logoImg);
-    expect(logoImg.getAttribute("src")).toBe("/icon.png");
+    expect(logoImg.getAttribute("src")).toBe("/default-firm-logo.svg");
   });
 });

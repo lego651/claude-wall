@@ -187,6 +187,9 @@ export async function GET(request) {
       }));
     }
 
+    // Exclude placeholder entries
+    firms = firms.filter((f) => f.name !== 'Industry');
+
     const data = [];
 
     for (const firm of firms) {

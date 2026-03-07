@@ -50,6 +50,6 @@ describe("ActiveLinksCard", () => {
     render(<ActiveLinksCard verifiedFirms={firms} />);
     const img = screen.getByRole("img", { name: "Firm One" });
     fireEvent.error(img);
-    expect(img.getAttribute("src")).toBe("/icon.png");
+    expect(img.getAttribute("src")).toBe("/default-firm-logo.svg");
   });
 });
