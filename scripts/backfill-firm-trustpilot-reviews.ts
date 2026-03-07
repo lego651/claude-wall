@@ -34,7 +34,6 @@ const REVIEWS_RETENTION_DAYS = parseInt(
   10
 );
 const INCIDENTS_RETENTION_DAYS = 30;
-const REPORTS_RETENTION_DAYS = 30;
 
 function daysAgo(days: number): string {
   const d = new Date();
@@ -68,15 +67,6 @@ async function runRetentionCleanup() {
   if (errIncidents) throw new Error(`firm_daily_incidents cleanup: ${errIncidents.message}`);
   console.log(`[Trustpilot Backfill] firm_daily_incidents: deleted ${deletedIncidents?.length ?? 0} rows`);
 
-  const reportsCutoff = new Date();
-  reportsCutoff.setUTCDate(reportsCutoff.getUTCDate() - REPORTS_RETENTION_DAYS);
-  const { data: deletedReports, error: errReports } = await supabase
-    .from('firm_weekly_reports')
-    .delete()
-    .lt('generated_at', reportsCutoff.toISOString())
-    .select('id');
-  if (errReports) throw new Error(`firm_weekly_reports cleanup: ${errReports.message}`);
-  console.log(`[Trustpilot Backfill] firm_weekly_reports: deleted ${deletedReports?.length ?? 0} rows`);
 }
 
 async function updateFirmScraperStatus(
