@@ -2,12 +2,12 @@
   "firmId": "fundednext",
   "period": "2026-03",
   "timezone": "UTC",
-  "generatedAt": "2026-03-07T05:57:09.389Z",
+  "generatedAt": "2026-03-07T11:15:22.895Z",
   "summary": {
-    "totalPayouts": 2389101,
-    "payoutCount": 1288,
+    "totalPayouts": 2591056,
+    "payoutCount": 1396,
     "largestPayout": 70840,
-    "avgPayout": 1855
+    "avgPayout": 1856
   },
   "dailyBuckets": [
     {
@@ -54,13 +54,985 @@
     },
     {
       "date": "2026-03-07",
-      "total": 110820,
-      "rise": 110820,
+      "total": 312774,
+      "rise": 312774,
       "crypto": 0,
       "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0x07abec0b9edd288bf655c5cb47f02595a14f274fbae3f2e56b1615a8b2837804",
+      "firm_id": "fundednext",
+      "amount": 458.57,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T09:16:35.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x2522742f8ee1e7725c47f9b2127cd63f36a1e1ff"
+    },
+    {
+      "tx_hash": "0x7aa847f9a7439da2eddf0bfd54350379993308e6273e05a8fa66651c78a9a4f5",
+      "firm_id": "fundednext",
+      "amount": 303.97,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T09:16:22.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x06978a2cc8c4f421043e93e9e72ead77ffca05eb"
+    },
+    {
+      "tx_hash": "0x5f3f0c7e83114a67341ff7f914db9e370d7460c30e93dca21389f80a22b8e210",
+      "firm_id": "fundednext",
+      "amount": 391,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T09:16:10.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xbaf704db834e258aa848eb57e7d521c8788aeba2"
+    },
+    {
+      "tx_hash": "0x07283fd2b00e9d5342a748d2a8ecd457c34f8f1b515b4d6cd42b9291f9cedac8",
+      "firm_id": "fundednext",
+      "amount": 993.95,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T09:15:06.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x58ddbc442af89972486d18956389c5357ac97d86"
+    },
+    {
+      "tx_hash": "0x2dcee3cff3a5dfee0c1bb6f24caf0fe24bd48da8f382e488b7c575d32ad88ae5",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T09:14:42.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xba4170f1df5b2930e5b9363c45f603c18005c797"
+    },
+    {
+      "tx_hash": "0x01fc1dfcdf6a632b5f6a502bd40d81b6502ca01d25ed29c1ad61bd27e4afbcd2",
+      "firm_id": "fundednext",
+      "amount": 926.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T08:55:17.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x2ea84755fce4d34a878f017c59661c54884ac9d0"
+    },
+    {
+      "tx_hash": "0x6fdb5f8de014af679dc4efc2befee41a9276368f739ef6db6aaa19f87f32ad02",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T08:55:12.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xa164b34640a9ce720bc925adee88b422b331fdb6"
+    },
+    {
+      "tx_hash": "0xfa2f09a18e0ea78bed60e8305e29d744f1d382636999088f657d82b47171d852",
+      "firm_id": "fundednext",
+      "amount": 1454.45,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T08:55:08.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x63f3a652fe8f40c7c4f1965fb3bec060885c6a50"
+    },
+    {
+      "tx_hash": "0xd9d81f1a579b5cb495e9d5bb07fce910bf0edcb83c814c28a914d61029cd9ba1",
+      "firm_id": "fundednext",
+      "amount": 617.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T08:54:46.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xa056536bf89f076dd490da5566745a9a2bd7ea03"
+    },
+    {
+      "tx_hash": "0xc72e6d0b9bf59d98745c60d53f7a112e62c8e3417584bad3def4b737a77a6609",
+      "firm_id": "fundednext",
+      "amount": 1930,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T08:54:19.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x098e145e5340553a9084c034c7b02e700069fedd"
+    },
+    {
+      "tx_hash": "0x1914f713cbe54886b7b7736c163288ede939304e9e327980ce8f5e4f5f61bf28",
+      "firm_id": "fundednext",
+      "amount": 682.7,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T08:54:13.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x655a161e8e784d01c871d85c8d3c7307b1b7dec5"
+    },
+    {
+      "tx_hash": "0x253d5190d2efbe2a4c51f684bb27b6382c5e62e98a9f0ff7acc615dbfc222a41",
+      "firm_id": "fundednext",
+      "amount": 926.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T08:54:08.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x55888b5969c654a4b36e8c3145fa51b2d16d2009"
+    },
+    {
+      "tx_hash": "0xe59135ee44a3619748f3d5b139f741bf9c0378ee34d87cd91642afb4979100fe",
+      "firm_id": "fundednext",
+      "amount": 1389.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T08:53:59.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x14626b56193c16c833761f31562b4592d03b71e9"
+    },
+    {
+      "tx_hash": "0x71c6b35be4b83d1c5321ca008c10436491247968b99a0b9d02fc038d0a2214ea",
+      "firm_id": "fundednext",
+      "amount": 617.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T08:53:54.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x22efe0e4d1e6dd0082342a39d0fc83e9a12a36f1"
+    },
+    {
+      "tx_hash": "0xd27ca0e0fef826ced02216c54cbbfc48b35684b62e61006d1852c560a83e9c0d",
+      "firm_id": "fundednext",
+      "amount": 507,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T08:53:16.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xd1ccb4b0127edb3d365a2b25468a23bd3b6845b2"
+    },
+    {
+      "tx_hash": "0x4ca048199aaa2248032d54adc80f4647744e39057ac8f3da24818513ed140bcb",
+      "firm_id": "fundednext",
+      "amount": 2976.23,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T08:53:08.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x58c52b1623204212046055e2a53b4de8ab754126"
+    },
+    {
+      "tx_hash": "0x3294e6bd001a9673f27c039032e9fdb3911f031ea06c04a86124b2aa66a985e2",
+      "firm_id": "fundednext",
+      "amount": 2259.97,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T08:53:03.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xdacc5dde654a68689beb588b372310e7bb7bcb72"
+    },
+    {
+      "tx_hash": "0x5c16e634012c7f8f1ea82b7b35b8527e677d175b06bb5adf6a89e2d5f2fc9c9c",
+      "firm_id": "fundednext",
+      "amount": 617.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:44:10.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x529c7d228efb73835e3e2e2f6c803e29a336c6d7"
+    },
+    {
+      "tx_hash": "0xab7c71b1820e5e5a37162c38d70dbf90651b7c5d742873b6d52309eea7348ac2",
+      "firm_id": "fundednext",
+      "amount": 617.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:44:04.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x771d7e6ba053283421c9bd02a7169e513f21f66f"
+    },
+    {
+      "tx_hash": "0x631431be696a5bfee12124eb8a58e1d2eb07970fe7b723dc68a2bb70fb756555",
+      "firm_id": "fundednext",
+      "amount": 3559.69,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:43:57.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x8f923f0d550688367e12edbc42b03bd385d7e089"
+    },
+    {
+      "tx_hash": "0xa4341def595a39bfda126c78b0737c7f6a8c116ced6bcc2f188bc34f1ba8d427",
+      "firm_id": "fundednext",
+      "amount": 617.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:43:51.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xd298996c248ac1c77cc9d3985c8bf3cc6bc44f2d"
+    },
+    {
+      "tx_hash": "0x866366ab920110586a385470639a2c6a482fb6358abfa0ac4464107c2c505e25",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:43:45.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xcd45b0b2ba3475a1fd09677b73aced0e726c442e"
+    },
+    {
+      "tx_hash": "0x45f5621d136ba7702a9f94d697cc95ec66d9e042828b291296e2bc7cb2e01b13",
+      "firm_id": "fundednext",
+      "amount": 527.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:43:41.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xb51bb84c47531287bdc598c091013f2f7fb07638"
+    },
+    {
+      "tx_hash": "0xc7b048949f5538ea2b81503e6870f38298196f3a99df0108a84475db34466f2f",
+      "firm_id": "fundednext",
+      "amount": 3417.62,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:43:34.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xa59b2a434d40ec288952756a0830401a9bb900f1"
+    },
+    {
+      "tx_hash": "0x9ba6d934a7ce579f7036649474824bcea0e8dd0e0709904650c81be48a4307fe",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:42:54.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x1629ca512edc4da9356d36c391b5c3091dcfaf93"
+    },
+    {
+      "tx_hash": "0xc7d520c1e8a8321b9aa24319a8b741a2d22177f4263e04c2cd73c7376af2ad47",
+      "firm_id": "fundednext",
+      "amount": 617.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:42:48.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x4ed08ba7f5e13742778b9d7891368d9103c22de2"
+    },
+    {
+      "tx_hash": "0xb1151e14ee02cc62b950ccfec19a91e0f4f2488f6d50b01d9bcef5fe7a76d172",
+      "firm_id": "fundednext",
+      "amount": 617.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:42:42.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x0195fa7437014283c1e55a7984868900829f7531"
+    },
+    {
+      "tx_hash": "0x2adabb9aca8d42b7113fa53db9c498bfb1382deae8636cab041d9b2877b93be9",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:42:36.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x3a4b4596e3308e2ad3c74254bf718aad12a9dd05"
+    },
+    {
+      "tx_hash": "0xc8e46ef340d5e12c9fad422b8690730e78a344dd33dbfdea9c672f23abace551",
+      "firm_id": "fundednext",
+      "amount": 741.12,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:42:30.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x082a947b9de208cd9a07446a05edee2c06feb2c5"
+    },
+    {
+      "tx_hash": "0xa8959e5c410bc736f8cc72e90abd508e51aeb540d0eb2ad0eff88be7f9306b74",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:42:24.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x2ee4690e9f570418721546ef78f14b159aefb63a"
+    },
+    {
+      "tx_hash": "0x221fa16c1eb82015432701e3e9937a9e545104e1042cd9b2cd6fd5427211bb44",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:42:18.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x2ee4690e9f570418721546ef78f14b159aefb63a"
+    },
+    {
+      "tx_hash": "0x94671c2995700790891a3f56a8d5ead83757883035b17d892d648125518124fe",
+      "firm_id": "fundednext",
+      "amount": 926.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:42:12.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xee0c4e281b5e27ab163097f34b5619843cff1f2f"
+    },
+    {
+      "tx_hash": "0x90ae655a566d6befd412c56caaa0424650b0a46c6c2a97b5b7b2470e7cfac65e",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:42:07.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x2d61aac41dde8783268789b3de834c80a0b9a353"
+    },
+    {
+      "tx_hash": "0x98863d180c63a6a907aa4a5bed7360207ab30609aa3624148750552a46806b34",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:42:00.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x2d61aac41dde8783268789b3de834c80a0b9a353"
+    },
+    {
+      "tx_hash": "0xad07898e99a432cc3926860c0f24e4931b7de7903e8fcd335ad719162f5fc3f7",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:41:54.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x2d61aac41dde8783268789b3de834c80a0b9a353"
+    },
+    {
+      "tx_hash": "0x886293dff686233359237688c939c0df8b97a5096ab73172ddfa6166d9e4c118",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:41:48.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x2d61aac41dde8783268789b3de834c80a0b9a353"
+    },
+    {
+      "tx_hash": "0x715aaa542c4fcdbcd385c0abdc70f1adeed3d81876bbe494b204ed635ea40d60",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:41:41.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x2d61aac41dde8783268789b3de834c80a0b9a353"
+    },
+    {
+      "tx_hash": "0xca6443cef34e91c3a365e419dc6842299f78cb4eecd60465a3e59b6757364a17",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:41:33.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xa7245c99b9805d81d0bb025235aacea49a504a6c"
+    },
+    {
+      "tx_hash": "0x19f5b9888c15cda71da6aaf8705701ae3af6a065ee89e6b1c895635eb21eba3b",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:41:26.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xcd44af7d33dfcac011a1ddf23fd0fe3556cbce25"
+    },
+    {
+      "tx_hash": "0xcfd84529e6f69844f913e2d2567f62959b99227b140f0e1d4dd88a54e41b6daf",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:38:07.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xcd44af7d33dfcac011a1ddf23fd0fe3556cbce25"
+    },
+    {
+      "tx_hash": "0xec7e762a543bcf663b8f00b49a6ec69515e63643b817bad5a4bc9cfb026c22a1",
+      "firm_id": "fundednext",
+      "amount": 724.52,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:37:44.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xf0449ea55eb08e39a5c6407a71ff4b03e92a0569"
+    },
+    {
+      "tx_hash": "0xf87e9da853499d51fc26c8512a3351fca9596d91a1ac05f11eb83c1cfaeec18d",
+      "firm_id": "fundednext",
+      "amount": 1093.33,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:37:14.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x79cebbcbf237458f6df450f7b4980a0c38602ce1"
+    },
+    {
+      "tx_hash": "0x179d5a6419c2b66cbaae029e43d484b3e9240f342780cbb3fa87018317443d9e",
+      "firm_id": "fundednext",
+      "amount": 926.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:36:56.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x824fd19d481bf65a3ef54785fd79cae15a2676c5"
+    },
+    {
+      "tx_hash": "0x5bd82952497dd0b5521dc2bc2d223847593009a8d1b2f43e9e41736c076f5fc0",
+      "firm_id": "fundednext",
+      "amount": 223.88,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:36:54.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x291082cef58f52959767321bc973be10afe4c416"
+    },
+    {
+      "tx_hash": "0x3d7a83ef8e065066735d1c5035a6b8304c63a1741f067773cdfae098a37c8497",
+      "firm_id": "fundednext",
+      "amount": 617.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:36:40.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x7cdee99513a90f53a0c11441d194c19ae1f83036"
+    },
+    {
+      "tx_hash": "0xe43bacb53ab447d0658cd691bf95c35bd693cbb429e5550ea03182ca38d5c8a8",
+      "firm_id": "fundednext",
+      "amount": 926.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:36:33.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x3dc5f2ad5ac32bc10d68fad9e6217fc038988d91"
+    },
+    {
+      "tx_hash": "0x390544608648e09c78ef20510bac03b09b1bf382810e585bf331ed064b68e159",
+      "firm_id": "fundednext",
+      "amount": 926.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:36:20.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x8845c5d1f1f8d0bcf018b43ca0c4b793d74f94cb"
+    },
+    {
+      "tx_hash": "0xa41229d242099053a6d19cf3c4a1941f032bf77823427934f351fb21a0735700",
+      "firm_id": "fundednext",
+      "amount": 861.55,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:36:12.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x022aa629a3f9a6fc8c24c561d4d2ce284fbdd863"
+    },
+    {
+      "tx_hash": "0x21f5c068a18ac94388e724e08aa643bd0903960032d6434b276804f80fdec3a8",
+      "firm_id": "fundednext",
+      "amount": 629.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:36:07.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x7e3ec1b3b8b5d2509434f1bd091105fbf16bf827"
+    },
+    {
+      "tx_hash": "0x6b4626106bdcc780dcda39e446aecffae1c870b58147f97d03144a741390506f",
+      "firm_id": "fundednext",
+      "amount": 1101.64,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:36:01.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x70d31cd19031b169bb3a3058d96dd62af5544a1c"
+    },
+    {
+      "tx_hash": "0x72d3c290cadac3b890e9337822d9dae50034cd7e06dc4b102e9d4257f40dc861",
+      "firm_id": "fundednext",
+      "amount": 1334.79,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:36:01.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x70d31cd19031b169bb3a3058d96dd62af5544a1c"
+    },
+    {
+      "tx_hash": "0x90e42de58030d61193f4e958f9a4cce6a5d81a11fb654b8fc35b8cef6bd88b99",
+      "firm_id": "fundednext",
+      "amount": 61.76,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:35:51.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x40d6e55babd04b5dd913c9bca4163581011b30d3"
+    },
+    {
+      "tx_hash": "0x8183a1a40a1b67f2a4f6acd45b5052ba9d7bb2a9e7e212938fcb4d2361a80857",
+      "firm_id": "fundednext",
+      "amount": 1930,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:35:40.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x3e55dfe48aba1a4b2c8eafc672b238bf4905d886"
+    },
+    {
+      "tx_hash": "0x6c89f05d37d767692963812810e9588c538da3ea2bf31de1f5aefb02491175af",
+      "firm_id": "fundednext",
+      "amount": 5944.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T07:35:36.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xee0c4e281b5e27ab163097f34b5619843cff1f2f"
+    },
+    {
+      "tx_hash": "0x2be8d67f9874bba7793fcae2eac6a3da5aeb26dac89f3429670923200e39ca3b",
+      "firm_id": "fundednext",
+      "amount": 482.5,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:40:22.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x7a7443d3bafccacd3d421604a56edc162a00ddd5"
+    },
+    {
+      "tx_hash": "0x48e3a115010b4aa6eedbb26b36e0c3928e0086710be29b2d073be403c18d5e6a",
+      "firm_id": "fundednext",
+      "amount": 482.5,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:40:10.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x7a7443d3bafccacd3d421604a56edc162a00ddd5"
+    },
+    {
+      "tx_hash": "0x85db2531a28af7a6218beef171160b1aab6c5e6f198cd1f945ec180e852a4168",
+      "firm_id": "fundednext",
+      "amount": 421.51,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:38:14.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x407119a34e375921d4f118790e70b12afac86d5d"
+    },
+    {
+      "tx_hash": "0xf60c7402f90460c93e883fabb4d336b042de3a19d2aff578fa386bfa991efa63",
+      "firm_id": "fundednext",
+      "amount": 393.72,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:37:56.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x407119a34e375921d4f118790e70b12afac86d5d"
+    },
+    {
+      "tx_hash": "0x690e4522f5e312bf35d2c1aa5f9861799919f5584aa837593037d7824093932b",
+      "firm_id": "fundednext",
+      "amount": 393.72,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:37:34.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x407119a34e375921d4f118790e70b12afac86d5d"
+    },
+    {
+      "tx_hash": "0x5fd0be47aee7e14029f3f316f6d15fe778920c44c29044b6bdaf50443ac206b5",
+      "firm_id": "fundednext",
+      "amount": 397.58,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:37:20.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x407119a34e375921d4f118790e70b12afac86d5d"
+    },
+    {
+      "tx_hash": "0x7975e7dc757a423b2c76fe5f83395a73a9d59b873406ce3282c52729f5f7e6e3",
+      "firm_id": "fundednext",
+      "amount": 617.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:37:05.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x7cdee99513a90f53a0c11441d194c19ae1f83036"
+    },
+    {
+      "tx_hash": "0xff99506e3624700d663e1643b0b47de925271badcefda0e0336306be6d4d2d76",
+      "firm_id": "fundednext",
+      "amount": 617.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:36:52.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x832ad8a470421d0914a4cd4bb81393f14eb268cb"
+    },
+    {
+      "tx_hash": "0x9d66f8f92a283cedf8df838760a1f9f63d5069bc1a8d70baec6885d54ea0d20a",
+      "firm_id": "fundednext",
+      "amount": 579,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:36:32.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x4ff6a566516b74f5b79427549e923d9466c76da2"
+    },
+    {
+      "tx_hash": "0xb0912aff35af20608f93ecf6ca2bc31592f8073dac1a10c4b19e5080acb26a21",
+      "firm_id": "fundednext",
+      "amount": 617.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:34:56.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x120f0875ce2999f0f8249eaa78637bec7c0bcf69"
+    },
+    {
+      "tx_hash": "0x02206d744895715c9fb43d1ea0195cb33fd1a5669b8e76de31ce3185bef9f222",
+      "firm_id": "fundednext",
+      "amount": 218.86,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:33:21.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xdc99ca3bab133eff7d75b5389b2294cac7a69a0d"
+    },
+    {
+      "tx_hash": "0xe50cb929a4b83078874f5a43771ad71e1682c30e63fa8ad2f69af1857c10134d",
+      "firm_id": "fundednext",
+      "amount": 101.32,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:31:48.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xb18c0d963c9815704c5e1b0862478c30560a4690"
+    },
+    {
+      "tx_hash": "0x18e971a4da2ef585b13e00d174d319f6da5a17ef3057502a2179a56ff31b9bca",
+      "firm_id": "fundednext",
+      "amount": 2213.66,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:28:50.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xdc1c2c94de5d8b79d530b35296040241b9068a07"
+    },
+    {
+      "tx_hash": "0xb80da742a08850d14d6b4a9da461a8e6259a74b55c57ea3ba581f2100324595c",
+      "firm_id": "fundednext",
+      "amount": 2214,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:28:40.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xdc1c2c94de5d8b79d530b35296040241b9068a07"
+    },
+    {
+      "tx_hash": "0xe133bc2611309aefac8825fb1525c6d51b77fe531b237a1252706933205bec56",
+      "firm_id": "fundednext",
+      "amount": 2213.66,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:27:47.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xdc1c2c94de5d8b79d530b35296040241b9068a07"
+    },
+    {
+      "tx_hash": "0x1d3139b5aa7a7d9a0ff03870e8f231aff81f35de6bd613673e751be24413932b",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:27:39.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x71f1ac15b790b4dbfac0244fc81cf7650aff487e"
+    },
+    {
+      "tx_hash": "0x5fb1220bf742b2488bd151be946f24719f1c37099e2db14a4dda99807451a52f",
+      "firm_id": "fundednext",
+      "amount": 2925.88,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:27:31.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xbc0a86ccdf7e153dbc3ab26d773aee9b2c88fc8c"
+    },
+    {
+      "tx_hash": "0x8b274c0108716aabea0da893b6bfbd9583286ffd2ac1e874b3d9b0d59739eb6e",
+      "firm_id": "fundednext",
+      "amount": 2856.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:27:23.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xbc0a86ccdf7e153dbc3ab26d773aee9b2c88fc8c"
+    },
+    {
+      "tx_hash": "0xdd846e36ff3e60e39f9482badb0dc10d025d10cc357696cb2fa89e23d62236fe",
+      "firm_id": "fundednext",
+      "amount": 926.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:27:15.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xd89121cf4aab72cea1f97b807869196975ec018d"
+    },
+    {
+      "tx_hash": "0x15a670e974904b7b63484f44189e333e0eee00d0765e63c687d5a57efada05f6",
+      "firm_id": "fundednext",
+      "amount": 926.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:27:05.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xd89121cf4aab72cea1f97b807869196975ec018d"
+    },
+    {
+      "tx_hash": "0x96ab825e0dfdeda2f09fded4527fef694af343b5606484c5ed5efc81c3e81990",
+      "firm_id": "fundednext",
+      "amount": 926.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:26:56.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xd89121cf4aab72cea1f97b807869196975ec018d"
+    },
+    {
+      "tx_hash": "0x43e9be5e7361331b137dd70788045ce02f242a660fb14d874bd7ea880390f6a6",
+      "firm_id": "fundednext",
+      "amount": 926.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:26:47.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xd89121cf4aab72cea1f97b807869196975ec018d"
+    },
+    {
+      "tx_hash": "0xd0652ba69e7c338768e6ebb03be1bf4bbc335d70f6406d6be00ba1a354dc754f",
+      "firm_id": "fundednext",
+      "amount": 926.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:26:39.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xd89121cf4aab72cea1f97b807869196975ec018d"
+    },
+    {
+      "tx_hash": "0x55ea860d33ddf499daed6c9e18dd08f59b7dd3068bbf5e4b1c41bc3e8780a33a",
+      "firm_id": "fundednext",
+      "amount": 1143.95,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:25:41.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xb45599ecedd04ca81ad890af0ed52fb8687d1afa"
+    },
+    {
+      "tx_hash": "0x33ec418f1732be401935ca9768fd78c5c6152f20a0640d52e4a6b35a429422b1",
+      "firm_id": "fundednext",
+      "amount": 4632,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:25:31.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x4c324e7d459af8bbd7359298b01d6b934b52fe0d"
+    },
+    {
+      "tx_hash": "0x0d84a2c35652de1bfa7c9b9d3431fdb8d8a18ada7d9857b05cdc7a8ab1c67959",
+      "firm_id": "fundednext",
+      "amount": 3128.12,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:25:23.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xc30c9da0daa879cd265f4114544d503e4f74db8a"
+    },
+    {
+      "tx_hash": "0xa14232c06011b3b974603a0baca59fb123984ea836cce590b635672757533c0e",
+      "firm_id": "fundednext",
+      "amount": 4632,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:25:14.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x4c324e7d459af8bbd7359298b01d6b934b52fe0d"
+    },
+    {
+      "tx_hash": "0x523633be5dbe68996e50e7224f82757dfaf554e46fee486a2e175dbca7f5ae55",
+      "firm_id": "fundednext",
+      "amount": 4632,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:25:05.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xbe58e9f57ca48d6874f3f8af009eb4fe7f19c8f4"
+    },
+    {
+      "tx_hash": "0x76393d7c791886475dc1b24a8a5efec794fe4d61465f74062cf2c758588e0014",
+      "firm_id": "fundednext",
+      "amount": 2110.99,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:24:56.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x4893c6d0b9b79c77eaa3ca8fac4c51b3f80f077d"
+    },
+    {
+      "tx_hash": "0x666d11d3b6c71c2cff7c9d5075b717264e1c767d0674916ada23e91d5a153b56",
+      "firm_id": "fundednext",
+      "amount": 2059.11,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:24:49.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xb26154c7c7b17f509418ddddfa8c3b2d8d8c269a"
+    },
+    {
+      "tx_hash": "0x52bb0f68590e619f95121d965818203a823370a07a1043318588f369d826bbbc",
+      "firm_id": "fundednext",
+      "amount": 2030.54,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:24:41.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xb26154c7c7b17f509418ddddfa8c3b2d8d8c269a"
+    },
+    {
+      "tx_hash": "0xbcd76a9ef357a0a639fa7568cb98c9f98454f3915059d6bfa393d25fa21cf8d6",
+      "firm_id": "fundednext",
+      "amount": 2056,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:24:33.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xb26154c7c7b17f509418ddddfa8c3b2d8d8c269a"
+    },
+    {
+      "tx_hash": "0x78111f6b6b78708091e4d6fe1a24cc7437256aef08382afebc9bf4017c2714fb",
+      "firm_id": "fundednext",
+      "amount": 2048.3,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:23:04.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xb26154c7c7b17f509418ddddfa8c3b2d8d8c269a"
+    },
+    {
+      "tx_hash": "0x64977830d71c1e44e865bdf8061d78e22731dd52f0c66d8fc3c98702ca0ab7de",
+      "firm_id": "fundednext",
+      "amount": 798.33,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:22:54.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x3eaa12bd49745e1d7768c6aa1d83db780d4e8044"
+    },
+    {
+      "tx_hash": "0x21d6a30b5af4070f14148dee741868fced7938119eb8ca9f01cf35cd21076e1a",
+      "firm_id": "fundednext",
+      "amount": 2179.85,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:22:45.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xca24c221bd6600af22d711d6b077216b1632e58a"
+    },
+    {
+      "tx_hash": "0x5afdee36e92b3812a5db4526a17161c9da0ae5ae0be082426512d298c95932f0",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:22:30.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x502b4f63e19dc13d89b6ab47133620ee109e25a7"
+    },
+    {
+      "tx_hash": "0xecea0273dc8ab7578ee3b54265ad5a278275ad3c5e473c981834be2018c86517",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:22:22.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x502b4f63e19dc13d89b6ab47133620ee109e25a7"
+    },
+    {
+      "tx_hash": "0xed5d2645c7f28f20b0e1e46519364ae8181f707ba5ffe412309309c8dffd3b05",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:22:12.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x502b4f63e19dc13d89b6ab47133620ee109e25a7"
+    },
+    {
+      "tx_hash": "0x19f62da6822930b8a814c6153ce66ce68ca19a7966be189655e72539a32b9ae8",
+      "firm_id": "fundednext",
+      "amount": 4632,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:22:02.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xd619a6dccb0e4151cac877932b85bfa3c4284cf8"
+    },
+    {
+      "tx_hash": "0x24af4eecafd16a4fe7ed352a17edd42ffc3767058591e7fef91fe9bcceb5ea3e",
+      "firm_id": "fundednext",
+      "amount": 2108.2,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:21:54.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x6aef85878791cb054a2f2f023814c1da021fcbfb"
+    },
+    {
+      "tx_hash": "0xbca9b18c6cbd9233ecdcd5894e17de3613129fc07cef593654b3d14e6deaeb24",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:21:46.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x4ff6a566516b74f5b79427549e923d9466c76da2"
+    },
+    {
+      "tx_hash": "0xa6d78c7f8552b70ce1e28269a08284240c994785a781b1ef243af403b9933c7c",
+      "firm_id": "fundednext",
+      "amount": 1158,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:21:38.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x4ff6a566516b74f5b79427549e923d9466c76da2"
+    },
+    {
+      "tx_hash": "0x6d9632441d3b813969148e4d9ed4105fc0c9147425df6889c248c1c0f5c1d66e",
+      "firm_id": "fundednext",
+      "amount": 4632,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:19:59.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x6843aa28d1edcb75dd834b6c04e2712fdb64c484"
+    },
+    {
+      "tx_hash": "0x62f00d18b3917a51b0fc6738d5b300925d4164339ee9276ba56a08b1d670a0a6",
+      "firm_id": "fundednext",
+      "amount": 4611.57,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:19:50.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x6843aa28d1edcb75dd834b6c04e2712fdb64c484"
+    },
+    {
+      "tx_hash": "0x2d6c8b8c336a94f0b82cdca33dc3db1814e15fb3cd73cdc3b91cdc6054cb68dc",
+      "firm_id": "fundednext",
+      "amount": 3418.96,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:19:43.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xfee71218b1bb666d2660ee96525168868fba6b5b"
+    },
+    {
+      "tx_hash": "0xd6b513595ff360b6ca24993eb53cff7a05e68a47ee142fb0a8ab6b9343ba35c5",
+      "firm_id": "fundednext",
+      "amount": 2818.6,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:19:35.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xfee71218b1bb666d2660ee96525168868fba6b5b"
+    },
+    {
+      "tx_hash": "0xb5d0c205cfc7f64ae58402289197859a6a684df6d4a242207942cf36ef418955",
+      "firm_id": "fundednext",
+      "amount": 2316,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:19:27.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x005437e14468a7da4937f4e9d6b3a3d7a65d63f0"
+    },
+    {
+      "tx_hash": "0x650521779a9a617c832b15d12d57d0bfdafe38c8456167c362857b7509491267",
+      "firm_id": "fundednext",
+      "amount": 2316,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:19:18.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x005437e14468a7da4937f4e9d6b3a3d7a65d63f0"
+    },
+    {
+      "tx_hash": "0xe587b8ef672733c52d0412bd75464b8f5990e0537e9e1eee5e51a629320d018b",
+      "firm_id": "fundednext",
+      "amount": 2316,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:19:09.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x005437e14468a7da4937f4e9d6b3a3d7a65d63f0"
+    },
+    {
+      "tx_hash": "0x3856c17e8f081a9a4b218494fdfcc4a4dd175e6360938478dc0c6236479c52a6",
+      "firm_id": "fundednext",
+      "amount": 2316,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:19:01.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x005437e14468a7da4937f4e9d6b3a3d7a65d63f0"
+    },
+    {
+      "tx_hash": "0x0b33527f1a677135cf6be011a04bcdfea37b989ffe0dc484780acaa9128f75aa",
+      "firm_id": "fundednext",
+      "amount": 2316,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:18:53.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x005437e14468a7da4937f4e9d6b3a3d7a65d63f0"
+    },
+    {
+      "tx_hash": "0x62d194c0df6079de63b230f3431fe67c0b8c650c9c5f970bc1ac0013b1fd6cbd",
+      "firm_id": "fundednext",
+      "amount": 926.4,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:18:44.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xbbd3c68c781e2d9ff0c96fa606df4793f0eb8094"
+    },
+    {
+      "tx_hash": "0xe872e8077404c4e9c6cb503a3e9de8e8e4893ccbae8fd896ff1c1d1b7e5a1763",
+      "firm_id": "fundednext",
+      "amount": 38979.94,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:18:35.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0xb4dc33b9407d2b150099711df85c8430cfb49961"
+    },
+    {
+      "tx_hash": "0x90386fc5ca793e2800e3727babd298564c846e0ab223cadc7270e4ecf7a1881d",
+      "firm_id": "fundednext",
+      "amount": 4100,
+      "payment_method": "rise",
+      "timestamp": "2026-03-07T06:18:24.000Z",
+      "from_address": "0x2b9a16e8448091159cc2b2a205b11f2368d53cb6",
+      "to_address": "0x78a3c42aae32a6a949da1d53e3d0f19c4446073a"
+    },
     {
       "tx_hash": "0x118db03b988e7a7bfc78beea3b57549d2e9c8388d2bce3047e2ba1be51e62fd7",
       "firm_id": "fundednext",
