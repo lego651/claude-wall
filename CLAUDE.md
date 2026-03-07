@@ -25,6 +25,16 @@ npm run build        # Production build
 npm run postbuild    # Generate sitemap after build
 npm run start        # Start production server
 npm run lint         # ESLint check
+
+# Testing
+npm run test                        # Jest unit tests
+npm run test:watch                  # Jest watch mode
+npm run test:coverage               # Coverage report
+npm run test:coverage:enforce-new   # Coverage enforcement (pre-commit)
+npm run test:e2e                    # Playwright E2E tests
+npm run test:e2e:ui                 # Playwright UI mode
+npx jest path/to/file.test.ts       # Run a single test file
+npx jest -t "test name"             # Run tests matching a name pattern
 ```
 
 ## Critical Warning Prevention
@@ -60,10 +70,17 @@ const supabase = createClient();
   - `app/dashboard/` - Protected user pages
 - **`components/`** - Reusable UI components (buttons, testimonials, features)
 - **`lib/`** - Core utilities and integrations
- - `lib/supabase/` - Database client configurations (server, client, middleware)
+ - `lib/supabase/` - Database client configurations (server, client, service, middleware)
+ - `lib/ai/` - OpenAI integration for classification and summarization
+ - `lib/services/` - Business logic (firms, traders, payouts)
+ - `lib/digest/` - Weekly email digest generation
+ - `lib/schemas/` - Zod validation schemas
+ - `lib/scrapers/` - Web scraping utilities (Apify, custom)
+ - `lib/twitter-fetch/` & `lib/twitter-ingest/` - Twitter/X data pipeline
  - `lib/stripe.ts` - Payment processing
  - `lib/seo.js` - SEO tag generation
  - `lib/resend.ts` - Email service
+- **`scripts/`** - Standalone utility scripts (backfill, reporting, Twitter sync); must load `.env` via `import 'dotenv/config'`
 - **`migrations/`** - **Single source for all SQL migrations.** Numbered files (01_, 02_, …) define run order. Run via Supabase SQL Editor or `psql`. Do not create other migration folders (e.g. `supabase/migrations`, `database/`).
 - **`documents/`** - **Single place for all markdown documentation.** See [Documents folder](#documents-folder) below for subfolder rules.
 - **`config.js`** - Central configuration (app settings, Stripe plans, colors, auth URLs)
@@ -74,12 +91,17 @@ const supabase = createClient();
 - Supabase with SSR support
 - Server components use `@/lib/supabase/server`
 - Client components use `@/lib/supabase/client`
+- Admin/service-role operations (bypassing RLS) use `@/lib/supabase/service`
 - Middleware handles session updates
 
 **Payments:**
 - Stripe integration with webhooks at `/api/webhook/stripe`
 - Multiple pricing plans configured in `config.js`
 - Customer portal and checkout creation endpoints
+
+**Background Jobs:**
+- Inngest for event-driven functions at `app/api/inngest/`
+- Cron jobs at `app/api/cron/` authenticated via `CRON_SECRET` header
 
 **Styling:**
 - Tailwind CSS v4 with CSS-based configuration
@@ -93,8 +115,11 @@ const supabase = createClient();
 
 **Required in `.env`:**
 - `NEXT_PUBLIC_SUPABASE_URL` & `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (for service-role / admin DB operations)
 - `STRIPE_SECRET_KEY` & `STRIPE_WEBHOOK_SECRET`
 - `RESEND_API_KEY`
+- `OPENAI_API_KEY` (required for Intelligence Feed classification/summarization)
+- `CRON_SECRET` (authenticates cron job endpoints)
 
 **Central Config (`config.js`):**
 - App metadata and SEO settings
