@@ -38,8 +38,10 @@ export async function GET(request, { params }) {
   const start = Date.now();
   const { searchParams } = new URL(request.url);
   const days = Math.min(365, Math.max(1, parseInt(searchParams.get('days') || '90', 10) || 90));
+  const limitParam = searchParams.get('limit');
+  const limit = limitParam ? Math.max(1, parseInt(limitParam, 10) || 0) : null;
 
-  log.info({ method: 'GET', params: { days } }, 'API request');
+  log.info({ method: 'GET', params: { days, limit } }, 'API request');
 
   const { ok, headers } = validateOrigin(request);
   setRequestIdHeader(headers, requestId);
@@ -141,6 +143,20 @@ export async function GET(request, { params }) {
       return db.localeCompare(da);
     });
 
-  log.info({ duration: Date.now() - start, count: incidentsWithLinks.length }, 'API response');
-  return NextResponse.json({ incidents: incidentsWithLinks }, { headers });
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 7);
+  const recentCutoff = sevenDaysAgo.toISOString().slice(0, 10);
+
+  function compositeScore(incident) {
+    const severityWeight = incident.severity === 'high' ? 3 : incident.severity === 'medium' ? 2 : 1;
+    const reviewCountWeight = incident.review_count || 0;
+    const recencyBoost = incident.evidence_date && incident.evidence_date >= recentCutoff ? 1 : 0;
+    return severityWeight + reviewCountWeight + recencyBoost;
+  }
+
+  const ranked = incidentsWithLinks.sort((a, b) => compositeScore(b) - compositeScore(a));
+  const result = limit ? ranked.slice(0, limit) : ranked;
+
+  log.info({ duration: Date.now() - start, count: result.length }, 'API response');
+  return NextResponse.json({ incidents: result }, { headers });
 }

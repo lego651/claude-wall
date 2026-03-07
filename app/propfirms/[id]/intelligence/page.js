@@ -145,7 +145,7 @@ export default function PropFirmIntelligencePage() {
     if (!firmId) return;
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/v2/propfirms/${firmId}/incidents?days=30`)
+    fetch(`/api/v2/propfirms/${firmId}/incidents?days=30&limit=8`)
       .then((r) => (r.ok ? r.json() : { incidents: [] }))
       .then((data) => {
         if (!cancelled) setIncidents(data.incidents || []);

@@ -219,6 +219,102 @@ describe('GET /api/v2/propfirms/[id]/incidents', () => {
     expect(body.incidents[0].source_links).toEqual([]);
   });
 
+  it('respects ?limit param and returns only N incidents', async () => {
+    const manyIncidents = [1, 2, 3, 4, 5].map((n) => ({
+      id: n,
+      firm_id: 'f1',
+      week_number: 7,
+      year: 2025,
+      incident_type: 'payout_delay',
+      severity: 'medium',
+      title: `Incident ${n}`,
+      summary: 'S',
+      review_count: n,
+      affected_users: 0,
+      review_ids: [],
+      created_at: new Date().toISOString(),
+    }));
+    withQueryGuard.mockResolvedValueOnce({ data: manyIncidents, error: null });
+    const req = createRequest('https://x.com/api/v2/propfirms/f1/incidents?days=90&limit=2');
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.incidents).toHaveLength(2);
+  });
+
+  it('returns all incidents when no ?limit param is provided', async () => {
+    const manyIncidents = [1, 2, 3].map((n) => ({
+      id: n,
+      firm_id: 'f1',
+      week_number: 7,
+      year: 2025,
+      incident_type: 'payout_delay',
+      severity: 'medium',
+      title: `Incident ${n}`,
+      summary: 'S',
+      review_count: 1,
+      affected_users: 0,
+      review_ids: [],
+      created_at: new Date().toISOString(),
+    }));
+    withQueryGuard.mockResolvedValueOnce({ data: manyIncidents, error: null });
+    const req = createRequest('https://x.com/api/v2/propfirms/f1/incidents?days=90');
+    const res = await GET(req, { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.incidents).toHaveLength(3);
+  });
+
+  it('ranks high-severity incident above low-severity recent one via composite score', async () => {
+    // Incident A: low severity, recent date → score = 1 + 0 + 1 = 2
+    // Incident B: high severity, high review_count, old date → score = 3 + 5 + 0 = 8
+    // Incident B should rank first despite older evidence_date
+    const twoIncidents = [
+      {
+        id: 20,
+        firm_id: 'f1',
+        week_number: 7,
+        year: 2025,
+        incident_type: 'other',
+        severity: 'low',
+        title: 'Low severity recent',
+        summary: 'S',
+        review_count: 0,
+        affected_users: 0,
+        review_ids: ['rev-recent'],
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 21,
+        firm_id: 'f1',
+        week_number: 1,
+        year: 2025,
+        incident_type: 'high_risk_allegation',
+        severity: 'high',
+        title: 'High severity old',
+        summary: 'S',
+        review_count: 5,
+        affected_users: 10,
+        review_ids: ['rev-old'],
+        created_at: new Date().toISOString(),
+      },
+    ];
+    withQueryGuard
+      .mockResolvedValueOnce({ data: twoIncidents, error: null })
+      .mockResolvedValueOnce({
+        data: [
+          { id: 'rev-recent', trustpilot_url: 'https://t.com/recent', review_date: '2025-02-14' },
+          { id: 'rev-old', trustpilot_url: 'https://t.com/old', review_date: '2025-01-01' },
+        ],
+      });
+    const res = await GET(createRequest(), { params: Promise.resolve({ id: 'f1' }) });
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.incidents).toHaveLength(2);
+    expect(body.incidents[0].title).toBe('High severity old');
+    expect(body.incidents[1].title).toBe('Low severity recent');
+  });
+
   it('sorts incidents by evidence_date descending (mixed dates and null)', async () => {
     const twoIncidents = [
       {
