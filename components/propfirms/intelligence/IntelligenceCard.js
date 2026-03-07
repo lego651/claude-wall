@@ -75,7 +75,7 @@ export default function IntelligenceCard({ item }) {
               References:
             </span>
             <div className="flex flex-wrap gap-1.5">
-              {item.sources.slice(0, 3).map((source) => (
+              {item.sources.slice(0, 6).map((source) => (
                 <a
                   key={source.id}
                   href={source.url}

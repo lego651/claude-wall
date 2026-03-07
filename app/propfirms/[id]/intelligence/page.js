@@ -69,7 +69,7 @@ function incidentToItem(inc) {
   const rawLinks = inc.source_links || [];
   const cardDateRaw = inc.evidence_date || inc.week_start || "";
   const cardDate = cardDateRaw ? formatDisplayDate(cardDateRaw) : "";
-  const sources = rawLinks.slice(0, 3).map((item, i) => {
+  const sources = rawLinks.slice(0, 6).map((item, i) => {
     const url = typeof item === "string" ? item : item?.url;
     const sourceDate = typeof item === "object" && item?.date ? item.date : cardDateRaw;
     const { label, domain } = getLabelAndDomainFromUrl(url || "", i);

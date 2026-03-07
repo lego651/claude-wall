@@ -123,7 +123,7 @@ export async function GET(request, { params }) {
     .map((r) => {
       const ids = Array.isArray(r.review_ids) ? r.review_ids : [];
       const source_links = ids
-        .slice(0, 3)
+        .slice(0, 6)
         .map((id) => {
           const info = idToInfo[id];
           if (!info?.url) return null;
