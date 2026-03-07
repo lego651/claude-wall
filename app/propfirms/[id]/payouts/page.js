@@ -471,13 +471,13 @@ export default function PropFirmPayoutsPage() {
               Top 10 Largest Payouts
             </h3>
           </div>
-          <div className="divide-y divide-slate-100 flex-grow">
+          <div className="divide-y divide-slate-100 max-h-[420px] overflow-y-auto">
             {topPayoutsLoading ? (
               <div className="px-6 py-8 text-center">
                 <span className="loading loading-spinner loading-sm" />
               </div>
             ) : topPayouts.length > 0 ? (
-              topPayouts.slice(0, 7).map((tx) => (
+              topPayouts.slice(0, 10).map((tx) => (
                 <a
                   key={tx.txHash}
                   href={tx.arbiscanUrl}
