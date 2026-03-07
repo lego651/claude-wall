@@ -37,6 +37,60 @@ function readFirmsFromFile() {
   }
 }
 
+// Firm profiles are cached separately with a short TTL so that latestPayoutAt
+// is always consistent across all period tabs (1d, 7d, 30d, 12m).
+const FIRM_PROFILES_CACHE_KEY = 'propfirms:firm-profiles';
+const FIRM_PROFILES_CACHE_TTL = 60; // 1 minute
+
+async function getFirmProfiles() {
+  const cached = await cache.get(FIRM_PROFILES_CACHE_KEY);
+  if (cached) return cached;
+
+  let firms = [];
+  const useSupabase = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  if (useSupabase) {
+    const supabase = createSupabaseClient();
+    let firmsResult = await withQueryGuard(
+      supabase.from('firm_profiles').select('id, name, logo_url, website, last_payout_at'),
+      { context: 'propfirms firms' }
+    );
+    if (firmsResult.error?.code === '42703') {
+      firmsResult = await withQueryGuard(
+        supabase.from('firm_profiles').select('id, name, logo_url, website'),
+        { context: 'propfirms firms fallback' }
+      );
+    }
+    const { data: supabaseFirms, error: firmsError } = firmsResult;
+    if (!firmsError && supabaseFirms?.length) {
+      firms = supabaseFirms.map((f) => ({
+        id: f.id,
+        name: f.name,
+        logo_url: f.logo_url,
+        website: f.website,
+        last_payout_at: f.last_payout_at,
+      }));
+    }
+  }
+
+  if (firms.length === 0) {
+    const fileFirms = readFirmsFromFile();
+    firms = fileFirms.map((f) => ({
+      id: f.id,
+      name: f.name,
+      logo_url: null,
+      website: null,
+      last_payout_at: null,
+    }));
+  }
+
+  firms = firms.filter((f) => f.name !== 'Industry');
+  await cache.set(FIRM_PROFILES_CACHE_KEY, firms, FIRM_PROFILES_CACHE_TTL);
+  return firms;
+}
+
 // Valid options
 const VALID_PERIODS = ['1d', '7d', '30d', '12m'];
 const VALID_SORT_FIELDS = ['totalPayouts', 'payoutCount', 'largestPayout', 'avgPayout', 'latestPayout'];
@@ -108,16 +162,34 @@ export async function GET(request) {
     );
   }
 
-  const cacheKey = `propfirms:${period}:${sort}:${order}`;
-  const cached = await cache.get(cacheKey);
-  if (cached) {
-    log.info({ cache: 'hit', key: cacheKey }, 'API response');
-    trackApiResponse('/api/v2/propfirms', Date.now() - start, 200);
-    return NextResponse.json(cached, { headers });
-  }
-
   try {
-    let firms = [];
+    // Always load firm profiles from the shared short-TTL cache so that
+    // latestPayoutAt is identical across all period tabs.
+    const firmProfiles = await getFirmProfiles();
+    const firmProfileMap = new Map(firmProfiles.map((f) => [f.id, f]));
+
+    const cacheKey = `propfirms:${period}:${sort}:${order}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+      // Overlay fresh latestPayoutAt from the shared firm-profiles cache so all
+      // period tabs always show the same timestamp.
+      const freshData = {
+        ...cached,
+        data: cached.data.map((item) => ({
+          ...item,
+          metrics: {
+            ...item.metrics,
+            latestPayoutAt:
+              firmProfileMap.get(item.id)?.last_payout_at ?? item.metrics.latestPayoutAt,
+          },
+        })),
+      };
+      log.info({ cache: 'hit', key: cacheKey }, 'API response');
+      trackApiResponse('/api/v2/propfirms', Date.now() - start, 200);
+      return NextResponse.json(freshData, { headers });
+    }
+
+    let firms = firmProfiles;
     let payoutsByFirmId = null;
     const useSupabase = Boolean(
       process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -126,28 +198,8 @@ export async function GET(request) {
     if (useSupabase) {
       const supabase = createSupabaseClient();
 
-      let firmsResult = await withQueryGuard(
-        supabase.from('firm_profiles').select('id, name, logo_url, website, last_payout_at'),
-        { context: 'propfirms firms' }
-      );
-      if (firmsResult.error?.code === '42703') {
-        firmsResult = await withQueryGuard(
-          supabase.from('firm_profiles').select('id, name, logo_url, website'),
-          { context: 'propfirms firms fallback' }
-        );
-      }
-      const { data: supabaseFirms, error: firmsError } = firmsResult;
-
-      if (!firmsError && supabaseFirms?.length) {
-        firms = supabaseFirms.map((f) => ({
-          id: f.id,
-          name: f.name,
-          logo_url: f.logo_url,
-          website: f.website,
-          last_payout_at: f.last_payout_at,
-        }));
-
-        if (period === '1d') {
+      if (period === '1d') {
+        if (firms.length > 0) {
           const hoursBack = periodToHours(period);
           const cutoffDate = new Date(Date.now() - (hoursBack * 60 * 60 * 1000)).toISOString();
           const firmIds = firms.map((f) => f.id);
@@ -174,21 +226,6 @@ export async function GET(request) {
         }
       }
     }
-
-    // Fallback to static list when Supabase is missing or returns no firms
-    if (firms.length === 0) {
-      const fileFirms = readFirmsFromFile();
-      firms = fileFirms.map((f) => ({
-        id: f.id,
-        name: f.name,
-        logo_url: null,
-        website: null,
-        last_payout_at: null,
-      }));
-    }
-
-    // Exclude placeholder entries
-    firms = firms.filter((f) => f.name !== 'Industry');
 
     const data = [];
 
