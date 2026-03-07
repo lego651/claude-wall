@@ -58,6 +58,40 @@ export async function GET(request) {
       console.warn(`[API] Error loading JSON files for ${address}:`, err.message);
     }
 
+    // Step 1b: Merge recent payouts from trader_recent_payouts (last 24h realtime data)
+    // This ensures new payouts show up immediately before the monthly history is updated
+    let recentPayoutsCount = 0;
+    try {
+      const { data: recentRows } = await supabase
+        .from('trader_recent_payouts')
+        .select('tx_hash, amount, payment_method, timestamp, from_address, to_address')
+        .eq('wallet_address', addressLower)
+        .order('timestamp', { ascending: false });
+
+      if (recentRows?.length) {
+        const existingHashes = new Set(jsonTransactions.map(tx => tx.tx_hash.toLowerCase()));
+        const newRecent = recentRows
+          .filter(row => !existingHashes.has(row.tx_hash.toLowerCase()))
+          .map(row => ({
+            tx_hash: row.tx_hash,
+            timestamp: row.timestamp,
+            from_address: row.from_address,
+            to_address: row.to_address,
+            amount: row.amount,
+            token: row.payment_method,
+          }));
+
+        if (newRecent.length > 0) {
+          recentPayoutsCount = newRecent.length;
+          // Prepend so they appear at the top (most recent first)
+          jsonTransactions = [...newRecent, ...jsonTransactions];
+          console.log(`[API] Merged ${recentPayoutsCount} recent payouts for ${address}`);
+        }
+      }
+    } catch (err) {
+      console.warn(`[API] Error loading recent payouts for ${address}:`, err.message);
+    }
+
     // Step 2: Get cached stats from Supabase
     const { data: cachedRecord } = await supabase
       .from('trader_records')
@@ -72,9 +106,9 @@ export async function GET(request) {
       cacheAge = Date.now() - new Date(cachedRecord.last_synced_at).getTime();
       const thirtyMinutes = 30 * 60 * 1000;
       if (cacheAge < thirtyMinutes) {
-        // Use cached stats + JSON transactions
+        // Use cached stats + JSON transactions (merged with recent payouts already in jsonTransactions)
         console.log(`[API] Using cached stats + JSON files for ${address} (${Math.round(cacheAge / 1000 / 60)}m old)`);
-        
+
         // Convert JSON transactions to expected format
         const formattedTransactions = jsonTransactions.map(tx => ({
           txHash: tx.tx_hash,
@@ -91,11 +125,22 @@ export async function GET(request) {
         // Calculate monthly data from JSON transactions
         const monthlyData = groupByMonth(formattedTransactions);
 
+        // If recent payouts were merged in, recalculate stats so numbers match the transaction list
+        let totalPayoutUSD = parseFloat(cachedRecord.total_payout_usd) || 0;
+        let last30DaysPayoutUSD = parseFloat(cachedRecord.last_30_days_payout_usd) || 0;
+        let avgPayoutUSD = parseFloat(cachedRecord.avg_payout_usd) || 0;
+        if (recentPayoutsCount > 0) {
+          const stats = calculateStats(formattedTransactions);
+          totalPayoutUSD = stats.totalPayoutUSD || totalPayoutUSD;
+          last30DaysPayoutUSD = stats.last30DaysPayoutUSD || last30DaysPayoutUSD;
+          avgPayoutUSD = stats.avgPayoutUSD || avgPayoutUSD;
+        }
+
         return NextResponse.json({
           address,
-          totalPayoutUSD: parseFloat(cachedRecord.total_payout_usd) || 0,
-          last30DaysPayoutUSD: parseFloat(cachedRecord.last_30_days_payout_usd) || 0,
-          avgPayoutUSD: parseFloat(cachedRecord.avg_payout_usd) || 0,
+          totalPayoutUSD,
+          last30DaysPayoutUSD,
+          avgPayoutUSD,
           transactions: formattedTransactions,
           monthlyData,
           cached: true,
