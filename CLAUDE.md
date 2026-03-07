@@ -200,6 +200,19 @@ export async function POST(req) {
 
 ## Testing & Quality
 
+### Before Committing — Run Tests First
+**ALWAYS run the relevant test file before attempting a commit.** The pre-commit hook runs `npm run test:coverage:enforce-new` automatically, but catching failures early saves time.
+
+```bash
+# Run the test file for the code you changed
+npx jest path/to/file.test.js --no-coverage
+
+# Only attempt commit once tests pass
+git add <files> && git commit ...
+```
+
+If the pre-commit hook fails, fix the issue and create a **new** commit — never use `--no-verify` to bypass it.
+
 ### Pre-commit Checklist
 1. `npm run build` passes without errors
 2. `npm run lint` shows no warnings
