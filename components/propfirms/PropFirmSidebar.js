@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
 import { getFirmLogoUrl, DEFAULT_LOGO_URL } from "@/lib/logoUtils";
+import TrustpilotSparkline from "@/components/propfirms/intelligence/TrustpilotSparkline";
 
 /* istanbul ignore next */
 function handleLogoError(e) {
@@ -88,7 +89,11 @@ export default function PropFirmSidebar({ firmId, firm }) {
             </div>
           </div>
 
-          <Link href={`/propfirms/${firmId}/intelligence`} className="w-full mt-6 flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-lg text-[11px] font-bold text-slate-500 transition-colors text-center">
+          <div className="mt-5 pt-5 border-t border-slate-100">
+            <TrustpilotSparkline firmId={firmId} />
+          </div>
+
+          <Link href={`/propfirms/${firmId}/intelligence`} className="w-full mt-5 flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-lg text-[11px] font-bold text-slate-500 transition-colors text-center">
             View full analytics
             <svg className="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
           </Link>

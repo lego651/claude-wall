@@ -18,7 +18,7 @@
 
 ### TICKET-S10-001: Fix firm_weekly_reports 30-Day Deletion Bug
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0
 **Story points:** 1
 
@@ -37,7 +37,7 @@
 
 ### TICKET-S10-002: Extend Topic Card References from 3 to 6
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0
 **Story points:** 1
 
@@ -56,7 +56,7 @@
 
 ### TICKET-S10-003: Composite Signal Ranking + Feed Limit
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0
 **Story points:** 2
 
@@ -84,7 +84,7 @@ recency_boost: +1 if evidence_date within last 7 days
 
 ### TICKET-S10-004: Enforce Text-Based Sentiment Classification (Not Star Rating)
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0
 **Story points:** 2
 
@@ -130,7 +130,7 @@ recency_boost: +1 if evidence_date within last 7 days
 
 ### TICKET-S10-006: Migration — Add trustpilot_overall_score to firm_profiles
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0
 **Story points:** 1
 
@@ -152,7 +152,7 @@ recency_boost: +1 if evidence_date within last 7 days
 
 ### TICKET-S10-007: Scraper — Parse Trustpilot Aggregate Score from JSON-LD
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0
 **Story points:** 2
 
@@ -174,7 +174,7 @@ recency_boost: +1 if evidence_date within last 7 days
 
 ### TICKET-S10-008: Backend — /api/v2/propfirms/[id]/trustpilot-trend Endpoint
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0
 **Story points:** 2
 
@@ -207,7 +207,7 @@ recency_boost: +1 if evidence_date within last 7 days
 
 ### TICKET-S10-009: Frontend — Score Momentum Sparkline in Intelligence Sidebar
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P1
 **Story points:** 3
 

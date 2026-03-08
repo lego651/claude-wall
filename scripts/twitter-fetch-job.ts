@@ -52,7 +52,7 @@ async function main() {
 
   const tweets = await runTwitterFetchJob();
 
-  const firmCount = tweets.filter((t) => t.source === "firm").length;
+  const firmCount = tweets.filter((t) => t.source === "firm_official").length;
   const industryCount = tweets.filter((t) => t.source === "industry").length;
   console.log(
     `[Twitter fetch] Done in ${((Date.now() - start) / 1000).toFixed(1)}s. Total: ${tweets.length} (firm: ${firmCount}, industry: ${industryCount})`
@@ -71,7 +71,7 @@ async function main() {
 
   const byFirm = new Map<string, number>();
   for (const t of tweets) {
-    if (t.source === "firm" && t.firmId) {
+    if (t.source === "firm_official" && t.firmId) {
       byFirm.set(t.firmId, (byFirm.get(t.firmId) ?? 0) + 1);
     }
   }

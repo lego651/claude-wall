@@ -14,6 +14,11 @@ jest.mock("@/lib/logoUtils", () => ({
   getFirmLogoUrl: jest.fn((firm) => firm?.logo_url ?? "/icon.png"),
   DEFAULT_LOGO_URL: "/icon.png",
 }));
+jest.mock("@/components/propfirms/intelligence/TrustpilotSparkline", () => {
+  const Mock = () => <div data-testid="trustpilot-sparkline" />;
+  Mock.displayName = "TrustpilotSparkline";
+  return { __esModule: true, default: Mock };
+});
 
 import * as logoUtils from "@/lib/logoUtils";
 

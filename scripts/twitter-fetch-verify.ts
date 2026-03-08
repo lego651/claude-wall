@@ -12,7 +12,7 @@
 
 import "dotenv/config";
 import { runTwitterSearch } from "@/lib/apify/twitter-scraper";
-import { TWITTER_MONITORING_FIRMS } from "@/config/twitter-monitoring";
+import { TWITTER_FIRM_HANDLES } from "@/config/twitter-monitoring";
 
 async function main() {
   if (!process.env.APIFY_TOKEN?.trim()) {
@@ -20,9 +20,9 @@ async function main() {
     process.exit(1);
   }
 
-  // Use first firm's first search term, cap at 5 tweets (min cost)
-  const firm = TWITTER_MONITORING_FIRMS[0];
-  const term = firm?.searchTerms[0] ?? "FundingPips";
+  // Use first firm's handle, cap at 5 tweets (min cost)
+  const firm = TWITTER_FIRM_HANDLES[0];
+  const term = firm ? `from:${firm.handle}` : "from:FundingPips";
   const label = firm ? `${firm.firmId}: ${term}` : term;
 
   console.log("[Twitter verify] Running Apify with one term (max 5 tweets)...");
