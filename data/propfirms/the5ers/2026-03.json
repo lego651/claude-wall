@@ -2,12 +2,12 @@
   "firmId": "the5ers",
   "period": "2026-03",
   "timezone": "UTC",
-  "generatedAt": "2026-03-07T05:56:35.795Z",
+  "generatedAt": "2026-03-08T11:15:33.053Z",
   "summary": {
-    "totalPayouts": 1521860,
-    "payoutCount": 586,
+    "totalPayouts": 1522060,
+    "payoutCount": 587,
     "largestPayout": 34740,
-    "avgPayout": 2597
+    "avgPayout": 2593
   },
   "dailyBuckets": [
     {
@@ -51,9 +51,25 @@
       "rise": 321821,
       "crypto": 0,
       "wire": 0
+    },
+    {
+      "date": "2026-03-08",
+      "total": 200,
+      "rise": 200,
+      "crypto": 0,
+      "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0xdca5280da5ead4984b43fe9c178ccda78cf2829671f2c924ba6e01919d390453",
+      "firm_id": "the5ers",
+      "amount": 200,
+      "payment_method": "rise",
+      "timestamp": "2026-03-08T09:09:26.000Z",
+      "from_address": "0x349b0ed1520eae1472f57eac77e390a1ecb0c677",
+      "to_address": "0xeadbd8387922b316e97d8b46f2fbb00bdc170b64"
+    },
     {
       "tx_hash": "0x6d44b4e01203f6caf1df72dcab518cff59ae4c474538c1c4665230640db938ad",
       "firm_id": "the5ers",
