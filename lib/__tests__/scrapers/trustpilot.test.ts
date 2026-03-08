@@ -22,6 +22,8 @@ import trustpilotDefault, {
   storeReviews,
   scrapeTrustpilot,
   scrapeAndStoreReviews,
+  parseJsonLdAggregateRating,
+  updateFirmOverallScore,
   type TrustpilotReview,
   type FirmWithTrustpilot,
 } from '@/lib/scrapers/trustpilot';
@@ -169,12 +171,15 @@ describe('Trustpilot scraper', () => {
   });
 
   describe('scrapeTrustpilot', () => {
-    function createMockBrowserAndPage(overrides?: { $$evalResolve?: unknown[] }) {
+    const SAMPLE_JSONLD_HTML = `<html><head><script type="application/ld+json">{"@type":"LocalBusiness","aggregateRating":{"ratingValue":"4.2","reviewCount":"1840"}}</script></head></html>`;
+
+    function createMockBrowserAndPage(overrides?: { $$evalResolve?: unknown[]; pageContent?: string }) {
       const mockPage = {
         setDefaultTimeout: jest.fn(),
         goto: jest.fn().mockResolvedValue(undefined),
         waitForSelector: jest.fn().mockResolvedValue(undefined),
         $$: jest.fn().mockResolvedValue([{}, {}]),
+        content: jest.fn().mockResolvedValue(overrides?.pageContent ?? SAMPLE_JSONLD_HTML),
         $$eval: jest.fn().mockResolvedValue(
           overrides?.$$evalResolve ?? [
             {
@@ -297,6 +302,7 @@ describe('Trustpilot scraper', () => {
         goto: jest.fn().mockResolvedValue(undefined),
         waitForSelector: jest.fn().mockResolvedValue(undefined),
         $$: jest.fn().mockResolvedValue([{}, {}]),
+        content: jest.fn().mockResolvedValue('<html></html>'),
         $$eval: jest
           .fn()
           .mockResolvedValueOnce(reviewsPage1)
@@ -345,6 +351,7 @@ describe('Trustpilot scraper', () => {
         goto: jest.fn().mockResolvedValue(undefined),
         waitForSelector: jest.fn().mockResolvedValue(undefined),
         $$: jest.fn().mockResolvedValue($$evalResolve.length ? [{}] : []),
+        content: jest.fn().mockResolvedValue('<html></html>'),
         $$eval: jest.fn().mockResolvedValue($$evalResolve),
       };
       const mockContext = { newPage: jest.fn().mockResolvedValue(mockPage) };
@@ -398,6 +405,119 @@ describe('Trustpilot scraper', () => {
       expect(trustpilotDefault.scrapeTrustpilot).toBe(scrapeTrustpilot);
       expect(trustpilotDefault.storeReviews).toBe(storeReviews);
       expect(trustpilotDefault.scrapeAndStoreReviews).toBe(scrapeAndStoreReviews);
+    });
+  });
+
+  describe('parseJsonLdAggregateRating', () => {
+    it('extracts ratingValue and reviewCount from JSON-LD script block', () => {
+      const html = `<html><head>
+        <script type="application/ld+json">{"@type":"LocalBusiness","aggregateRating":{"ratingValue":"4.2","reviewCount":"1840"}}</script>
+      </head></html>`;
+      expect(parseJsonLdAggregateRating(html)).toEqual({ ratingValue: 4.2, reviewCount: 1840 });
+    });
+
+    it('handles numeric ratingValue and reviewCount', () => {
+      const html = `<script type="application/ld+json">{"aggregateRating":{"ratingValue":3.8,"reviewCount":500}}</script>`;
+      expect(parseJsonLdAggregateRating(html)).toEqual({ ratingValue: 3.8, reviewCount: 500 });
+    });
+
+    it('returns null when no JSON-LD block present', () => {
+      expect(parseJsonLdAggregateRating('<html><head></head></html>')).toBeNull();
+    });
+
+    it('returns null when JSON-LD has no aggregateRating', () => {
+      const html = `<script type="application/ld+json">{"@type":"WebSite","name":"Trustpilot"}</script>`;
+      expect(parseJsonLdAggregateRating(html)).toBeNull();
+    });
+
+    it('skips malformed JSON blocks and tries the next one', () => {
+      const html = `
+        <script type="application/ld+json">{ INVALID JSON }</script>
+        <script type="application/ld+json">{"aggregateRating":{"ratingValue":"4.5","reviewCount":"200"}}</script>`;
+      expect(parseJsonLdAggregateRating(html)).toEqual({ ratingValue: 4.5, reviewCount: 200 });
+    });
+
+    it('returns null when ratingValue is not a number', () => {
+      const html = `<script type="application/ld+json">{"aggregateRating":{"ratingValue":"N/A","reviewCount":"100"}}</script>`;
+      expect(parseJsonLdAggregateRating(html)).toBeNull();
+    });
+  });
+
+  describe('updateFirmOverallScore', () => {
+    it('updates firm_profiles with overall score', async () => {
+      const mockUpdate = jest.fn().mockReturnValue({
+        eq: jest.fn().mockResolvedValue({ error: null }),
+      });
+      mockSupabase.from.mockReturnValueOnce({ update: mockUpdate });
+
+      await updateFirmOverallScore('fundednext', 4.2, 1840);
+
+      expect(mockSupabase.from).toHaveBeenCalledWith('firm_profiles');
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          trustpilot_overall_score: 4.2,
+          trustpilot_overall_review_count: 1840,
+        })
+      );
+    });
+
+    it('throws when DB update fails', async () => {
+      mockSupabase.from.mockReturnValueOnce({
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({ error: { message: 'DB error' } }),
+        }),
+      });
+
+      await expect(updateFirmOverallScore('fundednext', 4.2, 1840)).rejects.toThrow('Failed to update overall score');
+    });
+  });
+
+  describe('scrapeTrustpilot overall score', () => {
+    it('sets overallScore from JSON-LD on page 1', async () => {
+      const html = `<script type="application/ld+json">{"aggregateRating":{"ratingValue":"4.2","reviewCount":"1840"}}</script>`;
+      const mockPage = {
+        setDefaultTimeout: jest.fn(),
+        goto: jest.fn().mockResolvedValue(undefined),
+        waitForSelector: jest.fn().mockResolvedValue(undefined),
+        $$: jest.fn().mockResolvedValue([{}]),
+        content: jest.fn().mockResolvedValue(html),
+        $$eval: jest.fn().mockResolvedValue([
+          { rating: 5, title: 'Good', reviewText: 'Fast', reviewerName: 'U', dateString: 'January 24, 2026', reviewUrl: 'https://www.trustpilot.com/review/a' },
+        ]),
+      };
+      const mockBrowser = {
+        newContext: jest.fn().mockResolvedValue({ newPage: jest.fn().mockResolvedValue(mockPage) }),
+        close: jest.fn().mockResolvedValue(undefined),
+      };
+      (chromium.launch as jest.Mock).mockResolvedValue(mockBrowser);
+
+      const result = await scrapeTrustpilot('fundednext', { maxPages: 1, maxReviews: 10 }, 'https://www.trustpilot.com/review/fundednext.com');
+
+      expect(result.overallScore).toBe(4.2);
+      expect(result.overallReviewCount).toBe(1840);
+    });
+
+    it('leaves overallScore null when JSON-LD not found', async () => {
+      const mockPage = {
+        setDefaultTimeout: jest.fn(),
+        goto: jest.fn().mockResolvedValue(undefined),
+        waitForSelector: jest.fn().mockResolvedValue(undefined),
+        $$: jest.fn().mockResolvedValue([{}]),
+        content: jest.fn().mockResolvedValue('<html></html>'),
+        $$eval: jest.fn().mockResolvedValue([
+          { rating: 5, title: 'Good', reviewText: 'Fast', reviewerName: 'U', dateString: 'January 24, 2026', reviewUrl: 'https://www.trustpilot.com/review/a' },
+        ]),
+      };
+      const mockBrowser = {
+        newContext: jest.fn().mockResolvedValue({ newPage: jest.fn().mockResolvedValue(mockPage) }),
+        close: jest.fn().mockResolvedValue(undefined),
+      };
+      (chromium.launch as jest.Mock).mockResolvedValue(mockBrowser);
+
+      const result = await scrapeTrustpilot('fundednext', { maxPages: 1, maxReviews: 10 }, 'https://www.trustpilot.com/review/fundednext.com');
+
+      expect(result.overallScore).toBeNull();
+      expect(result.overallReviewCount).toBeNull();
     });
   });
 });

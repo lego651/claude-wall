@@ -20,6 +20,7 @@ import 'dotenv/config';
 import {
   scrapeAndStoreReviews,
   getFirmsWithTrustpilot,
+  updateFirmOverallScore,
 } from '@/lib/scrapers/trustpilot';
 import { createServiceClient } from '@/lib/supabase/service';
 
@@ -124,6 +125,13 @@ async function main() {
     console.log(
       `[${firm.id}] Scraped ${result.reviewsScraped}, stored ${result.reviewsStored ?? 0}, skipped ${result.duplicatesSkipped ?? 0} duplicates`
     );
+
+    if (result.overallScore != null && result.overallReviewCount != null) {
+      await updateFirmOverallScore(firm.id, result.overallScore, result.overallReviewCount);
+      console.log(`[${firm.id}] Overall score: ${result.overallScore} (${result.overallReviewCount} total reviews)`);
+    } else {
+      console.log(`[${firm.id}] No overall score found, skipping firm_profiles update`);
+    }
   }
 
   await runRetentionCleanup();

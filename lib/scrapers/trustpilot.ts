@@ -39,6 +39,8 @@ export interface ScraperResult {
   reviewsScraped: number;
   reviewsStored: number;
   duplicatesSkipped: number;
+  overallScore: number | null;
+  overallReviewCount: number | null;
 }
 
 // ============================================================================
@@ -133,6 +135,59 @@ function parseTrustpilotDate(dateString: string): Date {
 }
 
 // ============================================================================
+// JSON-LD AGGREGATE RATING PARSER
+// ============================================================================
+
+/**
+ * Parse Trustpilot aggregate rating from page HTML.
+ * Finds the application/ld+json script block containing aggregateRating.
+ * Returns null if not found or malformed.
+ */
+export function parseJsonLdAggregateRating(
+  html: string
+): { ratingValue: number; reviewCount: number } | null {
+  const scriptRegex = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let match;
+  while ((match = scriptRegex.exec(html)) !== null) {
+    try {
+      const data = JSON.parse(match[1]) as Record<string, unknown>;
+      const rating = data?.aggregateRating as Record<string, unknown> | undefined;
+      if (rating?.ratingValue != null && rating?.reviewCount != null) {
+        const ratingValue = parseFloat(String(rating.ratingValue));
+        const reviewCount = parseInt(String(rating.reviewCount), 10);
+        if (!isNaN(ratingValue) && !isNaN(reviewCount)) {
+          return { ratingValue, reviewCount };
+        }
+      }
+    } catch {
+      // try next script block
+    }
+  }
+  return null;
+}
+
+/**
+ * Write Trustpilot overall score to firm_profiles.
+ * Called from backfill script after scraping each firm.
+ */
+export async function updateFirmOverallScore(
+  firmId: string,
+  ratingValue: number,
+  reviewCount: number
+): Promise<void> {
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from('firm_profiles')
+    .update({
+      trustpilot_overall_score: ratingValue,
+      trustpilot_overall_review_count: reviewCount,
+      trustpilot_overall_updated_at: new Date().toISOString(),
+    })
+    .eq('id', firmId);
+  if (error) throw new Error(`Failed to update overall score for ${firmId}: ${error.message}`);
+}
+
+// ============================================================================
 // MAIN SCRAPER FUNCTION
 // ============================================================================
 
@@ -158,6 +213,8 @@ export async function scrapeTrustpilot(
     reviewsScraped: 0,
     reviewsStored: 0,
     duplicatesSkipped: 0,
+    overallScore: null,
+    overallReviewCount: null,
   };
 
   let browser: Browser | null = null;
@@ -209,6 +266,23 @@ export async function scrapeTrustpilot(
 
       console.log(`[Trustpilot Scraper] Navigating to page ${pageNum}/${maxPages}: ${pageUrl}`);
       await page.goto(pageUrl, { waitUntil: 'networkidle' });
+
+      // Parse aggregate rating from JSON-LD on first page only
+      if (pageNum === 1) {
+        try {
+          const html = await page.content();
+          const aggregate = parseJsonLdAggregateRating(html);
+          if (aggregate) {
+            result.overallScore = aggregate.ratingValue;
+            result.overallReviewCount = aggregate.reviewCount;
+            console.log(`[Trustpilot Scraper] Overall score for ${firmId}: ${aggregate.ratingValue} (${aggregate.reviewCount} reviews)`);
+          } else {
+            console.log(`[Trustpilot Scraper] No JSON-LD aggregate rating found for ${firmId}`);
+          }
+        } catch (err) {
+          console.log(`[Trustpilot Scraper] Could not parse JSON-LD for ${firmId}: ${err instanceof Error ? err.message : err}`);
+        }
+      }
 
       await page.waitForSelector('[data-service-review-card-paper]', { timeout: 10000 }).catch(() => null);
       const cards = await page.$$('[data-service-review-card-paper]');
