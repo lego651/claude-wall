@@ -56,6 +56,9 @@ export const POSITIVE_SIGNAL_CATEGORIES = ['positive_experience'] as const;
 /** Categories that generate INFORMATIONAL signals (spike ≥ MIN_REVIEWS_FOR_POSITIVE_SIGNAL in window) */
 export const INFORMATIONAL_SIGNAL_CATEGORIES = ['neutral_mixed'] as const;
 
+/** Auto-generated system signals (computed from aggregates, not individual review classification) */
+export const SYSTEM_SIGNAL_CATEGORIES = ['trustpilot_score_trend'] as const;
+
 /** Minimum review count to trigger a positive or informational signal */
 export const MIN_REVIEWS_FOR_POSITIVE_SIGNAL = 3;
 

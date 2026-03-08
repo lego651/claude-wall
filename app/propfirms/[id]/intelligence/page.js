@@ -25,6 +25,7 @@ const INCIDENT_TYPE_TO_CATEGORY = {
   other: IntelligenceCategory.REPUTATION,
   positive_experience: IntelligenceCategory.POSITIVE,
   neutral_mixed: IntelligenceCategory.INFORMATIONAL,
+  trustpilot_score_trend: IntelligenceCategory.REPUTATION,
 };
 
 function getDisplayCategory(incidentType) {

@@ -8,6 +8,7 @@
 import { createServiceClient } from '@/lib/supabase/service';
 import { getOpenAIClient } from '@/lib/ai/openai-client';
 import { getWeekNumberUtc, getYearUtc } from './week-utils';
+import { detectTrustpilotScoreTrendIncident } from './trustpilot-trend-incident';
 import {
   NEGATIVE_SPIKE_CATEGORIES,
   SEVERITY_OVERRIDE_CATEGORIES,
@@ -162,6 +163,10 @@ export async function detectIncidents(
       });
     }
   }
+
+  // S10-010: Append Trustpilot score trend signal if 2 consecutive weeks deviate from overall
+  const trendIncident = await detectTrustpilotScoreTrendIncident(firmId, weekStart);
+  if (trendIncident) incidents.push(trendIncident);
 
   await storeIncidents(incidents);
   return incidents;
