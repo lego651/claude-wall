@@ -23,7 +23,7 @@ export const SEVERITY_LEVELS = ['low', 'medium', 'high'] as const;
 export type SeverityLevel = (typeof SEVERITY_LEVELS)[number];
 
 export interface ReviewInput {
-  rating: number;
+  rating?: number;
   title?: string | null;
   text: string;
 }
@@ -65,7 +65,6 @@ function buildPrompt(review: ReviewInput): string {
   const title = review.title ?? '(no title)';
   return `Analyze this Trustpilot review for a prop trading firm.
 
-Rating: ${review.rating}/5
 Title: "${title}"
 Review: "${review.text.slice(0, 4000)}"
 
@@ -79,7 +78,6 @@ function buildBatchPrompt(reviews: ReviewInput[]): string {
   const parts = reviews.map((r, i) => {
     const title = r.title ?? '(no title)';
     return `--- Review ${i + 1} ---
-Rating: ${r.rating}/5
 Title: "${title}"
 Review: "${r.text.slice(0, 4000)}"`;
   });
