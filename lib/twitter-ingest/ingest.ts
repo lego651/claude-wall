@@ -19,6 +19,7 @@ export interface IngestResult {
   industryInserted: number;
   firmSkipped: number;
   industrySkipped: number;
+  mentionInserted: number;
 }
 
 /**
@@ -40,7 +41,7 @@ async function filterNewTweets(
   tweets: FetchedTweet[],
   supabase: ReturnType<typeof createServiceClient>
 ): Promise<{ firm: FetchedTweet[]; industry: FetchedTweet[]; firmSkipped: number; industrySkipped: number }> {
-  const firm = tweets.filter((t) => t.source === "firm" && t.firmId);
+  const firm = tweets.filter((t) => (t.source === "firm_official") && t.firmId);
   const industry = tweets.filter((t) => t.source === "industry");
 
   const firmUrls = [...new Set(firm.map((t) => t.url))];
@@ -99,7 +100,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
  */
 export async function ingestTweets(fetched: FetchedTweet[]): Promise<IngestResult> {
   if (fetched.length === 0) {
-    return { firmInserted: 0, industryInserted: 0, firmSkipped: 0, industrySkipped: 0 };
+    return { firmInserted: 0, industryInserted: 0, firmSkipped: 0, industrySkipped: 0, mentionInserted: 0 };
   }
 
   const supabase = createServiceClient();
@@ -108,6 +109,7 @@ export async function ingestTweets(fetched: FetchedTweet[]): Promise<IngestResul
   const batchSize = TWITTER_AI_BATCH_SIZE;
   let firmInserted = 0;
   let industryInserted = 0;
+  let mentionInserted = 0;
 
   // Process firm tweets in batches
   const firmChunks = chunk(firm, batchSize);
@@ -164,6 +166,29 @@ export async function ingestTweets(fetched: FetchedTweet[]): Promise<IngestResul
         published: false,
       });
       if (!error) industryInserted++;
+
+      // Fan out: for each mentioned firm, insert an additional firm row (S10-012)
+      if (r.mentioned_firm_ids && r.mentioned_firm_ids.length > 0) {
+        for (const mentionedFirmId of r.mentioned_firm_ids) {
+          const { error: mentionError } = await supabase
+            .from("firm_twitter_tweets")
+            .upsert(
+              {
+                firm_id: mentionedFirmId,
+                tweet_id: t.tweetId,
+                url: t.url,
+                text: t.text,
+                author_username: t.author || null,
+                tweeted_at: toDateOnly(t.date),
+                category: r.category || "other",
+                ai_summary: r.summary || null,
+                importance_score: r.importance_score ?? 0.5,
+              },
+              { onConflict: "firm_id,url", ignoreDuplicates: true }
+            );
+          if (!mentionError) mentionInserted++;
+        }
+      }
     }
   }
 
@@ -172,5 +197,6 @@ export async function ingestTweets(fetched: FetchedTweet[]): Promise<IngestResul
     industryInserted,
     firmSkipped,
     industrySkipped,
+    mentionInserted,
   };
 }

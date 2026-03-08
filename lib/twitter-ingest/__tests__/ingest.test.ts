@@ -19,6 +19,7 @@ import type { FetchedTweet } from "@/lib/twitter-fetch/fetch-job";
 
 function createMockSupabase() {
   const insert = jest.fn().mockResolvedValue({ error: null });
+  const upsert = jest.fn().mockResolvedValue({ error: null });
   const in_ = jest.fn().mockResolvedValue({ data: [], error: null });
 
   const chain = {
@@ -26,10 +27,11 @@ function createMockSupabase() {
     eq: jest.fn().mockReturnThis(),
     in: in_,
     insert,
+    upsert,
   };
 
   const from = jest.fn((_table: string) => chain);
-  return { from, select: chain.select, in: in_, insert };
+  return { from, select: chain.select, in: in_, insert, upsert };
 }
 
 describe("ingestTweets", () => {
@@ -60,8 +62,25 @@ describe("ingestTweets", () => {
       industryInserted: 0,
       firmSkipped: 0,
       industrySkipped: 0,
+      mentionInserted: 0,
     });
     expect(mock.from).not.toHaveBeenCalled();
+  });
+
+  it("firm insert uses fallback values when AI fields are falsy/missing", async () => {
+    (categorizeTweetBatch as jest.Mock).mockResolvedValue([
+      { category: "", summary: "", importance_score: undefined, topic_title: null, mentioned_firm_ids: [] },
+    ]);
+
+    const fetched: FetchedTweet[] = [
+      { tweetId: "fb2", text: "T", url: "https://x.com/fb/2", author: "", date: "2024-01-15", firmId: "fundednext", source: "firm_official" },
+    ];
+
+    await ingestTweets(fetched);
+
+    expect(mock.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ author_username: null, category: "other", ai_summary: null, importance_score: 0.5 })
+    );
   });
 
   it("dedupes firm tweets and inserts only new", async () => {
@@ -80,7 +99,7 @@ describe("ingestTweets", () => {
         author: "a",
         date: "2024-01-15",
         firmId: "fundednext",
-        source: "firm",
+        source: "firm_official",
       },
       {
         tweetId: "2",
@@ -89,7 +108,7 @@ describe("ingestTweets", () => {
         author: "b",
         date: "2024-01-15",
         firmId: "fundednext",
-        source: "firm",
+        source: "firm_official",
       },
     ];
 
@@ -186,7 +205,7 @@ describe("ingestTweets", () => {
         author: "c",
         date: "2024/01/17",
         firmId: "fundingpips",
-        source: "firm",
+        source: "firm_official",
       },
     ];
 
@@ -214,7 +233,7 @@ describe("ingestTweets", () => {
         author: "a",
         date: "2024-01-15",
         firmId: "fundednext",
-        source: "firm",
+        source: "firm_official",
       },
       {
         tweetId: "b",
@@ -223,7 +242,7 @@ describe("ingestTweets", () => {
         author: "b",
         date: "2024-01-15",
         firmId: "fundednext",
-        source: "firm",
+        source: "firm_official",
       },
     ];
 
@@ -266,7 +285,7 @@ describe("ingestTweets", () => {
         author: "a",
         date: "2024-01-15",
         firmId: "fundednext",
-        source: "firm",
+        source: "firm_official",
       },
       {
         tweetId: "y",
@@ -275,7 +294,7 @@ describe("ingestTweets", () => {
         author: "b",
         date: "2024-01-15",
         firmId: "fundednext",
-        source: "firm",
+        source: "firm_official",
       },
     ];
 
@@ -324,7 +343,7 @@ describe("ingestTweets", () => {
         author: "g",
         date: "2024-01-15",
         firmId: "fundednext",
-        source: "firm",
+        source: "firm_official",
       },
     ];
 
@@ -446,5 +465,108 @@ describe("ingestTweets", () => {
         published: false,
       })
     );
+  });
+
+  it("fans out industry tweet to mentioned firm rows via upsert (S10-012)", async () => {
+    (categorizeTweetBatch as jest.Mock).mockResolvedValue([
+      {
+        category: "company_news",
+        summary: "Mentions FundedNext and FundingPips",
+        importance_score: 0.8,
+        topic_title: "Industry Update",
+        mentioned_firm_ids: ["fundednext", "fundingpips"],
+      },
+    ]);
+
+    const fetched: FetchedTweet[] = [
+      {
+        tweetId: "fan1",
+        text: "FundedNext and FundingPips announce...",
+        url: "https://x.com/trader/fan1",
+        author: "trader",
+        date: "2024-01-20",
+        source: "industry",
+      },
+    ];
+
+    const result = await ingestTweets(fetched);
+
+    // Industry row inserted
+    expect(result.industryInserted).toBe(1);
+    expect(mock.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ firm_id: "industry", tweet_id: "fan1" })
+    );
+
+    // Fan-out rows upserted for each mentioned firm
+    expect(result.mentionInserted).toBe(2);
+    expect(mock.upsert).toHaveBeenCalledTimes(2);
+    expect(mock.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ firm_id: "fundednext", url: "https://x.com/trader/fan1" }),
+      expect.objectContaining({ onConflict: "firm_id,url", ignoreDuplicates: true })
+    );
+    expect(mock.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ firm_id: "fundingpips", url: "https://x.com/trader/fan1" }),
+      expect.objectContaining({ onConflict: "firm_id,url", ignoreDuplicates: true })
+    );
+  });
+
+  it("skips fan-out when mentioned_firm_ids is empty", async () => {
+    (categorizeTweetBatch as jest.Mock).mockResolvedValue([
+      { category: "other", summary: "No mentions", importance_score: 0.5, topic_title: "Generic", mentioned_firm_ids: [] },
+    ]);
+
+    const fetched: FetchedTweet[] = [
+      { tweetId: "nf1", text: "No firm", url: "https://x.com/u/nf1", author: "u", date: "2024-01-20", source: "industry" },
+    ];
+
+    const result = await ingestTweets(fetched);
+
+    expect(result.mentionInserted).toBe(0);
+    expect(mock.upsert).not.toHaveBeenCalled();
+  });
+
+  it("fan-out upsert uses fallback values when AI fields are falsy/missing", async () => {
+    (categorizeTweetBatch as jest.Mock).mockResolvedValue([
+      {
+        category: "",            // falsy → "other"
+        summary: "",             // falsy → null
+        importance_score: undefined, // missing → 0.5
+        topic_title: "Title",
+        mentioned_firm_ids: ["fundednext"],
+      },
+    ]);
+
+    const fetched: FetchedTweet[] = [
+      { tweetId: "fb1", text: "T", url: "https://x.com/fb/1", author: "", date: "2024-01-20", source: "industry" },
+    ];
+
+    await ingestTweets(fetched);
+
+    expect(mock.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        author_username: null,      // "" || null
+        category: "other",          // "" || "other"
+        ai_summary: null,           // "" || null
+        importance_score: 0.5,      // undefined ?? 0.5
+      }),
+      expect.objectContaining({ onConflict: "firm_id,url", ignoreDuplicates: true })
+    );
+  });
+
+  it("does not increment mentionInserted when fan-out upsert returns error", async () => {
+    mock.upsert.mockResolvedValueOnce({ error: { message: "upsert error" } });
+
+    (categorizeTweetBatch as jest.Mock).mockResolvedValue([
+      { category: "news", summary: "Summary", importance_score: 0.7, topic_title: "News", mentioned_firm_ids: ["fundednext"] },
+    ]);
+
+    const fetched: FetchedTweet[] = [
+      { tweetId: "ue1", text: "Fail", url: "https://x.com/ue/1", author: "u", date: "2024-01-20", source: "industry" },
+    ];
+
+    const result = await ingestTweets(fetched);
+
+    expect(result.mentionInserted).toBe(0);
+    expect(mock.upsert).toHaveBeenCalledTimes(1);
   });
 });

@@ -258,7 +258,7 @@ recency_boost: +1 if evidence_date within last 7 days
 
 ### TICKET-S10-011: Refactor Twitter Fetch to Hybrid 2-Run Model
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P0
 **Story points:** 3
 
@@ -281,7 +281,7 @@ recency_boost: +1 if evidence_date within last 7 days
 
 ### TICKET-S10-012: Fan Out Industry Tweets to Firm Rows via mentioned_firm_ids
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P1
 **Story points:** 3
 

@@ -1,6 +1,6 @@
 /**
- * Tests for Twitter fetch job (S8-TW-003)
- * Mocks runTwitterSearch; asserts merged list, dedupe, firmId/source tags.
+ * Tests for Twitter fetch job — hybrid 2-run model (S10-011)
+ * Mocks runTwitterSearch; asserts 2 Apify runs, handle attribution, dedupe, source tags.
  */
 
 jest.mock("@/lib/apify/twitter-scraper", () => ({
@@ -14,148 +14,199 @@ const mockRunTwitterSearch = runTwitterSearch as jest.MockedFunction<typeof runT
 
 beforeEach(() => {
   jest.clearAllMocks();
+  delete process.env.TWITTER_MAX_ITEMS_PER_FIRM;
+  delete process.env.TWITTER_MAX_ITEMS_INDUSTRY;
   process.env.APIFY_TOKEN = "test-token";
 });
 
-describe("runTwitterFetchJob", () => {
-  it("returns merged firm and industry tweets with no duplicate ids", async () => {
+describe("runTwitterFetchJob — hybrid 2-run model", () => {
+  it("makes exactly 2 Apify calls: one firm official run and one industry run", async () => {
+    mockRunTwitterSearch.mockResolvedValue([]);
+
+    await runTwitterFetchJob();
+
+    expect(mockRunTwitterSearch).toHaveBeenCalledTimes(2);
+  });
+
+  it("passes combined from: query as a single search term in Run 1", async () => {
+    mockRunTwitterSearch.mockResolvedValue([]);
+
+    await runTwitterFetchJob();
+
+    const [run1Call] = mockRunTwitterSearch.mock.calls;
+    const searchTerms = run1Call[0].searchTerms;
+    expect(searchTerms).toHaveLength(1);
+    expect(searchTerms[0]).toMatch(/from:FundedNext/);
+    expect(searchTerms[0]).toMatch(/from:FundingPips/);
+    expect(searchTerms[0]).toMatch(/from:AlphaCapitalGroup/);
+    expect(searchTerms[0]).toMatch(/ OR /);
+  });
+
+  it("attributes firm_official tweets by matching authorUsername to firmId", async () => {
     mockRunTwitterSearch
       .mockResolvedValueOnce([
         {
           id: "1",
-          text: "FundingPips news",
-          url: "https://x.com/a/1",
-          authorUsername: "a",
+          text: "FundedNext update",
+          url: "https://x.com/FundedNext/1",
+          authorUsername: "FundedNext", // case matches handle
           createdAt: "2024-01-15T12:00:00.000Z",
         },
         {
           id: "2",
-          text: "Funded Next payout",
-          url: "https://x.com/b/2",
-          authorUsername: "b",
+          text: "FundingPips update",
+          url: "https://x.com/FundingPips/2",
+          authorUsername: "fundingpips", // lowercase — should still match
           createdAt: "2024-01-15T13:00:00.000Z",
         },
-      ])
-      .mockResolvedValueOnce([
         {
           id: "3",
-          text: "Alpha Capital update",
-          url: "https://x.com/c/3",
-          authorUsername: "c",
+          text: "Unknown author tweet",
+          url: "https://x.com/unknown/3",
+          authorUsername: "SomeRandomUser", // no match
           createdAt: "2024-01-15T14:00:00.000Z",
         },
       ])
+      .mockResolvedValueOnce([]); // industry
+
+    const result = await runTwitterFetchJob();
+
+    const t1 = result.find((t) => t.tweetId === "1");
+    expect(t1?.firmId).toBe("fundednext");
+    expect(t1?.source).toBe("firm_official");
+
+    const t2 = result.find((t) => t.tweetId === "2");
+    expect(t2?.firmId).toBe("fundingpips");
+    expect(t2?.source).toBe("firm_official");
+
+    // Unmatched author — no firmId but still included
+    const t3 = result.find((t) => t.tweetId === "3");
+    expect(t3?.firmId).toBeUndefined();
+    expect(t3?.source).toBe("firm_official");
+  });
+
+  it("tags industry tweets with source industry and no firmId", async () => {
+    mockRunTwitterSearch
+      .mockResolvedValueOnce([]) // firm run
       .mockResolvedValueOnce([
         {
-          id: "4",
-          text: "Prop firm regulation",
-          url: "https://x.com/d/4",
-          authorUsername: "d",
-          createdAt: "2024-01-15T15:00:00.000Z",
-        },
-      ])
-      .mockResolvedValueOnce([
-        {
-          id: "5",
-          text: "Industry tweet",
-          url: "https://x.com/e/5",
-          authorUsername: "e",
+          id: "10",
+          text: "Industry news",
+          url: "https://x.com/someone/10",
+          authorUsername: "someone",
           createdAt: "2024-01-15T16:00:00.000Z",
         },
       ]);
 
     const result = await runTwitterFetchJob();
 
-    expect(mockRunTwitterSearch).toHaveBeenCalledTimes(4); // 3 firms + 1 industry
-    expect(result).toHaveLength(5);
-    const ids = result.map((t) => t.tweetId);
-    expect(new Set(ids).size).toBe(5);
-
-    const firmTweets = result.filter((t) => t.source === "firm");
-    expect(firmTweets.length).toBe(4);
-    expect(firmTweets.map((t) => t.firmId)).toEqual(
-      expect.arrayContaining(["fundednext", "fundingpips", "alphacapitalgroup"])
-    );
-
-    const industryTweets = result.filter((t) => t.source === "industry");
-    expect(industryTweets.length).toBe(1);
-    expect(industryTweets[0].firmId).toBeUndefined();
-    expect(industryTweets[0].tweetId).toBe("5");
-
-    for (const t of result) {
-      expect(t).toMatchObject({
-        tweetId: expect.any(String),
-        text: expect.any(String),
-        url: expect.any(String),
-        author: expect.any(String),
-        date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-        source: expect.stringMatching(/^firm|industry$/),
-      });
-    }
+    expect(result).toHaveLength(1);
+    expect(result[0].source).toBe("industry");
+    expect(result[0].firmId).toBeUndefined();
+    expect(result[0].tweetId).toBe("10");
   });
 
-  it("dedupes by tweet id across runs", async () => {
+  it("dedupes by tweet id across both runs", async () => {
     mockRunTwitterSearch
       .mockResolvedValueOnce([
-        { id: "1", text: "A", url: "https://x.com/1", authorUsername: "u", createdAt: "2024-01-01T00:00:00.000Z" },
+        { id: "dup", text: "From firm run", url: "https://x.com/1", authorUsername: "FundedNext", createdAt: "2024-01-01T00:00:00.000Z" },
       ])
       .mockResolvedValueOnce([
-        { id: "1", text: "A again", url: "https://x.com/1", authorUsername: "u", createdAt: "2024-01-01T00:00:00.000Z" },
-      ])
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([]);
+        { id: "dup", text: "Same from industry", url: "https://x.com/1", authorUsername: "FundedNext", createdAt: "2024-01-01T00:00:00.000Z" },
+      ]);
 
     const result = await runTwitterFetchJob();
-    expect(result.filter((t) => t.tweetId === "1")).toHaveLength(1);
+
+    expect(result.filter((t) => t.tweetId === "dup")).toHaveLength(1);
+    expect(result[0].source).toBe("firm_official"); // firm run wins (first seen)
   });
 
-  it("respects TWITTER_MAX_ITEMS_PER_FIRM env", async () => {
-    process.env.TWITTER_MAX_ITEMS_PER_FIRM = "2";
-    mockRunTwitterSearch.mockImplementation(async (opts) => {
-      const max = opts.maxItemsTotal ?? 150;
-      return Array.from({ length: 5 }, (_, i) => ({
-        id: `id-${i}`,
-        text: `t${i}`,
-        url: `https://x.com/u/${i}`,
-        authorUsername: "u",
-        createdAt: "2024-01-01T00:00:00.000Z",
-      })).slice(0, max);
-    });
+  it("returns merged results from both runs with correct counts", async () => {
+    mockRunTwitterSearch
+      .mockResolvedValueOnce([
+        { id: "a", text: "Firm A", url: "https://x.com/a", authorUsername: "FundedNext", createdAt: "2024-01-15T12:00:00.000Z" },
+        { id: "b", text: "Firm B", url: "https://x.com/b", authorUsername: "FundingPips", createdAt: "2024-01-15T13:00:00.000Z" },
+      ])
+      .mockResolvedValueOnce([
+        { id: "c", text: "Industry C", url: "https://x.com/c", authorUsername: "trader", createdAt: "2024-01-15T14:00:00.000Z" },
+      ]);
 
     const result = await runTwitterFetchJob();
-    const firmTweets = result.filter((t) => t.source === "firm");
-    expect(firmTweets.length).toBeLessThanOrEqual(3 * 2 + 10); // 3 firms * 2 + industry; runTwitterSearch caps at maxItemsTotal per call
-    expect(mockRunTwitterSearch).toHaveBeenCalledWith(
-      expect.objectContaining({ maxItemsTotal: 2 })
-    );
+
+    expect(result).toHaveLength(3);
+    expect(result.filter((t) => t.source === "firm_official")).toHaveLength(2);
+    expect(result.filter((t) => t.source === "industry")).toHaveLength(1);
+  });
+
+  it("uses TWITTER_MAX_ITEMS_PER_FIRM env as per-handle cap; combined total = cap * handle count", async () => {
+    process.env.TWITTER_MAX_ITEMS_PER_FIRM = "10";
+    mockRunTwitterSearch.mockResolvedValue([]);
+
+    await runTwitterFetchJob();
+
+    const [run1Call] = mockRunTwitterSearch.mock.calls;
+    // 3 firm handles * 10 per handle = 30
+    expect(run1Call[0].maxItemsTotal).toBe(30);
+  });
+
+  it("uses TWITTER_MAX_ITEMS_INDUSTRY env to cap industry run", async () => {
+    process.env.TWITTER_MAX_ITEMS_INDUSTRY = "25";
+    mockRunTwitterSearch.mockResolvedValue([]);
+
+    await runTwitterFetchJob();
+
+    const [, run2Call] = mockRunTwitterSearch.mock.calls;
+    expect(run2Call[0].maxItemsTotal).toBe(25);
   });
 
   it("uses fallback when TWITTER_MAX_ITEMS_INDUSTRY is invalid (NaN)", async () => {
     process.env.TWITTER_MAX_ITEMS_INDUSTRY = "not-a-number";
     mockRunTwitterSearch.mockResolvedValue([]);
+
     await runTwitterFetchJob();
-    const industryCall = mockRunTwitterSearch.mock.calls.find(
-      (c) => c[0].searchTerms && c[0].searchTerms.length > 5
-    );
-    expect(industryCall).toBeDefined();
-    expect(industryCall![0].maxItemsTotal).toBe(100); // TWITTER_MAX_ITEMS_INDUSTRY default
+
+    const [, run2Call] = mockRunTwitterSearch.mock.calls;
+    expect(run2Call[0].maxItemsTotal).toBe(100); // TWITTER_MAX_ITEMS_INDUSTRY default
   });
 
-  it("uses fallback when env is empty string", async () => {
-    process.env.TWITTER_MAX_ITEMS_PER_TERM = "";
+  it("uses fallback when TWITTER_MAX_ITEMS_PER_FIRM is empty string", async () => {
+    process.env.TWITTER_MAX_ITEMS_PER_FIRM = "";
     mockRunTwitterSearch.mockResolvedValue([]);
+
     await runTwitterFetchJob();
-    expect(mockRunTwitterSearch).toHaveBeenCalledWith(
-      expect.objectContaining({ maxItemsPerTerm: 50 })
-    ); // config default
+
+    const [run1Call] = mockRunTwitterSearch.mock.calls;
+    // default is 50 per handle * 3 handles = 150
+    expect(run1Call[0].maxItemsTotal).toBe(150);
   });
 
-  it("clamps negative env to 0", async () => {
+  it("clamps negative TWITTER_MAX_ITEMS_PER_FIRM env to 0", async () => {
     process.env.TWITTER_MAX_ITEMS_PER_FIRM = "-5";
     mockRunTwitterSearch.mockResolvedValue([]);
+
     await runTwitterFetchJob();
-    expect(mockRunTwitterSearch).toHaveBeenCalledWith(
-      expect.objectContaining({ maxItemsTotal: 0 })
-    );
+
+    const [run1Call] = mockRunTwitterSearch.mock.calls;
+    expect(run1Call[0].maxItemsTotal).toBe(0);
+  });
+
+  it("formats date as YYYY-MM-DD from ISO createdAt", async () => {
+    mockRunTwitterSearch
+      .mockResolvedValueOnce([
+        { id: "x", text: "T", url: "https://x.com/x", authorUsername: "FundedNext", createdAt: "2024-03-15T08:30:00.000Z" },
+      ])
+      .mockResolvedValueOnce([]);
+
+    const result = await runTwitterFetchJob();
+
+    expect(result[0].date).toBe("2024-03-15");
+  });
+
+  it("returns empty array when both runs return no tweets", async () => {
+    mockRunTwitterSearch.mockResolvedValue([]);
+
+    const result = await runTwitterFetchJob();
+
+    expect(result).toHaveLength(0);
   });
 });
