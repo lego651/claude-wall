@@ -50,13 +50,20 @@ export const NEGATIVE_SPIKE_CATEGORIES = [
 /** Categories that trigger an incident with lower threshold (e.g. >= 1 in 7d). UI: "High-risk allegations reported" */
 export const SEVERITY_OVERRIDE_CATEGORIES = ['high_risk_allegation'] as const;
 
+/** Categories that generate POSITIVE signals (spike ≥ MIN_REVIEWS_FOR_POSITIVE_SIGNAL in window) */
+export const POSITIVE_SIGNAL_CATEGORIES = ['positive_experience'] as const;
+
+/** Categories that generate INFORMATIONAL signals (spike ≥ MIN_REVIEWS_FOR_POSITIVE_SIGNAL in window) */
+export const INFORMATIONAL_SIGNAL_CATEGORIES = ['neutral_mixed'] as const;
+
+/** Minimum review count to trigger a positive or informational signal */
+export const MIN_REVIEWS_FOR_POSITIVE_SIGNAL = 3;
+
 /** Categories we never create incidents from */
 export const NEVER_INCIDENT_CATEGORIES = [
   'spam_template',
   'low_info',
   'off_topic',
-  'positive_experience',
-  'neutral_mixed',
 ] as const;
 
 /** All categories that count as "negative" for incidents (spike + severity override) */

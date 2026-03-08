@@ -104,7 +104,7 @@ recency_boost: +1 if evidence_date within last 7 days
 
 ### TICKET-S10-005: Surface Positive & Neutral Signals in Intelligence Feed
 
-**Status:** 🔲 Pending
+**Status:** ✅ Done
 **Priority:** P1
 **Story points:** 2
 

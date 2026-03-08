@@ -4,6 +4,8 @@ const CATEGORY_MAP = {
   OPERATIONAL: { label: "Operational", classes: "bg-blue-50 text-blue-600 border-blue-100" },
   REPUTATION: { label: "Reputation", classes: "bg-amber-50 text-amber-600 border-amber-100" },
   REGULATORY: { label: "Regulatory", classes: "bg-slate-50 text-slate-600 border-slate-100" },
+  POSITIVE: { label: "Positive", classes: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+  INFORMATIONAL: { label: "Informational", classes: "bg-slate-50 text-slate-500 border-slate-100" },
 };
 
 function SourceLinkIcon({ className = "" }) {
@@ -35,9 +37,15 @@ export default function IntelligenceCard({ item }) {
     label: item.category,
     classes: "bg-slate-50 text-slate-600 border-slate-100",
   };
-  const isReputation = item.category === "REPUTATION";
   const isHighConfidence = item.confidence === "HIGH";
-  const dotColor = isReputation && isHighConfidence ? "bg-red-500" : "bg-emerald-500";
+  const dotColor =
+    item.category === "POSITIVE"
+      ? "bg-emerald-500"
+      : item.category === "INFORMATIONAL"
+        ? "bg-slate-400"
+        : item.category === "REPUTATION" && isHighConfidence
+          ? "bg-red-500"
+          : "bg-amber-400";
 
   return (
     <div className="relative flex gap-4">

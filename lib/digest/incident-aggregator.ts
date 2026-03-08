@@ -11,15 +11,20 @@ import { getWeekNumberUtc, getYearUtc } from './week-utils';
 import {
   NEGATIVE_SPIKE_CATEGORIES,
   SEVERITY_OVERRIDE_CATEGORIES,
+  POSITIVE_SIGNAL_CATEGORIES,
+  INFORMATIONAL_SIGNAL_CATEGORIES,
   MIN_REVIEWS_FOR_SPIKE_INCIDENT,
   MIN_REVIEWS_FOR_HIGH_RISK_INCIDENT,
+  MIN_REVIEWS_FOR_POSITIVE_SIGNAL,
   normalizeCategory,
 } from '@/lib/ai/classification-taxonomy';
 
-// All categories that can produce an incident (spike or severity override); includes legacy for query
+// All categories that can produce an incident or signal; includes legacy for query
 const INCIDENT_QUERY_CATEGORIES = [
   ...NEGATIVE_SPIKE_CATEGORIES,
   ...SEVERITY_OVERRIDE_CATEGORIES,
+  ...POSITIVE_SIGNAL_CATEGORIES,
+  ...INFORMATIONAL_SIGNAL_CATEGORIES,
   // Legacy equivalents so existing rows are included
   'payout_issue',
   'scam_warning',
@@ -32,7 +37,11 @@ const SEVERITY_ORDER = { low: 0, medium: 1, high: 2 } as const;
 /** Max incidents per OpenAI call (batch). */
 const INCIDENT_SUMMARY_BATCH_SIZE = 10;
 
-export type IncidentType = (typeof NEGATIVE_SPIKE_CATEGORIES)[number] | (typeof SEVERITY_OVERRIDE_CATEGORIES)[number];
+export type IncidentType =
+  | (typeof NEGATIVE_SPIKE_CATEGORIES)[number]
+  | (typeof SEVERITY_OVERRIDE_CATEGORIES)[number]
+  | (typeof POSITIVE_SIGNAL_CATEGORIES)[number]
+  | (typeof INFORMATIONAL_SIGNAL_CATEGORIES)[number];
 
 export interface IncidentInput {
   incident_type: IncidentType;
@@ -95,6 +104,8 @@ export async function detectIncidents(
   }
 
   const isHighRisk = (c: string) => (SEVERITY_OVERRIDE_CATEGORIES as readonly string[]).includes(c);
+  const isPositive = (c: string) => (POSITIVE_SIGNAL_CATEGORIES as readonly string[]).includes(c);
+  const isInformational = (c: string) => (INFORMATIONAL_SIGNAL_CATEGORIES as readonly string[]).includes(c);
 
   interface PendingIncident {
     normCategory: string;
@@ -108,7 +119,9 @@ export async function detectIncidents(
   for (const [normCategory, group] of byNormalizedCategory) {
     const minRequired = isHighRisk(normCategory)
       ? MIN_REVIEWS_FOR_HIGH_RISK_INCIDENT
-      : MIN_REVIEWS_FOR_SPIKE_INCIDENT;
+      : isPositive(normCategory) || isInformational(normCategory)
+        ? MIN_REVIEWS_FOR_POSITIVE_SIGNAL
+        : MIN_REVIEWS_FOR_SPIKE_INCIDENT;
     if (group.length < minRequired) continue;
 
     pending.push({
@@ -192,7 +205,7 @@ async function generateIncidentSummariesBatch(
       it.reviewSummaries.map((s, i) => `${i + 1}. ${s}`).join('\n')
   );
   const prompt = `You are summarizing clusters of Trustpilot reviews for a prop trading firm. There are exactly ${items.length} incident clusters below. For each cluster, produce:
-- title: Short headline (max 80 chars), e.g. "Crypto payout delays reported"
+- title: Short headline (max 80 chars). For positive_experience clusters use positive framing (e.g. "Fast payouts praised by traders"). For neutral_mixed clusters use neutral framing (e.g. "Traders discussing fee structure changes").
 - summary: 2-3 sentence aggregated summary (max 300 chars)
 - affected_users: Estimate like "~10-15" or "~5-8" based on review count
 

@@ -7,7 +7,7 @@ import IntelligenceCard from "@/components/propfirms/intelligence/IntelligenceCa
 import IntelligenceCardSkeleton from "@/components/propfirms/intelligence/IntelligenceCardSkeleton";
 import { IntelligenceCategory, ConfidenceLevel } from "./types";
 
-// Map incident_type to display category (OPERATIONAL vs REPUTATION)
+// Map incident_type to display category
 const INCIDENT_TYPE_TO_CATEGORY = {
   platform_technical_issue: IntelligenceCategory.OPERATIONAL,
   support_issue: IntelligenceCategory.OPERATIONAL,
@@ -23,6 +23,8 @@ const INCIDENT_TYPE_TO_CATEGORY = {
   platform_issue: IntelligenceCategory.REPUTATION,
   rule_violation: IntelligenceCategory.REPUTATION,
   other: IntelligenceCategory.REPUTATION,
+  positive_experience: IntelligenceCategory.POSITIVE,
+  neutral_mixed: IntelligenceCategory.INFORMATIONAL,
 };
 
 function getDisplayCategory(incidentType) {
@@ -187,10 +189,10 @@ export default function PropFirmIntelligencePage() {
               className="appearance-none bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg pl-4 pr-10 py-2 hover:bg-slate-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-indigo-500/20 min-w-[140px]"
             >
               <option value="all">All Types</option>
+              <option value={IntelligenceCategory.POSITIVE}>Positive</option>
+              <option value={IntelligenceCategory.OPERATIONAL}>Operational</option>
               <option value={IntelligenceCategory.REPUTATION}>Reputation</option>
-              <option value={IntelligenceCategory.OPERATIONAL}>
-                Operational
-              </option>
+              <option value={IntelligenceCategory.INFORMATIONAL}>Informational</option>
               <option value={IntelligenceCategory.REGULATORY}>Regulatory</option>
             </select>
             <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
