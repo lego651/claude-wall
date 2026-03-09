@@ -2,12 +2,12 @@
   "firmId": "fxify",
   "period": "2026-03",
   "timezone": "UTC",
-  "generatedAt": "2026-03-07T05:56:33.779Z",
+  "generatedAt": "2026-03-09T11:30:56.440Z",
   "summary": {
-    "totalPayouts": 18364,
-    "payoutCount": 10,
+    "totalPayouts": 21992,
+    "payoutCount": 12,
     "largestPayout": 9000,
-    "avgPayout": 1836
+    "avgPayout": 1833
   },
   "dailyBuckets": [
     {
@@ -44,9 +44,34 @@
       "rise": 4462,
       "crypto": 0,
       "wire": 0
+    },
+    {
+      "date": "2026-03-09",
+      "total": 3628,
+      "rise": 3628,
+      "crypto": 0,
+      "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0xd46396876e27b5d90fc6063553a04b2ab824ad2bdc1874f19db53794777ae992",
+      "firm_id": "fxify",
+      "amount": 2220,
+      "payment_method": "rise",
+      "timestamp": "2026-03-09T09:24:26.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0x7874b97a2bd5483e2e2360dec75a35fb01c5b499"
+    },
+    {
+      "tx_hash": "0xe2f1b08da2f06daa03f111bd784e554fde06a6253175217dde396b121baafbac",
+      "firm_id": "fxify",
+      "amount": 1408,
+      "payment_method": "rise",
+      "timestamp": "2026-03-09T08:50:45.000Z",
+      "from_address": "0x36109f4d6804f391d830939c0c0e43efc41a7486",
+      "to_address": "0xbb70252d04a8102f4c65a1bfd0cffc3d61792425"
+    },
     {
       "tx_hash": "0x5ad4547bbc90cb61f60f2e7a557a3e53f497c29b36cd257742ef50fdb8aa9e1a",
       "firm_id": "fxify",
