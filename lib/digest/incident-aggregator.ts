@@ -66,6 +66,7 @@ type ReviewRow = {
   category: string | null;
   severity: string | null;
   ai_summary: string | null;
+  rating: number | null;
 };
 
 /**
@@ -86,7 +87,7 @@ export async function detectIncidents(
 
   const { data: reviews, error } = await supabase
     .from('firm_trustpilot_reviews')
-    .select('id, firm_id, category, severity, ai_summary')
+    .select('id, firm_id, category, severity, ai_summary, rating')
     .eq('firm_id', firmId)
     .gte('review_date', startStr)
     .lte('review_date', endStr)
@@ -125,12 +126,17 @@ export async function detectIncidents(
         : MIN_REVIEWS_FOR_SPIKE_INCIDENT;
     if (group.length < minRequired) continue;
 
+    const isNegative = !isPositive(normCategory) && !isInformational(normCategory);
+    // Exclude high-rated reviews (≥4 stars) from negative incident evidence — they're not representative
+    const evidenceGroup = isNegative
+      ? group.filter((r) => r.rating == null || r.rating <= 3)
+      : group;
     pending.push({
       normCategory,
       group,
-      reviewIds: group.map((r) => r.id),
-      summaries: group.map((r) => r.ai_summary ?? '(no summary)').filter(Boolean),
-      maxSeverity: deriveSeverity(group),
+      reviewIds: evidenceGroup.map((r) => r.id),
+      summaries: evidenceGroup.map((r) => r.ai_summary ?? '(no summary)').filter(Boolean),
+      maxSeverity: deriveSeverity(evidenceGroup.length > 0 ? evidenceGroup : group),
     });
   }
 

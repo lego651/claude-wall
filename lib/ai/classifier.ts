@@ -53,10 +53,10 @@ const CATEGORY_INSTRUCTIONS = `Classify into ONE category per review:
 - pricing_fee_complaint: Challenge fees, resets, hidden costs
 - execution_conditions: Slippage, spreads, execution quality
 - high_risk_allegation: Fraud/scam allegations, exit scam fears (use only when clearly alleged)
-- positive_experience: Success stories, praise, recommendations
+- positive_experience: Genuine praise, success stories, recommendations — including short but authentic positive reviews
 - neutral_mixed: Questions, general discussion, mixed feedback
-- spam_template: Templated praise, affiliate-driven
-- low_info: One-line or uninformative
+- spam_template: Only use when there are clear signs of copy-paste templates, affiliate links, or obvious promotional language. Do NOT use for short genuine positive reviews.
+- low_info: One-line or uninformative (no opinion expressed, no actionable content)
 - off_topic: Irrelevant, not about the firm
 
 Severity (if negative category): high = serious/money/mass impact, medium = moderate/delays/bugs, low = minor/isolated. Use null for positive_experience, neutral_mixed, spam_template, low_info, off_topic.`;
