@@ -34,7 +34,7 @@ export async function ingestFirmEmails(): Promise<IngestResult> {
     .eq('job_name', JOB_NAME)
     .single();
 
-  const afterTimestamp = lastRun?.last_run_at ? new Date(lastRun.last_run_at).getTime() : null;
+  const afterTimestamp = lastRun?.last_run_at ? new Date(lastRun.last_run_at as string).getTime() : null;
   const runStartedAt = new Date().toISOString();
 
   console.log(
