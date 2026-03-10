@@ -70,20 +70,25 @@ function incidentToItem(inc) {
   const rawLinks = inc.source_links || [];
   const cardDateRaw = inc.evidence_date || inc.week_start || "";
   const cardDate = cardDateRaw ? formatDisplayDate(cardDateRaw) : "";
-  const sources = rawLinks.slice(0, 6).map((item, i) => {
-    const url = typeof item === "string" ? item : item?.url;
-    const sourceDate = typeof item === "object" && item?.date ? item.date : cardDateRaw;
-    const { label, domain } = getLabelAndDomainFromUrl(url || "", i);
-    return {
-      id: `s${inc.id}-${i}`,
-      label,
-      url: url || "",
-      type: "web",
-      domain,
-      date: sourceDate,
-      rating: typeof item === "object" ? (item?.rating ?? null) : null,
-    };
-  });
+  const isPositive = inc.incident_type === "positive_experience";
+  const sources = rawLinks
+    .map((item, i) => {
+      const url = typeof item === "string" ? item : item?.url;
+      const sourceDate = typeof item === "object" && item?.date ? item.date : cardDateRaw;
+      const rating = typeof item === "object" ? (item?.rating ?? null) : null;
+      const { label, domain } = getLabelAndDomainFromUrl(url || "", i);
+      return {
+        id: `s${inc.id}-${i}`,
+        label,
+        url: url || "",
+        type: "web",
+        domain,
+        date: sourceDate,
+        rating,
+      };
+    })
+    .filter((s) => isPositive ? true : s.rating == null || s.rating <= 3)
+    .slice(0, 6);
 
   return {
     id: String(inc.id),
@@ -147,7 +152,7 @@ export default function PropFirmIntelligencePage() {
     if (!firmId) return;
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/v2/propfirms/${firmId}/incidents?days=30&limit=8`)
+    fetch(`/api/v2/propfirms/${firmId}/incidents?days=30&limit=20`)
       .then((r) => (r.ok ? r.json() : { incidents: [] }))
       .then((data) => {
         if (!cancelled) setIncidents(data.incidents || []);
