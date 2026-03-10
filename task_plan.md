@@ -54,7 +54,7 @@ Steps:
 
 ---
 
-### Phase 3: Admin API Routes ⬜
+### Phase 3: Admin API Routes ✅
 **Goal:** Enable the admin upload form that already exists but has no backend.
 
 Steps:

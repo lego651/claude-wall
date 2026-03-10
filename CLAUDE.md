@@ -200,14 +200,23 @@ export async function POST(req) {
 
 ## Testing & Quality
 
-### Before Committing — Run Tests First
-**ALWAYS run the relevant test file before attempting a commit.** The pre-commit hook runs `npm run test:coverage:enforce-new` automatically, but catching failures early saves time.
+### Write Tests Before Committing — MANDATORY
 
+**Every new file in `lib/`, `app/api/`, or `components/` MUST have a corresponding test file with ≥80% line coverage before committing.** The pre-commit hook enforces this automatically and will block the commit if coverage is insufficient.
+
+**CRITICAL: Always write tests as part of the same work session as the code — never defer them to later. Attempting a commit without tests for new files will always fail.**
+
+Test file naming convention:
+- `lib/gmail/ingest.ts` → `lib/gmail/ingest.test.ts`
+- `app/api/v2/propfirms/[id]/content/route.js` → `app/api/v2/propfirms/[id]/content/route.test.js`
+
+Workflow:
 ```bash
-# Run the test file for the code you changed
+# 1. Write tests alongside new code
+# 2. Verify coverage before staging
 npx jest path/to/file.test.js --no-coverage
 
-# Only attempt commit once tests pass
+# 3. Only stage + commit once tests pass
 git add <files> && git commit ...
 ```
 
@@ -216,7 +225,7 @@ If the pre-commit hook fails, fix the issue and create a **new** commit — neve
 ### Pre-commit Checklist
 1. `npm run build` passes without errors
 2. `npm run lint` shows no warnings
-3. Tests pass — pre-commit runs `npm run test:coverage:enforce-new` (tests + coverage; staged files in lib/, app/api/, components/ must have ≥80% coverage)
+3. Tests written and passing for all new files in `lib/`, `app/api/`, `components/` (≥80% line coverage each)
 4. No unused imports
 5. All async functions properly awaited
 6. Environment variables checked before use
