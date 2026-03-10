@@ -8,9 +8,25 @@ import IntelligenceCardSkeleton from "@/components/propfirms/intelligence/Intell
 import VerdictBanner from "@/components/propfirms/intelligence/VerdictBanner";
 import { IntelligenceCategory, ConfidenceLevel } from "./types";
 
+// Incident types that are always RISK regardless of severity
+const RISK_TYPES = new Set([
+  "scam_warning",
+  "high_risk_allegation",
+  "payout_denied",
+]);
+
+// Incident types that escalate to RISK only when severity is high
+const RISK_IF_HIGH_TYPES = new Set([
+  "payout_delay",
+  "payout_issue",
+  "kyc_withdrawal_issue",
+  "trustpilot_score_trend",
+]);
+
 function getDisplayCategory(incidentType, severity) {
   if (incidentType === "positive_experience") return IntelligenceCategory.POSITIVE;
-  if (severity === "high") return IntelligenceCategory.RISK;
+  if (RISK_TYPES.has(incidentType)) return IntelligenceCategory.RISK;
+  if (RISK_IF_HIGH_TYPES.has(incidentType) && severity === "high") return IntelligenceCategory.RISK;
   return IntelligenceCategory.WATCH;
 }
 
