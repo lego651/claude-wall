@@ -52,18 +52,24 @@ COMMENT ON COLUMN firm_email_senders.sender_domain IS 'Domain-level match fallba
 -- Seed: migrate static maps from lib/gmail/firm-mapper.ts
 -- -----------------------------------------------------------------------
 
--- Full email overrides
-INSERT INTO firm_email_senders (firm_id, sender_email) VALUES
+-- Full email overrides (only insert if firm_id exists in firm_profiles)
+INSERT INTO firm_email_senders (firm_id, sender_email)
+SELECT v.firm_id, v.sender_email
+FROM (VALUES
   ('fundingpips', 'updates@fundingpips.com'),
   ('fundingpips', 'noreply@fundingpips.com'),
   ('fxify',       'hello@fxify.com'),
   ('fxify',       'support@fxify.com'),
   ('fundednext',  'hello@fundednext.com'),
   ('fundednext',  'support@fundednext.com')
+) AS v(firm_id, sender_email)
+WHERE EXISTS (SELECT 1 FROM firm_profiles WHERE firm_profiles.id = v.firm_id)
 ON CONFLICT DO NOTHING;
 
--- Domain-level mappings
-INSERT INTO firm_email_senders (firm_id, sender_domain) VALUES
+-- Domain-level mappings (only insert if firm_id exists in firm_profiles)
+INSERT INTO firm_email_senders (firm_id, sender_domain)
+SELECT v.firm_id, v.sender_domain
+FROM (VALUES
   ('fundingpips',       'fundingpips.com'),
   ('fxify',             'fxify.com'),
   ('fundednext',        'fundednext.com'),
@@ -76,4 +82,6 @@ INSERT INTO firm_email_senders (firm_id, sender_domain) VALUES
   ('topstep',           'topstep.com'),
   ('apex',              'apextraderfunding.com'),
   ('apex',              'apex.com')
+) AS v(firm_id, sender_domain)
+WHERE EXISTS (SELECT 1 FROM firm_profiles WHERE firm_profiles.id = v.firm_id)
 ON CONFLICT DO NOTHING;
