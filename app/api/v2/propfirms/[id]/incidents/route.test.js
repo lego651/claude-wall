@@ -98,7 +98,7 @@ describe('GET /api/v2/propfirms/[id]/incidents', () => {
       source_links: expect.any(Array),
       evidence_date: '2025-02-10',
     });
-    expect(body.incidents[0].source_links[0]).toEqual({ url: 'https://trustpilot.com/review/1', date: '2025-02-10' });
+    expect(body.incidents[0].source_links[0]).toEqual({ url: 'https://trustpilot.com/review/1', date: '2025-02-10', rating: null });
   });
 
   it('includes source links with review date (Trustpilot)', async () => {

@@ -108,14 +108,14 @@ export async function GET(request, { params }) {
   let idToInfo = {};
   if (allReviewIds.length > 0) {
     const { data: reviewRows } = await withQueryGuard(
-      supabase.from('firm_trustpilot_reviews').select('id, trustpilot_url, review_date').in('id', allReviewIds),
+      supabase.from('firm_trustpilot_reviews').select('id, trustpilot_url, review_date, rating').in('id', allReviewIds),
       { context: 'incidents trustpilot_reviews' }
     );
     if (reviewRows?.length) {
       idToInfo = Object.fromEntries(
         reviewRows.map((row) => [
           row.id,
-          { url: row.trustpilot_url, review_date: row.review_date || null },
+          { url: row.trustpilot_url, review_date: row.review_date || null, rating: row.rating ?? null },
         ])
       );
     }
@@ -129,7 +129,7 @@ export async function GET(request, { params }) {
         .map((id) => {
           const info = idToInfo[id];
           if (!info?.url) return null;
-          return { url: info.url, date: info.review_date || null };
+          return { url: info.url, date: info.review_date || null, rating: info.rating ?? null };
         })
         .filter(Boolean);
       const dates = source_links.map((s) => s.date).filter(Boolean);

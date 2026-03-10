@@ -65,6 +65,7 @@ function incidentToItem(inc) {
       type: "web",
       domain,
       date: sourceDate,
+      rating: typeof item === "object" ? (item?.rating ?? null) : null,
     };
   });
 

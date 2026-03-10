@@ -82,7 +82,17 @@ export default function IntelligenceCard({ item }) {
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 rounded text-xs font-semibold text-slate-600 hover:text-indigo-600 transition-all"
                 >
                   <SourceLinkIcon />
-                  {source.label}
+                  {source.rating != null && (
+                    <span className={
+                      source.rating <= 2 ? "text-red-400" :
+                      source.rating === 3 ? "text-slate-400" :
+                      "text-emerald-500"
+                    }>★{source.rating}</span>
+                  )}
+                  <span>{source.label}</span>
+                  {source.date && (
+                    <span className="text-slate-300">· {source.date.slice(5)}</span>
+                  )}
                 </a>
               ))}
             </div>

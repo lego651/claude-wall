@@ -68,4 +68,32 @@ describe("IntelligenceCard", () => {
     render(<IntelligenceCard item={item} />);
     expect(screen.getByText("CUSTOM_TYPE")).toBeInTheDocument();
   });
+
+  it("renders star rating colored by score and short date in pill", () => {
+    const item = {
+      ...defaultItem,
+      sources: [
+        { id: "s1", url: "https://trustpilot.com/1", label: "Trustpilot Review", domain: "trustpilot.com", date: "2025-02-27", rating: 1 },
+        { id: "s2", url: "https://trustpilot.com/2", label: "Trustpilot Review #2", domain: "trustpilot.com", date: "2025-02-20", rating: 5 },
+      ],
+    };
+    const { container } = render(<IntelligenceCard item={item} />);
+    expect(screen.getByText("★1")).toBeInTheDocument();
+    expect(screen.getByText("★1").className).toContain("text-red-400");
+    expect(screen.getByText("★5")).toBeInTheDocument();
+    expect(screen.getByText("★5").className).toContain("text-emerald-500");
+    expect(screen.getByText("· 02-27")).toBeInTheDocument();
+  });
+
+  it("renders pill without rating/date when both are null", () => {
+    const item = {
+      ...defaultItem,
+      sources: [
+        { id: "s1", url: "https://example.com/1", label: "Source 1", domain: "example.com", date: null, rating: null },
+      ],
+    };
+    render(<IntelligenceCard item={item} />);
+    expect(screen.getByText("Source 1")).toBeInTheDocument();
+    expect(screen.queryByText(/★/)).not.toBeInTheDocument();
+  });
 });
