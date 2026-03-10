@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { THEME } from "@/lib/theme";
 import IntelligenceCard from "@/components/propfirms/intelligence/IntelligenceCard";
 import IntelligenceCardSkeleton from "@/components/propfirms/intelligence/IntelligenceCardSkeleton";
+import VerdictBanner from "@/components/propfirms/intelligence/VerdictBanner";
 import { IntelligenceCategory, ConfidenceLevel } from "./types";
 
 function getDisplayCategory(incidentType, severity) {
@@ -146,7 +147,7 @@ export default function PropFirmIntelligencePage() {
     typeFilter === "all"
       ? incidents
       : incidents.filter(
-          (i) => getDisplayCategory(i.incident_type) === typeFilter
+          (i) => getDisplayCategory(i.incident_type, i.severity) === typeFilter
         );
   const items = filtered.map(incidentToItem);
 
@@ -186,6 +187,9 @@ export default function PropFirmIntelligencePage() {
           </button>
         </div>
       </div>
+
+      {/* Verdict banner — shown only after load */}
+      {!loading && <VerdictBanner incidents={incidents} />}
 
       {/* Category legend */}
       <div className="flex items-center gap-4 mb-4 text-xs text-slate-500">
