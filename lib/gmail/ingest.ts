@@ -7,7 +7,7 @@
 
 import { listMessageIds, getMessage } from './client';
 import { parseEmail } from './parser';
-import { mapSenderToFirm } from './firm-mapper';
+import { mapSenderToFirmDB } from './firm-mapper';
 import { categorizeContent } from '@/lib/ai/categorize-content';
 import { createServiceClient } from '@/lib/supabase/service';
 
@@ -64,7 +64,7 @@ export async function ingestFirmEmails(): Promise<IngestResult> {
 
       const msg = await getMessage(messageId);
       const parsed = parseEmail(msg);
-      const { firmId } = mapSenderToFirm(parsed.senderEmail);
+      const { firmId } = await mapSenderToFirmDB(parsed.senderEmail, supabase);
 
       if (!firmId) {
         console.log(`[GmailIngest] Unknown sender: ${parsed.senderEmail} — skipping`);

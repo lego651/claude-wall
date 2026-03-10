@@ -18,7 +18,7 @@ jest.mock('@/lib/supabase/service');
 const mockListMessageIds = client.listMessageIds as jest.Mock;
 const mockGetMessage = client.getMessage as jest.Mock;
 const mockParseEmail = parser.parseEmail as jest.Mock;
-const mockMapSenderToFirm = firmMapper.mapSenderToFirm as jest.Mock;
+const mockMapSenderToFirm = firmMapper.mapSenderToFirmDB as jest.Mock;
 const mockCategorizeContent = categorizeModule.categorizeContent as jest.Mock;
 const mockCreateServiceClient = createServiceClient as jest.Mock;
 
@@ -68,7 +68,7 @@ describe('ingestFirmEmails', () => {
     mockListMessageIds.mockResolvedValue([]);
     mockGetMessage.mockResolvedValue({ id: 'msg-1' });
     mockParseEmail.mockReturnValue(makeParsedEmail());
-    mockMapSenderToFirm.mockReturnValue({ firmId: 'fundingpips', matchType: 'domain' });
+    mockMapSenderToFirm.mockResolvedValue({ firmId: 'fundingpips', matchType: 'domain' });
     mockCategorizeContent.mockResolvedValue(makeCategorizationResult());
   });
 
@@ -120,7 +120,7 @@ describe('ingestFirmEmails', () => {
 
   it('skips messages from unknown senders', async () => {
     mockListMessageIds.mockResolvedValue(['msg-1']);
-    mockMapSenderToFirm.mockReturnValue({ firmId: null, matchType: null });
+    mockMapSenderToFirm.mockResolvedValue({ firmId: null, matchType: null });
 
     const result = await ingestFirmEmails();
 
