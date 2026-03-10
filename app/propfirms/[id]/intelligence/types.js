@@ -4,11 +4,9 @@
  */
 
 export const IntelligenceCategory = {
-  OPERATIONAL: "OPERATIONAL",
-  REPUTATION: "REPUTATION",
-  REGULATORY: "REGULATORY",
+  RISK: "RISK",
+  WATCH: "WATCH",
   POSITIVE: "POSITIVE",
-  INFORMATIONAL: "INFORMATIONAL",
 };
 
 export const ConfidenceLevel = {

@@ -7,29 +7,10 @@ import IntelligenceCard from "@/components/propfirms/intelligence/IntelligenceCa
 import IntelligenceCardSkeleton from "@/components/propfirms/intelligence/IntelligenceCardSkeleton";
 import { IntelligenceCategory, ConfidenceLevel } from "./types";
 
-// Map incident_type to display category
-const INCIDENT_TYPE_TO_CATEGORY = {
-  platform_technical_issue: IntelligenceCategory.OPERATIONAL,
-  support_issue: IntelligenceCategory.OPERATIONAL,
-  payout_delay: IntelligenceCategory.OPERATIONAL,
-  payout_denied: IntelligenceCategory.OPERATIONAL,
-  kyc_withdrawal_issue: IntelligenceCategory.OPERATIONAL,
-  execution_conditions: IntelligenceCategory.OPERATIONAL,
-  high_risk_allegation: IntelligenceCategory.REPUTATION,
-  scam_warning: IntelligenceCategory.REPUTATION,
-  rules_dispute: IntelligenceCategory.REPUTATION,
-  pricing_fee_complaint: IntelligenceCategory.REPUTATION,
-  payout_issue: IntelligenceCategory.REPUTATION,
-  platform_issue: IntelligenceCategory.REPUTATION,
-  rule_violation: IntelligenceCategory.REPUTATION,
-  other: IntelligenceCategory.REPUTATION,
-  positive_experience: IntelligenceCategory.POSITIVE,
-  neutral_mixed: IntelligenceCategory.INFORMATIONAL,
-  trustpilot_score_trend: IntelligenceCategory.REPUTATION,
-};
-
-function getDisplayCategory(incidentType) {
-  return INCIDENT_TYPE_TO_CATEGORY[incidentType] || IntelligenceCategory.REPUTATION;
+function getDisplayCategory(incidentType, severity) {
+  if (incidentType === "positive_experience") return IntelligenceCategory.POSITIVE;
+  if (severity === "high") return IntelligenceCategory.RISK;
+  return IntelligenceCategory.WATCH;
 }
 
 function getConfidenceLevel(severity) {
@@ -88,7 +69,7 @@ function incidentToItem(inc) {
 
   return {
     id: String(inc.id),
-    category: getDisplayCategory(inc.incident_type),
+    category: getDisplayCategory(inc.incident_type, inc.severity),
     date: cardDate,
     title: inc.title,
     summary: inc.summary,
@@ -190,11 +171,9 @@ export default function PropFirmIntelligencePage() {
               className="appearance-none bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg pl-4 pr-10 py-2 hover:bg-slate-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-indigo-500/20 min-w-[140px]"
             >
               <option value="all">All Types</option>
+              <option value={IntelligenceCategory.RISK}>Risk Alerts</option>
+              <option value={IntelligenceCategory.WATCH}>Watch</option>
               <option value={IntelligenceCategory.POSITIVE}>Positive</option>
-              <option value={IntelligenceCategory.OPERATIONAL}>Operational</option>
-              <option value={IntelligenceCategory.REPUTATION}>Reputation</option>
-              <option value={IntelligenceCategory.INFORMATIONAL}>Informational</option>
-              <option value={IntelligenceCategory.REGULATORY}>Regulatory</option>
             </select>
             <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           </div>
@@ -206,6 +185,13 @@ export default function PropFirmIntelligencePage() {
             <FilterIcon className="w-4 h-4" />
           </button>
         </div>
+      </div>
+
+      {/* Category legend */}
+      <div className="flex items-center gap-4 mb-4 text-xs text-slate-500">
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" />Risk Alert</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />Watch</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />Positive</span>
       </div>
 
       {/* Feed Timeline — skeleton when loading, IntelligenceCard per item when loaded */}
@@ -270,7 +256,7 @@ export default function PropFirmIntelligencePage() {
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl -ml-20 -mb-20" />
         </div>
         <p className="mt-8 text-center text-slate-400 text-xs">
-          Intelligence Layer • Updated hourly
+          Intelligence Layer • Updated daily
         </p>
       </footer>
     </div>

@@ -6,7 +6,7 @@ import IntelligenceCard from "@/components/propfirms/intelligence/IntelligenceCa
 
 const defaultItem = {
   id: "1",
-  category: "REPUTATION",
+  category: "RISK",
   date: "Jan 15, 2025",
   title: "Test intelligence title",
   summary: "Test summary text",
@@ -20,7 +20,7 @@ const defaultItem = {
 describe("IntelligenceCard", () => {
   it("renders category badge, title and date", () => {
     render(<IntelligenceCard item={defaultItem} />);
-    expect(screen.getByText("Reputation")).toBeInTheDocument();
+    expect(screen.getByText("Risk Alert")).toBeInTheDocument();
     expect(screen.getByText("Jan 15, 2025")).toBeInTheDocument();
     expect(screen.getByText("Test intelligence title")).toBeInTheDocument();
     expect(screen.getByText("Test summary text")).toBeInTheDocument();
@@ -33,10 +33,11 @@ describe("IntelligenceCard", () => {
     expect(link).toHaveAttribute("href", "https://example.com/1");
   });
 
-  it("renders Operational category with blue styling", () => {
-    const item = { ...defaultItem, category: "OPERATIONAL" };
-    render(<IntelligenceCard item={item} />);
-    expect(screen.getByText("Operational")).toBeInTheDocument();
+  it("renders RISK category with red dot", () => {
+    const { container } = render(<IntelligenceCard item={defaultItem} />);
+    expect(screen.getByText("Risk Alert")).toBeInTheDocument();
+    const dot = container.querySelector(".bg-red-500");
+    expect(dot).toBeInTheDocument();
   });
 
   it("renders without References when no sources", () => {
@@ -46,7 +47,7 @@ describe("IntelligenceCard", () => {
     expect(screen.queryByText("References:")).not.toBeInTheDocument();
   });
 
-  it("renders POSITIVE category with green badge", () => {
+  it("renders POSITIVE category with green badge and dot", () => {
     const item = { ...defaultItem, category: "POSITIVE", confidence: "LOW" };
     const { container } = render(<IntelligenceCard item={item} />);
     expect(screen.getByText("Positive")).toBeInTheDocument();
@@ -54,29 +55,15 @@ describe("IntelligenceCard", () => {
     expect(dot).toBeInTheDocument();
   });
 
-  it("renders INFORMATIONAL category with grey dot", () => {
-    const item = { ...defaultItem, category: "INFORMATIONAL", confidence: "LOW" };
+  it("renders WATCH category with amber dot", () => {
+    const item = { ...defaultItem, category: "WATCH", confidence: "LOW" };
     const { container } = render(<IntelligenceCard item={item} />);
-    expect(screen.getByText("Informational")).toBeInTheDocument();
-    const dot = container.querySelector(".bg-slate-400");
-    expect(dot).toBeInTheDocument();
-  });
-
-  it("renders REPUTATION with amber dot when confidence is not HIGH", () => {
-    const item = { ...defaultItem, category: "REPUTATION", confidence: "LOW" };
-    const { container } = render(<IntelligenceCard item={item} />);
+    expect(screen.getByText("Watch")).toBeInTheDocument();
     const dot = container.querySelector(".bg-amber-400");
     expect(dot).toBeInTheDocument();
   });
 
-  it("renders REPUTATION with red dot when confidence is HIGH", () => {
-    const item = { ...defaultItem, category: "REPUTATION", confidence: "HIGH" };
-    const { container } = render(<IntelligenceCard item={item} />);
-    const dot = container.querySelector(".bg-red-500");
-    expect(dot).toBeInTheDocument();
-  });
-
-  it("renders unknown category with fallback label and amber dot", () => {
+  it("renders unknown category with fallback label and grey dot", () => {
     const item = { ...defaultItem, category: "CUSTOM_TYPE", confidence: "MEDIUM" };
     render(<IntelligenceCard item={item} />);
     expect(screen.getByText("CUSTOM_TYPE")).toBeInTheDocument();
