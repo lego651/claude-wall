@@ -7,7 +7,6 @@ import IntelligenceCard from "@/components/propfirms/intelligence/IntelligenceCa
 import IntelligenceCardSkeleton from "@/components/propfirms/intelligence/IntelligenceCardSkeleton";
 import VerdictBanner from "@/components/propfirms/intelligence/VerdictBanner";
 import { IntelligenceCategory, ConfidenceLevel } from "./types";
-import CompanyFeedTab from "@/components/propfirms/company-feed/CompanyFeedTab";
 
 // Incident types that are always RISK regardless of severity
 const RISK_TYPES = new Set([
@@ -252,11 +251,6 @@ export default function PropFirmIntelligencePage() {
           ))}
         </div>
       )}
-
-      {/* Company Feed — official firm updates, rule changes, promotions */}
-      <div className="mt-12">
-        <CompanyFeedTab firmId={firmId} />
-      </div>
 
       {/* Footer CTA — matches reference */}
       <footer className="mt-12">

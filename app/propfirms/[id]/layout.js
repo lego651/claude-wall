@@ -11,6 +11,7 @@ const TABS = [
   { label: "OVERVIEW", path: "", icon: "overview" },
   { label: "PAYOUT EVIDENCE", path: "/payouts", icon: "payout" },
   { label: "INTELLIGENCE", path: "/intelligence", icon: "intelligence" },
+  { label: "COMPANY FEED", path: "/company-feed", icon: "feed" },
 ];
 
 export default function PropFirmIdLayout({ children }) {
@@ -89,6 +90,11 @@ export default function PropFirmIdLayout({ children }) {
                     {tab.icon === "intelligence" && (
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    )}
+                    {tab.icon === "feed" && (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                       </svg>
                     )}
                     {tab.label}
