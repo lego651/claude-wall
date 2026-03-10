@@ -1,9 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
 import { getFirmLogoUrl, DEFAULT_LOGO_URL } from "@/lib/logoUtils";
-import TrustpilotSparkline from "@/components/propfirms/intelligence/TrustpilotSparkline";
+import WeeklyBarChart from "@/components/propfirms/intelligence/TrustpilotSparkline";
 
 /* istanbul ignore next */
 function handleLogoError(e) {
@@ -12,11 +13,88 @@ function handleLogoError(e) {
   e.target.nextElementSibling?.classList.remove("hidden");
 }
 
+// Trustpilot: 2 consecutive weekly drops → WATCH, 3 → ALERT
+function computeTrustpilotStatus(weeks) {
+  if (!weeks || weeks.length < 2) return "STABLE";
+  let drops = 0;
+  for (let i = 0; i < Math.min(weeks.length - 1, 3); i++) {
+    const curr = weeks[i]?.avg_rating;
+    const prev = weeks[i + 1]?.avg_rating;
+    if (curr != null && prev != null && curr < prev) drops++;
+    else break;
+  }
+  if (drops >= 3) return "ALERT";
+  if (drops >= 2) return "WATCH";
+  return "STABLE";
+}
+
+// Payout status is driven by how many consecutive days the firm has NOT paid right now.
+// Historical gaps don't matter — what counts is whether they're paying recently.
+// STABLE  — 0 or 1 consecutive days not paid (paying consistently right now)
+// WATCH   — 2+ consecutive days not paid right now
+// ALERT   — 3+ consecutive days not paid AND 3+ consecutive weekly drops
+function computePayoutStatus(weeks, payoutDaily) {
+  const { consecutive_days_not_paid = 0 } = payoutDaily ?? {};
+
+  let weeklyDrops = 0;
+  for (let i = 0; i < Math.min(weeks.length - 1, 3); i++) {
+    const curr = weeks[i]?.payout_total;
+    const prev = weeks[i + 1]?.payout_total;
+    if (curr != null && prev != null && curr < prev) weeklyDrops++;
+    else break;
+  }
+
+  if (consecutive_days_not_paid >= 3 && weeklyDrops >= 3) return "ALERT";
+  if (consecutive_days_not_paid >= 2) return "WATCH";
+  return "STABLE";
+}
+
+const PAYOUT_TEXT = {
+  STABLE: "Consistent payout volume with high velocity.",
+  WATCH: "Multiple missed payout days detected in the last 30 days.",
+  ALERT: "3+ consecutive days without payouts and sustained weekly volume decline.",
+};
+
+const TRUSTPILOT_TEXT = {
+  STABLE: "Reliable customer support signals and frequent positive mentions.",
+  WATCH: "Trustpilot rating has slipped for two consecutive weeks.",
+  ALERT: "Sustained Trustpilot rating decline detected across three weeks.",
+};
+
+function StatusBadge({ status }) {
+  const cls =
+    status === "ALERT"
+      ? "bg-red-500"
+      : status === "WATCH"
+      ? "bg-amber-400"
+      : "bg-emerald-500";
+  return (
+    <span className={`text-[10px] ${cls} text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider`}>
+      {status}
+    </span>
+  );
+}
+
 export default function PropFirmSidebar({ firmId, firm }) {
   const displayName = firm?.name || (firmId || "").replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const website = firm?.website || `https://${(firmId || "").replace(/-/g, "")}.com`;
   const logoUrl = firm ? getFirmLogoUrl(firm) : DEFAULT_LOGO_URL;
   const initials = displayName.replace(/\s+/g, "").substring(0, 2).toUpperCase();
+
+  const [trendData, setTrendData] = useState(null);
+
+  useEffect(() => {
+    fetch(`/api/v2/propfirms/${firmId}/trustpilot-trend`)
+      .then((r) => r.json())
+      .then(setTrendData)
+      .catch(() => setTrendData(null));
+  }, [firmId]);
+
+  const weeks = trendData?.weeks ?? [];
+  const tpWeeks = weeks.filter((w) => w.avg_rating != null);
+  const payoutWeeks = weeks.filter((w) => w.payout_total != null);
+  const tpStatus = computeTrustpilotStatus(tpWeeks);
+  const payoutStatus = computePayoutStatus(payoutWeeks, trendData?.payout_daily);
 
   return (
     <div className="flex flex-col gap-6 w-full lg:w-80 shrink-0">
@@ -45,36 +123,50 @@ export default function PropFirmSidebar({ firmId, firm }) {
         </a>
 
         <div className="w-full mt-2 pt-6 border-t border-slate-100">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-sm font-bold text-slate-800">Intelligence Status</h2>
-            <span className="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider">Stable</span>
-          </div>
+          <h2 className="text-sm font-bold text-slate-800 mb-5">Intelligence Status</h2>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
+            {/* PAYOUT */}
             <div className="flex gap-3 items-start">
               <div className="shrink-0 mt-0.5" style={{ color: THEME.primary }}>
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="5" y="15" width="14" height="4" rx="0.5" /><rect x="7" y="10" width="10" height="4" rx="0.5" /><rect x="9" y="5" width="6" height="4" rx="0.5" /></svg>
               </div>
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                  <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  Payout
+              <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Payout
+                  </div>
+                  <StatusBadge status={payoutStatus} />
                 </div>
-                <p className="text-[11px] text-slate-600 leading-tight font-medium">Consistent daily payout volume with high velocity.</p>
+                <p className="text-[11px] text-slate-600 leading-tight font-medium mb-1.5">{PAYOUT_TEXT[payoutStatus]}</p>
+                {payoutWeeks.length >= 2 && (
+                  <WeeklyBarChart weeks={payoutWeeks} dataKey="payout_total" color={THEME.primary} />
+                )}
               </div>
             </div>
+
+            {/* TRUSTPILOT */}
             <div className="flex gap-3 items-start">
               <div className="shrink-0 mt-0.5 text-emerald-500">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
               </div>
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                  <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                  Trustpilot
+              <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                    Trustpilot
+                  </div>
+                  <StatusBadge status={tpStatus} />
                 </div>
-                <p className="text-[11px] text-slate-600 leading-tight font-medium">Reliable customer support signals and frequent positive mentions.</p>
+                <p className="text-[11px] text-slate-600 leading-tight font-medium mb-1.5">{TRUSTPILOT_TEXT[tpStatus]}</p>
+                {tpWeeks.length >= 2 && (
+                  <WeeklyBarChart weeks={tpWeeks} dataKey="avg_rating" color="#10b981" referenceValue={trendData?.overall_score} />
+                )}
               </div>
             </div>
+
+            {/* X SOCIAL */}
             <div className="flex gap-3 items-start">
               <div className="shrink-0 mt-0.5 text-sky-400">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
@@ -87,10 +179,6 @@ export default function PropFirmSidebar({ firmId, firm }) {
                 <p className="text-[11px] text-slate-600 leading-tight font-medium">High discussion around new scaling rules on social media.</p>
               </div>
             </div>
-          </div>
-
-          <div className="mt-5 pt-5 border-t border-slate-100">
-            <TrustpilotSparkline firmId={firmId} />
           </div>
 
           <Link href={`/propfirms/${firmId}/intelligence`} className="w-full mt-5 flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-lg text-[11px] font-bold text-slate-500 transition-colors text-center">

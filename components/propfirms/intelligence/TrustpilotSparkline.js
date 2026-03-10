@@ -1,86 +1,88 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer } from "recharts";
 
-export default function TrustpilotSparkline({ firmId }) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
-  useEffect(() => {
-    fetch(`/api/v2/propfirms/${firmId}/trustpilot-trend`)
-      .then((r) => r.json())
-      .then(setData)
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, [firmId]);
+function formatWeekRange(fromStr, toStr) {
+  if (!fromStr || !toStr) return "";
+  const from = new Date(fromStr + "T00:00:00");
+  const to = new Date(toStr + "T00:00:00");
+  const fm = from.getMonth() + 1;
+  const fd = String(from.getDate()).padStart(2, "0");
+  const tm = to.getMonth() + 1;
+  const td = String(to.getDate()).padStart(2, "0");
+  return `${fm}/${fd}-${tm}/${td}`;
+}
 
-  if (loading) {
-    return <div className="animate-pulse h-14 bg-slate-100 rounded-lg" />;
+function formatValue(val, dataKey) {
+  if (dataKey === "avg_rating") return `${Number(val).toFixed(1)} / 5.0 ★`;
+  if (dataKey === "payout_total") {
+    if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(1)}M`;
+    if (val >= 1_000) return `$${(val / 1_000).toFixed(1)}K`;
+    return `$${Number(val).toLocaleString()}`;
   }
+  return val;
+}
 
-  const weeks = data?.weeks ?? [];
-  if (weeks.length < 2) {
-    return (
-      <p className="text-[10px] text-slate-400 italic text-center py-2">
-        Trend data building...
-      </p>
-    );
-  }
+function CustomTooltip({ active, payload, dataKey }) {
+  if (!active || !payload?.length) return null;
+  const point = payload[0].payload;
+  const val = payload[0].value;
+  return (
+    <div className="bg-slate-800 text-white text-[10px] px-2.5 py-1.5 rounded-lg shadow-lg pointer-events-none">
+      <div className="text-slate-400 mb-0.5">
+        {formatDate(point.week_from)} – {formatDate(point.week_to)}
+      </div>
+      <div className="font-bold">{formatValue(val, dataKey)}</div>
+    </div>
+  );
+}
 
-  const latestWeek = weeks[0]; // DESC order — first = most recent
-  const weeklyAvg = latestWeek?.avg_rating;
-  const overall = data?.overall_score;
-  const delta = weeklyAvg != null && overall != null ? +(weeklyAvg - overall).toFixed(1) : null;
+/**
+ * WeeklyBarChart — renders a compact bar chart from weekly data.
+ * weeks: array in DESC order (most recent first); reversed internally for display.
+ * dataKey: the field on each week object to chart.
+ */
+export default function WeeklyBarChart({ weeks, dataKey, color = "#6366f1", referenceValue }) {
+  const chartData = [...weeks].reverse().map((w) => ({
+    val: w[dataKey] ?? 0,
+    week_from: w.week_from,
+    week_to: w.week_to,
+    label: formatWeekRange(w.week_from, w.week_to),
+  }));
 
-  let deltaColor = "text-slate-400";
-  if (delta !== null) {
-    if (delta > 0) deltaColor = "text-emerald-500";
-    else if (delta < -0.3) deltaColor = "text-red-500";
-  }
-
-  // Reverse to oldest-first for chart display
-  const chartData = [...weeks].reverse().map((w) => ({ avg: w.avg_rating }));
+  const values = chartData.map((d) => d.val).filter((v) => v > 0);
+  if (referenceValue != null) values.push(referenceValue);
+  const min = values.length ? Math.min(...values) : 0;
+  const max = values.length ? Math.max(...values) : 1;
+  const padding = (max - min) * 0.4 || max * 0.1 || 0.5;
+  const yDomain = [Math.max(0, min - padding), max + padding];
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-          <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-          </svg>
-          Trustpilot Trend
-        </div>
-        {delta !== null && (
-          <span className={`text-[10px] font-bold ${deltaColor}`}>
-            {delta > 0 ? "+" : ""}{delta} vs avg
-          </span>
+    <ResponsiveContainer width="100%" height={72}>
+      <BarChart data={chartData} margin={{ top: 2, right: 4, bottom: 4, left: 4 }} barCategoryGap="35%" barGap={2}>
+        <XAxis
+          dataKey="label"
+          tick={{ fontSize: 8.5, fill: "#94a3b8" }}
+          tickLine={false}
+          axisLine={false}
+          interval="preserveStartEnd"
+        />
+        <YAxis domain={yDomain} hide />
+        <Tooltip
+          content={(props) => <CustomTooltip {...props} dataKey={dataKey} />}
+          cursor={{ fill: "rgba(0,0,0,0.06)", radius: 3 }}
+        />
+        <Bar dataKey="val" fill={color} radius={[3, 3, 0, 0]} isAnimationActive={false} maxBarSize={14} />
+        {referenceValue != null && (
+          <ReferenceLine y={referenceValue} stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4 3" />
         )}
-      </div>
-
-      <ResponsiveContainer width="100%" height={36}>
-        <LineChart data={chartData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
-          <Line
-            type="monotone"
-            dataKey="avg"
-            stroke="#6366f1"
-            strokeWidth={1.5}
-            dot={false}
-            isAnimationActive={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-
-      <div className="flex items-center justify-between mt-1">
-        <span className="text-[10px] text-slate-400">
-          This week:{" "}
-          <strong className="text-slate-600">{weeklyAvg != null ? weeklyAvg.toFixed(1) : "—"}</strong>
-        </span>
-        <span className="text-[10px] text-slate-400">
-          Overall:{" "}
-          <strong className="text-slate-600">{overall != null ? overall.toFixed(1) : "—"}</strong>
-        </span>
-      </div>
-    </div>
+      </BarChart>
+    </ResponsiveContainer>
   );
 }

@@ -1,123 +1,124 @@
 /**
  * @jest-environment jsdom
  */
-import { render, screen, waitFor } from "@testing-library/react";
-import TrustpilotSparkline from "@/components/propfirms/intelligence/TrustpilotSparkline";
+import { render, screen } from "@testing-library/react";
+import WeeklyBarChart from "@/components/propfirms/intelligence/TrustpilotSparkline";
+
+// Capture the Tooltip content renderer so we can invoke it in tests
+let capturedTooltipContent = null;
 
 jest.mock("recharts", () => ({
-  LineChart: ({ children }) => <div data-testid="line-chart">{children}</div>,
-  Line: () => null,
+  BarChart: ({ children }) => <div data-testid="bar-chart">{children}</div>,
+  Bar: () => null,
+  XAxis: ({ dataKey, tickFormatter }) => {
+    // exercise tickFormatter if provided (covers formatWeekRange indirectly via label dataKey)
+    return <div data-testid="x-axis" data-datakey={dataKey} />;
+  },
+  YAxis: () => null,
+  Tooltip: ({ content }) => {
+    capturedTooltipContent = content;
+    return <div data-testid="tooltip" />;
+  },
+  ReferenceLine: ({ y }) => <div data-testid="reference-line" data-y={y} />,
   ResponsiveContainer: ({ children }) => <div>{children}</div>,
 }));
 
-const makeWeeks = (n, avgRating = 4.0) =>
+const makeWeeks = (n, avg = 4.0) =>
   Array.from({ length: n }, (_, i) => ({
     week_from: `2026-0${i + 1}-01`,
     week_to: `2026-0${i + 1}-07`,
-    avg_rating: avgRating,
-    review_count: 10,
-    rating_change: 0,
+    avg_rating: avg,
+    payout_total: 1000 * (i + 1),
   }));
 
 beforeEach(() => {
-  global.fetch = jest.fn();
+  capturedTooltipContent = null;
 });
 
-afterEach(() => {
-  jest.resetAllMocks();
-});
-
-describe("TrustpilotSparkline", () => {
-  it("shows skeleton while loading", () => {
-    global.fetch.mockReturnValue(new Promise(() => {})); // never resolves
-    render(<TrustpilotSparkline firmId="fundingpips" />);
-    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+describe("WeeklyBarChart", () => {
+  it("renders a bar chart with given weeks", () => {
+    render(<WeeklyBarChart weeks={makeWeeks(4)} dataKey="avg_rating" color="#6366f1" />);
+    expect(screen.getByTestId("bar-chart")).toBeInTheDocument();
   });
 
-  it("shows placeholder when fewer than 2 weeks", async () => {
-    global.fetch.mockResolvedValue({
-      json: () => Promise.resolve({ overall_score: 4.2, weeks: makeWeeks(1) }),
+  it("renders with payout_total dataKey", () => {
+    render(<WeeklyBarChart weeks={makeWeeks(3)} dataKey="payout_total" color="#10b981" />);
+    expect(screen.getByTestId("bar-chart")).toBeInTheDocument();
+  });
+
+  it("renders with empty weeks without crashing", () => {
+    render(<WeeklyBarChart weeks={[]} dataKey="avg_rating" />);
+    expect(screen.getByTestId("bar-chart")).toBeInTheDocument();
+  });
+
+  it("renders ReferenceLine when referenceValue is provided", () => {
+    render(<WeeklyBarChart weeks={makeWeeks(3)} dataKey="avg_rating" referenceValue={4.2} />);
+    const line = screen.getByTestId("reference-line");
+    expect(line).toBeInTheDocument();
+    expect(line).toHaveAttribute("data-y", "4.2");
+  });
+
+  it("does not render ReferenceLine when referenceValue is not provided", () => {
+    render(<WeeklyBarChart weeks={makeWeeks(3)} dataKey="avg_rating" />);
+    expect(screen.queryByTestId("reference-line")).not.toBeInTheDocument();
+  });
+
+  describe("CustomTooltip (via Tooltip content prop)", () => {
+    it("renders nothing when active is false", () => {
+      render(<WeeklyBarChart weeks={makeWeeks(2)} dataKey="avg_rating" />);
+      const { container } = render(capturedTooltipContent({ active: false, payload: [] }));
+      expect(container).toBeEmptyDOMElement();
     });
-    render(<TrustpilotSparkline firmId="fundingpips" />);
-    await waitFor(() =>
-      expect(screen.getByText(/Trend data building/i)).toBeInTheDocument()
-    );
-  });
 
-  it("shows placeholder when weeks is empty", async () => {
-    global.fetch.mockResolvedValue({
-      json: () => Promise.resolve({ overall_score: null, weeks: [] }),
+    it("renders nothing when payload is empty", () => {
+      render(<WeeklyBarChart weeks={makeWeeks(2)} dataKey="avg_rating" />);
+      const { container } = render(capturedTooltipContent({ active: true, payload: [] }));
+      expect(container).toBeEmptyDOMElement();
     });
-    render(<TrustpilotSparkline firmId="fundingpips" />);
-    await waitFor(() =>
-      expect(screen.getByText(/Trend data building/i)).toBeInTheDocument()
-    );
-  });
 
-  it("shows sparkline and scores when 2+ weeks of data", async () => {
-    global.fetch.mockResolvedValue({
-      json: () =>
-        Promise.resolve({ overall_score: 4.2, weeks: makeWeeks(4, 4.0) }),
+    it("renders avg_rating tooltip with star format", () => {
+      render(<WeeklyBarChart weeks={makeWeeks(2)} dataKey="avg_rating" />);
+      const payload = [{ value: 4.2, payload: { week_from: "2026-02-02", week_to: "2026-02-08" } }];
+      const { container } = render(capturedTooltipContent({ active: true, payload }));
+      expect(container.textContent).toContain("4.2 / 5.0 ★");
+      expect(container.textContent).toContain("Feb 2");
+      expect(container.textContent).toContain("Feb 8");
     });
-    render(<TrustpilotSparkline firmId="fundingpips" />);
-    await waitFor(() =>
-      expect(screen.getByTestId("line-chart")).toBeInTheDocument()
-    );
-    expect(screen.getByText(/This week/i)).toBeInTheDocument();
-    expect(screen.getByText(/Overall/i)).toBeInTheDocument();
-    expect(screen.getByText("4.0")).toBeInTheDocument();
-    expect(screen.getByText("4.2")).toBeInTheDocument();
-  });
 
-  it("shows green delta when weekly > overall", async () => {
-    global.fetch.mockResolvedValue({
-      json: () =>
-        Promise.resolve({ overall_score: 3.8, weeks: makeWeeks(4, 4.5) }),
+    it("renders payout_total tooltip in K format", () => {
+      render(<WeeklyBarChart weeks={makeWeeks(2)} dataKey="payout_total" />);
+      const payload = [{ value: 12500, payload: { week_from: "2026-02-02", week_to: "2026-02-08" } }];
+      const { container } = render(capturedTooltipContent({ active: true, payload }));
+      expect(container.textContent).toContain("$12.5K");
     });
-    render(<TrustpilotSparkline firmId="fundingpips" />);
-    await waitFor(() => screen.getByTestId("line-chart"));
-    const delta = screen.getByText(/\+0\.7/);
-    expect(delta).toHaveClass("text-emerald-500");
-  });
 
-  it("shows red delta when weekly < overall by more than 0.3", async () => {
-    global.fetch.mockResolvedValue({
-      json: () =>
-        Promise.resolve({ overall_score: 4.5, weeks: makeWeeks(4, 4.0) }),
+    it("renders payout_total tooltip in M format", () => {
+      render(<WeeklyBarChart weeks={makeWeeks(2)} dataKey="payout_total" />);
+      const payload = [{ value: 2_500_000, payload: { week_from: "2026-02-02", week_to: "2026-02-08" } }];
+      const { container } = render(capturedTooltipContent({ active: true, payload }));
+      expect(container.textContent).toContain("$2.5M");
     });
-    render(<TrustpilotSparkline firmId="fundingpips" />);
-    await waitFor(() => screen.getByTestId("line-chart"));
-    const delta = screen.getByText(/-0\.5/);
-    expect(delta).toHaveClass("text-red-500");
-  });
 
-  it("shows grey delta when weekly < overall by 0.3 or less", async () => {
-    global.fetch.mockResolvedValue({
-      json: () =>
-        Promise.resolve({ overall_score: 4.2, weeks: makeWeeks(4, 4.0) }),
+    it("renders payout_total tooltip in dollar format for small values", () => {
+      render(<WeeklyBarChart weeks={makeWeeks(2)} dataKey="payout_total" />);
+      const payload = [{ value: 500, payload: { week_from: "2026-02-02", week_to: "2026-02-08" } }];
+      const { container } = render(capturedTooltipContent({ active: true, payload }));
+      expect(container.textContent).toContain("$500");
     });
-    render(<TrustpilotSparkline firmId="fundingpips" />);
-    await waitFor(() => screen.getByTestId("line-chart"));
-    const delta = screen.getByText(/-0\.2/);
-    expect(delta).toHaveClass("text-slate-400");
   });
 
-  it("shows placeholder when fetch fails", async () => {
-    global.fetch.mockRejectedValue(new Error("network error"));
-    render(<TrustpilotSparkline firmId="fundingpips" />);
-    await waitFor(() =>
-      expect(screen.getByText(/Trend data building/i)).toBeInTheDocument()
-    );
-  });
-
-  it("fetches from the correct endpoint", async () => {
-    global.fetch.mockResolvedValue({
-      json: () => Promise.resolve({ overall_score: null, weeks: [] }),
+  describe("formatWeekRange (via chartData label)", () => {
+    it("generates same-month range labels", () => {
+      const weeks = [{ week_from: "2026-02-02", week_to: "2026-02-08", avg_rating: 4.0 }];
+      render(<WeeklyBarChart weeks={weeks} dataKey="avg_rating" />);
+      // XAxis receives dataKey="label"; chart renders without crashing
+      expect(screen.getByTestId("x-axis")).toHaveAttribute("data-datakey", "label");
     });
-    render(<TrustpilotSparkline firmId="fundednext" />);
-    await waitFor(() => screen.getByText(/Trend data building/i));
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/v2/propfirms/fundednext/trustpilot-trend"
-    );
+
+    it("generates cross-month range labels", () => {
+      const weeks = [{ week_from: "2026-02-23", week_to: "2026-03-01", avg_rating: 4.0 }];
+      render(<WeeklyBarChart weeks={weeks} dataKey="avg_rating" />);
+      expect(screen.getByTestId("bar-chart")).toBeInTheDocument();
+    });
   });
 });

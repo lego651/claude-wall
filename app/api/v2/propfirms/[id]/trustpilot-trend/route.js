@@ -44,10 +44,10 @@ export async function GET(_request, { params }) {
   const supabase = createSupabaseClient();
 
   try {
-    // Fetch firm overall score
+    // Fetch firm overall score and last payout timestamp
     const { data: profile, error: profileError } = await supabase
       .from('firm_profiles')
-      .select('trustpilot_overall_score, trustpilot_overall_review_count')
+      .select('trustpilot_overall_score, trustpilot_overall_review_count, last_payout_at')
       .eq('id', firmId)
       .single();
 
@@ -69,19 +69,31 @@ export async function GET(_request, { params }) {
 
     const weeks = (reports ?? []).map((row) => {
       const tp = row.report_json?.trustpilot ?? {};
+      const payout = row.report_json?.payouts ?? {};
       return {
         week_from: row.week_from_date,
         week_to: row.week_to_date,
         avg_rating: tp.avgRating ?? null,
         review_count: tp.reviewCount ?? null,
         rating_change: tp.ratingChange ?? null,
+        payout_total: payout.total ?? null,
+        payout_count: payout.count ?? null,
       };
     });
+
+    // Derive consecutive days not paid from last_payout_at.
+    // This is simpler and more reliable than scanning firm_recent_payouts
+    // (which is a short-window real-time table, not a full history).
+    const lastPayoutAt = profile?.last_payout_at;
+    const consecutiveDaysNotPaid = lastPayoutAt
+      ? Math.floor((Date.now() - new Date(lastPayoutAt).getTime()) / (24 * 60 * 60 * 1000))
+      : 0;
 
     return NextResponse.json({
       overall_score: profile?.trustpilot_overall_score ?? null,
       overall_review_count: profile?.trustpilot_overall_review_count ?? null,
       weeks,
+      payout_daily: { consecutive_days_not_paid: consecutiveDaysNotPaid },
     });
   } catch (err) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

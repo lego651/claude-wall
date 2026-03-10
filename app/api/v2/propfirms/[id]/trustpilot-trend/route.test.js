@@ -69,6 +69,8 @@ describe('GET /api/v2/propfirms/[id]/trustpilot-trend', () => {
       avg_rating: 4.1,
       review_count: 12,
       rating_change: -0.1,
+      payout_total: null,
+      payout_count: null,
     });
   });
 
@@ -115,6 +117,8 @@ describe('GET /api/v2/propfirms/[id]/trustpilot-trend', () => {
       avg_rating: null,
       review_count: null,
       rating_change: null,
+      payout_total: null,
+      payout_count: null,
     });
   });
 
