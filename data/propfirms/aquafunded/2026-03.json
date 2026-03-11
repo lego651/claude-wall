@@ -2,12 +2,12 @@
   "firmId": "aquafunded",
   "period": "2026-03",
   "timezone": "UTC",
-  "generatedAt": "2026-03-10T11:28:41.686Z",
+  "generatedAt": "2026-03-11T11:29:13.260Z",
   "summary": {
-    "totalPayouts": 115914,
-    "payoutCount": 45,
+    "totalPayouts": 129235,
+    "payoutCount": 48,
     "largestPayout": 9600,
-    "avgPayout": 2576
+    "avgPayout": 2692
   },
   "dailyBuckets": [
     {
@@ -68,13 +68,47 @@
     },
     {
       "date": "2026-03-10",
-      "total": 5879,
-      "rise": 5879,
+      "total": 15958,
+      "rise": 15958,
+      "crypto": 0,
+      "wire": 0
+    },
+    {
+      "date": "2026-03-11",
+      "total": 3244,
+      "rise": 3244,
       "crypto": 0,
       "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0x90df975caa0433d9ad2cac49bc37d2c6ed4e6b99b5204213eeddcaf87b3d7f3b",
+      "firm_id": "aquafunded",
+      "amount": 3243.69,
+      "payment_method": "rise",
+      "timestamp": "2026-03-11T10:04:00.000Z",
+      "from_address": "0x6f405a66cb4048fb05e72d74fcccd5073697c469",
+      "to_address": "0xc80bd0057adcb8c483592d3f62e5588f25a69265"
+    },
+    {
+      "tx_hash": "0xb360a81542dccb8968d9e63e9df6bd0f87331e4cfb20f0c1e6c635ad92c90726",
+      "firm_id": "aquafunded",
+      "amount": 7520.01,
+      "payment_method": "rise",
+      "timestamp": "2026-03-10T17:06:11.000Z",
+      "from_address": "0x6f405a66cb4048fb05e72d74fcccd5073697c469",
+      "to_address": "0xc0878a66a9238f0f28abb33336335ced1fe4d142"
+    },
+    {
+      "tx_hash": "0x86be351adef0ec8417790858da73972f0252f41c1bbedc0f7a7bc4bbde46c635",
+      "firm_id": "aquafunded",
+      "amount": 2558.15,
+      "payment_method": "rise",
+      "timestamp": "2026-03-10T16:30:45.000Z",
+      "from_address": "0x6f405a66cb4048fb05e72d74fcccd5073697c469",
+      "to_address": "0x1f1743c2d2a442e3f739ae9cdc3adaae2847bb47"
+    },
     {
       "tx_hash": "0x998a2e9cba199c013a09e52de89a69ebab76a4a197ebf816cdf38155b45a9289",
       "firm_id": "aquafunded",
