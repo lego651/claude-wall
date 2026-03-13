@@ -64,16 +64,19 @@ Steps:
 
 ---
 
-### Phase 4: Frontend — Company Feed Tab ⬜
-**Goal:** Add a "Company Feed" section to `/propfirms/[id]/intelligence` with timeline + promo tabs.
+### Phase 4: Frontend — Company Feed Tab ✅
+**Goal:** Dedicated "Company Feed" tab at `/propfirms/[id]/company-feed` in the right-side content area (not on the intelligence page).
+
+**Actual scope (confirmed):** Company Feed is its own top-level tab in the layout alongside Overview, Payout Evidence, and Intelligence — not a section within intelligence.
 
 Steps:
-- [ ] 4.1 Create `components/propfirms/company-feed/CompanyFeedTab.js` — parent with two sub-tabs
-- [ ] 4.2 Create `components/propfirms/company-feed/TimelineItem.js` — single feed item card
-- [ ] 4.3 "Timeline" tab shows: `company_news`, `rule_change`, `other` — ordered by date
-- [ ] 4.4 "Promotions" tab shows: only `promotion` type
-- [ ] 4.5 Add Company Feed section to the intelligence page (below verdict banner or as separate tab)
-- [ ] 4.6 Each item shows: date, content_type badge, AI-generated title, ai_summary, source tag (email)
+- [x] 4.1 Create `components/propfirms/company-feed/CompanyFeedTab.js` — parent with Updates/Promotions sub-tabs
+- [x] 4.2 Create `components/propfirms/company-feed/TimelineItem.js` — single feed item card
+- [x] 4.3 "Updates" tab shows: all non-promotion content types (`company_news`, `rule_change`, `other`) — ordered by date
+- [x] 4.4 "Promotions" tab shows: only `promotion` type
+- [x] 4.5 Route `app/propfirms/[id]/company-feed/page.js` — delegates to `CompanyFeedTab`
+- [x] 4.6 Tab registered in `app/propfirms/[id]/layout.js` as "COMPANY FEED"
+- [x] 4.7 Each item shows: date, content_type badge, AI-generated title, ai_summary, source tag
 
 ---
 

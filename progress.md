@@ -62,7 +62,7 @@
 - [x] `app/api/v2/propfirms/[id]/content/route.js` — GET: published firm content (type/limit/days filters)
 
 ### Next Steps
-- [ ] Phase 4: Frontend — Company Feed Tab on intelligence page
+- [x] Phase 4: Frontend — Company Feed Tab (own route, not on intelligence page)
 
 ---
 
