@@ -12,6 +12,7 @@ const AdminLayout = ({ children }) => {
     { label: "Portfolio", path: "/admin/portfolio" },
     { label: "Strategies", path: "/admin/strategies" },
     { label: "Prop Firms", path: "/admin/propfirms" },
+    { label: "Email Preview", path: "/admin/email-preview" },
   ];
 
   return (
