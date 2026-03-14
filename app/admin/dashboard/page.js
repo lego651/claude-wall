@@ -1,33 +1,40 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import AdminLayout from "@/components/common/AdminLayout";
 
 const REFRESH_MS = 30_000;
 
-const VALID_SECTIONS = ["firms", "traders", "system"];
-const DEFAULT_SECTION = "firms";
+const VALID_SECTIONS = ['firms', 'traders', 'system'];
+const DEFAULT_SECTION = 'firms';
 const VALID_TABS = {
-  firms: ["payouts", "daily1", "daily2", "daily3", "weekly1", "weekly2", "twitter"],
+  firms: ['payouts', 'daily-scrape', 'daily-classify', 'daily-incidents', 'weekly-reports', 'weekly-digest', 'twitter', 'email-ingest'],
   traders: [],
   system: [],
 };
-const DEFAULT_TAB = "payouts";
-/** Map URL slug → internal firmsSection state ID. */
+const DEFAULT_TAB = 'payouts';
+/** Map URL tab slug to internal firmsSection state ID. */
 const TAB_SLUG_TO_INTERNAL = {
-  payouts: "payouts",
-  "daily-scrape": "daily1",
-  "daily-classify": "daily2",
-  "daily-incidents": "daily3",
-  "weekly-reports": "weekly1",
-  "weekly-digest": "weekly2",
-  twitter: "twitter",
+  'payouts': 'payouts',
+  'daily-scrape': 'daily1',
+  'daily-classify': 'daily2',
+  'daily-incidents': 'daily3',
+  'weekly-reports': 'weekly1',
+  'weekly-digest': 'weekly2',
+  'twitter': 'twitter',
+  'email-ingest': 'twitter',
 };
-/** Map internal state ID → URL slug (reverse of TAB_SLUG_TO_INTERNAL). */
-const TAB_INTERNAL_TO_SLUG = Object.fromEntries(
-  Object.entries(TAB_SLUG_TO_INTERNAL).map(([slug, internal]) => [internal, slug])
-);
+/** Map internal state ID → URL slug (reverse of TAB_SLUG_TO_INTERNAL, excluding email-ingest alias). */
+const TAB_INTERNAL_TO_SLUG = {
+  payouts: 'payouts',
+  daily1: 'daily-scrape',
+  daily2: 'daily-classify',
+  daily3: 'daily-incidents',
+  weekly1: 'weekly-reports',
+  weekly2: 'weekly-digest',
+  twitter: 'twitter',
+};
 
 function formatBytes(n) {
   if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(2)} MB`;
@@ -189,14 +196,22 @@ function metricsToCSV(data) {
   return rows.join("\n");
 }
 
-export default function AdminDashboardPage() {
+function AdminDashboardPageInner() {
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const initialSection = VALID_SECTIONS.includes(searchParams.get('section'))
+    ? searchParams.get('section')
+    : DEFAULT_SECTION;
+  const rawTab = searchParams.get('tab');
+  const initialTab = VALID_TABS[initialSection]?.includes(rawTab)
+    ? rawTab
+    : (VALID_TABS[initialSection]?.[0] ?? DEFAULT_TAB);
 
   /** Build a shareable URL for a given section and firms sub-tab. */
   function buildDashboardUrl(section, tabInternal) {
     const tabSlug = TAB_INTERNAL_TO_SLUG[tabInternal] ?? tabInternal;
     const params = new URLSearchParams({ section });
-    if (section === "firms" && tabSlug) params.set("tab", tabSlug);
+    if (section === 'firms' && tabSlug) params.set('tab', tabSlug);
     return `/admin/dashboard?${params.toString()}`;
   }
 
@@ -210,8 +225,11 @@ export default function AdminDashboardPage() {
   const [classifyRunResult, setClassifyRunResult] = useState(null);
   const [classifyRunLoading, setClassifyRunLoading] = useState(false);
   const [classifyLimit, setClassifyLimit] = useState(40);
-  const [activeTab, setActiveTab] = useState("firms");
-  const [firmsSection, setFirmsSection] = useState("payouts");
+  const [activeTab, setActiveTab] = useState(initialSection);
+  const [firmsSection, setFirmsSection] = useState(TAB_SLUG_TO_INTERNAL[initialTab] ?? DEFAULT_TAB);
+  const [twitterStats, setTwitterStats] = useState(null);
+  const [twitterStatsLoading, setTwitterStatsLoading] = useState(false);
+  const [twitterStatsError, setTwitterStatsError] = useState(null);
 
   const summary = getSummaryStatus(data);
   const MAIN_TAB_IDS = ["firms", "traders", "system"];
@@ -357,7 +375,7 @@ export default function AdminDashboardPage() {
     if (tabId === "daily3") return data.incidentDetection?.lastRunAt ?? null;
     if (tabId === "weekly1") return data.generateWeeklyReportsRun?.lastRunAt ?? null;
     if (tabId === "weekly2") return data.weeklyEmailReport?.lastRunAt ?? null;
-    if (tabId === "twitter") return data.twitterTweets?.lastRunAt ?? null;
+    if (tabId === "twitter") return twitterStats?.firmRun?.lastRunAt ?? data.twitterTweets?.lastRunAt ?? null;
     return null;
   };
 
@@ -400,6 +418,30 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (data && !loading) fetchClassifyStatus();
   }, [data, loading, fetchClassifyStatus]);
+
+  const fetchTwitterStats = useCallback(async () => {
+    setTwitterStatsLoading(true);
+    setTwitterStatsError(null);
+    try {
+      const res = await fetch("/api/admin/twitter/stats");
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || `HTTP ${res.status}`);
+      }
+      const json = await res.json();
+      setTwitterStats(json);
+    } catch (e) {
+      setTwitterStatsError(e.message);
+    } finally {
+      setTwitterStatsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "firms" && firmsSection === "twitter" && !twitterStats && !twitterStatsLoading) {
+      fetchTwitterStats();
+    }
+  }, [activeTab, firmsSection, twitterStats, twitterStatsLoading, fetchTwitterStats]);
 
   const runClassify = async () => {
     setClassifyRunResult(null);
@@ -1968,94 +2010,61 @@ export default function AdminDashboardPage() {
         )}
 
         {data && activeTab === "firms" && firmsSection === "twitter" && (
-          <div className="space-y-8">
-            <section>
-              <h2 className="text-lg font-semibold mb-4">Twitter – Tweet scan stats</h2>
-              <p className="text-sm text-slate-500 mb-3">
-                {data.twitterTweets?.note || "Firm tweets from firm_twitter_tweets (ingested by daily Twitter fetch + ingest)."}
-              </p>
-              {data.twitterTweets?.lastRunAt && (
-                <p className="text-sm text-slate-600 mb-3">
-                  Last run:{" "}
-                  <span className="font-medium">
-                    {new Date(data.twitterTweets.lastRunAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
-                  </span>
-                </p>
-              )}
-              {data.twitterTweets?.error ? (
-                <div className="alert alert-warning">
-                  <span>{data.twitterTweets.error}</span>
-                </div>
-              ) : !data.twitterTweets?.firms?.length ? (
-                <p className="text-slate-500">No firm tweets in DB yet. Run the Twitter fetch + ingest job to populate.</p>
-              ) : (
-                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="table table-sm w-full">
-                      <thead>
-                        <tr>
-                          <th className="font-medium">Firm</th>
-                          <th className="text-right">Total tweets</th>
-                          <th className="text-right">This week</th>
-                          <th className="text-right">Last tweeted</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.twitterTweets?.firms?.map((f) => (
-                          <tr key={f.firmId}>
-                            <td className="font-medium">{f.firmName ?? f.firmId}</td>
-                            <td className="text-right tabular-nums">{f.totalTweets ?? 0}</td>
-                            <td className="text-right tabular-nums">{f.thisWeek ?? 0}</td>
-                            <td className="text-right text-slate-600 tabular-nums">
-                              {f.lastTweetedAt
-                                ? new Date(f.lastTweetedAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
-                                : "—"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
+          <div className="space-y-6">
+            {/* Twitter tab — hybrid 2-run model display */}
+            <div>
+              <h2 className="text-lg font-semibold mb-1">Twitter Pipeline</h2>
+              <p className="text-sm text-slate-500">Hybrid 2-run model: firm official accounts + industry keywords.</p>
+            </div>
 
-              {data.twitterTweets?.industry && (
-                <div className="mt-6 pt-6 border-t border-slate-200">
-                  <h3 className="text-base font-semibold mb-3">Industry scan</h3>
-                  <p className="text-sm text-slate-500 mb-3">
-                    Industry-wide tweets (source_type=twitter) stored in industry_news_items.
-                  </p>
-                  <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden max-w-md">
-                    <table className="table table-sm w-full">
-                      <thead>
-                        <tr>
-                          <th className="font-medium">Metric</th>
-                          <th className="text-right">Value</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td className="font-medium">Total items</td>
-                          <td className="text-right tabular-nums">{data.twitterTweets.industry.total ?? 0}</td>
-                        </tr>
-                        <tr>
-                          <td className="font-medium">This week</td>
-                          <td className="text-right tabular-nums">{data.twitterTweets.industry.thisWeek ?? 0}</td>
-                        </tr>
-                        <tr>
-                          <td className="font-medium">Last content date</td>
-                          <td className="text-right text-slate-600 tabular-nums">
-                            {data.twitterTweets.industry.lastContentDate
-                              ? new Date(data.twitterTweets.industry.lastContentDate).toLocaleDateString(undefined, { dateStyle: "short" })
-                              : "—"}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+            {twitterStatsLoading ? (
+              <p className="text-slate-400 text-sm">Loading...</p>
+            ) : twitterStatsError ? (
+              <p className="text-red-500 text-sm">{twitterStatsError}</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Run 1 */}
+                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                  <h3 className="font-semibold text-sm mb-3">Run 1 — Firm Official</h3>
+                  <p className="text-xs text-slate-500 mb-2">Last run: {twitterStats?.firmRun?.lastRunAt ? new Date(twitterStats.firmRun.lastRunAt).toLocaleString() : "Never"}</p>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between"><span>Inserted</span><span className="font-mono">{twitterStats?.firmRun?.tweetsInserted ?? 0}</span></div>
+                    <div className="flex justify-between"><span>Skipped</span><span className="font-mono">{twitterStats?.firmRun?.tweetsSkipped ?? 0}</span></div>
+                    <div className="flex justify-between"><span>Errors</span><span className={`font-mono ${(twitterStats?.firmRun?.errors ?? 0) > 0 ? "text-red-600 font-semibold" : ""}`}>{twitterStats?.firmRun?.errors ?? 0}</span></div>
                   </div>
                 </div>
-              )}
-            </section>
+                {/* Run 2 */}
+                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                  <h3 className="font-semibold text-sm mb-3">Run 2 — Industry</h3>
+                  <p className="text-xs text-slate-500 mb-2">Last run: {twitterStats?.industryRun?.lastRunAt ? new Date(twitterStats.industryRun.lastRunAt).toLocaleString() : "Never"}</p>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between"><span>Inserted</span><span className="font-mono">{twitterStats?.industryRun?.tweetsInserted ?? 0}</span></div>
+                    <div className="flex justify-between"><span>Skipped</span><span className="font-mono">{twitterStats?.industryRun?.tweetsSkipped ?? 0}</span></div>
+                    <div className="flex justify-between"><span>Errors</span><span className={`font-mono ${(twitterStats?.industryRun?.errors ?? 0) > 0 ? "text-red-600 font-semibold" : ""}`}>{twitterStats?.industryRun?.errors ?? 0}</span></div>
+                  </div>
+                </div>
+                {/* Topic Groups */}
+                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                  <h3 className="font-semibold text-sm mb-3">Topic Groups</h3>
+                  <p className="text-xs text-slate-500 mb-2">Last run: {twitterStats?.topicGroups?.lastRunAt ? new Date(twitterStats.topicGroups.lastRunAt).toLocaleString() : "Never"}</p>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between"><span>Generated</span><span className="font-mono">{twitterStats?.topicGroups?.groupsGenerated ?? 0}</span></div>
+                    <div className="flex justify-between"><span>Errors</span><span className={`font-mono ${(twitterStats?.topicGroups?.errors ?? 0) > 0 ? "text-red-600 font-semibold" : ""}`}>{twitterStats?.topicGroups?.errors ?? 0}</span></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <button
+                type="button"
+                className="btn btn-sm btn-ghost"
+                onClick={fetchTwitterStats}
+                disabled={twitterStatsLoading}
+              >
+                {twitterStatsLoading ? "Refreshing…" : "Refresh Twitter stats"}
+              </button>
+            </div>
           </div>
         )}
 
@@ -2124,5 +2133,13 @@ export default function AdminDashboardPage() {
         )}
       </div>
     </AdminLayout>
+  );
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense>
+      <AdminDashboardPageInner />
+    </Suspense>
   );
 }
