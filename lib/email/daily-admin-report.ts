@@ -85,7 +85,7 @@ export async function fetchReportData(): Promise<ReportData> {
 
   const cronByJob = new Map<string, { last_run_at: string | null; result_json: Record<string, unknown> | null }>();
   for (const row of cronRows ?? []) {
-    cronByJob.set(row.job_name, {
+    cronByJob.set(row.job_name as string, {
       last_run_at: row.last_run_at ?? null,
       result_json: (row.result_json as Record<string, unknown> | null) ?? null,
     });
