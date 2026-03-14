@@ -1,9 +1,31 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import AdminLayout from "@/components/common/AdminLayout";
 
 const REFRESH_MS = 30_000;
+
+const VALID_TABS = {
+  firms: ['payouts', 'daily-scrape', 'daily-classify', 'daily-incidents', 'weekly-reports', 'weekly-digest', 'twitter', 'email-ingest'],
+  traders: [],
+  system: [],
+};
+const VALID_SECTIONS = ['firms', 'traders', 'system'];
+const DEFAULT_SECTION = 'firms';
+const DEFAULT_TAB = 'payouts';
+
+/** Map URL tab slug to internal firmsSection state ID. */
+const TAB_SLUG_TO_INTERNAL = {
+  'payouts': 'payouts',
+  'daily-scrape': 'daily1',
+  'daily-classify': 'daily2',
+  'daily-incidents': 'daily3',
+  'weekly-reports': 'weekly1',
+  'weekly-digest': 'weekly2',
+  'twitter': 'twitter',
+  'email-ingest': 'twitter',
+};
 
 function formatBytes(n) {
   if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(2)} MB`;
@@ -165,7 +187,16 @@ function metricsToCSV(data) {
   return rows.join("\n");
 }
 
-export default function AdminDashboardPage() {
+function AdminDashboardPageInner() {
+  const searchParams = useSearchParams();
+  const initialSection = VALID_SECTIONS.includes(searchParams.get('section'))
+    ? searchParams.get('section')
+    : DEFAULT_SECTION;
+  const rawTab = searchParams.get('tab');
+  const initialTab = VALID_TABS[initialSection]?.includes(rawTab)
+    ? rawTab
+    : (VALID_TABS[initialSection]?.[0] ?? DEFAULT_TAB);
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -176,8 +207,8 @@ export default function AdminDashboardPage() {
   const [classifyRunResult, setClassifyRunResult] = useState(null);
   const [classifyRunLoading, setClassifyRunLoading] = useState(false);
   const [classifyLimit, setClassifyLimit] = useState(40);
-  const [activeTab, setActiveTab] = useState("firms");
-  const [firmsSection, setFirmsSection] = useState("payouts");
+  const [activeTab, setActiveTab] = useState(initialSection);
+  const [firmsSection, setFirmsSection] = useState(TAB_SLUG_TO_INTERNAL[initialTab] ?? DEFAULT_TAB);
 
   const summary = getSummaryStatus(data);
   const MAIN_TAB_IDS = ["firms", "traders", "system"];
@@ -2064,5 +2095,13 @@ export default function AdminDashboardPage() {
         )}
       </div>
     </AdminLayout>
+  );
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense>
+      <AdminDashboardPageInner />
+    </Suspense>
   );
 }
