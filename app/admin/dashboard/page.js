@@ -1,9 +1,33 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import AdminLayout from "@/components/common/AdminLayout";
 
 const REFRESH_MS = 30_000;
+
+const VALID_SECTIONS = ["firms", "traders", "system"];
+const DEFAULT_SECTION = "firms";
+const VALID_TABS = {
+  firms: ["payouts", "daily1", "daily2", "daily3", "weekly1", "weekly2", "twitter"],
+  traders: [],
+  system: [],
+};
+const DEFAULT_TAB = "payouts";
+/** Map URL slug → internal firmsSection state ID. */
+const TAB_SLUG_TO_INTERNAL = {
+  payouts: "payouts",
+  "daily-scrape": "daily1",
+  "daily-classify": "daily2",
+  "daily-incidents": "daily3",
+  "weekly-reports": "weekly1",
+  "weekly-digest": "weekly2",
+  twitter: "twitter",
+};
+/** Map internal state ID → URL slug (reverse of TAB_SLUG_TO_INTERNAL). */
+const TAB_INTERNAL_TO_SLUG = Object.fromEntries(
+  Object.entries(TAB_SLUG_TO_INTERNAL).map(([slug, internal]) => [internal, slug])
+);
 
 function formatBytes(n) {
   if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(2)} MB`;
@@ -166,6 +190,16 @@ function metricsToCSV(data) {
 }
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
+
+  /** Build a shareable URL for a given section and firms sub-tab. */
+  function buildDashboardUrl(section, tabInternal) {
+    const tabSlug = TAB_INTERNAL_TO_SLUG[tabInternal] ?? tabInternal;
+    const params = new URLSearchParams({ section });
+    if (section === "firms" && tabSlug) params.set("tab", tabSlug);
+    return `/admin/dashboard?${params.toString()}`;
+  }
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -245,12 +279,15 @@ export default function AdminDashboardPage() {
   const goToIssueTarget = (target) => {
     if (!target) return;
     setActiveTab(target.main);
+    let resolvedTab = VALID_TABS[target.main]?.[0] ?? DEFAULT_TAB;
     if (target.main === "firms") {
-      if (target.firmsSub === "payouts") setFirmsSection("payouts");
-      if (target.firmsSub === "twitter") setFirmsSection("twitter");
-      if (target.firmsDailyTab) setFirmsSection(target.firmsDailyTab);
-      if (target.firmsWeeklyTab) setFirmsSection(target.firmsWeeklyTab);
+      if (target.firmsSub === "payouts") { setFirmsSection("payouts"); resolvedTab = "payouts"; }
+      if (target.firmsSub === "twitter") { setFirmsSection("twitter"); resolvedTab = "twitter"; }
+      if (target.firmsDailyTab) { setFirmsSection(target.firmsDailyTab); resolvedTab = target.firmsDailyTab; }
+      if (target.firmsWeeklyTab) { setFirmsSection(target.firmsWeeklyTab); resolvedTab = target.firmsWeeklyTab; }
     }
+    const newUrl = buildDashboardUrl(target.main, resolvedTab);
+    if (newUrl !== window.location.pathname + window.location.search) router.push(newUrl);
   };
   /** Tab ids that show "Last run" under the tab label. */
   const STEP_TAB_IDS = ["daily1", "daily2", "daily3", "weekly1", "weekly2", "twitter"];
@@ -512,7 +549,11 @@ export default function AdminDashboardPage() {
                           ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80"
                           : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
                       }`}
-                      onClick={() => setActiveTab(id)}
+                      onClick={() => {
+                        setActiveTab(id);
+                        const newUrl = buildDashboardUrl(id, VALID_TABS[id]?.[0] ?? DEFAULT_TAB);
+                        if (newUrl !== window.location.pathname + window.location.search) router.push(newUrl);
+                      }}
                     >
                       {MAIN_TAB_LABELS[id]}
                       {showStatus && (
@@ -556,7 +597,11 @@ export default function AdminDashboardPage() {
                             ? "bg-white text-[#6d28d9] shadow-sm ring-1 ring-slate-200/80"
                             : "text-slate-600 hover:bg-white/60 hover:text-slate-800"
                         }`}
-                        onClick={() => setFirmsSection(id)}
+                        onClick={() => {
+                          setFirmsSection(id);
+                          const newUrl = buildDashboardUrl(activeTab, id);
+                          if (newUrl !== window.location.pathname + window.location.search) router.push(newUrl);
+                        }}
                       >
                         <span
                           className={
@@ -1031,7 +1076,12 @@ export default function AdminDashboardPage() {
                           )}
                         </td>
                         <td className="text-right px-4 py-3">
-                          <button type="button" onClick={() => setActiveTab("payouts")} className="text-slate-600 hover:text-slate-900 text-xs font-medium">
+                          <button type="button" onClick={() => {
+                            setActiveTab("firms");
+                            setFirmsSection("payouts");
+                            const newUrl = buildDashboardUrl("firms", "payouts");
+                            if (newUrl !== window.location.pathname + window.location.search) router.push(newUrl);
+                          }} className="text-slate-600 hover:text-slate-900 text-xs font-medium">
                             Payouts → files
                           </button>
                         </td>
@@ -1055,7 +1105,12 @@ export default function AdminDashboardPage() {
                           )}
                         </td>
                         <td className="text-right px-4 py-3">
-                          <button type="button" onClick={() => setActiveTab("payouts")} className="text-slate-600 hover:text-slate-900 text-xs font-medium">
+                          <button type="button" onClick={() => {
+                            setActiveTab("firms");
+                            setFirmsSection("payouts");
+                            const newUrl = buildDashboardUrl("firms", "payouts");
+                            if (newUrl !== window.location.pathname + window.location.search) router.push(newUrl);
+                          }} className="text-slate-600 hover:text-slate-900 text-xs font-medium">
                             Payouts → Arbiscan
                           </button>
                         </td>
@@ -1105,7 +1160,12 @@ export default function AdminDashboardPage() {
                           <td className="text-right px-4 py-3">
                             <button
                               type="button"
-                              onClick={() => setActiveTab("payouts")}
+                              onClick={() => {
+                                setActiveTab("firms");
+                                setFirmsSection("payouts");
+                                const newUrl = buildDashboardUrl("firms", "payouts");
+                                if (newUrl !== window.location.pathname + window.location.search) router.push(newUrl);
+                              }}
                               className="text-slate-600 hover:text-slate-900 text-xs font-medium"
                             >
                               View in Payouts tab →
