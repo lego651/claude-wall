@@ -2,12 +2,12 @@
   "firmId": "blueguardian",
   "period": "2026-03",
   "timezone": "UTC",
-  "generatedAt": "2026-03-13T11:25:50.133Z",
+  "generatedAt": "2026-03-14T11:18:26.695Z",
   "summary": {
-    "totalPayouts": 215118,
-    "payoutCount": 110,
+    "totalPayouts": 224385,
+    "payoutCount": 114,
     "largestPayout": 12085,
-    "avgPayout": 1956
+    "avgPayout": 1968
   },
   "dailyBuckets": [
     {
@@ -89,13 +89,49 @@
     },
     {
       "date": "2026-03-13",
-      "total": 11427,
-      "rise": 11427,
+      "total": 20694,
+      "rise": 20694,
       "crypto": 0,
       "wire": 0
     }
   ],
   "transactions": [
+    {
+      "tx_hash": "0x77d07e53a05dfca17042080a1ca2d8ccdc5edb44a0cdeae02beb0fff788dd0ae",
+      "firm_id": "blueguardian",
+      "amount": 688,
+      "payment_method": "rise",
+      "timestamp": "2026-03-13T22:20:51.000Z",
+      "from_address": "0x68035843020b6c0cd94dd29c273fff13c8e9a914",
+      "to_address": "0x7872890088620153d65d9e5302493bf05b7a14e7"
+    },
+    {
+      "tx_hash": "0x457a984cf85e09d083a2c64d391c417f3f03bab8a453d3118829993fc1747467",
+      "firm_id": "blueguardian",
+      "amount": 522,
+      "payment_method": "rise",
+      "timestamp": "2026-03-13T21:50:03.000Z",
+      "from_address": "0x68035843020b6c0cd94dd29c273fff13c8e9a914",
+      "to_address": "0x9b586e043e58c95c53cffa9658ae75718be696c2"
+    },
+    {
+      "tx_hash": "0xb398933b9caa4343da6c9f71b0dd9d2fcd8bbccd2233b2b1e1b7da3cf5833320",
+      "firm_id": "blueguardian",
+      "amount": 2022,
+      "payment_method": "rise",
+      "timestamp": "2026-03-13T21:41:10.000Z",
+      "from_address": "0x68035843020b6c0cd94dd29c273fff13c8e9a914",
+      "to_address": "0x8e71cc48aa91575b69f3f52c177450d3c88b1c3c"
+    },
+    {
+      "tx_hash": "0x099b55c3e0be7e08db7b8db8e1a6ab784bda6f70563f8df171f911ae4c3d05a9",
+      "firm_id": "blueguardian",
+      "amount": 6035,
+      "payment_method": "rise",
+      "timestamp": "2026-03-13T21:39:47.000Z",
+      "from_address": "0x68035843020b6c0cd94dd29c273fff13c8e9a914",
+      "to_address": "0x6273f5570d39877b2e43a4c78c52a3b617dab8f0"
+    },
     {
       "tx_hash": "0x11c8bea4dcdc66bbe003721f01b7edab63a47c95e3b884aafd98fd3f56d7c413",
       "firm_id": "blueguardian",
