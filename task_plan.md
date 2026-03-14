@@ -1,129 +1,105 @@
-# Task Plan: Gmail Auto-Ingest → Firm Content Timeline
+# Task Plan: Daily News Feed — Iteration 1 (YouTube + Twitter)
 
-**Goal:** Auto-monitor a Gmail account for prop firm emails, categorize with AI, store in DB, and display as a timeline on each firm's page alongside Intelligence.
+## Goal
+Build a public `/news` page that surfaces AI-curated top 3 YouTube videos and top 3 Twitter posts daily for prop trading platform users, backed by a YouTube Data API v3 ingest pipeline and reusing the existing Twitter pipeline.
 
-**Status:** Planning
-
----
-
-## Context: What Already Exists
-
-| What | Where | Status |
-|------|-------|--------|
-| DB table `firm_content_items` | `migrations/26_firm_content_items.sql` | ✅ Exists — `source_type: 'firm_email'` already planned |
-| DB table `industry_news_items` | `migrations/27_industry_news_items.sql` | ✅ Exists |
-| AI categorizer | `lib/ai/categorize-content.ts` | ✅ Exists — GPT-4o-mini, returns category/summary/tags |
-| Admin manual upload UI | `app/admin/content/upload/page.js` | ✅ Exists (too slow to use manually) |
-| Admin content API routes | `app/api/admin/content/firm/route.js` | ❌ Does not exist yet |
-| Firm intelligence page | `app/propfirms/[id]/intelligence/page.js` | ✅ Exists — shows Trustpilot incidents |
-| Cron system | `app/api/cron/` + `CRON_SECRET` | ✅ Exists |
-| Email sending | `lib/email/`, `lib/resend.ts` | ✅ Exists (outbound only) |
-
----
+## Current Phase
+Phase 2 — DB Migrations (ready to start)
 
 ## Phases
 
-### Phase 1: Gmail API Integration Layer ✅
-**Goal:** Connect to a Gmail account and read new emails programmatically.
-
-Steps:
-- [x] 1.1 Set up Gmail API credentials (OAuth2 service account or installed app)
-- [x] 1.2 Store access/refresh tokens in `.env` or DB
-- [x] 1.3 Create `lib/gmail/client.ts` — Gmail API wrapper (list messages, get message, mark as read)
-- [x] 1.4 Create `lib/gmail/parser.ts` — extract subject, body (strip HTML), sender, date from raw Gmail message
-- [x] 1.5 Create `lib/gmail/firm-mapper.ts` — map sender email domain → firm_id (e.g. `@fundingpips.com` → `fundingpips`)
-
-**Decision:** Use Gmail API polling (not IMAP) — simpler, reliable, supports incremental sync via `historyId`.
-**Auth method:** OAuth2 with refresh token stored in env vars (no user-facing auth needed).
+### Phase 1: Planning & Scope Lock
+- [x] Research YouTube Data API v3 quota and approach
+- [x] PM/Tech-Lead sync (simulated)
+- [x] Scope locked, planning files created
+- **Status:** complete
 
 ---
 
-### Phase 2: Ingest Pipeline (Cron + AI) ⬜
-**Goal:** Periodically check Gmail, process new emails through AI, write to DB.
-
-Steps:
-- [ ] 2.1 Create `app/api/cron/ingest-firm-emails/route.js` — protected by `CRON_SECRET`
-  - Fetch emails since last run (use `historyId` or timestamp from `cron_last_run` table)
-  - For each email: parse → identify firm → categorize with AI → write to DB
-- [ ] 2.2 Create `lib/gmail/ingest.ts` — orchestrator function (called by cron route)
-- [ ] 2.3 Add `firm_email_senders` table or config map for sender → firm_id mapping
-- [ ] 2.4 Reuse `categorizeContent()` from `lib/ai/categorize-content.ts`
-- [ ] 2.5 Write results to `firm_content_items` (firm-specific) or `industry_news_items` (general)
-- [ ] 2.6 Auto-publish: set `published = true` when `ai_confidence >= 0.75`; else save as draft
-- [ ] 2.7 Schedule: add to Vercel cron or call via external scheduler every 15 minutes
+### Phase 2: DB Migrations
+- [ ] Migration 32 — `youtube_channels` table
+- [ ] Migration 33 — `youtube_keywords` table
+- [ ] Migration 34 — `youtube_daily_picks` table
+- [ ] Migration 35 — seed 30–50 channels + 10 keywords
+- **Status:** pending
 
 ---
 
-### Phase 3: Admin API Routes ✅
-**Goal:** Enable the admin upload form that already exists but has no backend.
-
-Steps:
-- [ ] 3.1 Create `app/api/admin/content/firm/route.js` — POST: receive content, run AI, write to `firm_content_items`
-- [ ] 3.2 Create `app/api/admin/content/industry/route.js` — POST: write to `industry_news_items`
-- [ ] 3.3 Create `app/api/v2/propfirms/[id]/content/route.js` — GET: return published content for a firm
-
----
-
-### Phase 4: Frontend — Company Feed Tab ✅
-**Goal:** Dedicated "Company Feed" tab at `/propfirms/[id]/company-feed` in the right-side content area (not on the intelligence page).
-
-**Actual scope (confirmed):** Company Feed is its own top-level tab in the layout alongside Overview, Payout Evidence, and Intelligence — not a section within intelligence.
-
-Steps:
-- [x] 4.1 Create `components/propfirms/company-feed/CompanyFeedTab.js` — parent with Updates/Promotions sub-tabs
-- [x] 4.2 Create `components/propfirms/company-feed/TimelineItem.js` — single feed item card
-- [x] 4.3 "Updates" tab shows: all non-promotion content types (`company_news`, `rule_change`, `other`) — ordered by date
-- [x] 4.4 "Promotions" tab shows: only `promotion` type
-- [x] 4.5 Route `app/propfirms/[id]/company-feed/page.js` — delegates to `CompanyFeedTab`
-- [x] 4.6 Tab registered in `app/propfirms/[id]/layout.js` as "COMPANY FEED"
-- [x] 4.7 Each item shows: date, content_type badge, AI-generated title, ai_summary, source tag
+### Phase 3: YouTube Lib Modules + Tests
+- [ ] `lib/youtube/fetch-videos.ts` + `lib/youtube/fetch-videos.test.ts` (≥80% coverage)
+- [ ] `lib/youtube/score-videos.ts` + `lib/youtube/score-videos.test.ts` (≥80% coverage)
+- [ ] `lib/youtube/summarize-video.ts` + `lib/youtube/summarize-video.test.ts` (≥80% coverage)
+- [ ] `lib/youtube/ingest.ts` + `lib/youtube/ingest.test.ts` (≥80% coverage)
+- **Status:** pending
 
 ---
 
-### Phase 5: Firm Sender Config ⬜
-**Goal:** Maintain a mapping of firm email senders for accurate routing.
-
-Steps:
-- [ ] 5.1 Create migration `33_firm_email_senders.sql` — table: `firm_id`, `sender_domain`, `sender_email`
-- [ ] 5.2 Seed initial sender mappings for known firms
-- [ ] 5.3 Add admin UI or config to update senders
+### Phase 4: Cron Job
+- [ ] `app/api/cron/fetch-youtube-news/route.ts`
+- [ ] `app/api/cron/fetch-youtube-news/route.test.ts` (≥80% coverage)
+- [ ] Wire to GitHub Actions at 07:00 UTC daily
+- **Status:** pending
 
 ---
 
-## Key Technical Decisions
-
-| Decision | Choice | Reason |
-|----------|--------|--------|
-| Gmail auth | OAuth2 refresh token in env | No user-facing auth, works in server environment |
-| Polling vs push | Cron polling every 15min | Simpler setup; push requires Cloud Pub/Sub |
-| Auto-publish threshold | confidence >= 0.75 | Balance quality vs automation |
-| HTML stripping | Strip HTML tags server-side | Keep raw_content readable, avoid noise |
-| Dedup | Track `gmail_message_id` in DB | Prevent duplicate ingest on re-runs |
+### Phase 5: Public /news Page
+- [ ] `app/news/page.tsx` — server component
+- [ ] YouTube Top 3 section (cards: thumbnail, title, channel, views, AI summary, link)
+- [ ] Twitter Top 3 section (reuses `firm_twitter_tweets` where firm_id='industry')
+- [ ] Empty state ("No picks yet today")
+- [ ] Mobile-responsive layout (Tailwind v4 + DaisyUI v5)
+- **Status:** pending
 
 ---
 
-## Env Vars Needed (add to `.env`)
-
-```
-GMAIL_CLIENT_ID=
-GMAIL_CLIENT_SECRET=
-GMAIL_REFRESH_TOKEN=
-GMAIL_USER_EMAIL=propfirm.monitor@gmail.com
-```
-
----
-
-## Implementation Order
-
-1. Phase 1 (Gmail client) → Phase 2 (cron ingest) → Phase 3 (API routes) → Phase 4 (frontend) → Phase 5 (sender config)
-2. Phase 3 can be done in parallel with Phase 2 (different files)
-3. Phase 4 depends on Phase 3 API being available
+### Phase 6: Admin Channel Management Page
+- [ ] `app/admin/news/channels/page.tsx`
+- [ ] Table view of channels (name, category, active toggle)
+- [ ] Add channel form (YouTube URL → resolve channel_id via API)
+- [ ] Keywords management section
+- [ ] Link from `/admin/page.js` main page
+- **Status:** pending
 
 ---
 
-## Out of Scope (for now)
+### Phase 7: QA & Delivery
+- [ ] `npm run build` passes
+- [ ] `npm run lint` clean
+- [ ] All new lib/ tests pass with ≥80% coverage
+- [ ] Manual smoke test of /news page
+- [ ] Hand off to user
+- **Status:** pending
 
-- Email attachments / screenshots
-- Gmail push notifications (Pub/Sub)
-- Unsubscribe handling
-- Multi-account Gmail support
+---
+
+## Key Decisions Made
+| Decision | Rationale |
+|----------|-----------|
+| Playlist approach (not search.list) per channel | search.list = 100 units each; playlistItems.list = 1 unit — 100× cheaper |
+| YouTube Data API v3 free tier | ~1,400–1,600 units/day vs 10,000 free limit — $0/day |
+| GPT-4o-mini for summaries only (max 3/day) | ~$0.001/day; scoring uses formula not LLM |
+| Scoring: views×0.4 + engagement×0.4 + freshness×0.2 | Deterministic, zero cost; refine in later iterations |
+| Twitter section reuses existing `firm_twitter_tweets` | industry tweets already collected daily — zero new infra |
+| Migrations numbered 32–35 | Project rule: /migrations/ folder, numbered after existing 31 files |
+| Add `YOUTUBE_API_KEY` to .env | Only new env var needed |
+| Reddit deferred to Iteration 2 | Reddit API OAuth changed 2023; needs separate spike |
+| /news page public (no auth required) | SEO value + top-of-funnel acquisition |
+| `youtube_channels` as DB table (not config) | Admin needs UI to manage list without code deploys |
+
+## Key Questions
+1. ✅ YouTube quota cost: ~$0/day (free tier sufficient)
+2. ✅ Twitter section: reuse `firm_twitter_tweets` (firm_id='industry'), no new pipeline
+3. ⬜ Should active toggle on channel affect next daily run only, or trigger immediate re-fetch? (assume: next daily run)
+4. ⬜ Confirm migration numbering — check if any migrations already exist past 31
+
+## Errors Encountered
+| Error | Attempt | Resolution |
+|-------|---------|------------|
+| (none yet) | — | — |
+
+## Notes
+- Pre-commit hook: `npm run test:coverage:enforce-new` — all new lib/ files need ≥80% coverage
+- Always run `npx jest path/to/file.test.ts --no-coverage` before staging
+- Never use `--no-verify` to bypass hook
+- Iteration 2 scope: Reddit (r/Forex, r/Daytrading, r/algotrading, r/Futures)
+- Previous planning files (Gmail ingest project) were overwritten — that project is complete
