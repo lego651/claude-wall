@@ -114,7 +114,7 @@ export async function fetchReportData(): Promise<ReportData> {
     .select('id, name')
     .lt('created_at', cutoffDate);
 
-  const firmIds = (oldFirms ?? []).map((f: { id: string; name: string | null }) => f.id);
+  const firmIds = (oldFirms ?? [] as { id: string; name: string | null }[]).map((f) => f.id as string);
 
   let zeroPayoutFirms: string[] = [];
   if (firmIds.length > 0) {
