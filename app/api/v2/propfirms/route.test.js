@@ -1,15 +1,20 @@
 /**
  * PROP-011: Integration tests for GET /api/v2/propfirms
+ * S12-001: Regression tests for latestPayoutAt consistency across period tabs
  */
 
 import { GET } from './route';
 import { createClient } from '@supabase/supabase-js';
 import { loadPeriodData } from '@/lib/services/payoutDataLoader';
 import { validateOrigin, isRateLimited } from '@/lib/apiSecurity';
+import { cache } from '@/lib/cache';
 
 jest.mock('@supabase/supabase-js');
 jest.mock('@/lib/services/payoutDataLoader');
 jest.mock('@/lib/apiSecurity');
+jest.mock('@/lib/cache', () => ({
+  cache: { get: jest.fn(), set: jest.fn() },
+}));
 jest.mock('@/lib/logger', () => ({
   createLogger: () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn() }),
 }));
@@ -40,6 +45,10 @@ describe('GET /api/v2/propfirms', () => {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
     validateOrigin.mockReturnValue({ ok: true, headers: {} });
     isRateLimited.mockReturnValue({ limited: false, retryAfterMs: 60_000 });
+
+    // Default: cache is a miss for all keys (simulates no KV store in tests).
+    cache.get.mockResolvedValue(null);
+    cache.set.mockResolvedValue(undefined);
 
     mockGte = jest.fn().mockResolvedValue({ data: [], error: null });
     mockIn = jest.fn().mockReturnValue({ gte: mockGte });
@@ -342,6 +351,175 @@ describe('GET /api/v2/propfirms', () => {
       const res = await GET(req);
 
       expect(res.headers.get('Access-Control-Allow-Methods')).toBe('GET, OPTIONS');
+    });
+  });
+
+  // S12-001: Regression tests — latestPayoutAt must always come from the shared
+  // firm-profiles cache (propfirms:firm-profiles, 60s TTL), never from period-specific
+  // cached data. This ensures all period tabs show the same "Latest Payout" value.
+  describe('S12-001: latestPayoutAt consistency across period tabs', () => {
+    const FIRM_PROFILES_CACHE_KEY = 'propfirms:firm-profiles';
+    const FRESH_LATEST_PAYOUT_AT = '2026-03-13T10:00:00Z'; // from firm-profiles cache
+    const STALE_LATEST_PAYOUT_AT = '2026-01-01T00:00:00Z';  // stale value in period cache
+
+    const firmProfilesCacheValue = [
+      {
+        id: 'firm-alpha',
+        name: 'Alpha Firm',
+        logo_url: null,
+        website: null,
+        last_payout_at: FRESH_LATEST_PAYOUT_AT,
+      },
+    ];
+
+    // Helper: build a cached period response with a stale latestPayoutAt
+    function makeStalePeriodCache(period) {
+      return {
+        data: [
+          {
+            id: 'firm-alpha',
+            name: 'Alpha Firm',
+            logo: null,
+            website: null,
+            metrics: {
+              totalPayouts: 50000,
+              payoutCount: 10,
+              largestPayout: 10000,
+              avgPayout: 5000,
+              latestPayoutAt: STALE_LATEST_PAYOUT_AT,
+            },
+          },
+        ],
+        meta: { period, sort: 'totalPayouts', order: 'desc', count: 1 },
+      };
+    }
+
+    it('fresh path (cache miss): latestPayoutAt comes from firm-profiles for 1d', async () => {
+      // Supabase returns a firm with last_payout_at set
+      mockSelectFirms.mockResolvedValueOnce({
+        data: [
+          {
+            id: 'firm-alpha',
+            name: 'Alpha Firm',
+            logo_url: null,
+            website: null,
+            last_payout_at: FRESH_LATEST_PAYOUT_AT,
+          },
+        ],
+        error: null,
+      });
+      mockGte.mockResolvedValueOnce({ data: [{ firm_id: 'firm-alpha', amount: 1000 }], error: null });
+
+      const req = createRequest('https://x.com/api/v2/propfirms?period=1d');
+      const res = await GET(req);
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.data[0].metrics.latestPayoutAt).toBe(FRESH_LATEST_PAYOUT_AT);
+    });
+
+    it.each(['7d', '30d', '12m'])(
+      'fresh path (cache miss): latestPayoutAt comes from firm-profiles for %s',
+      async (period) => {
+        mockSelectFirms.mockResolvedValueOnce({
+          data: [
+            {
+              id: 'firm-alpha',
+              name: 'Alpha Firm',
+              logo_url: null,
+              website: null,
+              last_payout_at: FRESH_LATEST_PAYOUT_AT,
+            },
+          ],
+          error: null,
+        });
+        loadPeriodData.mockReturnValue({
+          summary: {
+            totalPayouts: 50000,
+            payoutCount: 10,
+            largestPayout: 10000,
+            avgPayout: 5000,
+          },
+        });
+
+        const req = createRequest(`https://x.com/api/v2/propfirms?period=${period}`);
+        const res = await GET(req);
+        const body = await res.json();
+
+        expect(res.status).toBe(200);
+        // latestPayoutAt must be the fresh value from firm_profiles, not recomputed from period data
+        expect(body.data[0].metrics.latestPayoutAt).toBe(FRESH_LATEST_PAYOUT_AT);
+      }
+    );
+
+    it.each(['1d', '7d', '30d', '12m'])(
+      'cache-hit path: firm-profiles latestPayoutAt overwrites stale period-cache value for %s',
+      async (period) => {
+        // firm-profiles cache returns fresh value
+        cache.get.mockImplementation(async (key) => {
+          if (key === FIRM_PROFILES_CACHE_KEY) return firmProfilesCacheValue;
+          // Period-specific cache has a stale latestPayoutAt
+          return makeStalePeriodCache(period);
+        });
+
+        const req = createRequest(`https://x.com/api/v2/propfirms?period=${period}&sort=totalPayouts&order=desc`);
+        const res = await GET(req);
+        const body = await res.json();
+
+        expect(res.status).toBe(200);
+        // The firm-profiles value (fresh) must win over the stale period-cached value
+        expect(body.data[0].metrics.latestPayoutAt).toBe(FRESH_LATEST_PAYOUT_AT);
+        expect(body.data[0].metrics.latestPayoutAt).not.toBe(STALE_LATEST_PAYOUT_AT);
+      }
+    );
+
+    it('cache-hit path: falls back to period-cache latestPayoutAt when firm not in firm-profiles', async () => {
+      // firm-profiles cache returns a *different* firm — firm-alpha is not in it
+      cache.get.mockImplementation(async (key) => {
+        if (key === FIRM_PROFILES_CACHE_KEY) {
+          return [
+            {
+              id: 'other-firm',
+              name: 'Other Firm',
+              logo_url: null,
+              website: null,
+              last_payout_at: '2026-03-01T00:00:00Z',
+            },
+          ];
+        }
+        return makeStalePeriodCache('7d');
+      });
+
+      const req = createRequest('https://x.com/api/v2/propfirms?period=7d');
+      const res = await GET(req);
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      // firm-alpha is not in firmProfileMap, so falls back to cached period value
+      expect(body.data[0].metrics.latestPayoutAt).toBe(STALE_LATEST_PAYOUT_AT);
+    });
+
+    it('latestPayoutAt is null when firm has no last_payout_at', async () => {
+      mockSelectFirms.mockResolvedValueOnce({
+        data: [
+          {
+            id: 'firm-alpha',
+            name: 'Alpha Firm',
+            logo_url: null,
+            website: null,
+            last_payout_at: null,
+          },
+        ],
+        error: null,
+      });
+      mockGte.mockResolvedValueOnce({ data: [], error: null });
+
+      const req = createRequest('https://x.com/api/v2/propfirms?period=1d');
+      const res = await GET(req);
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.data[0].metrics.latestPayoutAt).toBeNull();
     });
   });
 });
