@@ -69,6 +69,13 @@ function getSummaryStatus(data) {
   if (propStatus === "critical") push("Prop firms payout data critical", "critical");
   else if (propStatus === "warning") push("Prop firms payout data warning", "warning");
 
+  // Payout sync (GitHub Actions daily sync per firm)
+  const syncFirms = data.firmPayoutSyncDaily?.firms ?? [];
+  const syncCritical = syncFirms.filter((f) => f.status === "critical").length;
+  const syncWarning = syncFirms.filter((f) => f.status === "warning").length;
+  if (syncCritical > 0) push(`Payout sync: ${syncCritical} firm(s) critical`, "critical");
+  else if (syncWarning > 0) push(`Payout sync: ${syncWarning} firm(s) warning`, "warning");
+
   // Daily 1: Scraper
   const firms = data.trustpilotScraper?.firms ?? [];
   const scraperTimestamps = firms.map((f) => f.last_scraper_run_at).filter(Boolean);
@@ -272,6 +279,7 @@ function AdminDashboardPageInner() {
     if (msg.startsWith("Daily 3")) return { main: "firms", firmsSub: "daily", firmsDailyTab: "daily3" };
     if (msg.startsWith("Weekly 1")) return { main: "firms", firmsSub: "weekly", firmsWeeklyTab: "weekly1" };
     if (msg.startsWith("Weekly 2") || msg.includes("email")) return { main: "firms", firmsSub: "weekly", firmsWeeklyTab: "weekly2" };
+    if (msg.startsWith("Payout sync")) return { main: "firms", firmsSub: "payouts" };
     if (msg.includes("Prop firms") || msg.includes("Arbiscan") || msg.includes("File size")) return { main: "firms", firmsSub: "payouts" };
     if (msg.includes("Traders") || msg.includes("trader") || msg.includes("backfill") || msg.includes("sync")) return { main: "traders" };
     if (msg.includes("Database")) return { main: "system" };
@@ -279,7 +287,35 @@ function AdminDashboardPageInner() {
   };
 
   const issuesBySection = getIssuesBySection(summary, getTabForIssue);
+
+  /** Compute status for a single Firms sub-tab. Returns "critical"|"warning"|"ok"|"gray". */
+  const getSubTabStatus = (tabId) => {
+    if (tabId === "email-ingest") return "gray";
+    const firmsIssues = issuesBySection.firms || [];
+    let relevant;
+    if (tabId === "payouts") {
+      relevant = firmsIssues.filter((item) => getTabForIssue(item.msg)?.firmsSub === "payouts");
+    } else if (tabId === "daily1" || tabId === "daily2" || tabId === "daily3") {
+      relevant = firmsIssues.filter((item) => getTabForIssue(item.msg)?.firmsDailyTab === tabId);
+    } else if (tabId === "weekly1" || tabId === "weekly2") {
+      relevant = firmsIssues.filter((item) => getTabForIssue(item.msg)?.firmsWeeklyTab === tabId);
+    } else if (tabId === "twitter") {
+      relevant = firmsIssues.filter((item) => getTabForIssue(item.msg)?.firmsSub === "twitter");
+    } else {
+      relevant = [];
+    }
+    if (relevant.some((i) => i.severity === "critical")) return "critical";
+    if (relevant.some((i) => i.severity === "warning")) return "warning";
+    return "ok";
+  };
+
   const getSectionStatus = (main) => {
+    if (main === "firms") {
+      const subStatuses = FIRMS_SECTION_IDS.map((id) => getSubTabStatus(id)).filter((s) => s !== "gray");
+      if (subStatuses.some((s) => s === "critical")) return "critical";
+      if (subStatuses.some((s) => s === "warning")) return "warning";
+      return null;
+    }
     const issues = issuesBySection[main] || [];
     const hasCritical = issues.some((i) => i.severity === "critical");
     const hasWarning = issues.some((i) => i.severity === "warning");
@@ -703,6 +739,24 @@ function AdminDashboardPageInner() {
                             </span>
                           )}
                         </div>
+                        {(() => {
+                          const st = getSubTabStatus(id);
+                          return (
+                            <span
+                              className={`inline-block h-2 w-2 shrink-0 rounded-full ${
+                                st === "critical"
+                                  ? "bg-red-500"
+                                  : st === "warning"
+                                    ? "bg-amber-500"
+                                    : st === "gray"
+                                      ? "bg-slate-400"
+                                      : "bg-emerald-500"
+                              }`}
+                              title={st === "critical" ? "Critical" : st === "warning" ? "Warning" : st === "gray" ? "No data" : "Healthy"}
+                              aria-hidden
+                            />
+                          );
+                        })()}
                       </button>
                     );
                   })}
@@ -1269,7 +1323,7 @@ function AdminDashboardPageInner() {
                     if (critical) parts.push(`${critical} critical`);
                     if (warning) parts.push(`${warning} warning`);
                     return (
-                      <span className="inline-flex shrink-0 items-center rounded-full bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-800">
+                      <span className={`inline-flex shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-medium ${critical > 0 ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-800"}`}>
                         {parts.join(", ")}
                       </span>
                     );
