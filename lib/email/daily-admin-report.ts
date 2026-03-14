@@ -126,9 +126,9 @@ export async function fetchReportData(): Promise<ReportData> {
       .in('firm_id', firmIds)
       .gte('timestamp', thirtyDaysAgo);
 
-    const firmsWithPayouts = new Set((payoutRows ?? []).map((r: { firm_id: string }) => r.firm_id));
+    const firmsWithPayouts = new Set((payoutRows ?? [] as { firm_id: string }[]).map((r) => r.firm_id as string));
     const nameById = new Map(
-      (oldFirms ?? []).map((f: { id: string; name: string | null }) => [f.id, f.name ?? f.id])
+      (oldFirms ?? [] as { id: string; name: string | null }[]).map((f) => [f.id as string, (f.name as string | null) ?? f.id as string])
     );
 
     zeroPayoutFirms = firmIds
@@ -157,7 +157,7 @@ export async function fetchReportData(): Promise<ReportData> {
   const firmIdSet = new Set<string>();
 
   for (const item of contentItems) {
-    const t: string = item.content_type ?? 'other';
+    const t: string = (item.content_type as string | null) ?? 'other';
     byType[t] = (byType[t] ?? 0) + 1;
     if (item.firm_id) firmIdSet.add(item.firm_id as string);
   }
@@ -170,7 +170,7 @@ export async function fetchReportData(): Promise<ReportData> {
       .in('id', [...firmIdSet]);
 
     const nameMap = new Map(
-      (firmProfiles ?? []).map((f: { id: string; name: string | null }) => [f.id, f.name ?? f.id])
+      (firmProfiles ?? [] as { id: string; name: string | null }[]).map((f) => [f.id as string, (f.name as string | null) ?? f.id as string])
     );
     contentFirmNames = [...firmIdSet].map((id) => nameMap.get(id) ?? id);
   }
