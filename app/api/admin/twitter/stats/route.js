@@ -88,5 +88,41 @@ export async function GET() {
     errors: topicGroupsErrors,
   };
 
-  return NextResponse.json({ firmRun, industryRun, topicGroups });
+  // Compute health status
+  const nowMs = Date.now();
+  const lastRunMs = lastRunAt ? new Date(lastRunAt).getTime() : null;
+  const hoursAgo = lastRunMs ? (nowMs - lastRunMs) / (1000 * 60 * 60) : null;
+
+  let runHealth = 'unknown';
+  if (hoursAgo === null) {
+    runHealth = 'critical';
+  } else if (hoursAgo > 48) {
+    runHealth = 'critical';
+  } else if (hoursAgo > 26) {
+    runHealth = 'warning';
+  } else {
+    runHealth = 'healthy';
+  }
+
+  // If both runs show 0 inserted AND 0 skipped, the run may have silently fetched nothing
+  const firmActivityHealth =
+    (r.firmInserted ?? 0) === 0 && (r.firmSkipped ?? 0) === 0 ? 'warning' : 'healthy';
+  const industryActivityHealth =
+    (r.industryInserted ?? 0) === 0 && (r.industrySkipped ?? 0) === 0 ? 'warning' : 'healthy';
+
+  const health = {
+    runStaleness: runHealth,
+    hoursAgo: hoursAgo !== null ? Math.round(hoursAgo * 10) / 10 : null,
+    firmActivity: firmActivityHealth,
+    industryActivity: industryActivityHealth,
+    // Overall: worst of all signals
+    overall:
+      runHealth === 'critical' || firmActivityHealth === 'critical' || industryActivityHealth === 'critical'
+        ? 'critical'
+        : runHealth === 'warning' || firmActivityHealth === 'warning' || industryActivityHealth === 'warning'
+        ? 'warning'
+        : 'healthy',
+  };
+
+  return NextResponse.json({ firmRun, industryRun, topicGroups, health });
 }

@@ -197,6 +197,14 @@ describe('GET /api/admin/twitter/stats', () => {
     expect(body.industryRun.tweetsInserted).toBe(7);
     expect(body.industryRun.tweetsSkipped).toBe(1);
     expect(body.industryRun.errors).toBe(0);
+
+    // health fields
+    expect(body.health).toBeDefined();
+    expect(['healthy', 'warning', 'critical']).toContain(body.health.runStaleness);
+    expect(typeof body.health.hoursAgo).toBe('number');
+    expect(['healthy', 'warning']).toContain(body.health.firmActivity);
+    expect(['healthy', 'warning']).toContain(body.health.industryActivity);
+    expect(['healthy', 'warning', 'critical']).toContain(body.health.overall);
   });
 
   it('returns null lastRunAt and zero counts when job has never run', async () => {
@@ -250,6 +258,13 @@ describe('GET /api/admin/twitter/stats', () => {
     expect(body.topicGroups.lastRunAt).toBeNull();
     expect(body.topicGroups.groupsGenerated).toBe(0);
     expect(body.topicGroups.errors).toBe(0);
+
+    // health: never run → critical staleness, both activity = warning (0/0)
+    expect(body.health.runStaleness).toBe('critical');
+    expect(body.health.hoursAgo).toBeNull();
+    expect(body.health.firmActivity).toBe('warning');
+    expect(body.health.industryActivity).toBe('warning');
+    expect(body.health.overall).toBe('critical');
   });
 
   it('returns errors=1 for topicGroups when DB query throws', async () => {

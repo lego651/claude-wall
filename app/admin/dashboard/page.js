@@ -238,6 +238,8 @@ function AdminDashboardPageInner() {
   const [twitterStats, setTwitterStats] = useState(null);
   const [twitterStatsLoading, setTwitterStatsLoading] = useState(false);
   const [twitterStatsError, setTwitterStatsError] = useState(null);
+  const [twitterHistory, setTwitterHistory] = useState(null);
+  const [twitterHistoryLoading, setTwitterHistoryLoading] = useState(false);
   const [emailIngestData, setEmailIngestData] = useState(null);
   const [emailIngestLoading, setEmailIngestLoading] = useState(false);
   const [emailIngestError, setEmailIngestError] = useState(null);
@@ -301,6 +303,11 @@ function AdminDashboardPageInner() {
       relevant = firmsIssues.filter((item) => getTabForIssue(item.msg)?.firmsWeeklyTab === tabId);
     } else if (tabId === "twitter") {
       relevant = firmsIssues.filter((item) => getTabForIssue(item.msg)?.firmsSub === "twitter");
+      const pipelineHealth = twitterStats?.health?.overall;
+      if (relevant.some((i) => i.severity === "critical") || pipelineHealth === "critical") return "critical";
+      if (relevant.some((i) => i.severity === "warning") || pipelineHealth === "warning") return "warning";
+      // If stats not loaded yet, fall back to ok (dot turns yellow once stats load)
+      return "ok";
     } else {
       relevant = [];
     }
@@ -470,26 +477,34 @@ function AdminDashboardPageInner() {
   const fetchTwitterStats = useCallback(async () => {
     setTwitterStatsLoading(true);
     setTwitterStatsError(null);
+    setTwitterHistoryLoading(true);
     try {
-      const res = await fetch("/api/admin/twitter/stats");
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || `HTTP ${res.status}`);
+      const [statsRes, histRes] = await Promise.all([
+        fetch("/api/admin/twitter/stats"),
+        fetch("/api/admin/twitter/history"),
+      ]);
+      if (!statsRes.ok) {
+        const j = await statsRes.json().catch(() => ({}));
+        throw new Error(j.error || `HTTP ${statsRes.status}`);
       }
-      const json = await res.json();
-      setTwitterStats(json);
+      const [statsJson, histJson] = await Promise.all([statsRes.json(), histRes.json()]);
+      setTwitterStats(statsJson);
+      if (!histJson.error) setTwitterHistory(histJson);
     } catch (e) {
       setTwitterStatsError(e.message);
     } finally {
       setTwitterStatsLoading(false);
+      setTwitterHistoryLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (activeTab === "firms" && firmsSection === "twitter" && !twitterStats && !twitterStatsLoading) {
+    // Fetch twitter stats whenever the Firms tab is active so the dot reflects pipeline health
+    // even when the user hasn't clicked the Twitter sub-tab yet.
+    if (activeTab === "firms" && !twitterStats && !twitterStatsLoading) {
       fetchTwitterStats();
     }
-  }, [activeTab, firmsSection, twitterStats, twitterStatsLoading, fetchTwitterStats]);
+  }, [activeTab, twitterStats, twitterStatsLoading, fetchTwitterStats]);
 
   useEffect(() => {
     if (activeTab !== "firms" || firmsSection !== "email-ingest") return;
@@ -2091,10 +2106,27 @@ function AdminDashboardPageInner() {
 
         {data && activeTab === "firms" && firmsSection === "twitter" && (
           <div className="space-y-6">
-            {/* Twitter tab — hybrid 2-run model display */}
-            <div>
-              <h2 className="text-lg font-semibold mb-1">Twitter Pipeline</h2>
-              <p className="text-sm text-slate-500">Hybrid 2-run model: firm official accounts + industry keywords.</p>
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold mb-1">Twitter Pipeline</h2>
+                <p className="text-sm text-slate-500">Hybrid 2-run model: 2 Apify calls/day (combined from: query + industry keywords).</p>
+              </div>
+              {twitterStats?.health && (() => {
+                const h = twitterStats.health.overall;
+                const cfg = {
+                  healthy: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", dot: "bg-emerald-500", label: "Healthy" },
+                  warning: { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", dot: "bg-amber-500", label: "Warning" },
+                  critical: { bg: "bg-red-50", border: "border-red-200", text: "text-red-700", dot: "bg-red-500", label: "Critical" },
+                  unknown: { bg: "bg-slate-50", border: "border-slate-200", text: "text-slate-500", dot: "bg-slate-400", label: "Unknown" },
+                }[h] ?? { bg: "bg-slate-50", border: "border-slate-200", text: "text-slate-500", dot: "bg-slate-400", label: h };
+                return (
+                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${cfg.bg} ${cfg.border} ${cfg.text}`}>
+                    <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+                    {cfg.label}
+                  </div>
+                );
+              })()}
             </div>
 
             {twitterStatsLoading ? (
@@ -2102,37 +2134,163 @@ function AdminDashboardPageInner() {
             ) : twitterStatsError ? (
               <p className="text-red-500 text-sm">{twitterStatsError}</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Run 1 */}
-                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                  <h3 className="font-semibold text-sm mb-3">Run 1 — Firm Official</h3>
-                  <p className="text-xs text-slate-500 mb-2">Last run: {twitterStats?.firmRun?.lastRunAt ? new Date(twitterStats.firmRun.lastRunAt).toLocaleString() : "Never"}</p>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between"><span>Inserted</span><span className="font-mono">{twitterStats?.firmRun?.tweetsInserted ?? 0}</span></div>
-                    <div className="flex justify-between"><span>Skipped</span><span className="font-mono">{twitterStats?.firmRun?.tweetsSkipped ?? 0}</span></div>
-                    <div className="flex justify-between"><span>Errors</span><span className={`font-mono ${(twitterStats?.firmRun?.errors ?? 0) > 0 ? "text-red-600 font-semibold" : ""}`}>{twitterStats?.firmRun?.errors ?? 0}</span></div>
+              <>
+                {/* Health metric row */}
+                {twitterStats?.health && (() => {
+                  const h = twitterStats.health;
+                  const badge = (status, label) => {
+                    const cfg = {
+                      healthy: "bg-emerald-100 text-emerald-700",
+                      warning: "bg-amber-100 text-amber-700",
+                      critical: "bg-red-100 text-red-700",
+                      unknown: "bg-slate-100 text-slate-500",
+                    }[status] ?? "bg-slate-100 text-slate-500";
+                    return <span className={`px-2 py-0.5 rounded text-xs font-semibold ${cfg}`}>{label}</span>;
+                  };
+                  return (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-wrap gap-6 text-sm">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-slate-500 uppercase tracking-wide">Job staleness</span>
+                        <div className="flex items-center gap-2">
+                          {badge(h.runStaleness, h.hoursAgo !== null ? `${h.hoursAgo}h ago` : "Never run")}
+                          <span className="text-slate-400 text-xs">{h.runStaleness === "critical" ? "Expected: daily at 6am PST" : h.runStaleness === "warning" ? "Overdue >26h" : "OK"}</span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-slate-500 uppercase tracking-wide">Firm run activity</span>
+                        <div className="flex items-center gap-2">
+                          {badge(h.firmActivity, h.firmActivity === "warning" ? "0 fetched (suspicious)" : "Active")}
+                          <span className="text-slate-400 text-xs">{h.firmActivity === "warning" ? "Both inserted & skipped = 0" : "Tweets fetched"}</span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-slate-500 uppercase tracking-wide">Industry run activity</span>
+                        <div className="flex items-center gap-2">
+                          {badge(h.industryActivity, h.industryActivity === "warning" ? "0 fetched (suspicious)" : "Active")}
+                          <span className="text-slate-400 text-xs">{h.industryActivity === "warning" ? "Both inserted & skipped = 0" : "Tweets fetched"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Last-run cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Run 1 */}
+                  <div className={`bg-white border rounded-xl p-4 shadow-sm ${
+                    twitterStats?.health?.firmActivity === "critical" ? "border-red-300" :
+                    twitterStats?.health?.firmActivity === "warning" ? "border-amber-300" : "border-slate-200"
+                  }`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-sm">Run 1 — Firm Official</h3>
+                      {twitterStats?.health?.firmActivity && (() => {
+                        const s = twitterStats.health.firmActivity;
+                        const cfg = { healthy: "bg-emerald-500", warning: "bg-amber-400", critical: "bg-red-500", unknown: "bg-slate-400" }[s] ?? "bg-slate-400";
+                        return <span className={`w-2 h-2 rounded-full ${cfg}`} />;
+                      })()}
+                    </div>
+                    <p className="text-xs text-slate-500 mb-3">Last run: {twitterStats?.firmRun?.lastRunAt ? new Date(twitterStats.firmRun.lastRunAt).toLocaleString() : "Never"}</p>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between"><span className="text-slate-600">Inserted</span><span className="font-mono font-semibold text-emerald-700">{twitterStats?.firmRun?.tweetsInserted ?? 0}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-600">Skipped (dupe)</span><span className="font-mono text-slate-500">{twitterStats?.firmRun?.tweetsSkipped ?? 0}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-600">Errors</span><span className={`font-mono ${(twitterStats?.firmRun?.errors ?? 0) > 0 ? "text-red-600 font-semibold" : "text-slate-400"}`}>{twitterStats?.firmRun?.errors ?? 0}</span></div>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-3">1 Apify call · combined from: query</p>
+                  </div>
+                  {/* Run 2 */}
+                  <div className={`bg-white border rounded-xl p-4 shadow-sm ${
+                    twitterStats?.health?.industryActivity === "critical" ? "border-red-300" :
+                    twitterStats?.health?.industryActivity === "warning" ? "border-amber-300" : "border-slate-200"
+                  }`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-sm">Run 2 — Industry</h3>
+                      {twitterStats?.health?.industryActivity && (() => {
+                        const s = twitterStats.health.industryActivity;
+                        const cfg = { healthy: "bg-emerald-500", warning: "bg-amber-400", critical: "bg-red-500", unknown: "bg-slate-400" }[s] ?? "bg-slate-400";
+                        return <span className={`w-2 h-2 rounded-full ${cfg}`} />;
+                      })()}
+                    </div>
+                    <p className="text-xs text-slate-500 mb-3">Last run: {twitterStats?.industryRun?.lastRunAt ? new Date(twitterStats.industryRun.lastRunAt).toLocaleString() : "Never"}</p>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between"><span className="text-slate-600">Inserted</span><span className="font-mono font-semibold text-emerald-700">{twitterStats?.industryRun?.tweetsInserted ?? 0}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-600">Skipped (dupe)</span><span className="font-mono text-slate-500">{twitterStats?.industryRun?.tweetsSkipped ?? 0}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-600">Errors</span><span className={`font-mono ${(twitterStats?.industryRun?.errors ?? 0) > 0 ? "text-red-600 font-semibold" : "text-slate-400"}`}>{twitterStats?.industryRun?.errors ?? 0}</span></div>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-3">1 Apify call · 14 keyword terms</p>
+                  </div>
+                  {/* Topic Groups */}
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                    <h3 className="font-semibold text-sm mb-3">Topic Groups</h3>
+                    <p className="text-xs text-slate-500 mb-3">Last run: {twitterStats?.topicGroups?.lastRunAt ? new Date(twitterStats.topicGroups.lastRunAt).toLocaleString() : "Never"}</p>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between"><span className="text-slate-600">Generated</span><span className="font-mono font-semibold">{twitterStats?.topicGroups?.groupsGenerated ?? 0}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-600">Errors</span><span className={`font-mono ${(twitterStats?.topicGroups?.errors ?? 0) > 0 ? "text-red-600 font-semibold" : "text-slate-400"}`}>{twitterStats?.topicGroups?.errors ?? 0}</span></div>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-3">Weekly grouping job</p>
                   </div>
                 </div>
-                {/* Run 2 */}
+
+                {/* 7-day ingestion history */}
                 <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                  <h3 className="font-semibold text-sm mb-3">Run 2 — Industry</h3>
-                  <p className="text-xs text-slate-500 mb-2">Last run: {twitterStats?.industryRun?.lastRunAt ? new Date(twitterStats.industryRun.lastRunAt).toLocaleString() : "Never"}</p>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between"><span>Inserted</span><span className="font-mono">{twitterStats?.industryRun?.tweetsInserted ?? 0}</span></div>
-                    <div className="flex justify-between"><span>Skipped</span><span className="font-mono">{twitterStats?.industryRun?.tweetsSkipped ?? 0}</span></div>
-                    <div className="flex justify-between"><span>Errors</span><span className={`font-mono ${(twitterStats?.industryRun?.errors ?? 0) > 0 ? "text-red-600 font-semibold" : ""}`}>{twitterStats?.industryRun?.errors ?? 0}</span></div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-sm">7-Day Tweet Ingestion</h3>
+                    {!twitterHistoryLoading && twitterHistory && (
+                      <div className="flex gap-4 text-xs text-slate-500">
+                        <span>Total: <strong className="text-slate-700">{twitterHistory.totalLast7}</strong></span>
+                        <span>Avg/day: <strong className="text-slate-700">{twitterHistory.avgPerDay}</strong></span>
+                        <span>Days active: <strong className={`${twitterHistory.daysWithData < 4 ? "text-amber-600" : "text-slate-700"}`}>{twitterHistory.daysWithData}/7</strong></span>
+                      </div>
+                    )}
                   </div>
+                  {twitterHistoryLoading ? (
+                    <p className="text-slate-400 text-xs">Loading history...</p>
+                  ) : twitterHistory ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-xs text-slate-500 uppercase border-b border-slate-100">
+                            <th className="text-left py-2 pr-4 font-medium">Date</th>
+                            <th className="text-right py-2 px-3 font-medium">Firm</th>
+                            <th className="text-right py-2 px-3 font-medium">Industry</th>
+                            <th className="text-right py-2 px-3 font-medium">Total</th>
+                            <th className="text-right py-2 pl-3 font-medium">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {twitterHistory.days.map((day, i) => {
+                            const isToday = i === 0;
+                            const dayStatus = day.total === 0
+                              ? (isToday ? "warning" : "critical")
+                              : day.total < 5 ? "warning" : "healthy";
+                            const statusCfg = {
+                              healthy: { label: "Healthy", cls: "bg-emerald-100 text-emerald-700" },
+                              warning: { label: isToday ? "No data yet" : "Low", cls: "bg-amber-100 text-amber-700" },
+                              critical: { label: "Empty", cls: "bg-red-100 text-red-700" },
+                            }[dayStatus];
+                            const dateLabel = new Date(day.date + 'T12:00:00Z').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+                            return (
+                              <tr key={day.date} className={`border-b border-slate-50 ${isToday ? "bg-slate-50/50" : ""}`}>
+                                <td className="py-2 pr-4 text-slate-700">
+                                  {dateLabel}
+                                  {isToday && <span className="ml-1.5 text-xs text-slate-400">(today)</span>}
+                                </td>
+                                <td className="text-right py-2 px-3 font-mono text-slate-600">{day.firm}</td>
+                                <td className="text-right py-2 px-3 font-mono text-slate-600">{day.industry}</td>
+                                <td className="text-right py-2 px-3 font-mono font-semibold text-slate-800">{day.total}</td>
+                                <td className="text-right py-2 pl-3">
+                                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${statusCfg.cls}`}>{statusCfg.label}</span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 text-xs">No history data available.</p>
+                  )}
                 </div>
-                {/* Topic Groups */}
-                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                  <h3 className="font-semibold text-sm mb-3">Topic Groups</h3>
-                  <p className="text-xs text-slate-500 mb-2">Last run: {twitterStats?.topicGroups?.lastRunAt ? new Date(twitterStats.topicGroups.lastRunAt).toLocaleString() : "Never"}</p>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between"><span>Generated</span><span className="font-mono">{twitterStats?.topicGroups?.groupsGenerated ?? 0}</span></div>
-                    <div className="flex justify-between"><span>Errors</span><span className={`font-mono ${(twitterStats?.topicGroups?.errors ?? 0) > 0 ? "text-red-600 font-semibold" : ""}`}>{twitterStats?.topicGroups?.errors ?? 0}</span></div>
-                  </div>
-                </div>
-              </div>
+              </>
             )}
 
             <div>
