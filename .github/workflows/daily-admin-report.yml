@@ -1,0 +1,40 @@
+# Daily Admin Report — Email to admin recipients
+#
+# Builds and sends the daily admin report email covering pipeline health,
+# data alerts, and content ingested in the last 24h.
+# Runs daily at 7:00 AM UTC.
+#
+# TICKET-S12-008
+
+name: Daily Admin Report
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  send-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Send daily admin report
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ADMIN_ALERT_EMAILS: ${{ secrets.ADMIN_ALERT_EMAILS }}
+        run: npx tsx scripts/send-daily-admin-report.ts
