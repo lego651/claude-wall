@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import AdminLayout from "@/components/common/AdminLayout";
+import EmailIngestTab from "@/components/admin/EmailIngestTab";
 
 const REFRESH_MS = 30_000;
 
@@ -178,12 +179,15 @@ export default function AdminDashboardPage() {
   const [classifyLimit, setClassifyLimit] = useState(40);
   const [activeTab, setActiveTab] = useState("firms");
   const [firmsSection, setFirmsSection] = useState("payouts");
+  const [emailIngestData, setEmailIngestData] = useState(null);
+  const [emailIngestLoading, setEmailIngestLoading] = useState(false);
+  const [emailIngestError, setEmailIngestError] = useState(null);
 
   const summary = getSummaryStatus(data);
   const MAIN_TAB_IDS = ["firms", "traders", "system"];
   const MAIN_TAB_LABELS = { firms: "Firms", traders: "Traders", system: "System" };
-  /** Single row of 7 Firms sections: payouts + daily1–3 + weekly1–2 + twitter */
-  const FIRMS_SECTION_IDS = ["payouts", "daily1", "daily2", "daily3", "weekly1", "weekly2", "twitter"];
+  /** Single row of 8 Firms sections: payouts + daily1–3 + weekly1–2 + twitter + email-ingest */
+  const FIRMS_SECTION_IDS = ["payouts", "daily1", "daily2", "daily3", "weekly1", "weekly2", "twitter", "email-ingest"];
   const FIRMS_SECTION_LABELS = {
     payouts: "Payouts & data",
     daily1: "Daily 1 – Scrape",
@@ -192,15 +196,17 @@ export default function AdminDashboardPage() {
     weekly1: "Weekly 1 – Reports",
     weekly2: "Weekly 2 – Digest",
     twitter: "Twitter",
+    "email-ingest": "Email Ingest",
   };
   const DAILY_TAB_IDS = ["daily1", "daily2", "daily3"];
   const DAILY_TAB_LABELS = { daily1: "Daily 1 – Scrape", daily2: "Daily 2 – Classify", daily3: "Daily 3 – Incidents" };
   const WEEKLY_TAB_IDS = ["weekly1", "weekly2"];
   const WEEKLY_TAB_LABELS = { weekly1: "Weekly 1 – Reports", weekly2: "Weekly 2 – Digest" };
-  /** Map firmsSection to firmsSub for issue filtering: payouts | daily | weekly | twitter */
+  /** Map firmsSection to firmsSub for issue filtering: payouts | daily | weekly | twitter | email-ingest */
   const getFirmsSubFromSection = (section) => {
     if (section === "payouts") return "payouts";
     if (section === "twitter") return "twitter";
+    if (section === "email-ingest") return "email-ingest";
     if (DAILY_TAB_IDS.includes(section)) return "daily";
     if (WEEKLY_TAB_IDS.includes(section)) return "weekly";
     return "payouts";
@@ -253,7 +259,7 @@ export default function AdminDashboardPage() {
     }
   };
   /** Tab ids that show "Last run" under the tab label. */
-  const STEP_TAB_IDS = ["daily1", "daily2", "daily3", "weekly1", "weekly2", "twitter"];
+  const STEP_TAB_IDS = ["daily1", "daily2", "daily3", "weekly1", "weekly2", "twitter", "email-ingest"];
 
   /** Icons for firms nav segments (Heroicons-style). Active payouts uses purple. */
   const FIRMS_SECTION_ICONS = {
@@ -292,6 +298,11 @@ export default function AdminDashboardPage() {
         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
       </svg>
     ),
+    "email-ingest": (
+      <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    ),
   };
 
   /** Format last run for tab: relative (e.g. "2h ago") or short date if older. */
@@ -321,6 +332,7 @@ export default function AdminDashboardPage() {
     if (tabId === "weekly1") return data.generateWeeklyReportsRun?.lastRunAt ?? null;
     if (tabId === "weekly2") return data.weeklyEmailReport?.lastRunAt ?? null;
     if (tabId === "twitter") return data.twitterTweets?.lastRunAt ?? null;
+    if (tabId === "email-ingest") return emailIngestData?.lastRun ?? null;
     return null;
   };
 
@@ -363,6 +375,20 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (data && !loading) fetchClassifyStatus();
   }, [data, loading, fetchClassifyStatus]);
+
+  useEffect(() => {
+    if (activeTab !== "firms" || firmsSection !== "email-ingest") return;
+    if (emailIngestData || emailIngestLoading) return;
+    setEmailIngestLoading(true);
+    fetch("/api/admin/email-ingest/stats")
+      .then((res) => {
+        if (!res.ok) return res.json().then((j) => { throw new Error(j.error || `HTTP ${res.status}`); });
+        return res.json();
+      })
+      .then((json) => { setEmailIngestData(json); setEmailIngestError(null); })
+      .catch((e) => setEmailIngestError(e.message))
+      .finally(() => setEmailIngestLoading(false));
+  }, [activeTab, firmsSection, emailIngestData, emailIngestLoading]);
 
   const runClassify = async () => {
     setClassifyRunResult(null);
@@ -1997,6 +2023,14 @@ export default function AdminDashboardPage() {
               )}
             </section>
           </div>
+        )}
+
+        {activeTab === "firms" && firmsSection === "email-ingest" && (
+          <EmailIngestTab
+            data={emailIngestData}
+            loading={emailIngestLoading}
+            error={emailIngestError}
+          />
         )}
 
         {data && activeTab === "system" && (
