@@ -8,6 +8,9 @@
  *   renderReportHtml(data)  — pure function, returns inline-styled HTML string
  */
 
+import fs from 'fs';
+import path from 'path';
+
 import {
   SCRAPER_STALE_HOURS,
   CLASSIFIER_BACKLOG_THRESHOLD,
@@ -30,6 +33,12 @@ export interface PipelineHealth {
   stats: Record<string, number>;
 }
 
+export interface PayoutSyncSummary {
+  totalFirms: number;
+  syncedToday: number;
+  critical: string[]; // firm names not synced today
+}
+
 export interface ReportData {
   pipelines: PipelineHealth[];
   zeroPayoutFirms: string[];
@@ -39,6 +48,7 @@ export interface ReportData {
     byType: Record<string, number>;
     firmNames: string[];
   };
+  payoutSync: PayoutSyncSummary;
   generatedAt: string;
 }
 
@@ -175,6 +185,9 @@ export async function fetchReportData(): Promise<ReportData> {
     contentFirmNames = [...firmIdSet].map((id) => nameMap.get(id) ?? id);
   }
 
+  // ── 5. Payout sync status (reads _sync.json files written by the daily script) ─
+  const payoutSync = await fetchPayoutSyncSummary(supabase);
+
   return {
     pipelines,
     zeroPayoutFirms,
@@ -184,8 +197,41 @@ export async function fetchReportData(): Promise<ReportData> {
       byType,
       firmNames: contentFirmNames,
     },
+    payoutSync,
     generatedAt: new Date().toISOString(),
   };
+}
+
+const PAYOUTS_DIR = path.join(process.cwd(), 'data', 'propfirms');
+
+async function fetchPayoutSyncSummary(
+  supabase: ReturnType<typeof createServiceClient>
+): Promise<PayoutSyncSummary> {
+  const { data: firmsRows } = await supabase.from('firm_profiles').select('id, name');
+  const firms = firmsRows ?? [];
+  const today = new Date().toISOString().slice(0, 10);
+
+  const critical: string[] = [];
+  let syncedToday = 0;
+
+  for (const firm of firms as { id: string; name: string | null }[]) {
+    const syncPath = path.join(PAYOUTS_DIR, firm.id as string, '_sync.json');
+    let synced = false;
+    try {
+      const raw = fs.readFileSync(syncPath, 'utf8');
+      const data = JSON.parse(raw);
+      if (data.lastSyncDate === today) synced = true;
+    } catch {
+      // file missing or unreadable — not synced
+    }
+    if (synced) {
+      syncedToday++;
+    } else {
+      critical.push((firm.name as string | null) ?? (firm.id as string));
+    }
+  }
+
+  return { totalFirms: firms.length, syncedToday, critical };
 }
 
 // ---------------------------------------------------------------------------
@@ -259,7 +305,16 @@ export function renderReportHtml(data: ReportData): string {
       ? '<p style="color:#16a34a;font-size:14px;margin:0;">&#x2705; All systems nominal</p>'
       : `<ul style="padding-left:20px;margin:8px 0;font-size:14px;">${alertItems.join('\n')}</ul>`;
 
-  // Section C — New Content
+  // Section C — Payout Sync
+  const syncBadge = data.payoutSync.critical.length === 0
+    ? `<span style="${BADGE_STYLES.ok}">OK</span>`
+    : `<span style="${BADGE_STYLES.critical}">CRITICAL</span>`;
+
+  const syncDetail = data.payoutSync.critical.length === 0
+    ? `<span style="color:#16a34a;font-size:14px;">All ${data.payoutSync.totalFirms} firms synced today.</span>`
+    : `<span style="font-size:14px;">${data.payoutSync.syncedToday}/${data.payoutSync.totalFirms} synced today. Not synced: ${data.payoutSync.critical.join(', ')}</span>`;
+
+  // Section D — New Content
   const byTypeLines = Object.entries(data.newContent.byType)
     .map(([t, c]) => `${t}: ${c}`)
     .join(', ');
@@ -290,6 +345,9 @@ export function renderReportHtml(data: ReportData): string {
 
   <h2 style="font-size:15px;border-bottom:1px solid #e2e8f0;padding-bottom:8px;margin-top:24px;">Data Alerts</h2>
   ${sectionB}
+
+  <h2 style="font-size:15px;border-bottom:1px solid #e2e8f0;padding-bottom:8px;margin-top:24px;">Payout Sync</h2>
+  <p style="font-size:14px;margin:4px 0;">${syncBadge} &nbsp;${syncDetail}</p>
 
   <h2 style="font-size:15px;border-bottom:1px solid #e2e8f0;padding-bottom:8px;margin-top:24px;">Content Ingested (Last 24h)</h2>
   ${sectionC}

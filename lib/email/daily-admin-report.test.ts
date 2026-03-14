@@ -4,7 +4,15 @@
  */
 
 import { renderReportHtml, fetchReportData } from './daily-admin-report';
-import type { ReportData, PipelineHealth, PipelineStatus } from './daily-admin-report';
+import type { ReportData, PipelineHealth } from './daily-admin-report';
+
+jest.mock('fs', () => ({
+  readFileSync: jest.fn().mockImplementation(() => {
+    throw new Error('ENOENT');
+  }),
+}));
+
+import fs from 'fs';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -27,6 +35,7 @@ function makeData(overrides: Partial<ReportData> = {}): ReportData {
     zeroPayoutFirms: [],
     staleClassifierBacklog: 0,
     newContent: { total: 0, byType: {}, firmNames: [] },
+    payoutSync: { totalFirms: 10, syncedToday: 10, critical: [] },
     generatedAt: '2026-03-13T08:00:00.000Z',
     ...overrides,
   };
@@ -140,6 +149,23 @@ describe('renderReportHtml', () => {
     expect(html).toContain('claude-wall.vercel.app/admin/dashboard');
   });
 
+  it('shows OK badge when all firms synced today', () => {
+    const data = makeData({ payoutSync: { totalFirms: 5, syncedToday: 5, critical: [] } });
+    const html = renderReportHtml(data);
+    expect(html).toContain('Payout Sync');
+    expect(html).toContain('All 5 firms synced today');
+  });
+
+  it('shows CRITICAL badge when some firms not synced today', () => {
+    const data = makeData({
+      payoutSync: { totalFirms: 5, syncedToday: 3, critical: ['FirmA', 'FirmB'] },
+    });
+    const html = renderReportHtml(data);
+    expect(html).toContain('3/5 synced today');
+    expect(html).toContain('FirmA');
+    expect(html).toContain('FirmB');
+  });
+
   it('renders pipeline stats when present', () => {
     const data = makeData({
       pipelines: [
@@ -239,6 +265,8 @@ function buildMockSupabase(overrides: {
 describe('fetchReportData', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default: no _sync.json files present
+    (fs.readFileSync as jest.Mock).mockImplementation(() => { throw new Error('ENOENT'); });
   });
 
   it('returns a ReportData object with all required fields', async () => {
@@ -248,6 +276,7 @@ describe('fetchReportData', () => {
     expect(data).toHaveProperty('zeroPayoutFirms');
     expect(data).toHaveProperty('staleClassifierBacklog');
     expect(data).toHaveProperty('newContent');
+    expect(data).toHaveProperty('payoutSync');
     expect(data).toHaveProperty('generatedAt');
   });
 
@@ -378,5 +407,12 @@ describe('fetchReportData', () => {
     const data = await fetchReportData();
     expect(() => new Date(data.generatedAt)).not.toThrow();
     expect(data.generatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('payoutSync reports 0 synced when no _sync.json files exist', async () => {
+    mockCreateServiceClient.mockReturnValue(buildMockSupabase());
+    const data = await fetchReportData();
+    expect(data.payoutSync.syncedToday).toBe(0);
+    expect(data.payoutSync.totalFirms).toBe(0); // no firms in mock
   });
 });

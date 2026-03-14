@@ -47,6 +47,9 @@ jobs:
       - name: Check for changes
         id: git-check
         run: |
+          # Stage everything — includes _sync.json files written on every run
+          # (even when no payout data changed) so the admin dashboard can detect
+          # that the sync ran today without relying on unreliable file mtimes.
           git add data/propfirms/
           git diff --cached --quiet data/propfirms/ || echo "changes=true" >> $GITHUB_OUTPUT
 

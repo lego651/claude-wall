@@ -518,7 +518,6 @@ async function getFirmPayoutSyncDaily(supabase) {
     };
   }
 
-  const firmDirs = await fs.promises.readdir(PAYOUTS_DIR).catch(() => []);
   const dateSetByFirm = new Map();
 
   for (const firm of firms) {
@@ -528,15 +527,19 @@ async function getFirmPayoutSyncDaily(supabase) {
       dateSetByFirm.set(firm.id, new Set());
       continue;
     }
-    const entries = await fs.promises.readdir(firmPath, { withFileTypes: true }).catch(() => []);
+    // Read _sync.json written by update-firm-monthly-json.js on each daily run.
+    // Using a dedicated sync log avoids relying on file mtime, which is reset by
+    // git checkout on every Vercel deployment and only updated when new payouts exist.
+    const syncPath = path.join(firmPath, '_sync.json');
+    const syncRaw = await fs.promises.readFile(syncPath, 'utf8').catch(() => null);
     const dates = new Set();
-    for (const ent of entries) {
-      if (!ent.isFile() || !ent.name.endsWith('.json')) continue;
-      const filePath = path.join(firmPath, ent.name);
-      const fileStat = await fs.promises.stat(filePath).catch(() => null);
-      if (!fileStat?.mtime) continue;
-      const m = new Date(fileStat.mtime);
-      dates.add(m.toISOString().slice(0, 10));
+    if (syncRaw) {
+      try {
+        const syncData = JSON.parse(syncRaw);
+        if (syncData.lastSyncDate) dates.add(syncData.lastSyncDate);
+      } catch {
+        // ignore malformed sync file
+      }
     }
     dateSetByFirm.set(firm.id, dates);
   }

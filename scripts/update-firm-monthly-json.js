@@ -304,65 +304,82 @@ function saveMonthData(firmId, yearMonth, data) {
 // Main Update Logic
 // ============================================================================
 
+function writeSyncLog(firmId, syncedAt) {
+  const firmDir = path.join(PAYOUTS_DIR, firmId);
+  if (!fs.existsSync(firmDir)) {
+    fs.mkdirSync(firmDir, { recursive: true });
+  }
+  const syncDate = syncedAt.toISOString().slice(0, 10);
+  fs.writeFileSync(
+    path.join(firmDir, '_sync.json'),
+    JSON.stringify({ lastSyncDate: syncDate, syncedAt: syncedAt.toISOString() }, null, 2)
+  );
+}
+
 async function updateFirmMonth(firm, apiKey) {
   const timezone = firm.timezone || 'UTC';
   // Get current month in firm's local timezone
   const yearMonth = getCurrentYearMonthInTimezone(timezone);
-  
+
   console.log(`\n📊 Updating ${firm.name} for ${yearMonth} (timezone: ${timezone})...`);
-  
+
   // Fetch all transactions
   let allNative = [];
   let allTokens = [];
-  
+
   for (const address of firm.addresses) {
     const { native, tokens } = await fetchAllTransactions(address, apiKey);
     allNative = [...allNative, ...native];
     allTokens = [...allTokens, ...tokens];
     await sleep(500); // Rate limit between addresses
   }
-  
+
   console.log(`  Found ${allNative.length} native + ${allTokens.length} token transactions`);
-  
+
   // Process transactions for this month only (using firm's timezone)
   const transactions = processTransactionsForMonth(
-    allNative, 
-    allTokens, 
-    firm.addresses, 
-    firm.id, 
+    allNative,
+    allTokens,
+    firm.addresses,
+    firm.id,
     yearMonth,
     timezone
   );
-  
+
   console.log(`  Processed ${transactions.length} payouts for ${yearMonth}`);
-  
+
+  // Always write sync log so the admin dashboard can detect that the script ran today,
+  // even if no new payouts were found (mtime is unreliable in serverless deployments).
+  const now = new Date();
+  writeSyncLog(firm.id, now);
+
   if (transactions.length === 0) {
     console.log('  No payouts for this month');
     return { firm: firm.id, payouts: 0, changed: false };
   }
-  
+
   // Load existing data to compare
   const existing = loadExistingMonthData(firm.id, yearMonth);
   const existingCount = existing?.summary?.payoutCount || 0;
-  
+
   // Build new month data (using firm's timezone for daily buckets)
   const monthData = buildMonthData(firm.id, yearMonth, transactions, timezone);
-  
+
   // Check if anything changed
   if (existingCount === monthData.summary.payoutCount) {
     console.log(`  No new payouts (still ${existingCount})`);
     return { firm: firm.id, payouts: transactions.length, changed: false };
   }
-  
+
   // Save updated data
   const filePath = saveMonthData(firm.id, yearMonth, monthData);
   console.log(`  ✅ Saved ${filePath}`);
   console.log(`     ${existingCount} → ${monthData.summary.payoutCount} payouts`);
   console.log(`     Total: $${monthData.summary.totalPayouts.toLocaleString()}`);
-  
-  return { 
-    firm: firm.id, 
-    payouts: transactions.length, 
+
+  return {
+    firm: firm.id,
+    payouts: transactions.length,
     changed: true,
     newPayouts: monthData.summary.payoutCount - existingCount,
   };
