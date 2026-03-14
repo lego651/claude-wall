@@ -15,6 +15,8 @@ import { usageTracker } from '@/lib/arbiscan';
 import { getCacheStats } from '@/lib/cache';
 import { sendAlert, checkIntelligenceFeedAlerts } from '@/lib/alerts';
 import { getWeekNumberUtc, getYearUtc, getWeekBoundsUtc } from '@/lib/digest/week-utils';
+// Alert thresholds are centralized in lib/alert-rules.ts — import from there if adding new threshold checks here.
+// e.g. import { SCRAPER_STALE_HOURS, CLASSIFIER_BACKLOG_THRESHOLD } from '@/lib/alert-rules';
 
 /** Incident detection: current week (UTC) and per-firm incident counts (for admin dashboard). */
 async function getIncidentDetectionStatus(supabase, trustpilotFirms) {
