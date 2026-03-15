@@ -1,0 +1,41 @@
+# Daily — YouTube News Ingest
+#
+# Fetches top YouTube videos from the channel watchlist + keyword searches,
+# scores them, picks top 3, generates AI summaries, and writes to youtube_daily_picks.
+#
+# Schedule: 07:00 UTC daily (after Twitter pipeline at 14:00 UTC previous day).
+# Requires repo secrets: YOUTUBE_API_KEY, OPENAI_API_KEY,
+#                        NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+
+name: Daily – YouTube News Ingest
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  youtube-ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run YouTube news ingest
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/fetch-youtube-news.ts
