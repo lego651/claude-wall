@@ -20,20 +20,31 @@ const mockFrom = jest.fn();
 const mockUpdate = jest.fn();
 const mockEq = jest.fn();
 const mockUpsert = jest.fn();
+const mockIn = jest.fn();
+
+// Build a keywords query chain: .select().eq().order().limit() → resolves
+function makeKeywordChain(data: unknown[], error: null | { message: string } = null) {
+  const mockLimit = jest.fn().mockResolvedValue({ data, error });
+  const mockOrder = jest.fn().mockReturnValue({ limit: mockLimit });
+  const mockEqFn = jest.fn().mockReturnValue({ order: mockOrder });
+  return { eq: mockEqFn };
+}
+
+// Build a channels query chain: .select().eq() → resolves
+function makeChannelChain(data: unknown[], error: null | { message: string } = null) {
+  return { eq: jest.fn().mockResolvedValue({ data, error }) };
+}
 
 function buildSupabaseMock() {
-  mockEq.mockReturnThis();
-  mockUpdate.mockReturnValue({ eq: mockEq });
+  mockIn.mockResolvedValue({ error: null });
+  mockUpdate.mockReturnValue({ eq: mockEq, in: mockIn });
   mockUpsert.mockResolvedValue({ error: null });
 
-  // Chain: from → select → eq → resolves
-  mockFrom.mockImplementation((table: string) => {
-    return {
-      select: mockSelect,
-      update: mockUpdate,
-      upsert: mockUpsert,
-    };
-  });
+  mockFrom.mockImplementation(() => ({
+    select: mockSelect,
+    update: mockUpdate,
+    upsert: mockUpsert,
+  }));
 
   (createServiceClient as jest.Mock).mockReturnValue({ from: mockFrom });
 }
@@ -43,7 +54,7 @@ const REFERENCE_DATE = new Date("2024-01-02T10:00:00Z");
 const MOCK_CHANNELS = [
   { channel_id: "UC1", channel_name: "Channel 1", upload_playlist_id: "UU1" },
 ];
-const MOCK_KEYWORDS = [{ keyword: "prop firm" }];
+const MOCK_KEYWORDS = [{ id: "kw1", keyword: "prop firm", last_searched_at: null }];
 
 const MOCK_RAW_VIDEOS = [
   {
@@ -87,28 +98,22 @@ const MOCK_RAW_VIDEOS = [
 const MOCK_SCORED = MOCK_RAW_VIDEOS.map((v, i) => ({ ...v, score: 0.9 - i * 0.1 }));
 const MOCK_TOP3 = MOCK_SCORED.slice(0, 3);
 
+// Default select mock: call 1 = channels, call 2+ = keywords
+function setDefaultSelectMock() {
+  let selectCallCount = 0;
+  mockSelect.mockImplementation(() => {
+    selectCallCount++;
+    return selectCallCount === 1
+      ? makeChannelChain(MOCK_CHANNELS)
+      : makeKeywordChain(MOCK_KEYWORDS);
+  });
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   process.env.YOUTUBE_API_KEY = "test-key";
   buildSupabaseMock();
-
-  // Default DB responses
-  mockSelect.mockImplementation(() => ({
-    eq: jest.fn().mockImplementation(() => ({
-      // channel query returns channels, keyword query returns keywords
-      then: undefined,
-    })),
-  }));
-
-  // Patch select to return appropriate data based on call order
-  let selectCallCount = 0;
-  mockSelect.mockImplementation(() => {
-    selectCallCount++;
-    const data = selectCallCount === 1 ? MOCK_CHANNELS : MOCK_KEYWORDS;
-    return {
-      eq: jest.fn().mockResolvedValue({ data, error: null }),
-    };
-  });
+  setDefaultSelectMock();
 
   (fetchVideosFromChannels as jest.Mock).mockResolvedValue(MOCK_RAW_VIDEOS.slice(0, 2));
   (fetchVideosByKeyword as jest.Mock).mockResolvedValue([MOCK_RAW_VIDEOS[2]]);
@@ -131,9 +136,9 @@ describe("runYouTubeIngest", () => {
   });
 
   it("throws if channels DB query fails", async () => {
-    mockSelect.mockImplementationOnce(() => ({
-      eq: jest.fn().mockResolvedValue({ data: null, error: { message: "DB error" } }),
-    }));
+    mockSelect.mockImplementationOnce(() =>
+      makeChannelChain([], { message: "DB error" })
+    );
     await expect(runYouTubeIngest(REFERENCE_DATE)).rejects.toThrow("Failed to load channels");
   });
 
@@ -151,11 +156,9 @@ describe("runYouTubeIngest", () => {
     let selectCallCount = 0;
     mockSelect.mockImplementation(() => {
       selectCallCount++;
-      const data = selectCallCount === 1 ? MOCK_CHANNELS : MOCK_KEYWORDS;
-      const error = selectCallCount === 2 ? { message: "kw DB error" } : null;
-      return {
-        eq: jest.fn().mockResolvedValue({ data, error }),
-      };
+      return selectCallCount === 1
+        ? makeChannelChain(MOCK_CHANNELS)
+        : makeKeywordChain([], { message: "kw DB error" });
     });
 
     const result = await runYouTubeIngest(REFERENCE_DATE);
@@ -166,13 +169,9 @@ describe("runYouTubeIngest", () => {
     let selectCallCount = 0;
     mockSelect.mockImplementation(() => {
       selectCallCount++;
-      const data =
-        selectCallCount === 1
-          ? [{ channel_id: "UC1", channel_name: "Ch1", upload_playlist_id: null }]
-          : MOCK_KEYWORDS;
-      return {
-        eq: jest.fn().mockResolvedValue({ data, error: null }),
-      };
+      return selectCallCount === 1
+        ? makeChannelChain([{ channel_id: "UC1", channel_name: "Ch1", upload_playlist_id: null }])
+        : makeKeywordChain(MOCK_KEYWORDS);
     });
 
     await runYouTubeIngest(REFERENCE_DATE);

@@ -42,6 +42,89 @@ function formatSubscribers(n: number): string {
   return String(n);
 }
 
+// ── Prop firm lists (source: propfirmmatch.com + industry knowledge) ─────────
+export const CFD_FIRMS = [
+  "FTMO",
+  "The5ers",
+  "FXIFY",
+  "Funding Pips",
+  "FundedNext",
+  "True Forex Funds",
+  "Lux Trading Firm",
+  "City Traders Imperium",
+  "Blue Guardian",
+  "BrightFunded",
+  "E8 Funding",
+  "Blueberry Funded",
+  "Audacity Capital",
+  "Hola Prime",
+  "Traders With Edge",
+  "My Funded Capital",
+  "The Funded Trader",
+  "TTT Markets",
+  "Funding Traders",
+];
+
+export const FUTURES_FIRMS = [
+  "Apex Trader Funding",
+  "Topstep",
+  "Tradeify",
+  "My Funded Futures",
+  "Top One Futures",
+  "TradeDay",
+  "Alpha Futures",
+  "Take Profit Trader",
+  "AquaFutures",
+  "Blue Guardian Futures",
+  "The Trading Pit",
+  "E8 Futures",
+  "Earn2Trade",
+  "FundedNext Futures",
+  "Blueberry Futures",
+];
+
+const ALL_FIRMS = [...CFD_FIRMS, ...FUTURES_FIRMS];
+
+interface KeywordTemplate {
+  id: string;
+  label: string;
+  pattern: string; // {var} is replaced by each selected value
+  vars: string[];
+}
+
+const KEYWORD_TEMPLATES: KeywordTemplate[] = [
+  {
+    id: "best_year",
+    label: "best prop firm [year]",
+    pattern: "best prop firm {var}",
+    vars: ["2023", "2024", "2025", "2026", "2027"],
+  },
+  {
+    id: "type_propfirm",
+    label: "[type] prop firm",
+    pattern: "{var} prop firm",
+    vars: ["forex", "futures", "CFD", "crypto", "stocks"],
+  },
+  {
+    id: "propfirm_topic",
+    label: "prop firm [topic]",
+    pattern: "prop firm {var}",
+    vars: ["strategies", "strategy", "news", "challenges", "challenge", "payouts", "tips", "review", "trading", "trader", "rules", "funded"],
+  },
+  {
+    id: "firm_review",
+    label: "[firm] review",
+    pattern: "{var} review",
+    vars: ALL_FIRMS,
+  },
+  {
+    id: "firm_challenge",
+    label: "[firm] challenge",
+    pattern: "{var} challenge",
+    vars: ALL_FIRMS,
+  },
+];
+
 const CATEGORIES = [
   "prop_firm_official",
   "trading_educator",
@@ -77,9 +160,6 @@ export default function ChannelManagementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [seeding, setSeeding] = useState(false);
-  const [seedMsg, setSeedMsg] = useState<string | null>(null);
-
   // Add channel — lookup flow
   const [lookupUrl, setLookupUrl] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -95,6 +175,20 @@ export default function ChannelManagementPage() {
   const [newKeyword, setNewKeyword] = useState("");
   const [addingKeyword, setAddingKeyword] = useState(false);
   const [addKeywordError, setAddKeywordError] = useState<string | null>(null);
+
+  // Keyword generator
+  const [genTemplateId, setGenTemplateId] = useState<string>(KEYWORD_TEMPLATES[0].id);
+  const [genSelected, setGenSelected] = useState<Set<string>>(new Set(KEYWORD_TEMPLATES[0].vars));
+  const [bulkAdding, setBulkAdding] = useState(false);
+  const [bulkMsg, setBulkMsg] = useState<string | null>(null);
+
+  // Channel finder (discover official prop firm channels via YouTube search)
+  const [finderOpen, setFinderOpen] = useState(false);
+  const [firmResults, setFirmResults] = useState<
+    Record<string, Array<{ channel_id: string; channel_name: string; description: string; thumbnail: string }>>
+  >({});
+  const [firmLoading, setFirmLoading] = useState<Set<string>>(new Set());
+  const [addingFromFinder, setAddingFromFinder] = useState<string | null>(null); // channel_id being added
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -225,27 +319,87 @@ export default function ChannelManagementPage() {
     }
   }
 
-  async function restoreDefaults() {
-    setSeeding(true);
-    setSeedMsg(null);
+  async function searchFirmChannel(firmName: string) {
+    setFirmLoading((prev) => new Set(prev).add(firmName));
     try {
-      const res = await fetch("/api/admin/youtube/seed", { method: "POST" });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Failed to restore defaults");
+      const res = await fetch(
+        `/api/admin/youtube/search-channel?name=${encodeURIComponent(firmName)}`
+      );
+      const data = await res.json();
+      if (res.ok) {
+        setFirmResults((prev) => ({ ...prev, [firmName]: data.channels ?? [] }));
       }
-      setSeedMsg("Defaults restored");
-      await fetchData();
-    } catch (err) {
-      setSeedMsg(err instanceof Error ? err.message : "Failed");
     } finally {
-      setSeeding(false);
-      setTimeout(() => setSeedMsg(null), 3000);
+      setFirmLoading((prev) => {
+        const next = new Set(prev);
+        next.delete(firmName);
+        return next;
+      });
+    }
+  }
+
+  async function addChannelFromFinder(
+    channelId: string,
+    channelName: string,
+    firmType: "cfd" | "futures"
+  ) {
+    setAddingFromFinder(channelId);
+    try {
+      const res = await fetch("/api/admin/youtube/channels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          channel_id: channelId,
+          channel_name: channelName,
+          category: "prop_firm_official",
+          // hint for context only — category is locked to prop_firm_official here
+          _firmType: firmType,
+        }),
+      });
+      if (res.ok) await fetchData();
+    } finally {
+      setAddingFromFinder(null);
+    }
+  }
+
+  function selectTemplate(id: string) {
+    setGenTemplateId(id);
+    const tpl = KEYWORD_TEMPLATES.find((t) => t.id === id)!;
+    setGenSelected(new Set(tpl.vars));
+  }
+
+  async function bulkAddKeywords(toAdd: string[]) {
+    if (toAdd.length === 0) return;
+    setBulkAdding(true);
+    setBulkMsg(null);
+    try {
+      await Promise.all(
+        toAdd.map((keyword) =>
+          fetch("/api/admin/youtube/keywords", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ keyword }),
+          })
+        )
+      );
+      setBulkMsg(`Added ${toAdd.length} keyword${toAdd.length !== 1 ? "s" : ""}`);
+      await fetchData();
+      setTimeout(() => setBulkMsg(null), 3000);
+    } catch {
+      setBulkMsg("Some keywords failed to add");
+    } finally {
+      setBulkAdding(false);
     }
   }
 
   const activeChannels = channels.filter((c) => c.active).length;
   const activeKeywords = keywords.filter((k) => k.active).length;
+
+  // Keyword generator computed values
+  const genTemplate = KEYWORD_TEMPLATES.find((t) => t.id === genTemplateId)!;
+  const existingKeywordSet = new Set(keywords.map((k) => k.keyword.toLowerCase()));
+  const generatedKeywords = [...genSelected].map((v) => genTemplate.pattern.replace("{var}", v));
+  const newKeywordsToAdd = generatedKeywords.filter((k) => !existingKeywordSet.has(k.toLowerCase()));
 
   // Channels to show based on category filter
   const visibleChannels =
@@ -284,22 +438,6 @@ export default function ChannelManagementPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              className="btn btn-sm btn-ghost gap-1"
-              onClick={restoreDefaults}
-              disabled={seeding}
-              title="Re-add any missing default channels and keywords"
-            >
-              {seeding ? (
-                <span className="loading loading-spinner loading-xs" />
-              ) : (
-                <span>↺</span>
-              )}
-              Restore Defaults
-            </button>
-            {seedMsg && (
-              <span className="text-xs text-success">{seedMsg}</span>
-            )}
             <Link href="/admin/news/debug" className="btn btn-sm btn-outline">
               Debug Top-15
             </Link>
@@ -421,6 +559,157 @@ export default function ChannelManagementPage() {
                   </button>
                 </div>
               </form>
+            )}
+          </div>
+
+          {/* Find Official Channels */}
+          <div className="card bg-base-100 border border-base-200 p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm">Find Official Channels</h3>
+              <button
+                type="button"
+                className="btn btn-xs btn-ghost"
+                onClick={() => setFinderOpen((v) => !v)}
+              >
+                {finderOpen ? "Hide" : "Show"} ({ALL_FIRMS.length} firms)
+              </button>
+            </div>
+            <p className="text-xs text-base-content/40">
+              Search YouTube for official prop firm channels. Click a firm to find candidates, then pick the right one.
+            </p>
+
+            {finderOpen && (
+              <div className="space-y-4">
+                {/* CFD Firms */}
+                <div>
+                  <p className="text-xs font-semibold text-base-content/50 mb-2">CFD / Forex</p>
+                  <div className="space-y-2">
+                    {CFD_FIRMS.map((firm) => {
+                      const alreadyAdded = channels.some((c) =>
+                        c.channel_name.toLowerCase().includes(firm.toLowerCase())
+                      );
+                      const results = firmResults[firm];
+                      const loading = firmLoading.has(firm);
+                      return (
+                        <div key={firm} className="space-y-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-medium w-48 shrink-0">{firm}</span>
+                            {alreadyAdded ? (
+                              <span className="badge badge-sm badge-success">In DB</span>
+                            ) : (
+                              <button
+                                type="button"
+                                className="btn btn-xs btn-outline"
+                                disabled={loading}
+                                onClick={() => searchFirmChannel(firm)}
+                              >
+                                {loading ? <span className="loading loading-spinner loading-xs" /> : "Find on YouTube"}
+                              </button>
+                            )}
+                          </div>
+                          {results && results.length === 0 && (
+                            <p className="text-xs text-base-content/30 ml-50">No results found</p>
+                          )}
+                          {results && results.length > 0 && !alreadyAdded && (
+                            <div className="ml-4 space-y-1">
+                              {results.map((ch) => (
+                                <div
+                                  key={ch.channel_id}
+                                  className="flex items-center gap-2 p-2 rounded-lg bg-base-200/50 border border-base-200"
+                                >
+                                  {ch.thumbnail && (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={ch.thumbnail} alt="" className="w-6 h-6 rounded-full shrink-0" />
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{ch.channel_name}</p>
+                                    {ch.description && (
+                                      <p className="text-xs text-base-content/40 truncate">{ch.description}</p>
+                                    )}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="btn btn-xs btn-primary shrink-0"
+                                    disabled={addingFromFinder === ch.channel_id}
+                                    onClick={() => addChannelFromFinder(ch.channel_id, ch.channel_name, "cfd")}
+                                  >
+                                    {addingFromFinder === ch.channel_id ? "Adding..." : "Add"}
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Futures Firms */}
+                <div>
+                  <p className="text-xs font-semibold text-base-content/50 mb-2">Futures</p>
+                  <div className="space-y-2">
+                    {FUTURES_FIRMS.map((firm) => {
+                      const alreadyAdded = channels.some((c) =>
+                        c.channel_name.toLowerCase().includes(firm.toLowerCase())
+                      );
+                      const results = firmResults[firm];
+                      const loading = firmLoading.has(firm);
+                      return (
+                        <div key={firm} className="space-y-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-medium w-48 shrink-0">{firm}</span>
+                            {alreadyAdded ? (
+                              <span className="badge badge-sm badge-success">In DB</span>
+                            ) : (
+                              <button
+                                type="button"
+                                className="btn btn-xs btn-outline"
+                                disabled={loading}
+                                onClick={() => searchFirmChannel(firm)}
+                              >
+                                {loading ? <span className="loading loading-spinner loading-xs" /> : "Find on YouTube"}
+                              </button>
+                            )}
+                          </div>
+                          {results && results.length === 0 && (
+                            <p className="text-xs text-base-content/30">No results found</p>
+                          )}
+                          {results && results.length > 0 && !alreadyAdded && (
+                            <div className="ml-4 space-y-1">
+                              {results.map((ch) => (
+                                <div
+                                  key={ch.channel_id}
+                                  className="flex items-center gap-2 p-2 rounded-lg bg-base-200/50 border border-base-200"
+                                >
+                                  {ch.thumbnail && (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={ch.thumbnail} alt="" className="w-6 h-6 rounded-full shrink-0" />
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{ch.channel_name}</p>
+                                    {ch.description && (
+                                      <p className="text-xs text-base-content/40 truncate">{ch.description}</p>
+                                    )}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="btn btn-xs btn-primary shrink-0"
+                                    disabled={addingFromFinder === ch.channel_id}
+                                    onClick={() => addChannelFromFinder(ch.channel_id, ch.channel_name, "futures")}
+                                  >
+                                    {addingFromFinder === ch.channel_id ? "Adding..." : "Add"}
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 
@@ -587,6 +876,106 @@ export default function ChannelManagementPage() {
               </p>
             </div>
           )}
+
+          {/* Keyword Generator */}
+          <div className="card bg-base-100 border border-base-200 p-5 space-y-4">
+            <h3 className="font-bold text-sm">Generate Keywords</h3>
+
+            {/* Template selector */}
+            <div className="flex flex-wrap gap-1">
+              {KEYWORD_TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  className={`btn btn-xs ${genTemplateId === tpl.id ? "btn-primary" : "btn-ghost"}`}
+                  onClick={() => selectTemplate(tpl.id)}
+                >
+                  {tpl.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Variable checkboxes */}
+            <div className="space-y-2">
+              <div className="flex gap-1 mb-1">
+                <button
+                  type="button"
+                  className="btn btn-xs btn-ghost"
+                  onClick={() => setGenSelected(new Set(genTemplate.vars))}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-xs btn-ghost"
+                  onClick={() => setGenSelected(new Set())}
+                >
+                  None
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-2">
+                {genTemplate.vars.map((v) => (
+                  <label key={v} className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-xs checkbox-primary"
+                      checked={genSelected.has(v)}
+                      onChange={(e) => {
+                        setGenSelected((prev) => {
+                          const next = new Set(prev);
+                          if (e.target.checked) next.add(v);
+                          else next.delete(v);
+                          return next;
+                        });
+                      }}
+                    />
+                    <span className="text-sm">{v}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Preview */}
+            {genSelected.size > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs text-base-content/50">
+                  <span className="text-base-content/80 font-medium">{newKeywordsToAdd.length} new</span>
+                  {generatedKeywords.length - newKeywordsToAdd.length > 0 && (
+                    <> · {generatedKeywords.length - newKeywordsToAdd.length} already exist</>
+                  )}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {generatedKeywords.map((kw) => {
+                    const isNew = !existingKeywordSet.has(kw.toLowerCase());
+                    return (
+                      <span
+                        key={kw}
+                        className={`badge badge-sm ${isNew ? "badge-outline" : "badge-ghost opacity-30 line-through"}`}
+                      >
+                        {kw}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                onClick={() => bulkAddKeywords(newKeywordsToAdd)}
+                disabled={bulkAdding || newKeywordsToAdd.length === 0}
+              >
+                {bulkAdding ? (
+                  <><span className="loading loading-spinner loading-xs" /> Adding...</>
+                ) : (
+                  `Add ${newKeywordsToAdd.length} keyword${newKeywordsToAdd.length !== 1 ? "s" : ""}`
+                )}
+              </button>
+              {bulkMsg && <span className="text-xs text-success">{bulkMsg}</span>}
+            </div>
+          </div>
 
           {/* Add keyword form */}
           <form

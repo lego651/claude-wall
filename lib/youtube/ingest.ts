@@ -71,16 +71,21 @@ export async function runYouTubeIngest(
     }
   }
 
-  // 3. Load active keywords
+  // 3. Load active keywords — rotate through long lists within quota budget.
+  // search.list costs 100 units each; daily budget is 10,000 units.
+  // We reserve ~2,000 units for channel ops, leaving room for ~60 keyword searches.
+  const KEYWORD_SEARCH_LIMIT = 60;
+
   const { data: keywordRows, error: kwErr } = await supabase
     .from("youtube_keywords")
-    .select("keyword")
-    .eq("active", true);
+    .select("id, keyword, last_searched_at")
+    .eq("active", true)
+    .order("last_searched_at", { ascending: true, nullsFirst: true })
+    .limit(KEYWORD_SEARCH_LIMIT);
 
   if (kwErr) errors.push(`Failed to load keywords: ${kwErr.message}`);
-  const keywords: string[] = ((keywordRows ?? []) as { keyword: string }[]).map(
-    (r) => r.keyword
-  );
+  const keywordRecords = (keywordRows ?? []) as { id: string; keyword: string; last_searched_at: string | null }[];
+  const keywords = keywordRecords.map((r) => r.keyword);
 
   // 4. Fetch videos — try 24h window first, extend to 48h if < 3
   let windowHours = 24;
@@ -108,6 +113,16 @@ export async function runYouTubeIngest(
 
     candidates = [...channelVideos, ...keywordVideos];
     if (candidates.length >= 3) break;
+  }
+
+  // Mark searched keywords so rotation picks least-recently-searched next run.
+  if (keywordRecords.length > 0) {
+    const ids = keywordRecords.map((r) => r.id);
+    const { error: updateErr } = await supabase
+      .from("youtube_keywords")
+      .update({ last_searched_at: referenceDate.toISOString() })
+      .in("id", ids);
+    if (updateErr) errors.push(`Failed to update last_searched_at: ${updateErr.message}`);
   }
 
   // 5. Score + pick top 15 (for debug) and top 3 (for /news page)
