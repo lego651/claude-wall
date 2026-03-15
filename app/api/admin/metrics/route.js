@@ -524,7 +524,7 @@ async function getFirmPayoutSyncDaily(supabase) {
     const firmPath = path.join(PAYOUTS_DIR, firm.id);
     const stat = await fs.promises.stat(firmPath).catch(() => null);
     if (!stat?.isDirectory()) {
-      dateSetByFirm.set(firm.id, new Set());
+      // No local data directory — DB-only placeholder (e.g. "Industry"). Skip it.
       continue;
     }
     // Read _sync.json written by update-firm-monthly-json.js on each daily run.
@@ -545,7 +545,7 @@ async function getFirmPayoutSyncDaily(supabase) {
   }
 
   const dayDates = days.map((d) => d.date);
-  const result = firms.map((firm) => {
+  const result = firms.filter((f) => dateSetByFirm.has(f.id)).map((firm) => {
     const datesSet = dateSetByFirm.get(firm.id) || new Set();
     const byDate = {};
     for (let i = 0; i < dayDates.length; i++) {
