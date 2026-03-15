@@ -4,11 +4,25 @@
  * score = (normalized_views × 0.4) + (engagement_rate × 0.4) + (freshness_factor × 0.2)
  *
  * normalized_views   = video_views / max_views_in_set  (0–1)
- * engagement_rate    = min((likes + comments) / max(views, 1), 1.0)  (capped at 1.0)
+ * engagement_rate    = min((likes + comments) / (views + ENGAGEMENT_SMOOTHING), 1.0)
+ *                      Smoothing prevents low-view videos from getting a perfect
+ *                      engagement score (e.g. 4 likes / 5 views = 0.80, not 1.0).
  * freshness_factor   = max(0, 1 - (hours_since_published / windowHours))
+ *
+ * Candidates with fewer than MIN_VIEWS are excluded before scoring.
  */
 
 import type { RawVideo } from "./fetch-videos";
+
+/** Videos with fewer views than this are filtered out before scoring. */
+export const MIN_VIEWS = 100;
+
+/**
+ * Smoothing constant added to the denominator of engagement_rate.
+ * Prevents tiny-sample manipulation (e.g. 5 likes / 5 views = 1.0).
+ * At 500 views the effect is small (<20%); at 5 views it's decisive.
+ */
+export const ENGAGEMENT_SMOOTHING = 500;
 
 export interface ScoredVideo extends RawVideo {
   score: number;
@@ -21,13 +35,19 @@ export function scoreVideos(
 ): ScoredVideo[] {
   if (videos.length === 0) return [];
 
-  const maxViews = Math.max(...videos.map((v) => v.views), 1);
+  // Filter out low-view candidates — statistically unreliable engagement
+  const eligible = videos.filter((v) => v.views >= MIN_VIEWS);
+  if (eligible.length === 0) return [];
 
-  return videos.map((video) => {
+  const maxViews = Math.max(...eligible.map((v) => v.views), 1);
+
+  return eligible.map((video) => {
     const normalizedViews = video.views / maxViews;
 
+    // Smoothed engagement: adding ENGAGEMENT_SMOOTHING to denominator prevents
+    // a video with 4 likes / 5 views from scoring equal to one with 10K likes / 500K views
     const engagementRate = Math.min(
-      (video.likes + video.comments) / Math.max(video.views, 1),
+      (video.likes + video.comments) / (video.views + ENGAGEMENT_SMOOTHING),
       1.0
     );
 
