@@ -9,6 +9,7 @@
  *   5. If < 3 in 24h window, extend to 48h and retry once
  *   6. Pick top 3, generate AI summaries
  *   7. Upsert into youtube_daily_picks for today
+ *   8. Upsert top 15 into youtube_daily_candidates for debug/tuning
  *
  * Returns a structured result for the cron route to log.
  */
@@ -109,9 +110,10 @@ export async function runYouTubeIngest(
     if (candidates.length >= 3) break;
   }
 
-  // 5. Score + pick top 3
+  // 5. Score + pick top 15 (for debug) and top 3 (for /news page)
   const scored: ScoredVideo[] = scoreVideos(candidates, referenceDate, windowHours);
-  const top3 = pickTopVideos(scored, 3);
+  const top15 = pickTopVideos(scored, 15);
+  const top3 = top15.slice(0, 3);
 
   // 6. Generate AI summaries
   const summaries = await summarizeVideos(
@@ -151,6 +153,34 @@ export async function runYouTubeIngest(
       errors.push(`Failed to upsert picks: ${upsertErr.message}`);
     } else {
       picksInserted = rows.length;
+    }
+  }
+
+  // 8. Upsert top 15 candidates for debug/tuning
+  const candidateRows = top15.map((video, i) => ({
+    candidate_date: pickDate,
+    rank: i + 1,
+    video_id: video.videoId,
+    title: video.title,
+    channel_name: video.channelName,
+    channel_id: video.channelId,
+    thumbnail_url: video.thumbnailUrl || null,
+    video_url: `https://www.youtube.com/watch?v=${video.videoId}`,
+    views: video.views,
+    likes: video.likes,
+    comments: video.comments,
+    published_at: video.publishedAt,
+    score: video.score,
+    source: video.source,
+    window_hours: windowHours,
+  }));
+
+  if (candidateRows.length > 0) {
+    const { error: candErr } = await supabase
+      .from("youtube_daily_candidates")
+      .upsert(candidateRows, { onConflict: "candidate_date,rank" });
+    if (candErr) {
+      errors.push(`Failed to upsert candidates: ${candErr.message}`);
     }
   }
 

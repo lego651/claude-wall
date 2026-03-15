@@ -187,6 +187,9 @@ export default function ChannelManagementPage() {
               {activeChannels} active channels · {activeKeywords} active keywords
             </p>
           </div>
+          <Link href="/admin/news/debug" className="btn btn-sm btn-outline gap-2">
+            Debug Top-15
+          </Link>
           <Link href="/news" target="_blank" className="btn btn-sm btn-outline gap-2">
             View /news page
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
