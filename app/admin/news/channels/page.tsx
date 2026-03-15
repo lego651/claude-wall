@@ -106,7 +106,11 @@ export default function ChannelManagementPage() {
       ]);
       if (!chRes.ok || !kwRes.ok) throw new Error("Failed to fetch data");
       const [chData, kwData] = await Promise.all([chRes.json(), kwRes.json()]);
-      setChannels(chData.channels ?? []);
+      setChannels(
+        (chData.channels ?? []).sort((a: Channel, b: Channel) =>
+          a.channel_name.toLowerCase().localeCompare(b.channel_name.toLowerCase())
+        )
+      );
       setKeywords(kwData.keywords ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
