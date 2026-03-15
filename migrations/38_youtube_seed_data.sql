@@ -11,19 +11,6 @@ INSERT INTO youtube_channels (channel_id, channel_name, category) VALUES
   ('UCf6-7VuMxaS7zWuPz_pVVjw', 'True Forex Funds',      'prop_firm_official'),
   ('UCzmNNRdopK_VilGHLwzJJXg', 'BluFX Trading',         'prop_firm_official'),
 
-  -- trading_educator
-  ('UCEgRcLsCN-VELZSSa5HZxcw', 'Rayner Teo',            'trading_educator'),
-  ('UCbFBMSTGUhXy3z8V2kJkE9Q', 'Anton Kreil',           'trading_educator'),
-  ('UCmXDvDKe-4DKG3yjbNmHyLw', 'Adam Khoo',             'trading_educator'),
-  ('UCDRUsJoFW9Lf-5IFqrQfpDw', 'Urban Forex',           'trading_educator'),
-  ('UCwJCFkV0S3cGMoNqT4RHf_g', 'ForexSignals TV',       'trading_educator'),
-  ('UC0h-GYZTVfDz4LCMM6iT8mw', 'TraderNick',            'trading_educator'),
-  ('UCBqYtZWFBfG1vy9bsOvp98Q', 'The Trading Channel',   'trading_educator'),
-  ('UCYs7qBj2DPRKnJdMDFKjIOg', 'SMC Trading Concepts',  'trading_educator'),
-  ('UCQg8nkyOJVcGXkFx8fRVAbg', 'Babypips',              'trading_educator'),
-  ('UCXaYQ2P0JL7h4TSF8FPBmow', 'Trader Dante',          'trading_educator'),
-  ('UCrj9WG6tkm5_b_VE7oNDTRw', 'ICT Inner Circle',      'trading_educator'),
-
   -- prop_firm_review
   ('UCn4FWyY1M4MH-JN0SWFk5VA', 'Those Who Trade',       'prop_firm_review'),
   ('UC3YF4BO0C5LUfNRVy9HkxRQ', 'Prop Firm Reviews',     'prop_firm_review'),
