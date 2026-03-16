@@ -131,21 +131,51 @@ async function getFileStats() {
 }
 
 async function getDbStats(supabase) {
-  const tables = ['firm_profiles', 'firm_recent_payouts', 'firm_trustpilot_reviews', 'firm_daily_incidents', 'firm_weekly_reports', 'user_subscriptions'];
-  const counts = {};
+  const tables = [
+    'firm_profiles',
+    'firm_recent_payouts',
+    'firm_trustpilot_reviews',
+    'firm_daily_incidents',
+    'firm_weekly_reports',
+    'firm_content_items',
+    'firm_twitter_tweets',
+    'firm_email_senders',
+    'industry_news_items',
+    'twitter_topic_groups',
+    'youtube_channels',
+    'youtube_keywords',
+    'youtube_daily_picks',
+    'youtube_daily_candidates',
+    'trader_recent_payouts',
+    'trader_history_payouts',
+    'user_subscriptions',
+    'user_profiles',
+    'pending_wallets',
+    'cron_last_run',
+  ];
+  const rawCounts = {};
   const start = Date.now();
   let ok = true;
   for (const table of tables) {
     try {
       const { count, error } = await supabase.from(table).select('*', { count: 'exact', head: true });
-      counts[table] = error ? null : count;
+      rawCounts[table] = error ? null : count;
       if (error) ok = false;
     } catch {
-      counts[table] = null;
+      rawCounts[table] = null;
       ok = false;
     }
   }
   const latencyMs = Date.now() - start;
+  // Sort by count descending (nulls last)
+  const counts = Object.fromEntries(
+    Object.entries(rawCounts).sort(([, a], [, b]) => {
+      if (a == null && b == null) return 0;
+      if (a == null) return 1;
+      if (b == null) return -1;
+      return b - a;
+    })
+  );
   return { counts, latencyMs, ok };
 }
 

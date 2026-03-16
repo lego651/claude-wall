@@ -2329,12 +2329,19 @@ function AdminDashboardPageInner() {
                   </thead>
                   <tbody>
                     {data.database &&
-                      Object.entries(data.database).map(([table, count]) => (
-                        <tr key={table}>
-                          <td className="font-mono text-sm">{table}</td>
-                          <td className="text-right tabular-nums">{count != null ? count.toLocaleString() : "—"}</td>
-                        </tr>
-                      ))}
+                      Object.entries(data.database)
+                        .sort(([, a], [, b]) => {
+                          if (a == null && b == null) return 0;
+                          if (a == null) return 1;
+                          if (b == null) return -1;
+                          return b - a;
+                        })
+                        .map(([table, count]) => (
+                          <tr key={table}>
+                            <td className="font-mono text-sm">{table}</td>
+                            <td className="text-right tabular-nums">{count != null ? count.toLocaleString() : "—"}</td>
+                          </tr>
+                        ))}
                   </tbody>
                 </table>
               </div>
