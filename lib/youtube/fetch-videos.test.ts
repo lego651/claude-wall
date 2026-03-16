@@ -71,10 +71,9 @@ describe("getPlaylistVideoIds", () => {
     expect(result).toHaveLength(1);
   });
 
-  it("returns empty array on HTTP error", async () => {
-    mockFetch({}, false);
-    const result = await getPlaylistVideoIds("PLtest", API_KEY);
-    expect(result).toEqual([]);
+  it("throws on HTTP error", async () => {
+    mockFetch({ error: { message: "quota exceeded" } }, false);
+    await expect(getPlaylistVideoIds("PLtest", API_KEY)).rejects.toThrow("YouTube API");
   });
 });
 
@@ -218,10 +217,9 @@ describe("fetchVideosFromChannels", () => {
 describe("fetchVideosByKeyword", () => {
   const referenceDate = new Date("2024-01-02T10:00:00Z");
 
-  it("returns empty array on HTTP error", async () => {
-    mockFetch({}, false);
-    const result = await fetchVideosByKeyword("prop firm", API_KEY, referenceDate);
-    expect(result).toEqual([]);
+  it("throws on HTTP error", async () => {
+    mockFetch({ error: { message: "quota exceeded" } }, false);
+    await expect(fetchVideosByKeyword("prop firm", API_KEY, referenceDate)).rejects.toThrow("YouTube API");
   });
 
   it("returns empty array when no search items", async () => {

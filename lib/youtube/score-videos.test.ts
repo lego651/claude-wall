@@ -1,4 +1,11 @@
-import { scoreVideos, pickTopVideos, MIN_VIEWS, ENGAGEMENT_SMOOTHING } from "./score-videos";
+import {
+  scoreVideos,
+  pickTopVideos,
+  scoreAndMerge,
+  MIN_VIEWS,
+  ENGAGEMENT_SMOOTHING,
+  CROSS_APPEARING_BONUS,
+} from "./score-videos";
 import type { RawVideo } from "./fetch-videos";
 
 const REF_DATE = new Date("2024-01-02T10:00:00Z");
@@ -87,8 +94,6 @@ describe("scoreVideos", () => {
   });
 
   it("smoothing prevents low-view video from outscoring high-view video on engagement alone", () => {
-    // Without smoothing: 5/5 views = 1.0 engagement (full score)
-    // With smoothing: 5/(5+500) = 0.0099 engagement (near zero)
     const lowView = makeVideo({
       videoId: "low",
       views: MIN_VIEWS,
@@ -106,16 +111,12 @@ describe("scoreVideos", () => {
     const scored = scoreVideos([lowView, highView], REF_DATE);
     const high = scored.find((v) => v.videoId === "high")!;
     const low = scored.find((v) => v.videoId === "low")!;
-    // High-view video should win despite lower engagement rate
     expect(high.score).toBeGreaterThan(low.score);
   });
 
   it("engagement uses ENGAGEMENT_SMOOTHING constant in denominator", () => {
-    // Verify the smoothing formula: (likes+comments) / (views + ENGAGEMENT_SMOOTHING)
     const video = makeVideo({ views: ENGAGEMENT_SMOOTHING, likes: ENGAGEMENT_SMOOTHING, comments: 0 });
     const [scored] = scoreVideos([video], REF_DATE);
-    // engagement = SMOOTHING / (SMOOTHING + SMOOTHING) = 0.5
-    // score = 1.0×0.4 (normalizedViews, only video) + 0.5×0.4 + freshness×0.2
     const expectedEngagement = 0.5;
     const expectedNV = 1.0;
     const hoursSince = (REF_DATE.getTime() - new Date("2024-01-02T05:00:00Z").getTime()) / 3_600_000;
@@ -169,5 +170,114 @@ describe("pickTopVideos", () => {
 
   it("returns empty for empty input", () => {
     expect(pickTopVideos([], 3)).toEqual([]);
+  });
+});
+
+describe("scoreAndMerge", () => {
+  const channelVids: RawVideo[] = [
+    makeVideo({ videoId: "c1", source: "channel", views: 400, likes: 20, comments: 5, publishedAt: "2024-01-02T08:00:00Z" }),
+    makeVideo({ videoId: "c2", source: "channel", views: 200, likes: 10, comments: 2, publishedAt: "2024-01-02T07:00:00Z" }),
+  ];
+  const keywordVids: RawVideo[] = [
+    makeVideo({ videoId: "k1", source: "keyword", views: 8000, likes: 400, comments: 60, publishedAt: "2024-01-02T09:00:00Z" }),
+    makeVideo({ videoId: "k2", source: "keyword", views: 5000, likes: 200, comments: 30, publishedAt: "2024-01-02T06:00:00Z" }),
+  ];
+
+  it("returns merged, channelPool, and keywordPool", () => {
+    const result = scoreAndMerge(channelVids, keywordVids, REF_DATE);
+    expect(result.merged.length).toBeGreaterThan(0);
+    expect(result.channelPool.length).toBeGreaterThan(0);
+    expect(result.keywordPool.length).toBeGreaterThan(0);
+  });
+
+  it("channelPool contains only channel-sourced videos", () => {
+    const { channelPool } = scoreAndMerge(channelVids, keywordVids, REF_DATE);
+    expect(channelPool.every((v) => v.source === "channel")).toBe(true);
+  });
+
+  it("keywordPool contains only keyword-sourced videos", () => {
+    const { keywordPool } = scoreAndMerge(channelVids, keywordVids, REF_DATE);
+    expect(keywordPool.every((v) => v.source === "keyword")).toBe(true);
+  });
+
+  it("channel pool scores are normalized independently (best channel video gets score >= keyword videos even with lower views)", () => {
+    const { channelPool, keywordPool } = scoreAndMerge(channelVids, keywordVids, REF_DATE);
+    // Best channel video normalizedViews = 1.0 within its pool
+    // Best keyword video normalizedViews = 1.0 within its pool
+    // So both best videos should have comparable scores despite very different raw view counts
+    const bestChannel = channelPool[0].score;
+    const bestKeyword = keywordPool[0].score;
+    // Both should be meaningful scores (not near 0)
+    expect(bestChannel).toBeGreaterThan(0.3);
+    expect(bestKeyword).toBeGreaterThan(0.3);
+  });
+
+  it("cross-appearing video receives CROSS_APPEARING_BONUS and appears in merged", () => {
+    const crossVideo: RawVideo = makeVideo({
+      videoId: "cross",
+      source: "channel",
+      views: 300,
+      likes: 15,
+      comments: 3,
+      publishedAt: "2024-01-02T08:30:00Z",
+    });
+    const crossAsKeyword: RawVideo = { ...crossVideo, source: "keyword" };
+    const ch = [...channelVids, crossVideo];
+    const kw = [...keywordVids, crossAsKeyword];
+
+    const { merged } = scoreAndMerge(ch, kw, REF_DATE);
+    const crossInMerged = merged.find((v) => v.videoId === "cross");
+    expect(crossInMerged).toBeDefined();
+
+    // Without bonus, cross video would score modestly; with +0.3 it should be near top
+    const crossRank = merged.findIndex((v) => v.videoId === "cross") + 1;
+    expect(crossRank).toBeLessThanOrEqual(2); // guaranteed top-2 with +0.3 bonus
+  });
+
+  it("cross-appearing video score is capped at 1.0", () => {
+    const crossVideo: RawVideo = makeVideo({
+      videoId: "cross",
+      source: "channel",
+      views: 10000,
+      likes: 5000,
+      comments: 500,
+      publishedAt: "2024-01-02T09:50:00Z",
+    });
+    const crossAsKeyword: RawVideo = { ...crossVideo, source: "keyword" };
+    const { merged } = scoreAndMerge([crossVideo], [crossAsKeyword], REF_DATE);
+    const crossEntry = merged.find((v) => v.videoId === "cross")!;
+    expect(crossEntry.score).toBeLessThanOrEqual(1.0);
+  });
+
+  it("cross-appearing video appears only once in merged", () => {
+    const crossVideo: RawVideo = makeVideo({ videoId: "cross", source: "channel" });
+    const crossAsKeyword: RawVideo = { ...crossVideo, source: "keyword" };
+    const { merged } = scoreAndMerge([crossVideo], [crossAsKeyword], REF_DATE);
+    const crossCount = merged.filter((v) => v.videoId === "cross").length;
+    expect(crossCount).toBe(1);
+  });
+
+  it("merged result is sorted by score descending", () => {
+    const { merged } = scoreAndMerge(channelVids, keywordVids, REF_DATE);
+    const scores = merged.map((v) => v.score);
+    expect(scores).toEqual([...scores].sort((a, b) => b - a));
+  });
+
+  it("handles empty channel pool gracefully", () => {
+    const { merged, channelPool, keywordPool } = scoreAndMerge([], keywordVids, REF_DATE);
+    expect(channelPool).toHaveLength(0);
+    expect(keywordPool.length).toBeGreaterThan(0);
+    expect(merged.length).toBeGreaterThan(0);
+  });
+
+  it("handles empty keyword pool gracefully", () => {
+    const { merged, channelPool, keywordPool } = scoreAndMerge(channelVids, [], REF_DATE);
+    expect(keywordPool).toHaveLength(0);
+    expect(channelPool.length).toBeGreaterThan(0);
+    expect(merged.length).toBeGreaterThan(0);
+  });
+
+  it("CROSS_APPEARING_BONUS constant matches expected value", () => {
+    expect(CROSS_APPEARING_BONUS).toBe(0.3);
   });
 });

@@ -22,7 +22,7 @@ import {
   type ChannelRow,
   type RawVideo,
 } from "./fetch-videos";
-import { scoreVideos, pickTopVideos, type ScoredVideo } from "./score-videos";
+import { scoreAndMerge, pickTopVideos, type ScoredVideo } from "./score-videos";
 import { summarizeVideos } from "./summarize-video";
 
 export interface IngestResult {
@@ -87,32 +87,49 @@ export async function runYouTubeIngest(
   const keywordRecords = (keywordRows ?? []) as { id: string; keyword: string; last_searched_at: string | null }[];
   const keywords = keywordRecords.map((r) => r.keyword);
 
-  // 4. Fetch videos — try 24h window first, extend to 48h if < 3
+  // 4. Fetch videos — try 24h window first, extend to 48h if < 3.
+  // Keep channel and keyword videos separate so each pool can be scored independently.
   let windowHours = 24;
-  let candidates: RawVideo[] = [];
+  let channelVideos: RawVideo[] = [];
+  let keywordVideos: RawVideo[] = [];
 
+  let fetchAborted = false;
   for (const attempt of [24, 48]) {
     windowHours = attempt;
-    const channelVideos = await fetchVideosFromChannels(
-      channels,
-      apiKey,
-      referenceDate,
-      windowHours
-    );
 
-    const keywordVideos: RawVideo[] = [];
-    for (const keyword of keywords) {
-      const vids = await fetchVideosByKeyword(
-        keyword,
+    try {
+      channelVideos = await fetchVideosFromChannels(
+        channels,
         apiKey,
         referenceDate,
         windowHours
       );
-      keywordVideos.push(...vids);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      errors.push(`Channel fetch failed: ${msg}`);
+      fetchAborted = true;
+      break;
     }
 
-    candidates = [...channelVideos, ...keywordVideos];
-    if (candidates.length >= 3) break;
+    keywordVideos = [];
+    for (const keyword of keywords) {
+      try {
+        const vids = await fetchVideosByKeyword(
+          keyword,
+          apiKey,
+          referenceDate,
+          windowHours
+        );
+        keywordVideos.push(...vids);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`Keyword fetch failed: ${msg}`);
+        fetchAborted = true;
+        break;
+      }
+    }
+
+    if (fetchAborted || channelVideos.length + keywordVideos.length >= 3) break;
   }
 
   // Mark searched keywords so rotation picks least-recently-searched next run.
@@ -125,9 +142,16 @@ export async function runYouTubeIngest(
     if (updateErr) errors.push(`Failed to update last_searched_at: ${updateErr.message}`);
   }
 
-  // 5. Score + pick top 15 (for debug) and top 3 (for /news page)
-  const scored: ScoredVideo[] = scoreVideos(candidates, referenceDate, windowHours);
-  const top15 = pickTopVideos(scored, 15);
+  // 5. Score each pool independently then merge.
+  // Channel and keyword pools normalize views within their own set so high-view
+  // keyword results don't suppress channel video scores.
+  const { merged, channelPool, keywordPool } = scoreAndMerge(
+    channelVideos,
+    keywordVideos,
+    referenceDate,
+    windowHours
+  );
+  const top15 = pickTopVideos(merged, 15);
   const top3 = top15.slice(0, 3);
 
   // 6. Generate AI summaries
@@ -171,29 +195,38 @@ export async function runYouTubeIngest(
     }
   }
 
-  // 8. Upsert top 15 candidates for debug/tuning
-  const candidateRows = top15.map((video, i) => ({
-    candidate_date: pickDate,
-    rank: i + 1,
-    video_id: video.videoId,
-    title: video.title,
-    channel_name: video.channelName,
-    channel_id: video.channelId,
-    thumbnail_url: video.thumbnailUrl || null,
-    video_url: `https://www.youtube.com/watch?v=${video.videoId}`,
-    views: video.views,
-    likes: video.likes,
-    comments: video.comments,
-    published_at: video.publishedAt,
-    score: video.score,
-    source: video.source,
-    window_hours: windowHours,
-  }));
+  // 8. Upsert candidates for debug/tuning — three pools stored separately:
+  //    merged (top 15), channel (top 10), keyword (top 10)
+  const buildCandidateRows = (videos: ScoredVideo[], pool: string) =>
+    videos.map((video, i) => ({
+      candidate_date: pickDate,
+      rank: i + 1,
+      video_id: video.videoId,
+      title: video.title,
+      channel_name: video.channelName,
+      channel_id: video.channelId,
+      thumbnail_url: video.thumbnailUrl || null,
+      video_url: `https://www.youtube.com/watch?v=${video.videoId}`,
+      views: video.views,
+      likes: video.likes,
+      comments: video.comments,
+      published_at: video.publishedAt,
+      score: video.score,
+      source: video.source,
+      window_hours: windowHours,
+      pool,
+    }));
 
-  if (candidateRows.length > 0) {
+  const allCandidateRows = [
+    ...buildCandidateRows(top15, "merged"),
+    ...buildCandidateRows(channelPool, "channel"),
+    ...buildCandidateRows(keywordPool, "keyword"),
+  ];
+
+  if (allCandidateRows.length > 0) {
     const { error: candErr } = await supabase
       .from("youtube_daily_candidates")
-      .upsert(candidateRows, { onConflict: "candidate_date,rank" });
+      .upsert(allCandidateRows, { onConflict: "candidate_date,rank,pool" });
     if (candErr) {
       errors.push(`Failed to upsert candidates: ${candErr.message}`);
     }
@@ -201,7 +234,7 @@ export async function runYouTubeIngest(
 
   return {
     date: pickDate,
-    candidatesFound: candidates.length,
+    candidatesFound: channelVideos.length + keywordVideos.length,
     windowHoursUsed: windowHours,
     picksInserted,
     errors,

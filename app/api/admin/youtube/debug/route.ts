@@ -20,7 +20,14 @@ export async function GET() {
       .order("rank");
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ candidates: data ?? [], date: today });
+
+    const rows = data ?? [];
+    return NextResponse.json({
+      merged: rows.filter((r) => r.pool === "merged" || !r.pool),
+      channelPool: rows.filter((r) => r.pool === "channel"),
+      keywordPool: rows.filter((r) => r.pool === "keyword"),
+      date: today,
+    });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Unknown error" },

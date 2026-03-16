@@ -62,7 +62,10 @@ export async function getPlaylistVideoIds(
     `${YT_BASE}/playlistItems?part=contentDetails&playlistId=${encodeURIComponent(playlistId)}` +
     `&maxResults=${maxResults}&key=${apiKey}`;
   const res = await fetch(url);
-  if (!res.ok) return [];
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as { error?: { message?: string } };
+    throw new Error(`YouTube API ${res.status}: ${body.error?.message ?? res.statusText}`);
+  }
   const data = (await res.json()) as {
     items?: { contentDetails?: { videoId?: string; videoPublishedAt?: string } }[];
   };
@@ -156,6 +159,7 @@ export async function fetchVideosFromChannels(
 
   for (const ch of channels) {
     if (!ch.upload_playlist_id) continue;
+    // Let API errors (quota, auth) propagate — they affect all channels equally
     const items = await getPlaylistVideoIds(ch.upload_playlist_id, apiKey, 10);
     for (const item of items) {
       if (!item.publishedAt) continue;
@@ -215,7 +219,10 @@ export async function fetchVideosByKeyword(
     `&publishedAfter=${publishedAfter}&maxResults=${maxResults}&order=viewCount&key=${apiKey}`;
 
   const res = await fetch(url);
-  if (!res.ok) return [];
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as { error?: { message?: string } };
+    throw new Error(`YouTube API ${res.status}: ${body.error?.message ?? res.statusText}`);
+  }
 
   const data = (await res.json()) as {
     items?: {

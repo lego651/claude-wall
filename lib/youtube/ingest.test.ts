@@ -12,7 +12,7 @@ import {
   fetchVideosByKeyword,
   resolveUploadPlaylistId,
 } from "./fetch-videos";
-import { scoreVideos, pickTopVideos } from "./score-videos";
+import { scoreAndMerge, pickTopVideos } from "./score-videos";
 import { summarizeVideos } from "./summarize-video";
 
 const mockSelect = jest.fn();
@@ -117,7 +117,11 @@ beforeEach(() => {
 
   (fetchVideosFromChannels as jest.Mock).mockResolvedValue(MOCK_RAW_VIDEOS.slice(0, 2));
   (fetchVideosByKeyword as jest.Mock).mockResolvedValue([MOCK_RAW_VIDEOS[2]]);
-  (scoreVideos as jest.Mock).mockReturnValue(MOCK_SCORED);
+  (scoreAndMerge as jest.Mock).mockReturnValue({
+    merged: MOCK_SCORED,
+    channelPool: MOCK_SCORED.filter((v) => v.source === "channel"),
+    keywordPool: MOCK_SCORED.filter((v) => v.source === "keyword"),
+  });
   (pickTopVideos as jest.Mock).mockReturnValue(MOCK_TOP3);
   (summarizeVideos as jest.Mock).mockResolvedValue(["Summary 1", "Summary 2", "Summary 3"]);
   (resolveUploadPlaylistId as jest.Mock).mockResolvedValue("UUnew");
