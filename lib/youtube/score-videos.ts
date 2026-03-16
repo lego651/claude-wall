@@ -120,9 +120,6 @@ export function scoreAndMerge(
   const channelScored = scoreVideos(channelVideos, referenceDate, windowHours);
   const keywordScored = scoreVideos(keywordVideos, referenceDate, windowHours);
 
-  const channelScoreMap = new Map<string, number>(
-    channelScored.map((v) => [v.videoId, v.score])
-  );
   const keywordScoreMap = new Map<string, number>(
     keywordScored.map((v) => [v.videoId, v.score])
   );

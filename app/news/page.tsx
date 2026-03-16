@@ -149,6 +149,8 @@ export default async function NewsPage() {
     timeZone: "UTC",
   });
 
+  const twitterHandle = process.env.NEXT_PUBLIC_TWITTER_HANDLE;
+
   return (
     <main className="max-w-6xl mx-auto px-4 py-12 space-y-16">
       {/* Header */}
@@ -159,14 +161,47 @@ export default async function NewsPage() {
         <h1 className="text-3xl md:text-4xl font-black text-base-content">
           Prop Trading News
         </h1>
-        <p className="text-base-content/50 text-sm font-medium">{displayDate}</p>
+        <p className="text-base-content/50 text-sm font-medium">
+          {displayDate} · Updated daily at 07:00 UTC
+        </p>
+      </div>
+
+      {/* Digest signup CTA */}
+      <div className="card bg-primary/5 border border-primary/20 max-w-xl mx-auto">
+        <div className="card-body p-6 gap-3 text-center">
+          <h2 className="font-black text-base text-base-content">
+            Get the weekly intelligence report
+          </h2>
+          <p className="text-sm text-base-content/60">
+            Payout trends, firm incidents, and top content — delivered every Sunday.
+          </p>
+          <Link
+            href="/onboarding"
+            className="btn btn-primary btn-sm w-full sm:w-auto sm:mx-auto"
+          >
+            Subscribe free →
+          </Link>
+        </div>
       </div>
 
       {/* YouTube Section */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">▶</span>
-          <h2 className="text-xl font-black text-base-content">Top Videos Today</h2>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">▶</span>
+            <h2 className="text-xl font-black text-base-content">Top Videos Today</h2>
+          </div>
+          {twitterHandle && (
+            <a
+              href={`https://twitter.com/${twitterHandle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-sm text-base-content/50 hover:text-primary transition-colors"
+            >
+              <span>𝕏</span>
+              <span>@{twitterHandle}</span>
+            </a>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -175,7 +210,7 @@ export default async function NewsPage() {
               <YouTubeCard key={pick.video_id} pick={pick} />
             ))
           ) : (
-            <EmptyState label="No video picks yet today — check back after 07:00 UTC" />
+            <EmptyState label="No video picks yet — updated daily at 07:00 UTC" />
           )}
         </div>
       </section>
