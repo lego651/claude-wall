@@ -25,6 +25,7 @@ export interface RawVideo {
   comments: number;
   thumbnailUrl: string;
   source: "channel" | "keyword";
+  isLiveStream: boolean;
 }
 
 export interface ChannelRow {
@@ -86,7 +87,7 @@ export async function getVideoStats(
 ): Promise<
   Record<
     string,
-    { title: string; channelId: string; channelName: string; views: number; likes: number; comments: number; thumbnailUrl: string }
+    { title: string; channelId: string; channelName: string; views: number; likes: number; comments: number; thumbnailUrl: string; isLiveStream: boolean }
   >
 > {
   if (videoIds.length === 0) return {};
@@ -94,14 +95,17 @@ export async function getVideoStats(
   const BATCH = 50;
   const result: Record<
     string,
-    { title: string; channelId: string; channelName: string; views: number; likes: number; comments: number; thumbnailUrl: string }
+    { title: string; channelId: string; channelName: string; views: number; likes: number; comments: number; thumbnailUrl: string; isLiveStream: boolean }
   > = {};
 
   for (let i = 0; i < videoIds.length; i += BATCH) {
     const batch = videoIds.slice(i, i + BATCH);
     const ids = batch.map(encodeURIComponent).join(",");
+    // liveStreamingDetails is present on ALL live broadcast videos (live or ended VOD).
+    // Regular uploads never have it — this is more reliable than liveBroadcastContent,
+    // which reverts to "none" the moment a stream ends.
     const url =
-      `${YT_BASE}/videos?part=snippet,statistics&id=${ids}&key=${apiKey}`;
+      `${YT_BASE}/videos?part=snippet,statistics,liveStreamingDetails&id=${ids}&key=${apiKey}`;
     const res = await fetch(url);
     if (!res.ok) continue;
 
@@ -112,6 +116,7 @@ export async function getVideoStats(
           title?: string;
           channelId?: string;
           channelTitle?: string;
+          liveBroadcastContent?: string;
           thumbnails?: { medium?: { url?: string }; default?: { url?: string } };
         };
         statistics?: {
@@ -119,12 +124,22 @@ export async function getVideoStats(
           likeCount?: string;
           commentCount?: string;
         };
+        liveStreamingDetails?: {
+          actualStartTime?: string;
+          actualEndTime?: string;
+        };
       }[];
     };
 
     for (const item of data.items ?? []) {
       const id = item.id ?? "";
       if (!id) continue;
+      // Treat as live stream if liveStreamingDetails exists (live broadcast or ended VOD)
+      // OR if liveBroadcastContent is explicitly "live" / "upcoming"
+      const isLiveStream =
+        !!item.liveStreamingDetails ||
+        item.snippet?.liveBroadcastContent === "live" ||
+        item.snippet?.liveBroadcastContent === "upcoming";
       result[id] = {
         title: item.snippet?.title ?? "",
         channelId: item.snippet?.channelId ?? "",
@@ -136,6 +151,7 @@ export async function getVideoStats(
           item.snippet?.thumbnails?.medium?.url ??
           item.snippet?.thumbnails?.default?.url ??
           "",
+        isLiveStream,
       };
     }
   }
@@ -143,46 +159,64 @@ export async function getVideoStats(
   return result;
 }
 
+export interface FetchChannelsResult {
+  videos: RawVideo[];
+  errors: string[];
+}
+
 /**
  * Fetch recent videos from a list of channels.
  * Each channel must have upload_playlist_id already resolved.
  * Only returns videos published within `windowHours` hours of `referenceDate`.
+ *
+ * Per-channel 404s (stale playlist ID) are non-fatal and collected in `errors`.
+ * Quota/auth errors (403) are re-thrown to abort the entire fetch.
  */
 export async function fetchVideosFromChannels(
   channels: ChannelRow[],
   apiKey: string,
   referenceDate: Date,
   windowHours = 24
-): Promise<RawVideo[]> {
+): Promise<FetchChannelsResult> {
   const cutoff = new Date(referenceDate.getTime() - windowHours * 60 * 60 * 1000);
   const allVideoIds: { videoId: string; publishedAt: string; channelId: string; channelName: string }[] = [];
+  const errors: string[] = [];
 
   for (const ch of channels) {
     if (!ch.upload_playlist_id) continue;
-    // Let API errors (quota, auth) propagate — they affect all channels equally
-    const items = await getPlaylistVideoIds(ch.upload_playlist_id, apiKey, 10);
-    for (const item of items) {
-      if (!item.publishedAt) continue;
-      const pub = new Date(item.publishedAt);
-      if (pub >= cutoff && pub <= referenceDate) {
-        allVideoIds.push({
-          videoId: item.videoId,
-          publishedAt: item.publishedAt,
-          channelId: ch.channel_id,
-          channelName: ch.channel_name,
-        });
+    try {
+      const items = await getPlaylistVideoIds(ch.upload_playlist_id, apiKey, 10);
+      for (const item of items) {
+        if (!item.publishedAt) continue;
+        const pub = new Date(item.publishedAt);
+        if (pub >= cutoff && pub <= referenceDate) {
+          allVideoIds.push({
+            videoId: item.videoId,
+            publishedAt: item.publishedAt,
+            channelId: ch.channel_id,
+            channelName: ch.channel_name,
+          });
+        }
       }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      // Quota/auth errors affect all channels — re-throw to abort
+      if (msg.includes("403") || msg.toLowerCase().includes("quota")) {
+        throw err;
+      }
+      // Channel-specific errors (e.g. 404 stale playlist) — skip and record
+      errors.push(`Playlist fetch failed for ${ch.channel_id}: ${msg}`);
     }
   }
 
-  if (allVideoIds.length === 0) return [];
+  if (allVideoIds.length === 0) return { videos: [], errors };
 
   const statsMap = await getVideoStats(
     allVideoIds.map((v) => v.videoId),
     apiKey
   );
 
-  const channelVideos = allVideoIds.flatMap((v) => {
+  const videos = allVideoIds.flatMap((v) => {
     const stats = statsMap[v.videoId];
     if (!stats) return [];
     const video: RawVideo = {
@@ -196,10 +230,11 @@ export async function fetchVideosFromChannels(
       comments: stats.comments,
       thumbnailUrl: stats.thumbnailUrl,
       source: "channel",
+      isLiveStream: stats.isLiveStream,
     };
     return [video];
   });
-  return channelVideos;
+  return { videos, errors };
 }
 
 /**
@@ -232,6 +267,7 @@ export async function fetchVideosByKeyword(
         channelId?: string;
         channelTitle?: string;
         publishedAt?: string;
+        liveBroadcastContent?: string;
         thumbnails?: { medium?: { url?: string }; default?: { url?: string } };
       };
     }[];
@@ -262,6 +298,10 @@ export async function fetchVideosByKeyword(
         item.snippet?.thumbnails?.default?.url ??
         stats.thumbnailUrl,
       source: "keyword",
+      isLiveStream:
+        item.snippet?.liveBroadcastContent === "live" ||
+        item.snippet?.liveBroadcastContent === "upcoming" ||
+        stats.isLiveStream,
     };
     return [video];
   });

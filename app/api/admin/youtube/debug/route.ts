@@ -23,9 +23,12 @@ export async function GET() {
 
     const rows = data ?? [];
     return NextResponse.json({
-      merged: rows.filter((r) => r.pool === "merged" || !r.pool),
-      channelPool: rows.filter((r) => r.pool === "channel"),
-      keywordPool: rows.filter((r) => r.pool === "keyword"),
+      videoMerged:   rows.filter((r) => r.pool === "video-merged"),
+      liveMerged:    rows.filter((r) => r.pool === "live-merged"),
+      videoChannel:  rows.filter((r) => r.pool === "video-channel"),
+      liveChannel:   rows.filter((r) => r.pool === "live-channel"),
+      videoKeyword:  rows.filter((r) => r.pool === "video-keyword"),
+      liveKeyword:   rows.filter((r) => r.pool === "live-keyword"),
       date: today,
     });
   } catch (err) {

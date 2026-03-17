@@ -20,6 +20,7 @@ import {
   fetchVideosByKeyword,
   resolveUploadPlaylistId,
   type ChannelRow,
+  type FetchChannelsResult,
   type RawVideo,
 } from "./fetch-videos";
 import { scoreAndMerge, pickTopVideos, type ScoredVideo } from "./score-videos";
@@ -30,6 +31,7 @@ export interface IngestResult {
   candidatesFound: number;
   windowHoursUsed: number;
   picksInserted: number;
+  livePicksInserted: number;
   errors: string[];
 }
 
@@ -97,8 +99,9 @@ export async function runYouTubeIngest(
   for (const attempt of [24, 48]) {
     windowHours = attempt;
 
+    let channelResult: FetchChannelsResult;
     try {
-      channelVideos = await fetchVideosFromChannels(
+      channelResult = await fetchVideosFromChannels(
         channels,
         apiKey,
         referenceDate,
@@ -110,6 +113,8 @@ export async function runYouTubeIngest(
       fetchAborted = true;
       break;
     }
+    channelVideos = channelResult.videos;
+    errors.push(...channelResult.errors);
 
     keywordVideos = [];
     for (const keyword of keywords) {
@@ -151,22 +156,27 @@ export async function runYouTubeIngest(
     referenceDate,
     windowHours
   );
-  const top15 = pickTopVideos(merged, 15);
-  const top3 = top15.slice(0, 3);
 
-  // 6. Generate AI summaries
+  // 5b. Split every pool into live / non-live, scored independently within each group
+  const nonLiveMerged = merged.filter((v) => !v.isLiveStream);
+  const liveMerged = merged.filter((v) => v.isLiveStream);
+  const top10NonLive = pickTopVideos(nonLiveMerged, 10);
+  const top3Live = pickTopVideos(liveMerged, 3);
+
+  // 6. Generate AI summaries for top 3 non-live videos only
+  const top3ForSummary = top10NonLive.slice(0, 3);
   const summaries = await summarizeVideos(
-    top3.map((v) => ({
+    top3ForSummary.map((v) => ({
       title: v.title,
       channelName: v.channelName,
       views: v.views,
     }))
   );
 
-  // 7. Upsert picks for today
-  const rows = top3.map((video, i) => ({
+  // 7. Upsert picks for today — non-live videos (up to 10) + live streams (up to 3)
+  const buildPickRow = (video: ScoredVideo, rank: number, videoType: "video" | "live", summary: string | null) => ({
     pick_date: pickDate,
-    rank: i + 1,
+    rank,
     video_id: video.videoId,
     title: video.title,
     channel_name: video.channelName,
@@ -178,25 +188,35 @@ export async function runYouTubeIngest(
     comments: video.comments,
     published_at: video.publishedAt,
     score: video.score,
-    ai_summary: summaries[i] ?? null,
+    ai_summary: summary,
     source: video.source,
-  }));
+    video_type: videoType,
+  });
+
+  const videoRows = top10NonLive.map((v, i) =>
+    buildPickRow(v, i + 1, "video", summaries[i] ?? null)
+  );
+  const liveRows = top3Live.map((v, i) =>
+    buildPickRow(v, i + 1, "live", null)
+  );
+  const allPickRows = [...videoRows, ...liveRows];
 
   let picksInserted = 0;
-  if (rows.length > 0) {
+  let livePicksInserted = 0;
+  if (allPickRows.length > 0) {
     const { error: upsertErr } = await supabase
       .from("youtube_daily_picks")
-      .upsert(rows, { onConflict: "pick_date,rank" });
+      .upsert(allPickRows, { onConflict: "pick_date,rank,video_type" });
 
     if (upsertErr) {
       errors.push(`Failed to upsert picks: ${upsertErr.message}`);
     } else {
-      picksInserted = rows.length;
+      picksInserted = videoRows.length;
+      livePicksInserted = liveRows.length;
     }
   }
 
-  // 8. Upsert candidates for debug/tuning — three pools stored separately:
-  //    merged (top 15), channel (top 10), keyword (top 10)
+  // 8. Upsert candidates for debug/tuning — six pools: live/non-live × merged/channel/keyword
   const buildCandidateRows = (videos: ScoredVideo[], pool: string) =>
     videos.map((video, i) => ({
       candidate_date: pickDate,
@@ -215,12 +235,24 @@ export async function runYouTubeIngest(
       source: video.source,
       window_hours: windowHours,
       pool,
+      is_live_stream: video.isLiveStream,
     }));
 
+  // Split channel/keyword pools into live and non-live
+  const channelNonLive = pickTopVideos(channelPool.filter((v) => !v.isLiveStream), 10);
+  const channelLive    = pickTopVideos(channelPool.filter((v) => v.isLiveStream), 5);
+  const keywordNonLive = pickTopVideos(keywordPool.filter((v) => !v.isLiveStream), 10);
+  const keywordLive    = pickTopVideos(keywordPool.filter((v) => v.isLiveStream), 5);
+  const mergedNonLive  = pickTopVideos(nonLiveMerged, 20);
+  const mergedLive     = pickTopVideos(liveMerged, 10);
+
   const allCandidateRows = [
-    ...buildCandidateRows(top15, "merged"),
-    ...buildCandidateRows(channelPool, "channel"),
-    ...buildCandidateRows(keywordPool, "keyword"),
+    ...buildCandidateRows(mergedNonLive,  "video-merged"),
+    ...buildCandidateRows(mergedLive,     "live-merged"),
+    ...buildCandidateRows(channelNonLive, "video-channel"),
+    ...buildCandidateRows(channelLive,    "live-channel"),
+    ...buildCandidateRows(keywordNonLive, "video-keyword"),
+    ...buildCandidateRows(keywordLive,    "live-keyword"),
   ];
 
   if (allCandidateRows.length > 0) {
@@ -237,6 +269,7 @@ export async function runYouTubeIngest(
     candidatesFound: channelVideos.length + keywordVideos.length,
     windowHoursUsed: windowHours,
     picksInserted,
+    livePicksInserted,
     errors,
   };
 }

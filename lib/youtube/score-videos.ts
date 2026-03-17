@@ -148,7 +148,7 @@ export function scoreAndMerge(
 
   return {
     merged,
-    channelPool: pickTopVideos(channelScored, 10),
-    keywordPool: pickTopVideos(keywordScored, 10),
+    channelPool: pickTopVideos(channelScored, 20),
+    keywordPool: pickTopVideos(keywordScored, 20),
   };
 }

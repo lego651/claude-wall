@@ -1,11 +1,12 @@
 /**
- * Public /news page — daily top-3 YouTube videos + top-3 Twitter posts.
- * Server component — reads from DB on each request (fresh picks).
+ * Public /news page — top YouTube videos, top live streams, history, and top tweets.
+ * Data is server-fetched; interactive expand lives in <YouTubeSection>.
  */
 
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { getSEOTags } from "@/lib/seo";
+import { YouTubeSection, type YouTubePick } from "./YouTubeSection";
 
 export const metadata = getSEOTags({
   title: "Daily Prop Trading News | Top Videos & Tweets",
@@ -15,18 +16,6 @@ export const metadata = getSEOTags({
 });
 
 export const dynamic = "force-dynamic";
-
-interface YouTubePick {
-  rank: number;
-  video_id: string;
-  title: string;
-  channel_name: string;
-  thumbnail_url: string | null;
-  video_url: string;
-  views: number;
-  ai_summary: string | null;
-  published_at: string;
-}
 
 interface Tweet {
   id: string;
@@ -38,51 +27,30 @@ interface Tweet {
   tweeted_at: string;
 }
 
+interface HistoryPick {
+  pick_date: string;
+  rank: number;
+  video_id: string;
+  title: string;
+  channel_name: string;
+  thumbnail_url: string | null;
+  video_url: string;
+  views: number;
+}
+
 function formatViews(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return String(n);
 }
 
-function YouTubeCard({ pick }: { pick: YouTubePick }) {
-  return (
-    <a
-      href={pick.video_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-shadow group"
-    >
-      <figure className="relative aspect-video bg-base-200 overflow-hidden rounded-t-2xl">
-        {pick.thumbnail_url ? (
-          <img
-            src={pick.thumbnail_url}
-            alt={pick.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-base-content/30 text-4xl">
-            ▶
-          </div>
-        )}
-        <span className="absolute top-3 left-3 badge badge-error text-white font-black text-xs">
-          #{pick.rank}
-        </span>
-      </figure>
-      <div className="card-body gap-2 p-5">
-        <h3 className="font-bold text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-          {pick.title}
-        </h3>
-        <div className="flex items-center gap-2 text-sm text-base-content/50">
-          <span className="font-semibold">{pick.channel_name}</span>
-          <span>·</span>
-          <span>{formatViews(pick.views)} views</span>
-        </div>
-        {pick.ai_summary && (
-          <p className="text-sm text-base-content/70 line-clamp-3 mt-1">{pick.ai_summary}</p>
-        )}
-      </div>
-    </a>
-  );
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 function TweetCard({ tweet }: { tweet: Tweet }) {
@@ -111,12 +79,42 @@ function TweetCard({ tweet }: { tweet: Tweet }) {
   );
 }
 
-function EmptyState({ label }: { label: string }) {
+function HistoryDay({ date, picks }: { date: string; picks: HistoryPick[] }) {
   return (
-    <div className="col-span-3 flex flex-col items-center justify-center py-16 text-base-content/30 gap-3">
-      <span className="text-4xl">📭</span>
-      <p className="font-semibold">{label}</p>
-    </div>
+    <details className="group border border-base-200 rounded-xl overflow-hidden">
+      <summary className="flex items-center justify-between px-5 py-4 cursor-pointer select-none bg-base-100 hover:bg-base-200/50 transition-colors list-none">
+        <span className="font-semibold text-sm text-base-content">{formatDate(date)}</span>
+        <span className="text-xs text-base-content/40 group-open:rotate-180 transition-transform">▼</span>
+      </summary>
+      <div className="divide-y divide-base-200">
+        {picks.map((pick) => (
+          <a
+            key={pick.video_id}
+            href={pick.video_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 px-5 py-3 hover:bg-base-200/40 transition-colors group"
+          >
+            {pick.thumbnail_url && (
+              <img
+                src={pick.thumbnail_url}
+                alt={pick.title}
+                className="w-20 h-12 object-cover rounded-lg flex-shrink-0"
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+                {pick.title}
+              </p>
+              <p className="text-xs text-base-content/50 mt-0.5">
+                {pick.channel_name} · {formatViews(pick.views)} views
+              </p>
+            </div>
+            <span className="badge badge-ghost text-xs flex-shrink-0">#{pick.rank}</span>
+          </a>
+        ))}
+      </div>
+    </details>
   );
 }
 
@@ -124,14 +122,18 @@ export default async function NewsPage() {
   const supabase = await createClient();
 
   const today = new Date().toISOString().slice(0, 10);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  const [{ data: youtubePicks }, { data: tweets }] = await Promise.all([
+  const [{ data: allPicks }, { data: tweets }, { data: historyRows }] = await Promise.all([
+    // Today's picks — both video and live types
     supabase
       .from("youtube_daily_picks")
-      .select("rank, video_id, title, channel_name, thumbnail_url, video_url, views, ai_summary, published_at")
+      .select("rank, video_id, title, channel_name, thumbnail_url, video_url, views, ai_summary, published_at, video_type")
       .eq("pick_date", today)
+      .order("video_type")   // 'live' before 'video' alphabetically, but we split below
       .order("rank"),
 
+    // Today's top tweets
     supabase
       .from("firm_twitter_tweets")
       .select("id, author_username, text, url, ai_summary, importance_score, tweeted_at")
@@ -139,7 +141,31 @@ export default async function NewsPage() {
       .eq("tweeted_at", today)
       .order("importance_score", { ascending: false })
       .limit(3),
+
+    // Past 7 days history — top 3 non-live per day
+    supabase
+      .from("youtube_daily_picks")
+      .select("pick_date, rank, video_id, title, channel_name, thumbnail_url, video_url, views")
+      .eq("video_type", "video")
+      .lt("pick_date", today)
+      .gte("pick_date", sevenDaysAgo)
+      .lte("rank", 3)
+      .order("pick_date", { ascending: false })
+      .order("rank", { ascending: true }),
   ]);
+
+  // Split today's picks by type
+  const picks = (allPicks ?? []) as YouTubePick[];
+  const videoPicks = picks.filter((p) => p.video_type === "video");
+  const livePicks = picks.filter((p) => p.video_type === "live");
+
+  // Group history by date
+  const historyByDate = new Map<string, HistoryPick[]>();
+  for (const row of (historyRows ?? []) as HistoryPick[]) {
+    const existing = historyByDate.get(row.pick_date) ?? [];
+    existing.push(row);
+    historyByDate.set(row.pick_date, existing);
+  }
 
   const displayDate = new Date(today).toLocaleDateString("en-US", {
     weekday: "long",
@@ -184,13 +210,10 @@ export default async function NewsPage() {
         </div>
       </div>
 
-      {/* YouTube Section */}
-      <section className="space-y-6">
+      {/* YouTube section (client component handles expand + live split) */}
+      <div className="space-y-12">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">▶</span>
-            <h2 className="text-xl font-black text-base-content">Top Videos Today</h2>
-          </div>
+          <div /> {/* spacer */}
           {twitterHandle && (
             <a
               href={`https://twitter.com/${twitterHandle}`}
@@ -203,17 +226,20 @@ export default async function NewsPage() {
             </a>
           )}
         </div>
+        <YouTubeSection videos={videoPicks} liveStreams={livePicks} />
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {youtubePicks && youtubePicks.length > 0 ? (
-            (youtubePicks as YouTubePick[]).map((pick) => (
-              <YouTubeCard key={pick.video_id} pick={pick} />
-            ))
-          ) : (
-            <EmptyState label="No video picks yet — updated daily at 07:00 UTC" />
-          )}
-        </div>
-      </section>
+      {/* History */}
+      {historyByDate.size > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-xl font-black text-base-content">Previous Days</h2>
+          <div className="space-y-2">
+            {[...historyByDate.entries()].map(([date, dayPicks]) => (
+              <HistoryDay key={date} date={date} picks={dayPicks} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Twitter Section */}
       <section className="space-y-6">
@@ -228,7 +254,10 @@ export default async function NewsPage() {
               <TweetCard key={tweet.id} tweet={tweet} />
             ))
           ) : (
-            <EmptyState label="No posts yet today — check back later" />
+            <div className="col-span-3 flex flex-col items-center justify-center py-16 text-base-content/30 gap-3">
+              <span className="text-4xl">📭</span>
+              <p className="font-semibold">No posts yet today — check back later</p>
+            </div>
           )}
         </div>
       </section>

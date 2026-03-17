@@ -68,6 +68,7 @@ const MOCK_RAW_VIDEOS = [
     comments: 30,
     thumbnailUrl: "https://img.example.com/t.jpg",
     source: "channel" as const,
+    isLiveStream: false,
   },
   {
     videoId: "vid2",
@@ -80,6 +81,7 @@ const MOCK_RAW_VIDEOS = [
     comments: 15,
     thumbnailUrl: "https://img.example.com/t2.jpg",
     source: "keyword" as const,
+    isLiveStream: false,
   },
   {
     videoId: "vid3",
@@ -92,10 +94,26 @@ const MOCK_RAW_VIDEOS = [
     comments: 60,
     thumbnailUrl: "https://img.example.com/t3.jpg",
     source: "channel" as const,
+    isLiveStream: false,
   },
 ];
 
+const MOCK_LIVE_VIDEO = {
+  videoId: "live1",
+  title: "Live Futures Trading Session",
+  channelId: "UC1",
+  channelName: "Channel 1",
+  publishedAt: "2024-01-02T09:00:00Z",
+  views: 25000,
+  likes: 300,
+  comments: 0,
+  thumbnailUrl: "https://img.example.com/live.jpg",
+  source: "channel" as const,
+  isLiveStream: true,
+};
+
 const MOCK_SCORED = MOCK_RAW_VIDEOS.map((v, i) => ({ ...v, score: 0.9 - i * 0.1 }));
+const MOCK_LIVE_SCORED = [{ ...MOCK_LIVE_VIDEO, score: 0.85 }];
 const MOCK_TOP3 = MOCK_SCORED.slice(0, 3);
 
 // Default select mock: call 1 = channels, call 2+ = keywords
@@ -115,14 +133,19 @@ beforeEach(() => {
   buildSupabaseMock();
   setDefaultSelectMock();
 
-  (fetchVideosFromChannels as jest.Mock).mockResolvedValue(MOCK_RAW_VIDEOS.slice(0, 2));
+  (fetchVideosFromChannels as jest.Mock).mockResolvedValue({ videos: MOCK_RAW_VIDEOS.slice(0, 2), errors: [] });
   (fetchVideosByKeyword as jest.Mock).mockResolvedValue([MOCK_RAW_VIDEOS[2]]);
   (scoreAndMerge as jest.Mock).mockReturnValue({
-    merged: MOCK_SCORED,
+    merged: [...MOCK_SCORED, ...MOCK_LIVE_SCORED],
     channelPool: MOCK_SCORED.filter((v) => v.source === "channel"),
     keywordPool: MOCK_SCORED.filter((v) => v.source === "keyword"),
   });
-  (pickTopVideos as jest.Mock).mockReturnValue(MOCK_TOP3);
+  // pickTopVideos call order: top10NonLive, top3Live, channelNonLive, channelLive,
+  //   keywordNonLive, keywordLive, mergedNonLive, mergedLive
+  (pickTopVideos as jest.Mock)
+    .mockReturnValueOnce(MOCK_TOP3)         // top10NonLive (picks)
+    .mockReturnValueOnce(MOCK_LIVE_SCORED)  // top3Live (picks)
+    .mockReturnValue([]);                   // all 6 candidate pool calls
   (summarizeVideos as jest.Mock).mockResolvedValue(["Summary 1", "Summary 2", "Summary 3"]);
   (resolveUploadPlaylistId as jest.Mock).mockResolvedValue("UUnew");
 });
@@ -151,9 +174,10 @@ describe("runYouTubeIngest", () => {
     expect(result.date).toBe("2024-01-02");
   });
 
-  it("returns picksInserted = 3 on success", async () => {
+  it("returns picksInserted = 3 and livePicksInserted = 1 on success", async () => {
     const result = await runYouTubeIngest(REFERENCE_DATE);
     expect(result.picksInserted).toBe(3);
+    expect(result.livePicksInserted).toBe(1);
   });
 
   it("includes keyword errors in result.errors (non-fatal)", async () => {
@@ -183,9 +207,14 @@ describe("runYouTubeIngest", () => {
   });
 
   it("records upsert error in result.errors", async () => {
+    (pickTopVideos as jest.Mock)
+      .mockReturnValueOnce(MOCK_TOP3)
+      .mockReturnValueOnce(MOCK_LIVE_SCORED)
+      .mockReturnValue([]);
     mockUpsert.mockResolvedValue({ error: { message: "upsert failed" } });
     const result = await runYouTubeIngest(REFERENCE_DATE);
     expect(result.picksInserted).toBe(0);
+    expect(result.livePicksInserted).toBe(0);
     expect(result.errors.some((e) => e.includes("upsert failed"))).toBe(true);
   });
 

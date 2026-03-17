@@ -22,6 +22,7 @@ function makeVideo(overrides: Partial<RawVideo> = {}): RawVideo {
     comments: 10,
     thumbnailUrl: "https://img.example.com/t.jpg",
     source: "channel",
+    isLiveStream: false,
     ...overrides,
   };
 }

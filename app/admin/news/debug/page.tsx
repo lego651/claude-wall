@@ -21,10 +21,11 @@ interface Candidate {
   source: "channel" | "keyword";
   window_hours: number;
   candidate_date: string;
-  pool: "merged" | "channel" | "keyword";
+  pool: string;
+  is_live_stream: boolean;
 }
 
-type Tab = "merged" | "channel" | "keyword";
+type Tab = "video" | "live";
 
 function formatViews(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -32,11 +33,6 @@ function formatViews(n: number): string {
   return String(n);
 }
 
-/**
- * Hours since publication measured from the ingest reference time
- * (07:00 UTC on the candidate_date) rather than the current time.
- * Keeps the displayed age consistent with the "window: Xh" label.
- */
 function hoursAtIngest(iso: string, candidateDate: string): string {
   const ingestRef = new Date(`${candidateDate}T07:00:00Z`);
   const diff = (ingestRef.getTime() - new Date(iso).getTime()) / 3_600_000;
@@ -49,51 +45,41 @@ function ScoreBar({ value }: { value: number }) {
   return (
     <div className="flex items-center gap-2">
       <div className="w-24 h-2 bg-base-200 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-primary rounded-full"
-          style={{ width: `${pct}%` }}
-        />
+        <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
       </div>
       <span className="font-mono text-xs tabular-nums text-base-content/60">{value.toFixed(4)}</span>
     </div>
   );
 }
 
-function CandidateList({
+function PoolSection({
+  label,
   candidates,
-  highlightTop3,
+  highlightTop,
+  highlightCount = 3,
 }: {
+  label: string;
   candidates: Candidate[];
-  highlightTop3: boolean;
+  highlightTop: boolean;
+  highlightCount?: number;
 }) {
-  if (candidates.length === 0) {
-    return (
-      <div className="flex flex-col items-center py-16 gap-3 text-base-content/30">
-        <span className="text-4xl">📭</span>
-        <p className="font-semibold">No candidates for this pool today</p>
-        <p className="text-sm">Click &ldquo;Run Ingest Now&rdquo; to fetch today&apos;s videos</p>
-      </div>
-    );
-  }
+  if (candidates.length === 0) return null;
 
   return (
     <div className="space-y-3">
+      <h3 className="text-xs font-bold uppercase tracking-widest text-base-content/40">{label}</h3>
       {candidates.map((c) => (
         <div
           key={c.id}
           className={`flex gap-4 p-4 rounded-2xl border transition-shadow hover:shadow-md ${
-            highlightTop3 && c.rank <= 3
+            highlightTop && c.rank <= highlightCount
               ? "border-primary/30 bg-primary/5"
               : "border-base-200 bg-base-100"
           }`}
         >
           {/* Rank */}
           <div className="flex-none w-8 text-center">
-            <span
-              className={`text-lg font-black ${
-                highlightTop3 && c.rank <= 3 ? "text-primary" : "text-base-content/30"
-              }`}
-            >
+            <span className={`text-lg font-black ${highlightTop && c.rank <= highlightCount ? "text-primary" : "text-base-content/30"}`}>
               #{c.rank}
             </span>
           </div>
@@ -148,12 +134,25 @@ function CandidateList({
   );
 }
 
+function EmptyPool() {
+  return (
+    <div className="flex flex-col items-center py-16 gap-3 text-base-content/30">
+      <span className="text-4xl">📭</span>
+      <p className="font-semibold">No candidates for this pool today</p>
+      <p className="text-sm">Click &ldquo;Run Ingest Now&rdquo; to fetch today&apos;s videos</p>
+    </div>
+  );
+}
+
 export default function YouTubeDebugPage() {
-  const [merged, setMerged] = useState<Candidate[]>([]);
-  const [channelPool, setChannelPool] = useState<Candidate[]>([]);
-  const [keywordPool, setKeywordPool] = useState<Candidate[]>([]);
+  const [videoMerged,  setVideoMerged]  = useState<Candidate[]>([]);
+  const [liveMerged,   setLiveMerged]   = useState<Candidate[]>([]);
+  const [videoChannel, setVideoChannel] = useState<Candidate[]>([]);
+  const [liveChannel,  setLiveChannel]  = useState<Candidate[]>([]);
+  const [videoKeyword, setVideoKeyword] = useState<Candidate[]>([]);
+  const [liveKeyword,  setLiveKeyword]  = useState<Candidate[]>([]);
   const [date, setDate] = useState("");
-  const [activeTab, setActiveTab] = useState<Tab>("merged");
+  const [activeTab, setActiveTab] = useState<Tab>("video");
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [runResult, setRunResult] = useState<string | null>(null);
@@ -167,9 +166,12 @@ export default function YouTubeDebugPage() {
       const res = await fetch("/api/admin/youtube/debug");
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to fetch");
-      setMerged(data.merged ?? []);
-      setChannelPool(data.channelPool ?? []);
-      setKeywordPool(data.keywordPool ?? []);
+      setVideoMerged(data.videoMerged ?? []);
+      setLiveMerged(data.liveMerged ?? []);
+      setVideoChannel(data.videoChannel ?? []);
+      setLiveChannel(data.liveChannel ?? []);
+      setVideoKeyword(data.videoKeyword ?? []);
+      setLiveKeyword(data.liveKeyword ?? []);
       setDate(data.date ?? "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -192,7 +194,7 @@ export default function YouTubeDebugPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Ingest failed");
       setRunResult(
-        `Done — ${data.picksInserted} picks inserted, ${data.candidatesFound} candidates found (${data.windowHoursUsed}h window)`
+        `Done — ${data.picksInserted} videos + ${data.livePicksInserted} live picks inserted, ${data.candidatesFound} candidates found (${data.windowHoursUsed}h window)`
       );
       if (data.errors?.length) setIngestErrors(data.errors);
       await fetchCandidates();
@@ -203,14 +205,14 @@ export default function YouTubeDebugPage() {
     }
   }
 
-  const tabs: { id: Tab; label: string; count: number }[] = [
-    { id: "merged", label: "Merged Top 15", count: merged.length },
-    { id: "channel", label: "Channel Pool", count: channelPool.length },
-    { id: "keyword", label: "Keyword Pool", count: keywordPool.length },
+  const tabs: { id: Tab; label: string; icon: string; mergedCount: number }[] = [
+    { id: "video", label: "Videos",      icon: "▶", mergedCount: videoMerged.length },
+    { id: "live",  label: "Live Streams", icon: "🔴", mergedCount: liveMerged.length },
   ];
 
-  const activeList =
-    activeTab === "merged" ? merged : activeTab === "channel" ? channelPool : keywordPool;
+  const isEmpty = activeTab === "video"
+    ? videoMerged.length === 0 && videoChannel.length === 0 && videoKeyword.length === 0
+    : liveMerged.length === 0 && liveChannel.length === 0 && liveKeyword.length === 0;
 
   return (
     <AdminLayout>
@@ -225,7 +227,7 @@ export default function YouTubeDebugPage() {
               <span className="text-base-content/30">/</span>
               <span className="text-sm font-semibold">Debug</span>
             </div>
-            <h1 className="text-2xl font-black">YouTube Top-15 Debug</h1>
+            <h1 className="text-2xl font-black">YouTube Ingest Debug</h1>
             <p className="text-sm text-base-content/50 mt-1">
               {date ? `Candidates for ${date}` : "Loading..."} · Use this to tune channel accuracy
             </p>
@@ -274,11 +276,11 @@ export default function YouTubeDebugPage() {
             <span className="badge badge-secondary badge-sm">keyword</span> from keyword search
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-3 rounded bg-warning/50 mr-1" /> ranks 1–3 = today&apos;s /news picks
+            <span className="inline-block w-3 h-3 rounded bg-primary/30 mr-1" /> highlighted = today&apos;s /news picks
           </span>
         </div>
 
-        {/* Tabs */}
+        {/* Video / Live tabs */}
         <div className="tabs tabs-bordered">
           {tabs.map((tab) => (
             <button
@@ -286,9 +288,10 @@ export default function YouTubeDebugPage() {
               className={`tab gap-2 ${activeTab === tab.id ? "tab-active" : ""}`}
               onClick={() => setActiveTab(tab.id)}
             >
+              <span>{tab.icon}</span>
               {tab.label}
-              {tab.count > 0 && (
-                <span className="badge badge-sm badge-ghost">{tab.count}</span>
+              {tab.mergedCount > 0 && (
+                <span className="badge badge-sm badge-ghost">{tab.mergedCount}</span>
               )}
             </button>
           ))}
@@ -296,21 +299,63 @@ export default function YouTubeDebugPage() {
 
         {/* Tab description */}
         <p className="text-xs text-base-content/40 -mt-4">
-          {activeTab === "merged" && "Channel and keyword pools scored independently, then merged. Cross-appearing videos get a +0.3 score bonus. Ranks 1–3 are shown on /news."}
-          {activeTab === "channel" && "Top 10 from your channel watchlist, scored within the channel pool only (views normalized against other channel videos)."}
-          {activeTab === "keyword" && "Top 10 from keyword searches, scored within the keyword pool only (views normalized against other keyword videos)."}
+          {activeTab === "video" && (
+            <>Top 20 non-live videos (merged pool, ranks 1–10 shown on /news). Channel pool: top 10 non-live. Keyword pool: top 10 non-live. Scored independently per pool.</>
+          )}
+          {activeTab === "live" && (
+            <>Top 10 live streams (merged pool, ranks 1–3 shown on /news). Channel pool: top 5 live. Keyword pool: top 5 live.</>
+          )}
         </p>
 
-        {/* Candidate list */}
         {loading ? (
           <div className="flex justify-center py-20">
             <span className="loading loading-spinner loading-lg" />
           </div>
+        ) : isEmpty ? (
+          <EmptyPool />
         ) : (
-          <CandidateList
-            candidates={activeList}
-            highlightTop3={activeTab === "merged"}
-          />
+          <div className="space-y-10">
+            {activeTab === "video" && (
+              <>
+                <PoolSection
+                  label={`Merged Top ${videoMerged.length} · non-live combined`}
+                  candidates={videoMerged}
+                  highlightTop={true}
+                  highlightCount={10}
+                />
+                <PoolSection
+                  label={`Channel Pool · top ${videoChannel.length} non-live`}
+                  candidates={videoChannel}
+                  highlightTop={false}
+                />
+                <PoolSection
+                  label={`Keyword Pool · top ${videoKeyword.length} non-live`}
+                  candidates={videoKeyword}
+                  highlightTop={false}
+                />
+              </>
+            )}
+            {activeTab === "live" && (
+              <>
+                <PoolSection
+                  label={`Merged Top ${liveMerged.length} · live streams combined`}
+                  candidates={liveMerged}
+                  highlightTop={true}
+                  highlightCount={3}
+                />
+                <PoolSection
+                  label={`Channel Pool · top ${liveChannel.length} live`}
+                  candidates={liveChannel}
+                  highlightTop={false}
+                />
+                <PoolSection
+                  label={`Keyword Pool · top ${liveKeyword.length} live`}
+                  candidates={liveKeyword}
+                  highlightTop={false}
+                />
+              </>
+            )}
+          </div>
         )}
 
         <p className="text-xs text-base-content/30 text-center">
