@@ -1,6 +1,7 @@
 import Link from "next/link";
 import PropProofLayout from "@/components/common/PropProofLayout";
 import { THEME, themeStyles } from "@/lib/theme";
+import TradeLogFAB from "@/components/trade-log/TradeLogFAB";
 
 const MenuCard = ({ title, description, icon, badge, href, color = "bg-white" }) => (
   <Link href={href}>
@@ -65,6 +66,7 @@ export default function Page() {
         </section>
 
       </div>
+      <TradeLogFAB />
     </PropProofLayout>
   );
 }
