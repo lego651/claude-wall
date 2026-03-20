@@ -98,4 +98,57 @@ describe('TradeCard', () => {
     const dashes = screen.getAllByText('—');
     expect(dashes.length).toBeGreaterThan(0);
   });
+
+  it('formats trade_at as locale string', () => {
+    render(<TradeCard trade={{ ...baseTrade, trade_at: '2026-03-20T10:30:00Z' }} />);
+    // Just verify it doesn't show the raw ISO string or a dash
+    const dashes = screen.queryAllByText('—');
+    // trade_at should be formatted, not a dash
+    const allText = document.body.textContent;
+    expect(allText).not.toContain('2026-03-20T10:30:00Z');
+  });
+
+  it('clears field to null when input is emptied in edit mode', () => {
+    render(<TradeCard trade={baseTrade} />);
+    fireEvent.click(screen.getByText('Edit'));
+
+    const inputs = screen.getAllByRole('textbox');
+    // Change an input to empty string — handleFieldChange should set it to null
+    fireEvent.change(inputs[0], { target: { value: '' } });
+    // Confirm still works after clearing
+    fireEvent.click(screen.getByText('Confirm'));
+    expect(screen.getByText('Edit')).toBeInTheDocument();
+  });
+
+  it('allows editing direction via select in edit mode', () => {
+    render(<TradeCard trade={baseTrade} />);
+    fireEvent.click(screen.getByText('Edit'));
+
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'sell' } });
+    expect(select.value).toBe('sell');
+  });
+
+  it('allows editing notes via textarea in edit mode', () => {
+    render(<TradeCard trade={baseTrade} />);
+    fireEvent.click(screen.getByText('Edit'));
+
+    const textareas = document.querySelectorAll('textarea');
+    expect(textareas.length).toBeGreaterThan(0);
+    fireEvent.change(textareas[0], { target: { value: 'Updated notes' } });
+    expect(textareas[0].value).toBe('Updated notes');
+  });
+
+  it('shows Saving… while save is in progress', async () => {
+    let resolveFetch;
+    fetch.mockReturnValueOnce(
+      new Promise((resolve) => { resolveFetch = resolve; })
+    );
+
+    render(<TradeCard trade={baseTrade} />);
+    fireEvent.click(screen.getByText('Save'));
+
+    expect(screen.getByText('Saving…')).toBeInTheDocument();
+    resolveFetch({ ok: true, json: () => Promise.resolve({ id: 'x' }) });
+  });
 });

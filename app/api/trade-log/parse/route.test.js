@@ -7,13 +7,24 @@ jest.mock('@/lib/ai/openai-client', () => ({
 
 const { getOpenAIClient } = require('@/lib/ai/openai-client');
 
-function makeRequest(fields = {}) {
+function makeRequest(fields = {}, imageFile = null) {
   const formData = new Map(Object.entries(fields));
   return {
     formData: () =>
       Promise.resolve({
-        get: (key) => formData.get(key) || null,
+        get: (key) => {
+          if (key === 'image') return imageFile;
+          return formData.get(key) || null;
+        },
       }),
+  };
+}
+
+function makeImageFile(content = 'fake-image-bytes', type = 'image/png') {
+  return {
+    size: content.length,
+    type,
+    arrayBuffer: () => Promise.resolve(Buffer.from(content)),
   };
 }
 
@@ -139,5 +150,70 @@ describe('POST /api/trade-log/parse', () => {
     const req = makeRequest({ message: 'buy BTC' });
     const res = await POST(req);
     expect(res.status).toBe(500);
+  });
+
+  // T9 edge cases
+
+  it('extracts partial fields from vague input ("I bought AAPL")', async () => {
+    mockOpenAI({
+      symbol: 'AAPL',
+      direction: 'buy',
+      entry_price: null,
+      stop_loss: null,
+      take_profit: null,
+      lots: null,
+      risk_reward: null,
+      trade_at: null,
+      notes: null,
+    });
+
+    const req = makeRequest({ message: 'I bought AAPL' });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.symbol).toBe('AAPL');
+    expect(body.direction).toBe('buy');
+    expect(body.entry_price).toBeNull();
+  });
+
+  it('processes image upload and passes base64 to OpenAI', async () => {
+    mockOpenAI({
+      symbol: 'EURUSD',
+      direction: 'sell',
+      entry_price: 1.09,
+      stop_loss: 1.095,
+      take_profit: 1.08,
+      lots: null,
+      risk_reward: 2,
+      trade_at: null,
+      notes: 'Extracted from MT4 screenshot',
+    });
+
+    const image = makeImageFile('fake-chart-bytes', 'image/png');
+    const req = makeRequest({}, image);
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.symbol).toBe('EURUSD');
+    expect(body.notes).toBe('Extracted from MT4 screenshot');
+
+    const createCall = getOpenAIClient().chat.completions.create;
+    const userContent = createCall.mock.calls[0][0].messages[1].content;
+    const imageBlock = userContent.find((c) => c.type === 'image_url');
+    expect(imageBlock).toBeDefined();
+    expect(imageBlock.image_url.url).toMatch(/^data:image\/png;base64,/);
+  });
+
+  it('returns non_trade for clearly ambiguous/non-trade input', async () => {
+    mockOpenAI({ error: 'non_trade' });
+
+    const req = makeRequest({ message: 'I made a trade' });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.error).toBe('non_trade');
   });
 });

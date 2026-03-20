@@ -118,4 +118,66 @@ describe('TradeLogModal', () => {
       expect(input.value).toBe('');
     });
   });
+
+  it('shows generic error message for non-non_trade error responses', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      json: () => Promise.resolve({ error: 'AI request failed' }),
+    });
+
+    render(<TradeLogModal onClose={() => {}} />);
+    const input = screen.getByPlaceholderText('Describe your trade…');
+    fireEvent.change(input, { target: { value: 'buy BTC' } });
+    fireEvent.click(screen.getByLabelText('Send'));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Error: AI request failed/i)).toBeInTheDocument();
+    });
+  });
+
+  it('sends message on Enter key press', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ symbol: 'GBPUSD', direction: 'buy' }),
+    });
+
+    render(<TradeLogModal onClose={() => {}} />);
+    const input = screen.getByPlaceholderText('Describe your trade…');
+    fireEvent.change(input, { target: { value: 'buy GBPUSD' } });
+    fireEvent.keyDown(input, { key: 'Enter', shiftKey: false });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('trade-card')).toBeInTheDocument();
+    });
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not send on Shift+Enter key press', () => {
+    render(<TradeLogModal onClose={() => {}} />);
+    const input = screen.getByPlaceholderText('Describe your trade…');
+    fireEvent.change(input, { target: { value: 'buy GBPUSD' } });
+    fireEvent.keyDown(input, { key: 'Enter', shiftKey: true });
+
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('camera button triggers file input click', () => {
+    render(<TradeLogModal onClose={() => {}} />);
+    const fileInput = document.querySelector('input[type="file"]');
+    const clickSpy = jest.spyOn(fileInput, 'click');
+
+    fireEvent.click(screen.getByLabelText('Attach image'));
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
+  it('shows image preview after file selection', () => {
+    global.URL.createObjectURL = jest.fn(() => 'blob:fake-url');
+
+    render(<TradeLogModal onClose={() => {}} />);
+    const fileInput = document.querySelector('input[type="file"]');
+    const file = new File(['chart'], 'chart.png', { type: 'image/png' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    expect(screen.getByAltText('Preview')).toBeInTheDocument();
+  });
 });
