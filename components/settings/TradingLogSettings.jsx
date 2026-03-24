@@ -12,10 +12,6 @@ function PnlUnitBadge({ unit }) {
 }
 
 export default function TradingLogSettings() {
-  const [dailyLimit, setDailyLimit] = useState(3);
-  const [limitInput, setLimitInput] = useState("3");
-  const [savingLimit, setSavingLimit] = useState(false);
-
   const [accounts, setAccounts] = useState([]);
   const [loadingAccounts, setLoadingAccounts] = useState(true);
 
@@ -28,31 +24,21 @@ export default function TradingLogSettings() {
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState("");
 
-  // Default P&L edit state: accountId → temp value string
+  // Default P&L edit state
   const [editingPnlId, setEditingPnlId] = useState(null);
   const [pnlEditValue, setPnlEditValue] = useState("");
+
+  // Daily limit edit state
+  const [editingLimitId, setEditingLimitId] = useState(null);
+  const [limitEditValue, setLimitEditValue] = useState("");
 
   // Delete confirm
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   useEffect(() => {
-    fetchSettings();
     fetchAccounts();
   }, []);
-
-  async function fetchSettings() {
-    try {
-      const res = await fetch("/api/user-settings/trading");
-      if (res.ok) {
-        const data = await res.json();
-        setDailyLimit(data.daily_trade_limit);
-        setLimitInput(String(data.daily_trade_limit));
-      }
-    } catch {
-      // Silently fail; defaults remain
-    }
-  }
 
   async function fetchAccounts() {
     setLoadingAccounts(true);
@@ -65,29 +51,6 @@ export default function TradingLogSettings() {
       toast.error("Failed to load accounts");
     } finally {
       setLoadingAccounts(false);
-    }
-  }
-
-  async function handleSaveLimit() {
-    const val = parseInt(limitInput, 10);
-    if (!Number.isInteger(val) || val < 1) {
-      toast.error("Daily trade limit must be at least 1");
-      return;
-    }
-    setSavingLimit(true);
-    try {
-      const res = await fetch("/api/user-settings/trading", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ daily_trade_limit: val }),
-      });
-      if (!res.ok) throw new Error();
-      setDailyLimit(val);
-      toast.success("Daily limit saved");
-    } catch {
-      toast.error("Failed to save daily limit");
-    } finally {
-      setSavingLimit(false);
     }
   }
 
@@ -163,6 +126,30 @@ export default function TradingLogSettings() {
     }
   }
 
+  async function handleSaveAccountLimit(id) {
+    const trimmed = limitEditValue.trim();
+    const val = trimmed === "" ? null : parseInt(trimmed, 10);
+    if (trimmed !== "" && (isNaN(val) || val < 1)) {
+      toast.error("Daily limit must be a positive number");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/trade-accounts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ daily_trade_limit: val }),
+      });
+      if (!res.ok) throw new Error();
+      const updated = await res.json();
+      setAccounts((prev) => prev.map((a) => (a.id === id ? updated : a)));
+      toast.success(val === null ? "Daily limit cleared" : "Daily limit saved");
+    } catch {
+      toast.error("Failed to save daily limit");
+    } finally {
+      setEditingLimitId(null);
+    }
+  }
+
   async function handleSetDefault(id) {
     try {
       const res = await fetch(`/api/trade-accounts/${id}`, {
@@ -206,32 +193,7 @@ export default function TradingLogSettings() {
         <h2 className="text-xl font-bold">Trading Log</h2>
       </div>
 
-      {/* Part A: Daily Trade Limit */}
-      <div className="mb-8">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Daily Trade Limit</h3>
-        <div className="flex items-center gap-3">
-          <input
-            type="number"
-            min={1}
-            value={limitInput}
-            onChange={(e) => setLimitInput(e.target.value)}
-            className="input input-bordered w-24"
-            aria-label="Daily trade limit"
-          />
-          <button
-            onClick={handleSaveLimit}
-            disabled={savingLimit}
-            className="btn btn-primary btn-sm"
-          >
-            {savingLimit ? <span className="loading loading-spinner loading-xs" /> : "Save"}
-          </button>
-        </div>
-        <p className="text-xs text-gray-500 mt-1">
-          Maximum trades you intend to log per day. Currently: {dailyLimit}
-        </p>
-      </div>
-
-      {/* Part B: Trade Accounts */}
+      {/* Trade Accounts */}
       <div>
         <h3 className="text-sm font-semibold text-gray-700 mb-3">Trade Accounts</h3>
 
@@ -284,6 +246,36 @@ export default function TradingLogSettings() {
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700">
                     Default
                   </span>
+                )}
+
+                {/* Daily limit inline editor */}
+                {editingLimitId === account.id ? (
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={limitEditValue}
+                    onChange={(e) => setLimitEditValue(e.target.value)}
+                    onBlur={() => handleSaveAccountLimit(account.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSaveAccountLimit(account.id);
+                      if (e.key === "Escape") setEditingLimitId(null);
+                    }}
+                    placeholder="e.g. 3"
+                    className="input input-bordered input-xs w-20"
+                    autoFocus
+                  />
+                ) : (
+                  <button
+                    onClick={() => {
+                      setEditingLimitId(account.id);
+                      setLimitEditValue(account.daily_trade_limit != null ? String(account.daily_trade_limit) : "");
+                    }}
+                    className="text-xs text-gray-400 hover:text-indigo-600 border border-dashed border-gray-200 hover:border-indigo-300 rounded px-2 py-0.5 transition-colors shrink-0"
+                    title="Set daily trade limit"
+                  >
+                    {account.daily_trade_limit != null ? `${account.daily_trade_limit}/day` : "Set limit"}
+                  </button>
                 )}
 
                 {/* Default P&L inline editor */}

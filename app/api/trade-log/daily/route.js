@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-const DEFAULT_DAILY_LIMIT = 3;
-
 export async function GET(request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -18,13 +16,17 @@ export async function GET(request) {
   }
 
   try {
-    // Fetch daily trade limit
-    const { data: settingsData } = await supabase
-      .from('user_trading_settings')
-      .select('daily_trade_limit')
-      .eq('user_id', user.id)
-      .single();
-    const dailyLimit = settingsData?.daily_trade_limit ?? DEFAULT_DAILY_LIMIT;
+    // Daily limit: only meaningful when a single account is selected
+    let dailyLimit = null;
+    if (account_ids.length === 1) {
+      const { data: acctData } = await supabase
+        .from('trade_accounts')
+        .select('daily_trade_limit')
+        .eq('id', account_ids[0])
+        .eq('user_id', user.id)
+        .single();
+      dailyLimit = acctData?.daily_trade_limit ?? null;
+    }
 
     // Build trade query
     const dayStart = `${date}T00:00:00.000Z`;
@@ -77,7 +79,7 @@ export async function GET(request) {
     const pnlValues = flatTrades.map((t) => t.pnl).filter((v) => v !== null);
     const pnlTotal = pnlValues.length > 0 ? pnlValues.reduce((a, b) => a + b, 0) : null;
 
-    // pnl_unit only when exactly 1 account_id provided
+    // pnl_unit only when exactly 1 account_id provided (already fetched above if so)
     let pnlUnit = null;
     if (account_ids.length === 1) {
       const { data: acct } = await supabase
@@ -90,7 +92,7 @@ export async function GET(request) {
     }
 
     const tradesLogged = flatTrades.length;
-    const tradesRemaining = Math.max(0, dailyLimit - tradesLogged);
+    const tradesRemaining = dailyLimit !== null ? Math.max(0, dailyLimit - tradesLogged) : null;
 
     return NextResponse.json({
       date,

@@ -70,7 +70,7 @@ function ArcProgress({ value, max }) {
   );
 }
 
-export default function DailySummaryCard({ tradesLogged = 0, tradesRemaining = 0, dailyLimit = 3, pnlTotal = null, pnlUnit = null, isLoading = false }) {
+export default function DailySummaryCard({ tradesLogged = 0, tradesRemaining = null, dailyLimit = null, pnlTotal = null, pnlUnit = null, isLoading = false }) {
   if (isLoading) {
     return (
       <div className="px-6 py-5 animate-pulse">
@@ -85,6 +85,7 @@ export default function DailySummaryCard({ tradesLogged = 0, tradesRemaining = 0
 
   const pnlFormatted = formatPnl(pnlTotal, pnlUnit);
   const pnlColor = pnlTotal === null ? "text-slate-300" : pnlTotal >= 0 ? "text-green-500" : "text-red-500";
+  const showArc = dailyLimit !== null;
 
   return (
     <div className="px-6 py-5">
@@ -95,8 +96,8 @@ export default function DailySummaryCard({ tradesLogged = 0, tradesRemaining = 0
           <p className="text-3xl font-black text-slate-900">{tradesLogged}</p>
         </div>
 
-        {/* Center: Arc */}
-        <ArcProgress value={tradesLogged} max={dailyLimit} />
+        {/* Center: Arc — only when single account with limit set */}
+        {showArc && <ArcProgress value={tradesLogged} max={dailyLimit} />}
 
         {/* Right: P&L */}
         <div className="text-center min-w-0">
@@ -105,7 +106,7 @@ export default function DailySummaryCard({ tradesLogged = 0, tradesRemaining = 0
         </div>
       </div>
 
-      {tradesRemaining === 0 && (
+      {showArc && tradesRemaining === 0 && (
         <p className="text-center text-[11px] font-bold text-red-400 uppercase tracking-wide mt-3">Limit reached</p>
       )}
     </div>

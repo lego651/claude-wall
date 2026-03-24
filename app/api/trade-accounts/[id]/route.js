@@ -59,6 +59,19 @@ export async function PATCH(request, { params }) {
       }
     }
 
+    if ('daily_trade_limit' in body) {
+      const val = body.daily_trade_limit;
+      if (val === null) {
+        updates.daily_trade_limit = null;
+      } else {
+        const num = parseInt(val, 10);
+        if (isNaN(num) || num < 1) {
+          return NextResponse.json({ error: 'daily_trade_limit must be a positive integer or null' }, { status: 400 });
+        }
+        updates.daily_trade_limit = num;
+      }
+    }
+
     if (body.is_default === true) {
       // Unset all other defaults for this user first
       await supabase
@@ -74,7 +87,7 @@ export async function PATCH(request, { params }) {
       .update(updates)
       .eq('id', id)
       .eq('user_id', user.id)
-      .select('id, name, is_default, pnl_unit, default_pnl, created_at')
+      .select('id, name, is_default, pnl_unit, default_pnl, daily_trade_limit, created_at')
       .single();
 
     if (error) {
