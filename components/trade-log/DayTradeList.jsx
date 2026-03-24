@@ -148,8 +148,24 @@ export default function DayTradeList({ trades, accounts, onUpdated, onDeleted, i
 
   if (!trades || trades.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-400 text-sm">
-        No trades logged for this day.
+      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+        {/* 4-square grid icon matching the design */}
+        <div className="mb-5">
+          <svg className="w-14 h-14 text-slate-300" viewBox="0 0 56 56" fill="none">
+            <rect x="6" y="6" width="19" height="19" rx="3" stroke="currentColor" strokeWidth="2.5" fill="none" />
+            <rect x="31" y="6" width="19" height="19" rx="3" stroke="currentColor" strokeWidth="2.5" fill="none" />
+            <rect x="6" y="31" width="19" height="19" rx="3" stroke="currentColor" strokeWidth="2.5" fill="none" />
+            <rect x="31" y="31" width="19" height="19" rx="3" stroke="currentColor" strokeWidth="2.5" fill="none" />
+          </svg>
+        </div>
+        <p className="text-base font-bold text-slate-700 mb-1">No trades logged</p>
+        <p className="text-sm text-slate-400 mb-5">Log your first trade for this day.</p>
+        <button
+          onClick={() => document.querySelector('[data-fab]')?.click()}
+          className="text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+        >
+          Log Trade
+        </button>
       </div>
     );
   }

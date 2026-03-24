@@ -31,6 +31,7 @@ function mockClient({ user = USER, tradesData = [], tradesError = null, acctData
   const tradesChain = {
     select: jest.fn().mockReturnThis(),
     eq: jest.fn().mockReturnThis(),
+    in: jest.fn().mockReturnThis(),
     gte: jest.fn().mockReturnThis(),
     lte: jest.fn().mockReturnThis(),
     order: jest.fn().mockReturnThis(),
@@ -134,5 +135,22 @@ describe('GET /api/trade-log/monthly', () => {
     expect(body.weeks.length).toBe(5);
     expect(body.weeks[0].label).toBe('Week 1');
     expect(body.weeks[0].saturday).toMatch(/^2026-03-/);
+  });
+
+  it('filters by multiple account_ids', async () => {
+    const trades = [
+      { trade_at: '2026-03-20T10:00:00Z', pnl: 1.0, account_id: 'a1', trade_accounts: { pnl_unit: 'R' } },
+      { trade_at: '2026-03-20T11:00:00Z', pnl: 2.0, account_id: 'a2', trade_accounts: { pnl_unit: 'R' } },
+    ];
+    mockClient({ tradesData: trades });
+    const url = new URL('http://localhost/api/trade-log/monthly');
+    url.searchParams.append('month', '2026-03');
+    url.searchParams.append('account_id', 'a1');
+    url.searchParams.append('account_id', 'a2');
+    const res = await GET({ url: url.toString() });
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.days['2026-03-20'].trade_count).toBe(2);
+    expect(body.pnl_unit).toBeNull(); // multi-account = no unit
   });
 });

@@ -63,6 +63,7 @@ const PropProofLayout = ({ children }) => {
     { label: "Payouts", path: "/propfirms" },
     { label: "Traders", path: "/traders" },
     { label: "Trading Study", path: "/study" },
+    { label: "Trading Journal", path: "/logs" },
   ];
 
   const displayName = profile?.display_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
@@ -87,7 +88,8 @@ const PropProofLayout = ({ children }) => {
                 const isActive = pathname === item.path ||
                   (item.path === "/propfirms" && pathname?.startsWith("/propfirms")) ||
                   (item.path === "/traders" && pathname?.startsWith("/traders")) ||
-                  (item.path === "/study" && pathname?.startsWith("/study"));
+                  (item.path === "/study" && pathname?.startsWith("/study")) ||
+                  (item.path === "/logs" && pathname?.startsWith("/logs"));
                 return (
                   <Link
                     key={item.path}

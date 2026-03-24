@@ -47,6 +47,7 @@ function mockClient({ user = USER, settingsData = null, tradesData = [TRADE], tr
   const tradesChain = {
     select: jest.fn().mockReturnThis(),
     eq: jest.fn().mockReturnThis(),
+    in: jest.fn().mockReturnThis(),
     gte: jest.fn().mockReturnThis(),
     lte: jest.fn().mockReturnThis(),
     order: jest.fn().mockReturnThis(),
@@ -140,5 +141,18 @@ describe('GET /api/trade-log/daily', () => {
     mockClient({ tradesError: { message: 'fail' } });
     const res = await GET(makeRequest({ date: '2026-03-20' }));
     expect(res.status).toBe(500);
+  });
+
+  it('filters by multiple account_ids', async () => {
+    mockClient({ tradesData: [TRADE], settingsData: { daily_trade_limit: 3 } });
+    const url = new URL('http://localhost/api/trade-log/daily');
+    url.searchParams.append('date', '2026-03-20');
+    url.searchParams.append('account_id', 'acct-1');
+    url.searchParams.append('account_id', 'acct-2');
+    const res = await GET({ url: url.toString() });
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.trades_logged).toBe(1);
+    expect(body.pnl_unit).toBeNull(); // multi-account = no unit
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-const DOW = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const DOW = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 function formatPnl(value, unit) {
   if (value === null || value === undefined) return null;
@@ -15,20 +15,17 @@ function formatPnl(value, unit) {
 }
 
 function buildCalendarGrid(year, month) {
-  const firstDow = new Date(Date.UTC(year, month - 1, 1)).getUTCDay(); // 0=Sun
+  const firstDow = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const prevMonthDays = new Date(Date.UTC(year, month - 1, 0)).getUTCDate();
 
   const cells = [];
-  // Previous month overflow
   for (let i = firstDow - 1; i >= 0; i--) {
     cells.push({ day: prevMonthDays - i, overflow: true });
   }
-  // Current month
   for (let d = 1; d <= daysInMonth; d++) {
     cells.push({ day: d, overflow: false });
   }
-  // Next month overflow to fill last row
   const remaining = 7 - (cells.length % 7);
   if (remaining < 7) {
     for (let d = 1; d <= remaining; d++) {
@@ -49,83 +46,88 @@ export default function MonthlyCalendar({ monthlyData, selectedDate, onDayClick,
   });
 
   const cells = buildCalendarGrid(year, monthNum);
-  const weeks = monthlyData?.weeks || [];
   const days = monthlyData?.days || {};
   const pnlUnit = monthlyData?.pnl_unit || null;
   const monthlyPnl = monthlyData?.monthly_pnl ?? null;
-
-  // Week index for a given day (0-based row)
-  function weekRowIndex(day) {
-    const firstDow = new Date(Date.UTC(year, monthNum - 1, 1)).getUTCDay();
-    return Math.floor((firstDow + day - 1) / 7);
-  }
 
   function dateStr(day) {
     return `${String(year).padStart(4, "0")}-${String(monthNum).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   }
 
   const pnlHeader = formatPnl(monthlyPnl, pnlUnit);
-  const headerColor = monthlyPnl === null ? "text-gray-400" : monthlyPnl >= 0 ? "text-green-600" : "text-red-600";
+  const headerColor = monthlyPnl === null ? "text-slate-400" : monthlyPnl >= 0 ? "text-green-500" : "text-red-500";
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-      {/* Monthly P&L header */}
-      <div className="text-center mb-3">
-        <span className={`text-base font-bold ${headerColor}`}>
-          Monthly P&L: {pnlHeader || "—"}
-        </span>
-      </div>
-
-      {/* Month nav */}
-      <div className="flex items-center justify-between mb-3">
-        <button onClick={() => onMonthChange(-1)} aria-label="Previous month"
-          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <span className="text-sm font-semibold text-gray-700">{monthLabel}</span>
-        <div className="flex items-center gap-1">
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-5">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 leading-tight">{monthLabel}</h2>
+            <p className={`text-sm font-semibold leading-tight ${headerColor}`}>
+              Monthly P&L: {pnlHeader || "—"}
+            </p>
+          </div>
+        </div>
+        {/* Nav: < Today > */}
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => onMonthChange(1)}
-            aria-label="Next month"
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+            onClick={() => onMonthChange(-1)}
+            aria-label="Previous month"
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-slate-200 hover:bg-slate-50 text-slate-500 transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <button
-            onClick={() => {
-              const todayMonth = today.substring(0, 7);
-              if (viewMonth !== todayMonth) onMonthChange(0); // signal reset — parent handles
-            }}
-            className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold px-2"
-            aria-label="Go to today's month"
+            onClick={() => onMonthChange(0)}
+            className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 px-1 transition-colors"
           >
             Today
+          </button>
+          <button
+            onClick={() => onMonthChange(1)}
+            aria-label="Next month"
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-slate-200 hover:bg-slate-50 text-slate-500 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
       </div>
 
       {/* DOW headers */}
-      <div className="grid grid-cols-8 mb-1">
+      <div className="grid grid-cols-7 border-t border-slate-100">
         {DOW.map((d) => (
-          <div key={d} className="text-center text-xs font-semibold text-gray-400 py-1">{d}</div>
+          <div key={d} className="text-center text-[11px] font-bold text-slate-400 py-2.5 tracking-wide">
+            {d}
+          </div>
         ))}
-        <div className="text-center text-xs font-semibold text-gray-400 py-1">Wk</div>
       </div>
 
       {/* Calendar rows */}
       {Array.from({ length: cells.length / 7 }).map((_, rowIdx) => {
         const rowCells = cells.slice(rowIdx * 7, rowIdx * 7 + 7);
-        const weekData = weeks[rowIdx] || { trade_count: 0, pnl: null, label: `Week ${rowIdx + 1}` };
 
         return (
-          <div key={rowIdx} className="grid grid-cols-8 mb-0.5">
+          <div key={rowIdx} className="grid grid-cols-7 border-t border-slate-100">
             {rowCells.map((cell, colIdx) => {
               if (cell.overflow) {
-                return <div key={colIdx} className="text-center p-1 text-xs text-gray-300">{cell.day}</div>;
+                return (
+                  <div
+                    key={colIdx}
+                    className="px-2 pt-3 pb-4 min-h-[5.5rem] border-r border-slate-100 last:border-r-0"
+                  >
+                    <span className="text-sm font-medium text-slate-300">{cell.day}</span>
+                  </div>
+                );
               }
 
               const ds = dateStr(cell.day);
@@ -133,44 +135,42 @@ export default function MonthlyCalendar({ monthlyData, selectedDate, onDayClick,
               const pnl = dayData?.pnl ?? null;
               const count = dayData?.trade_count ?? 0;
               const isToday = ds === today;
-              const isSelected = ds === selectedDate;
-
-              let bgClass = "";
-              if (pnl !== null && pnl > 0) bgClass = "bg-green-900/20";
-              else if (pnl !== null && pnl < 0) bgClass = "bg-red-900/20";
+              const isSelected = ds === selectedDate && !isToday;
 
               return (
                 <button
                   key={colIdx}
                   onClick={() => onDayClick(ds)}
-                  className={`relative text-left p-1 rounded-lg text-xs min-h-[3rem] ${bgClass} ${isToday ? "ring-2 ring-indigo-500" : ""} ${isSelected ? "ring-2 ring-indigo-300" : ""} hover:bg-gray-100 transition-colors`}
+                  className={`text-left px-2 pt-3 pb-4 min-h-[5.5rem] border-r border-slate-100 last:border-r-0 hover:bg-slate-50 transition-colors ${isSelected ? "bg-indigo-50" : ""}`}
                   aria-label={`${ds}${count > 0 ? `, ${count} trades` : ""}`}
                 >
-                  <div className="font-semibold text-gray-800">{cell.day}</div>
+                  {/* Day number */}
+                  {isToday ? (
+                    <span className="inline-flex w-7 h-7 items-center justify-center rounded-full bg-indigo-600 text-white text-sm font-bold mb-1">
+                      {cell.day}
+                    </span>
+                  ) : (
+                    <span className={`text-sm font-semibold mb-1 block ${isSelected ? "text-indigo-600" : "text-slate-600"}`}>
+                      {cell.day}
+                    </span>
+                  )}
+
+                  {/* P&L */}
                   {pnl !== null && (
-                    <div className={`text-[9px] leading-tight font-medium ${pnl >= 0 ? "text-green-700" : "text-red-600"}`}>
+                    <div className={`text-xs font-bold leading-tight ${pnl >= 0 ? "text-green-500" : "text-red-500"}`}>
                       {formatPnl(pnl, pnlUnit)}
                     </div>
                   )}
+
+                  {/* Trade count */}
                   {count > 0 && (
-                    <div className="text-[8px] text-gray-400">{count}t</div>
+                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mt-0.5">
+                      {count} {count === 1 ? "TRADE" : "TRADES"}
+                    </div>
                   )}
                 </button>
               );
             })}
-
-            {/* Saturday week summary */}
-            <div className="text-center p-1 text-[9px] text-gray-500 flex flex-col justify-center">
-              <div className="font-semibold">{weekData.label}</div>
-              {weekData.pnl !== null && (
-                <div className={`font-medium ${weekData.pnl >= 0 ? "text-green-600" : "text-red-500"}`}>
-                  {formatPnl(weekData.pnl, pnlUnit)}
-                </div>
-              )}
-              {weekData.trade_count > 0 && (
-                <div className="text-gray-400">{weekData.trade_count}t</div>
-              )}
-            </div>
           </div>
         );
       })}

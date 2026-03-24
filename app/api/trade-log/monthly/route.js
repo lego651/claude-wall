@@ -42,7 +42,7 @@ export async function GET(request) {
 
   const { searchParams } = new URL(request.url);
   const month = searchParams.get('month');
-  const account_id = searchParams.get('account_id') || null;
+  const account_ids = searchParams.getAll('account_id');
 
   if (!month || !/^\d{4}-\d{2}$/.test(month)) {
     return NextResponse.json({ error: 'month is required (YYYY-MM)' }, { status: 400 });
@@ -69,8 +69,10 @@ export async function GET(request) {
       .lte('trade_at', monthEnd)
       .order('trade_at', { ascending: true });
 
-    if (account_id) {
-      query = query.eq('account_id', account_id);
+    if (account_ids.length === 1) {
+      query = query.eq('account_id', account_ids[0]);
+    } else if (account_ids.length > 1) {
+      query = query.in('account_id', account_ids);
     }
 
     const { data: trades, error } = await query;
@@ -80,13 +82,13 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
 
-    // pnl_unit from selected account
+    // pnl_unit only when exactly 1 account_id provided
     let pnlUnit = null;
-    if (account_id) {
+    if (account_ids.length === 1) {
       const { data: acct } = await supabase
         .from('trade_accounts')
         .select('pnl_unit')
-        .eq('id', account_id)
+        .eq('id', account_ids[0])
         .eq('user_id', user.id)
         .single();
       pnlUnit = acct?.pnl_unit ?? null;
