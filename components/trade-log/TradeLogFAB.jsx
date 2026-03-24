@@ -1,15 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import TradeLogModal from "./TradeLogModal";
 
-export default function TradeLogFAB() {
+export default function TradeLogFAB({ onTradeLogged }) {
   const [open, setOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsLoggedIn(!!user);
+    });
+  }, []);
+
+  function handleClick() {
+    if (!isLoggedIn) {
+      router.push("/signin");
+      return;
+    }
+    setOpen(true);
+  }
 
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={handleClick}
         className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-gray-900 text-white font-bold text-sm px-5 py-3 rounded-2xl shadow-lg hover:bg-gray-700 hover:-translate-y-0.5 transition-all duration-200"
         aria-label="Log a trade"
       >
@@ -20,7 +39,7 @@ export default function TradeLogFAB() {
         Log Trade
       </button>
 
-      {open && <TradeLogModal onClose={() => setOpen(false)} />}
+      {open && <TradeLogModal onClose={() => setOpen(false)} onSaved={onTradeLogged} />}
     </>
   );
 }

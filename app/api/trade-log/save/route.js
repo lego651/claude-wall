@@ -1,8 +1,42 @@
 import { NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/service';
+import { createClient } from '@/lib/supabase/server';
 import { tradeLogSchema } from '@/lib/schemas/trade-log';
 
+/**
+ * Fetch the user's default trade account, creating one if none exists.
+ */
+async function getOrCreateDefaultAccount(supabase, userId) {
+  const { data: existing } = await supabase
+    .from('trade_accounts')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('is_default', true)
+    .limit(1)
+    .single();
+
+  if (existing?.id) return existing.id;
+
+  const { data: created, error } = await supabase
+    .from('trade_accounts')
+    .insert({ user_id: userId, name: 'Default', is_default: true, pnl_unit: 'USD' })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('[trade-log/save] Failed to create default account:', error);
+    return null;
+  }
+
+  return created.id;
+}
+
 export async function POST(request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body;
   try {
     body = await request.json();
@@ -19,10 +53,37 @@ export async function POST(request) {
   }
 
   try {
-    const supabase = createServiceClient();
+    // Resolve account_id: use provided one if owned by user, else lazy default
+    let accountId = result.data.account_id || null;
+
+    if (accountId) {
+      // Verify ownership
+      const { data: acct } = await supabase
+        .from('trade_accounts')
+        .select('id')
+        .eq('id', accountId)
+        .eq('user_id', user.id)
+        .limit(1)
+        .single();
+
+      if (!acct) {
+        accountId = null; // fall back to default if not owned
+      }
+    }
+
+    if (!accountId) {
+      accountId = await getOrCreateDefaultAccount(supabase, user.id);
+    }
+
+    const insertData = {
+      ...result.data,
+      user_id: user.id,
+      account_id: accountId,
+    };
+
     const { data, error } = await supabase
       .from('trade_logs')
-      .insert(result.data)
+      .insert(insertData)
       .select('id, created_at')
       .single();
 

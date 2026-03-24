@@ -1,0 +1,113 @@
+"use client";
+
+function formatPnl(value, unit) {
+  if (value === null || value === undefined) return "—";
+  const sign = value >= 0 ? "+" : "-";
+  const abs = Math.abs(value);
+  if (unit === "R") return `${sign}${abs}R`;
+  if (unit === "USD") {
+    const formatted = abs.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    return `${sign}$${formatted}`;
+  }
+  return `${sign}${abs}`;
+}
+
+function ArcProgress({ value, max }) {
+  const ratio = max > 0 ? Math.min(value / max, 1) : 0;
+  // SVG arc — 100 unit viewBox, center (50,50), radius 40
+  const cx = 50, cy = 50, r = 40;
+  const startAngle = -210; // degrees, start at bottom-left
+  const totalDegrees = 240;
+  const angle = startAngle + ratio * totalDegrees;
+
+  function polarToCartesian(angleDeg) {
+    const rad = (angleDeg * Math.PI) / 180;
+    return {
+      x: cx + r * Math.cos(rad),
+      y: cy + r * Math.sin(rad),
+    };
+  }
+
+  const start = polarToCartesian(startAngle);
+  const end = polarToCartesian(angle);
+  const largeArcFlag = ratio * totalDegrees > 180 ? 1 : 0;
+
+  const trackEnd = polarToCartesian(startAngle + totalDegrees);
+  const trackLargeArc = 1;
+
+  // Color: green < limit, amber = limit, red > limit
+  let color = "#22c55e"; // green
+  if (value >= max) color = value > max ? "#ef4444" : "#f59e0b";
+
+  return (
+    <svg viewBox="0 0 100 100" className="w-20 h-20">
+      {/* Track */}
+      <path
+        d={`M ${start.x} ${start.y} A ${r} ${r} 0 ${trackLargeArc} 1 ${trackEnd.x} ${trackEnd.y}`}
+        fill="none"
+        stroke="#e5e7eb"
+        strokeWidth={8}
+        strokeLinecap="round"
+      />
+      {/* Fill */}
+      {ratio > 0 && (
+        <path
+          d={`M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`}
+          fill="none"
+          stroke={color}
+          strokeWidth={8}
+          strokeLinecap="round"
+        />
+      )}
+      {/* Center label */}
+      <text x="50" y="48" textAnchor="middle" dominantBaseline="middle" fontSize="18" fontWeight="bold" fill="#111827">
+        {value}
+      </text>
+      <text x="50" y="64" textAnchor="middle" fontSize="9" fill="#6b7280">
+        / {max}
+      </text>
+    </svg>
+  );
+}
+
+export default function DailySummaryCard({ tradesLogged = 0, tradesRemaining = 0, dailyLimit = 3, pnlTotal = null, pnlUnit = null, isLoading = false }) {
+  if (isLoading) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm animate-pulse">
+        <div className="flex items-center justify-between">
+          <div className="h-8 w-20 bg-gray-200 rounded" />
+          <div className="h-20 w-20 bg-gray-200 rounded-full" />
+          <div className="h-8 w-20 bg-gray-200 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  const pnlFormatted = formatPnl(pnlTotal, pnlUnit);
+  const pnlColor = pnlTotal === null ? "text-gray-400" : pnlTotal >= 0 ? "text-green-600" : "text-red-600";
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-4">
+        {/* Left: Logged */}
+        <div className="text-center min-w-0">
+          <p className="text-xs text-gray-500 font-medium">Logged</p>
+          <p className="text-2xl font-black text-gray-900">{tradesLogged}</p>
+        </div>
+
+        {/* Center: Arc */}
+        <ArcProgress value={tradesLogged} max={dailyLimit} />
+
+        {/* Right: P&L */}
+        <div className="text-center min-w-0">
+          <p className="text-xs text-gray-500 font-medium">P&L</p>
+          <p className={`text-lg font-black ${pnlColor}`}>{pnlFormatted}</p>
+        </div>
+      </div>
+
+      {tradesRemaining === 0 && (
+        <p className="text-center text-xs font-semibold text-red-500 mt-2">Limit reached</p>
+      )}
+    </div>
+  );
+}

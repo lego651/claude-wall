@@ -49,7 +49,12 @@ export default function TradeCard({ trade, onSave }) {
       });
       if (!res.ok) {
         const body = await res.json();
-        throw new Error(body.error || "Save failed");
+        const fieldErrors = body.details?.fieldErrors
+          ? Object.entries(body.details.fieldErrors)
+              .map(([f, msgs]) => `${f}: ${msgs[0]}`)
+              .join("; ")
+          : null;
+        throw new Error(fieldErrors || body.error || "Save failed");
       }
       const saved = await res.json();
       setMode("saved");

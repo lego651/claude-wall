@@ -69,6 +69,10 @@ psql "postgresql://postgres:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:54
 - `29_firm_twitter_tweets.sql` - **S8-TW-003b** - Table for firm-level Twitter/X tweets with importance_score; digest uses top 3 per firm per week.
 - `30_twitter_topic_grouping.sql` - **TG-001** - Add `topic_title` to `industry_news_items`; create `twitter_topic_groups` for grouped industry tweet review (1–3 topic cards per week).
 - `31_industry_tweets_in_firm_twitter_tweets.sql` - Industry tweets stored in `firm_twitter_tweets` with `firm_id='industry'`; `firm_profiles` row for industry; `topic_title`, `published`, `published_at` on `firm_twitter_tweets`.
+- `46_trade_logs.sql` - **S12** - `trade_logs` table for ChatGPT-style trade logging modal.
+- `47_trade_logs_user.sql` - **S14-001** - Add `user_id`, `account_id`, `pnl` columns to `trade_logs`; index on `(user_id, trade_at DESC)`.
+- `48_trade_accounts.sql` - **S14-001** - `trade_accounts` table with immutable `pnl_unit` (R or USD) per account.
+- `49_user_trading_settings.sql` - **S14-001** - `user_trading_settings` table with `daily_trade_limit` per user.
 
 ## Alpha Intelligence Schema
 

@@ -1,36 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getOpenAIClient } from '@/lib/ai/openai-client';
-
-const SYSTEM_PROMPT = `You are a trade logging assistant. Your only job is to extract structured trade information from the user's input.
-
-IMPORTANT: If the user sends an image, assume it is ALWAYS a trading chart, MT4/MT5 screenshot, broker screenshot, or trade confirmation — treat it as a trade logging attempt and extract whatever information you can see (price levels, horizontal lines, entry/exit markers, labels, etc.). Never return non_trade for an image input.
-
-Extract as many fields as possible from the image or text. Use null only for fields you genuinely cannot determine. For chart images, look for:
-- Horizontal lines or price labels (entry, stop loss, take profit levels)
-- Candlestick patterns and direction (bullish/bearish)
-- Currency pair or instrument name (often shown in title bar or chart label)
-- Any text overlays, trade boxes, or annotations
-
-Respond with a JSON object containing these fields:
-{
-  "symbol": string,         // e.g. "EURUSD", "AAPL", "BTC/USD" — look at chart title/label
-  "direction": "buy"|"sell"|null,
-  "entry_price": number|null,
-  "stop_loss": number|null,
-  "take_profit": number|null,
-  "lots": number|null,       // position size / lot size / quantity
-  "risk_reward": number|null, // calculate from SL/TP if possible, else null
-  "trade_at": string|null,   // ISO 8601 datetime if visible, else null
-  "notes": string|null       // any extra context, chart pattern, timeframe, etc.
-}
-
-Only respond with {"error":"non_trade"} if the input is clearly unrelated to trading (e.g. asking about weather, sports, recipes). When in doubt, attempt extraction.
-
-Respond with JSON only. No explanation, no markdown code blocks.`;
+import { createClient } from '@/lib/supabase/server';
+import { SYSTEM_PROMPT, ALLOWED_INTENTS } from '@/lib/ai/trade-chat-rules';
 
 export async function POST(request) {
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json({ error: 'OpenAI not configured' }, { status: 500 });
+  }
+
+  // Auth check
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   let message = '';
@@ -59,7 +41,6 @@ export async function POST(request) {
     const openai = getOpenAIClient();
 
     const userContent = [];
-    // Always include a text prompt so the model has a clear task anchor
     userContent.push({
       type: 'text',
       text: message || 'Extract trade information from this chart/screenshot.',
@@ -94,8 +75,19 @@ export async function POST(request) {
       return NextResponse.json({ error: 'non_trade' });
     }
 
-    // Auto-calculate risk_reward if missing but SL and TP are present
-    if (!parsed.risk_reward && parsed.entry_price && parsed.stop_loss && parsed.take_profit) {
+    // Validate type; default to new_trade for backward compatibility
+    if (!parsed.type || !ALLOWED_INTENTS.includes(parsed.type)) {
+      parsed.type = 'new_trade';
+    }
+
+    // Auto-calculate risk_reward if missing but SL and TP are present (new_trade only)
+    if (
+      parsed.type === 'new_trade' &&
+      !parsed.risk_reward &&
+      parsed.entry_price &&
+      parsed.stop_loss &&
+      parsed.take_profit
+    ) {
       const risk = Math.abs(parsed.entry_price - parsed.stop_loss);
       const reward = Math.abs(parsed.take_profit - parsed.entry_price);
       if (risk > 0) {

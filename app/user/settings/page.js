@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import apiClient from "@/lib/api";
 import config from "@/config";
 import PropProofLayout from "@/components/common/PropProofLayout";
+import TradingLogSettings from "@/components/settings/TradingLogSettings";
 
 export default function SettingsPage() {
   const supabase = createClient();
@@ -467,6 +468,9 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
+
+        {/* Trading Log Section */}
+        <TradingLogSettings />
 
         {/* Security Section */}
         <div className="bg-white border border-red-200 rounded-2xl p-8 shadow-sm">
