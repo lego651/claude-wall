@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import Link from "next/link";
 import TradeCard from "./TradeCard";
 
 const NON_TRADE_REPLY =
@@ -339,6 +340,17 @@ export default function TradeLogModal({ onClose, onSaved }) {
             </div>
           </div>
         )}
+
+        {/* Settings hint */}
+        <div className="px-5 pb-2">
+          <Link
+            href="/user/settings/trading"
+            onClick={onClose}
+            className="text-[11px] text-gray-400 hover:text-indigo-500 transition-colors"
+          >
+            Set default account &amp; P&L in Trading Settings →
+          </Link>
+        </div>
 
         {/* Divider */}
         <div className="h-px bg-gray-100 mx-0" />
