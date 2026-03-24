@@ -49,11 +49,25 @@ export default function TradeLogModal({ onClose, onSaved }) {
       .then((r) => r.ok ? r.json() : [])
       .then((data) => {
         setAccounts(data);
-        const def = data.find((a) => a.is_default);
-        if (def) setSelectedAccountId(def.id);
+        const def = data.find((a) => a.is_default) || data[0];
+        if (def) {
+          setSelectedAccountId(def.id);
+          if (def.default_pnl != null) setPnlInput(String(def.default_pnl));
+        }
       })
       .catch(() => {});
   }, []);
+
+  // Pre-fill P&L when user switches account
+  useEffect(() => {
+    if (!selectedAccountId || accounts.length === 0) return;
+    const acc = accounts.find((a) => a.id === selectedAccountId);
+    if (acc?.default_pnl != null) {
+      setPnlInput(String(acc.default_pnl));
+    } else {
+      setPnlInput("");
+    }
+  }, [selectedAccountId, accounts]);
 
   function handleImageChange(e) {
     applyFile(e.target.files?.[0]);

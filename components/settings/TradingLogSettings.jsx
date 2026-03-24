@@ -28,6 +28,10 @@ export default function TradingLogSettings() {
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState("");
 
+  // Default P&L edit state: accountId → temp value string
+  const [editingPnlId, setEditingPnlId] = useState(null);
+  const [pnlEditValue, setPnlEditValue] = useState("");
+
   // Delete confirm
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -132,6 +136,30 @@ export default function TradingLogSettings() {
       toast.error("Failed to rename account");
     } finally {
       setRenamingId(null);
+    }
+  }
+
+  async function handleSaveDefaultPnl(id) {
+    const trimmed = pnlEditValue.trim();
+    const val = trimmed === "" ? null : parseFloat(trimmed);
+    if (trimmed !== "" && isNaN(val)) {
+      toast.error("Default P&L must be a number");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/trade-accounts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ default_pnl: val }),
+      });
+      if (!res.ok) throw new Error();
+      const updated = await res.json();
+      setAccounts((prev) => prev.map((a) => (a.id === id ? updated : a)));
+      toast.success(val === null ? "Default P&L cleared" : "Default P&L saved");
+    } catch {
+      toast.error("Failed to save default P&L");
+    } finally {
+      setEditingPnlId(null);
     }
   }
 
@@ -256,6 +284,37 @@ export default function TradingLogSettings() {
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700">
                     Default
                   </span>
+                )}
+
+                {/* Default P&L inline editor */}
+                {editingPnlId === account.id ? (
+                  <input
+                    type="number"
+                    step="any"
+                    value={pnlEditValue}
+                    onChange={(e) => setPnlEditValue(e.target.value)}
+                    onBlur={() => handleSaveDefaultPnl(account.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSaveDefaultPnl(account.id);
+                      if (e.key === "Escape") setEditingPnlId(null);
+                    }}
+                    placeholder={`Default P&L (${account.pnl_unit === "R" ? "R" : "$"})`}
+                    className="input input-bordered input-xs w-28"
+                    autoFocus
+                  />
+                ) : (
+                  <button
+                    onClick={() => {
+                      setEditingPnlId(account.id);
+                      setPnlEditValue(account.default_pnl != null ? String(account.default_pnl) : "");
+                    }}
+                    className="text-xs text-gray-400 hover:text-indigo-600 border border-dashed border-gray-200 hover:border-indigo-300 rounded px-2 py-0.5 transition-colors shrink-0"
+                    title="Set default P&L"
+                  >
+                    {account.default_pnl != null
+                      ? `${account.default_pnl}${account.pnl_unit === "R" ? "R" : "$"}`
+                      : "Set P&L"}
+                  </button>
                 )}
 
                 {/* Actions */}

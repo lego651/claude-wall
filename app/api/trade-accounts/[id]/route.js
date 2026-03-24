@@ -46,6 +46,19 @@ export async function PATCH(request, { params }) {
       updates.name = name;
     }
 
+    if ('default_pnl' in body) {
+      const val = body.default_pnl;
+      if (val === null) {
+        updates.default_pnl = null;
+      } else {
+        const num = parseFloat(val);
+        if (isNaN(num)) {
+          return NextResponse.json({ error: 'default_pnl must be a number or null' }, { status: 400 });
+        }
+        updates.default_pnl = num;
+      }
+    }
+
     if (body.is_default === true) {
       // Unset all other defaults for this user first
       await supabase
@@ -61,7 +74,7 @@ export async function PATCH(request, { params }) {
       .update(updates)
       .eq('id', id)
       .eq('user_id', user.id)
-      .select('id, name, is_default, pnl_unit, created_at')
+      .select('id, name, is_default, pnl_unit, default_pnl, created_at')
       .single();
 
     if (error) {

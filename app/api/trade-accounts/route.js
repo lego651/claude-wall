@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from('trade_accounts')
-      .select('id, name, is_default, pnl_unit, created_at')
+      .select('id, name, is_default, pnl_unit, default_pnl, created_at')
       .eq('user_id', user.id)
       .order('is_default', { ascending: false })
       .order('created_at', { ascending: true });
@@ -56,7 +56,7 @@ export async function POST(request) {
     const { data, error } = await supabase
       .from('trade_accounts')
       .insert({ user_id: user.id, name: name.trim(), pnl_unit, is_default: false })
-      .select('id, name, is_default, pnl_unit, created_at')
+      .select('id, name, is_default, pnl_unit, default_pnl, created_at')
       .single();
 
     if (error) {
