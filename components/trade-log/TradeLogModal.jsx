@@ -291,7 +291,7 @@ export default function TradeLogModal({ onClose, onSaved }) {
 
         {/* Account + P&L row */}
         {accounts.length > 0 && (
-          <div className="px-5 pr-5 pb-3 flex items-center gap-3">
+          <div className="px-5 pb-3 flex items-center gap-3">
             {/* Account */}
             <div className="flex items-center gap-2 flex-1">
               <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase shrink-0">Account</span>
@@ -309,7 +309,7 @@ export default function TradeLogModal({ onClose, onSaved }) {
               </select>
             </div>
             {/* P&L */}
-            <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase shrink-0">
                 P&amp;L {pnlUnit ? `(${pnlUnit === "R" ? "R" : "$"})` : ""}
               </span>
@@ -319,7 +319,7 @@ export default function TradeLogModal({ onClose, onSaved }) {
                 value={pnlInput}
                 onChange={(e) => setPnlInput(e.target.value)}
                 placeholder={pnlUnit === "R" ? "e.g. 2.5" : "e.g. 1000"}
-                className="flex-1 text-sm text-gray-800 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400 min-w-0"
+                className="flex-1 text-sm text-gray-800 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400 min-w-0 w-0"
                 aria-label={`P&L ${pnlUnit ? `(${pnlUnit})` : ""}`}
               />
             </div>
