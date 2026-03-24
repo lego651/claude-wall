@@ -40,7 +40,7 @@ function ArcProgress({ value, max }) {
   if (value >= max) color = value > max ? "#ef4444" : "#f59e0b";
 
   return (
-    <svg viewBox="0 0 100 100" className="w-20 h-20">
+    <svg viewBox="0 0 100 100" className="w-24 h-24">
       {/* Track */}
       <path
         d={`M ${start.x} ${start.y} A ${r} ${r} 0 ${trackLargeArc} 1 ${trackEnd.x} ${trackEnd.y}`}
@@ -73,26 +73,26 @@ function ArcProgress({ value, max }) {
 export default function DailySummaryCard({ tradesLogged = 0, tradesRemaining = 0, dailyLimit = 3, pnlTotal = null, pnlUnit = null, isLoading = false }) {
   if (isLoading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm animate-pulse">
+      <div className="px-6 py-5 animate-pulse">
         <div className="flex items-center justify-between">
-          <div className="h-8 w-20 bg-gray-200 rounded" />
-          <div className="h-20 w-20 bg-gray-200 rounded-full" />
-          <div className="h-8 w-20 bg-gray-200 rounded" />
+          <div className="h-10 w-16 bg-gray-100 rounded" />
+          <div className="h-24 w-24 bg-gray-100 rounded-full" />
+          <div className="h-10 w-16 bg-gray-100 rounded" />
         </div>
       </div>
     );
   }
 
   const pnlFormatted = formatPnl(pnlTotal, pnlUnit);
-  const pnlColor = pnlTotal === null ? "text-gray-400" : pnlTotal >= 0 ? "text-green-600" : "text-red-600";
+  const pnlColor = pnlTotal === null ? "text-slate-300" : pnlTotal >= 0 ? "text-green-500" : "text-red-500";
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+    <div className="px-6 py-5">
       <div className="flex items-center justify-between gap-4">
         {/* Left: Logged */}
         <div className="text-center min-w-0">
-          <p className="text-xs text-gray-500 font-medium">Logged</p>
-          <p className="text-2xl font-black text-gray-900">{tradesLogged}</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Logged</p>
+          <p className="text-3xl font-black text-slate-900">{tradesLogged}</p>
         </div>
 
         {/* Center: Arc */}
@@ -100,13 +100,13 @@ export default function DailySummaryCard({ tradesLogged = 0, tradesRemaining = 0
 
         {/* Right: P&L */}
         <div className="text-center min-w-0">
-          <p className="text-xs text-gray-500 font-medium">P&L</p>
-          <p className={`text-lg font-black ${pnlColor}`}>{pnlFormatted}</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">P&L</p>
+          <p className={`text-3xl font-black ${pnlColor}`}>{pnlFormatted}</p>
         </div>
       </div>
 
       {tradesRemaining === 0 && (
-        <p className="text-center text-xs font-semibold text-red-500 mt-2">Limit reached</p>
+        <p className="text-center text-[11px] font-bold text-red-400 uppercase tracking-wide mt-3">Limit reached</p>
       )}
     </div>
   );

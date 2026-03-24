@@ -66,32 +66,36 @@ function AccountFilterBar({ accounts, selectedIds, onToggle, onSelectAll }) {
 
       {/* Pills row */}
       <div className="flex items-center gap-2 flex-wrap">
-        {/* All Accounts pill */}
+        {/* All Accounts pill — solid indigo when all selected */}
         <button
           onClick={onSelectAll}
-          className="px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-300 bg-white text-slate-700 hover:border-slate-400 transition-all"
+          className={`px-5 py-2 rounded-full text-sm font-bold border transition-all ${
+            allSelected
+              ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
+              : "bg-white border-slate-300 text-slate-600 hover:border-slate-400"
+          }`}
         >
           All Accounts
         </button>
 
         {/* Individual account pills */}
         {accounts.map((acct, idx) => {
-          const isSelected = allSelected || selectedIds.has(acct.id);
+          const isActive = !allSelected && selectedIds.has(acct.id);
           const color = ACCOUNT_COLORS[idx % ACCOUNT_COLORS.length];
           return (
             <button
               key={acct.id}
               onClick={() => onToggle(acct.id)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all flex items-center gap-1.5 ${
-                isSelected
+              className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all flex items-center gap-2 ${
+                isActive
                   ? "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
-                  : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
               }`}
             >
               {acct.name}
               <span
                 className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ backgroundColor: isSelected ? color : "#CBD5E1" }}
+                style={{ backgroundColor: isActive ? color : "#94A3B8" }}
               />
             </button>
           );
@@ -305,23 +309,23 @@ export default function LogsPageClient() {
 
           {/* Right column: Day view */}
           <div className="flex flex-col gap-4">
-            {/* Day Navigator */}
-            <DayNavigator
-              selectedDate={selectedDate}
-              onPrev={handlePrev}
-              onNext={handleNext}
-              onLabelClick={() => setShowCalendarPicker(true)}
-            />
-
-            {/* Daily Summary Card */}
-            <DailySummaryCard
-              tradesLogged={dailyData?.trades_logged ?? 0}
-              tradesRemaining={dailyData?.trades_remaining ?? 0}
-              dailyLimit={dailyData?.daily_limit ?? 3}
-              pnlTotal={dailyData?.pnl_total ?? null}
-              pnlUnit={dailyData?.pnl_unit ?? null}
-              isLoading={dailyLoading}
-            />
+            {/* Navigator + Summary combined card */}
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+              <DayNavigator
+                selectedDate={selectedDate}
+                onPrev={handlePrev}
+                onNext={handleNext}
+                onLabelClick={() => setShowCalendarPicker(true)}
+              />
+              <DailySummaryCard
+                tradesLogged={dailyData?.trades_logged ?? 0}
+                tradesRemaining={dailyData?.trades_remaining ?? 0}
+                dailyLimit={dailyData?.daily_limit ?? 3}
+                pnlTotal={dailyData?.pnl_total ?? null}
+                pnlUnit={dailyData?.pnl_unit ?? null}
+                isLoading={dailyLoading}
+              />
+            </div>
 
             {/* Trades section */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
