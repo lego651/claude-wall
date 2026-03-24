@@ -1,6 +1,6 @@
 "use client";
 
-const DOW = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+const DOW = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT", "WK"];
 
 function formatPnl(value, unit) {
   if (value === null || value === undefined) return null;
@@ -104,7 +104,7 @@ export default function MonthlyCalendar({ monthlyData, selectedDate, onDayClick,
       </div>
 
       {/* DOW headers */}
-      <div className="grid grid-cols-7 border-t border-slate-100">
+      <div className="grid grid-cols-[repeat(7,1fr)_80px] border-t border-slate-100">
         {DOW.map((d) => (
           <div key={d} className="text-center text-[11px] font-bold text-slate-400 py-2.5 tracking-wide">
             {d}
@@ -116,14 +116,25 @@ export default function MonthlyCalendar({ monthlyData, selectedDate, onDayClick,
       {Array.from({ length: cells.length / 7 }).map((_, rowIdx) => {
         const rowCells = cells.slice(rowIdx * 7, rowIdx * 7 + 7);
 
+        // Compute weekly summary from non-overflow cells
+        let weekPnl = null;
+        let weekTrades = 0;
+        rowCells.forEach((cell) => {
+          if (cell.overflow) return;
+          const ds = dateStr(cell.day);
+          const dayData = days[ds];
+          if (dayData?.pnl != null) weekPnl = (weekPnl ?? 0) + dayData.pnl;
+          weekTrades += dayData?.trade_count ?? 0;
+        });
+
         return (
-          <div key={rowIdx} className="grid grid-cols-7 border-t border-slate-100">
+          <div key={rowIdx} className="grid grid-cols-[repeat(7,1fr)_80px] border-t border-slate-100">
             {rowCells.map((cell, colIdx) => {
               if (cell.overflow) {
                 return (
                   <div
                     key={colIdx}
-                    className="px-2 pt-3 pb-4 min-h-[5.5rem] border-r border-slate-100 last:border-r-0"
+                    className="px-2 pt-3 pb-4 min-h-[5.5rem] border-r border-slate-100"
                   >
                     <span className="text-sm font-medium text-slate-300">{cell.day}</span>
                   </div>
@@ -141,7 +152,7 @@ export default function MonthlyCalendar({ monthlyData, selectedDate, onDayClick,
                 <button
                   key={colIdx}
                   onClick={() => onDayClick(ds)}
-                  className={`text-left px-2 pt-3 pb-4 min-h-[5.5rem] border-r border-slate-100 last:border-r-0 hover:bg-slate-50 transition-colors ${isSelected ? "bg-indigo-50" : ""}`}
+                  className={`text-left px-2 pt-3 pb-4 min-h-[5.5rem] border-r border-slate-100 hover:bg-slate-50 transition-colors ${isSelected ? "bg-indigo-50" : ""}`}
                   aria-label={`${ds}${count > 0 ? `, ${count} trades` : ""}`}
                 >
                   {/* Day number */}
@@ -165,12 +176,31 @@ export default function MonthlyCalendar({ monthlyData, selectedDate, onDayClick,
                   {/* Trade count */}
                   {count > 0 && (
                     <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mt-0.5">
-                      {count} {count === 1 ? "TRADE" : "TRADES"}
+                      {count} {count === 1 ? "T" : "T"}
                     </div>
                   )}
                 </button>
               );
             })}
+
+            {/* Weekly summary cell */}
+            <div className="px-2 pt-3 pb-4 min-h-[5.5rem] flex flex-col justify-end">
+              {weekTrades > 0 && (
+                <>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">
+                    Week {rowIdx + 1}
+                  </p>
+                  {weekPnl !== null && (
+                    <p className={`text-sm font-bold leading-tight ${weekPnl >= 0 ? "text-green-500" : "text-red-500"}`}>
+                      {formatPnl(weekPnl, pnlUnit)}
+                    </p>
+                  )}
+                  <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide mt-0.5">
+                    {weekTrades} {weekTrades === 1 ? "Trade" : "Trades"}
+                  </p>
+                </>
+              )}
+            </div>
           </div>
         );
       })}

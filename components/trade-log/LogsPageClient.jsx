@@ -328,9 +328,9 @@ export default function LogsPageClient() {
             </div>
 
             {/* Trades section */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div>
               {/* Section header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+              <div className="flex items-center justify-between px-1 py-3">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                   Trades for {formatSelectedDate(selectedDate)}
                 </span>
