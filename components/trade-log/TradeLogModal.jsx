@@ -291,7 +291,7 @@ export default function TradeLogModal({ onClose, onSaved }) {
 
         {/* Account + P&L row */}
         {accounts.length > 0 && (
-          <div className="px-5 pb-3 flex items-center gap-4">
+          <div className="px-5 pr-5 pb-3 flex items-center gap-3">
             {/* Account */}
             <div className="flex items-center gap-2 flex-1">
               <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase shrink-0">Account</span>
@@ -523,25 +523,19 @@ export default function TradeLogModal({ onClose, onSaved }) {
         </div>
 
         {/* Bottom bar */}
-        <div className="px-5 pb-4 pt-1 flex items-center justify-between">
+        <div className="px-5 pb-4 pt-1">
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
             className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-400 tracking-wide hover:text-indigo-500 transition-colors disabled:opacity-40"
             aria-label="Attach file"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
             </svg>
             <span className="uppercase tracking-widest">Attach File</span>
             <span className="text-gray-300 mx-0.5">•</span>
             <span className="uppercase tracking-widest">Drag &amp; Drop to Upload</span>
-          </button>
-          <button
-            onClick={onSaved}
-            className="text-[11px] font-bold tracking-widest text-indigo-600 hover:text-indigo-800 uppercase transition-colors"
-          >
-            Complete Log
           </button>
         </div>
 
