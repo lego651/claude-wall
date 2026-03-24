@@ -14,6 +14,7 @@ import MetricsCards from "@/components/common/MetricsCards";
 import MonthlyPayoutChart from "@/components/common/MonthlyPayoutChart";
 import ConnectWalletModal from "@/components/user/dashboard/ConnectWalletModal";
 import SubscriptionStatsPanel from "@/components/user/dashboard/SubscriptionStatsPanel";
+import TradeLogFAB from "@/components/trade-log/TradeLogFAB";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -569,6 +570,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <TradeLogFAB />
 
       {/* Connect Wallet Modal (for users without a wallet) */}
       <ConnectWalletModal
