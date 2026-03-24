@@ -210,7 +210,7 @@ export default function LogsPageClient() {
       ...prev,
       trades: prev.trades.filter((t) => t.id !== id),
       trades_logged: Math.max(0, prev.trades_logged - 1),
-      trades_remaining: prev.trades_remaining + 1,
+      trades_remaining: prev.trades_remaining !== null ? prev.trades_remaining + 1 : null,
     }));
   }
 
@@ -319,8 +319,8 @@ export default function LogsPageClient() {
               />
               <DailySummaryCard
                 tradesLogged={dailyData?.trades_logged ?? 0}
-                tradesRemaining={dailyData?.trades_remaining ?? 0}
-                dailyLimit={dailyData?.daily_limit ?? 3}
+                tradesRemaining={dailyData?.trades_remaining ?? null}
+                dailyLimit={dailyData?.daily_limit ?? null}
                 pnlTotal={dailyData?.pnl_total ?? null}
                 pnlUnit={dailyData?.pnl_unit ?? null}
                 isLoading={dailyLoading}
