@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 function formatPnl(value, unit) {
   if (value === null || value === undefined) return "—";
   const sign = value >= 0 ? "+" : "-";
@@ -108,6 +110,13 @@ export default function DailySummaryCard({ tradesLogged = 0, tradesRemaining = n
 
       {showArc && tradesRemaining === 0 && (
         <p className="text-center text-[11px] font-bold text-red-400 uppercase tracking-wide mt-3">Limit reached</p>
+      )}
+      {!showArc && (
+        <p className="text-center text-[11px] text-slate-400 mt-3">
+          <Link href="/user/settings/trading" className="hover:text-indigo-500 transition-colors">
+            Set a daily trade limit in Trading Settings →
+          </Link>
+        </p>
       )}
     </div>
   );
