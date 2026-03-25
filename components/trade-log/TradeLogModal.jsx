@@ -17,7 +17,7 @@ function formatPnl(value, unit) {
   return `${sign}${value}`;
 }
 
-export default function TradeLogModal({ onClose, onSaved }) {
+export default function TradeLogModal({ onClose, onSaved, preselectedAccountId }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [imageFile, setImageFile] = useState(null);
@@ -51,7 +51,8 @@ export default function TradeLogModal({ onClose, onSaved }) {
       .then((r) => r.ok ? r.json() : [])
       .then((data) => {
         setAccounts(data);
-        const def = data.find((a) => a.is_default) || data[0];
+        const preselected = preselectedAccountId && data.find((a) => a.id === preselectedAccountId);
+        const def = preselected || data.find((a) => a.is_default) || data[0];
         if (def) {
           setSelectedAccountId(def.id);
           if (def.default_pnl != null) setPnlInput(String(def.default_pnl));

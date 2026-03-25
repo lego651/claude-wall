@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import TradeLogModal from "./TradeLogModal";
 
-export default function TradeLogFAB({ onTradeLogged }) {
+export default function TradeLogFAB({ onTradeLogged, preselectedAccountId }) {
   const [open, setOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
@@ -42,7 +42,7 @@ export default function TradeLogFAB({ onTradeLogged }) {
         Log New Trade
       </button>
 
-      {open && <TradeLogModal onClose={() => setOpen(false)} onSaved={onTradeLogged} />}
+      {open && <TradeLogModal onClose={() => setOpen(false)} onSaved={onTradeLogged} preselectedAccountId={preselectedAccountId} />}
     </>
   );
 }
