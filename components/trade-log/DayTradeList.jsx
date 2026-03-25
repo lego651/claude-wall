@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import TradeEditModal from "./TradeEditModal";
 import { createClient } from "@/lib/supabase/client";
+import { getBrowserTimezone, formatTimezoneLabel } from "@/lib/timezone";
 
 function formatPnl(value, unit) {
   if (value === null || value === undefined) return "—";
@@ -75,7 +76,7 @@ function ChartImageTop({ chartImagePath }) {
   );
 }
 
-function TradeRow({ trade, accounts, onUpdated, onDeleted }) {
+function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -84,11 +85,13 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted }) {
   const pnlUnit = account?.pnl_unit || trade.pnl_unit || null;
   const isBuy = trade.direction === "buy";
 
+  const tz = userTimezone || getBrowserTimezone();
   const time = trade.trade_at
     ? new Date(trade.trade_at).toLocaleTimeString("en-US", {
-        hour: "numeric", minute: "2-digit", hour12: true, timeZone: "UTC",
+        hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz,
       })
     : null;
+  const tzLabel = formatTimezoneLabel(tz);
 
   // SELL: SL → Entry → TP (red → gray → green)
   // BUY:  TP → Entry → SL (green → gray → red)
@@ -240,7 +243,10 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted }) {
         <div className="flex-1" />
 
         {time && (
-          <span className="text-xs font-medium text-slate-400">{time}</span>
+          <div className="text-right">
+            <div className="text-xs font-medium text-slate-400">{time}</div>
+            <div className="text-[10px] text-slate-300">{tzLabel}</div>
+          </div>
         )}
 
         <button
@@ -266,7 +272,7 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted }) {
   );
 }
 
-export default function DayTradeList({ trades, accounts, onUpdated, onDeleted, isLoading }) {
+export default function DayTradeList({ trades, accounts, onUpdated, onDeleted, isLoading, userTimezone }) {
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -309,6 +315,7 @@ export default function DayTradeList({ trades, accounts, onUpdated, onDeleted, i
           accounts={accounts}
           onUpdated={onUpdated}
           onDeleted={onDeleted}
+          userTimezone={userTimezone}
         />
       ))}
     </div>

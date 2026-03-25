@@ -119,12 +119,17 @@ export default function LogsPageClient() {
   const [accounts, setAccounts] = useState([]);
   // selectedIds: empty Set = show all accounts (no filter)
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [userTimezone, setUserTimezone] = useState(null);
 
-  // Load accounts once
+  // Load accounts and timezone once
   useEffect(() => {
     fetch("/api/trade-accounts")
       .then((r) => r.ok ? r.json() : [])
       .then((data) => setAccounts(Array.isArray(data) ? data : []))
+      .catch(() => {});
+    fetch("/api/user-settings/trading")
+      .then((r) => r.ok ? r.json() : {})
+      .then((data) => { if (data.preferred_timezone) setUserTimezone(data.preferred_timezone); })
       .catch(() => {});
   }, []);
 
@@ -345,6 +350,7 @@ export default function LogsPageClient() {
                 onUpdated={handleTradeUpdated}
                 onDeleted={handleTradeDeleted}
                 isLoading={dailyLoading}
+                userTimezone={userTimezone}
               />
             </div>
           </div>
