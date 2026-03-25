@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { utcToLocalInputValue, localInputValueToUtc, getBrowserTimezone } from "@/lib/timezone";
+import { utcToLocalInputValue, localInputValueToUtc, getBrowserTimezone, formatTimezoneLabel } from "@/lib/timezone";
 
 const FIELD_LABELS = {
   symbol: "Symbol",
@@ -196,6 +196,9 @@ export default function TradeCard({ trade, onSave, userTimezone, initialChartIma
               <div key={key}>
                 <div className="text-gray-400 text-[10px] font-semibold uppercase tracking-wider">{label}</div>
                 <div className="text-gray-800 font-medium">{formatValue(key, fields[key], tz)}</div>
+                {key === "trade_at" && fields[key] && (
+                  <div className="text-gray-400 text-[10px] mt-0.5">{formatTimezoneLabel(tz)}</div>
+                )}
               </div>
             ))}
         </div>
