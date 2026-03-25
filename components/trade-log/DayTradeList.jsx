@@ -77,10 +77,40 @@ function ChartImageTop({ chartImagePath }) {
   );
 }
 
+const RESULT_STATUSES = [
+  {
+    key: "TP",
+    label: "TP",
+    active: "text-green-600 border-green-300 bg-green-100",
+    inactive: "text-slate-300 border-slate-100 bg-white hover:border-green-200 hover:text-green-500",
+  },
+  {
+    key: "BE",
+    label: "BE",
+    active: "text-slate-600 border-slate-300 bg-slate-100",
+    inactive: "text-slate-300 border-slate-100 bg-white hover:border-slate-300 hover:text-slate-500",
+  },
+  {
+    key: "SL",
+    label: "SL",
+    active: "text-red-500 border-red-300 bg-red-100",
+    inactive: "text-slate-300 border-slate-100 bg-white hover:border-red-200 hover:text-red-400",
+  },
+];
+
+function getResultStatus(pnl, rr) {
+  if (pnl === null || pnl === undefined) return null;
+  if (pnl === 0) return "BE";
+  if (pnl === -1) return "SL";
+  if (rr != null && pnl === rr) return "TP";
+  return null;
+}
+
 function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const account = accounts.find((a) => a.id === trade.account_id);
   const pnlUnit = account?.pnl_unit || trade.pnl_unit || null;
@@ -131,6 +161,30 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
     } finally {
       setDeleting(false);
       setConfirmDelete(false);
+    }
+  }
+
+  async function handleSetStatus(statusKey) {
+    const currentStatus = getResultStatus(trade.pnl, trade.risk_reward);
+    // Toggle off if already active
+    const pnl = currentStatus === statusKey ? null
+      : statusKey === "TP" ? (trade.risk_reward ?? 0)
+      : statusKey === "BE" ? 0
+      : -1; // SL
+
+    setUpdatingStatus(true);
+    try {
+      const res = await fetch(`/api/trade-log/${trade.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pnl }),
+      });
+      if (!res.ok) throw new Error();
+      onUpdated(await res.json());
+    } catch {
+      // silently fail
+    } finally {
+      setUpdatingStatus(false);
     }
   }
 
@@ -202,7 +256,26 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center gap-5 px-4 py-3 border-t border-slate-100">
+      <div className="flex items-center gap-3 px-4 py-3 border-t border-slate-100">
+        {/* Quick result status pills */}
+        <div className="flex items-center gap-1">
+          {RESULT_STATUSES.map(({ key, label, active, inactive }) => {
+            const isActive = getResultStatus(trade.pnl, trade.risk_reward) === key;
+            return (
+              <button
+                key={key}
+                onClick={() => handleSetStatus(key)}
+                disabled={updatingStatus}
+                className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-all cursor-pointer disabled:opacity-40 ${isActive ? active : inactive}`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="w-px h-3.5 bg-slate-200 shrink-0" />
+
         <button
           onClick={() => setEditOpen(true)}
           className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
