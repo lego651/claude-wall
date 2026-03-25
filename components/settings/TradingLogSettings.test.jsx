@@ -50,13 +50,6 @@ describe('TradingLogSettings', () => {
     expect(screen.getByText('Trading Log')).toBeInTheDocument();
   });
 
-  it('renders daily trade limit input', async () => {
-    await act(async () => {
-      render(<TradingLogSettings />);
-    });
-    expect(screen.getByLabelText('Daily trade limit')).toBeInTheDocument();
-  });
-
   it('loads and displays accounts', async () => {
     await act(async () => {
       render(<TradingLogSettings />);
@@ -89,46 +82,11 @@ describe('TradingLogSettings', () => {
     });
   });
 
-  it('saves daily limit', async () => {
-    global.fetch = jest.fn()
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ daily_trade_limit: 3 }) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(ACCOUNTS) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ daily_trade_limit: 5 }) });
-
-    await act(async () => {
-      render(<TradingLogSettings />);
-    });
-
-    const input = screen.getByLabelText('Daily trade limit');
-    fireEvent.change(input, { target: { value: '5' } });
-
-    await act(async () => {
-      fireEvent.click(screen.getByText('Save'));
-    });
-
-    expect(toast.success).toHaveBeenCalledWith('Daily limit saved');
-  });
-
-  it('shows error toast for daily limit < 1', async () => {
-    await act(async () => {
-      render(<TradingLogSettings />);
-    });
-
-    const input = screen.getByLabelText('Daily trade limit');
-    fireEvent.change(input, { target: { value: '0' } });
-
-    await act(async () => {
-      fireEvent.click(screen.getByText('Save'));
-    });
-
-    expect(toast.error).toHaveBeenCalledWith('Daily trade limit must be at least 1');
-  });
-
   it('adds a new account', async () => {
     const newAcct = { id: 'acct-3', name: 'Test', is_default: false, pnl_unit: 'R', created_at: '2026-01-03' };
     global.fetch = jest.fn()
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ daily_trade_limit: 3 }) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(ACCOUNTS) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(newAcct) });
 
     await act(async () => {
@@ -137,7 +95,7 @@ describe('TradingLogSettings', () => {
 
     await waitFor(() => screen.getByText('Funded A'));
 
-    fireEvent.change(screen.getByPlaceholderText('Account name'), { target: { value: 'Test' } });
+    fireEvent.change(screen.getByPlaceholderText('Enter account name...'), { target: { value: 'Test' } });
     // Switch to R - find by value
     const rRadio = screen.getByDisplayValue('R');
     fireEvent.click(rRadio);
@@ -180,8 +138,8 @@ describe('TradingLogSettings', () => {
 
   it('deletes non-default account', async () => {
     global.fetch = jest.fn()
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ daily_trade_limit: 3 }) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(ACCOUNTS) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ success: true }) });
 
     await act(async () => {
@@ -205,18 +163,18 @@ describe('TradingLogSettings', () => {
   it('sets account as default', async () => {
     const updated = { ...ACCOUNTS[1], is_default: true };
     global.fetch = jest.fn()
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ daily_trade_limit: 3 }) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(ACCOUNTS) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(updated) });
 
     await act(async () => {
       render(<TradingLogSettings />);
     });
 
-    await waitFor(() => screen.getByText('Set default'));
+    await waitFor(() => screen.getByTitle('Set as default'));
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Set default'));
+      fireEvent.click(screen.getByTitle('Set as default'));
     });
 
     // After setting default, the account should update

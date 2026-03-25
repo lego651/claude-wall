@@ -303,29 +303,30 @@ export default function TradingLogSettings() {
     : [effectiveTz, ...COMMON_TIMEZONES];
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-      <div className="flex items-center gap-2 mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
-        <h2 className="text-xl font-bold">Trading Log</h2>
+        <h2 className="text-xl font-bold text-slate-900">Trading Log</h2>
       </div>
 
       {/* Timezone Preference */}
-      <div className="mb-8">
-        <h3 className="text-sm font-semibold text-gray-700 mb-1">Trade Timezone</h3>
-        <p className="text-xs text-gray-400 mb-3">
+      <div className="px-6 py-5 border-b border-slate-100">
+        <p className="text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-1">Trade Timezone</p>
+        <p className="text-xs text-slate-400 mb-3">
           All trade date &amp; time fields are displayed in this timezone. Trade history on the calendar uses UTC dates.
         </p>
         {loadingTz ? (
-          <div className="h-10 bg-gray-100 rounded-xl animate-pulse w-72" />
+          <div className="h-11 bg-slate-100 rounded-xl animate-pulse" />
         ) : (
-          <div className="flex items-center gap-3">
+          <div className="relative flex items-center">
             <select
               value={effectiveTz}
               onChange={(e) => handleSaveTimezone(e.target.value)}
               disabled={savingTz}
-              className="select select-bordered select-sm text-sm"
+              className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-sm text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300 transition-colors cursor-pointer"
             >
               {tzOptions.map((tz) => (
                 <option key={tz} value={tz}>
@@ -333,35 +334,38 @@ export default function TradingLogSettings() {
                 </option>
               ))}
             </select>
-            {savingTz && <span className="loading loading-spinner loading-xs text-gray-400" />}
-            {!preferredTimezone && (
-              <span className="text-xs text-gray-400">
-                (auto-detected from browser)
-              </span>
-            )}
+            <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+              {savingTz
+                ? <span className="loading loading-spinner loading-xs" />
+                : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+              }
+            </div>
           </div>
+        )}
+        {!preferredTimezone && !loadingTz && (
+          <p className="text-[11px] text-slate-400 mt-1.5">Auto-detected from browser</p>
         )}
       </div>
 
       {/* Trade Accounts */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Trade Accounts</h3>
+      <div className="px-6 py-5 border-b border-slate-100">
+        <p className="text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-3">Trade Accounts</p>
 
         {loadingAccounts ? (
           <div className="space-y-2">
             {[1, 2].map((i) => (
-              <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />
+              <div key={i} className="h-14 bg-slate-100 rounded-xl animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="space-y-2 mb-6">
+          <div className="space-y-2">
             {accounts.map((account) => (
               <div
                 key={account.id}
-                className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl"
+                className={`flex items-center gap-2 px-4 py-3 border rounded-xl ${account.is_default ? "border-slate-300" : "border-slate-200"}`}
               >
                 {/* Name (inline edit or display) */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 mr-2">
                   {renamingId === account.id ? (
                     <input
                       type="text"
@@ -378,7 +382,7 @@ export default function TradingLogSettings() {
                     />
                   ) : (
                     <button
-                      className="text-sm font-medium text-gray-900 hover:text-indigo-600 text-left truncate block"
+                      className="text-sm font-bold text-slate-900 hover:text-indigo-600 text-left truncate block"
                       onClick={() => {
                         setRenamingId(account.id);
                         setRenameValue(account.name);
@@ -390,13 +394,14 @@ export default function TradingLogSettings() {
                   )}
                 </div>
 
-                {/* Badges */}
-                <PnlUnitBadge unit={account.pnl_unit} />
-                {account.is_default && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700">
-                    Default
-                  </span>
-                )}
+                {/* P&L UNIT label + badge */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="text-[9px] font-bold tracking-wider uppercase text-slate-400">P&L UNIT</span>
+                  <PnlUnitBadge unit={account.pnl_unit} />
+                </div>
+
+                {/* Divider */}
+                <div className="w-px h-5 bg-slate-200 shrink-0" />
 
                 {/* Daily limit inline editor */}
                 {editingLimitId === account.id ? (
@@ -412,7 +417,7 @@ export default function TradingLogSettings() {
                       if (e.key === "Escape") setEditingLimitId(null);
                     }}
                     placeholder="e.g. 3"
-                    className="input input-bordered input-xs w-20"
+                    className="input input-bordered input-xs w-16"
                     autoFocus
                   />
                 ) : (
@@ -421,12 +426,15 @@ export default function TradingLogSettings() {
                       setEditingLimitId(account.id);
                       setLimitEditValue(account.daily_trade_limit != null ? String(account.daily_trade_limit) : "");
                     }}
-                    className="text-xs text-gray-400 hover:text-indigo-600 border border-dashed border-gray-200 hover:border-indigo-300 rounded px-2 py-0.5 transition-colors shrink-0"
+                    className="text-[11px] font-semibold text-slate-500 hover:text-indigo-600 border border-slate-200 hover:border-indigo-300 rounded-lg px-2 py-1 transition-colors shrink-0"
                     title="Set daily trade limit"
                   >
-                    {account.daily_trade_limit != null ? `${account.daily_trade_limit}/day` : "Set limit"}
+                    {account.daily_trade_limit != null ? `${account.daily_trade_limit}/DAY` : "SET LIMIT"}
                   </button>
                 )}
+
+                {/* Divider */}
+                <div className="w-px h-5 bg-slate-200 shrink-0" />
 
                 {/* Default P&L inline editor */}
                 {editingPnlId === account.id ? (
@@ -440,8 +448,8 @@ export default function TradingLogSettings() {
                       if (e.key === "Enter") handleSaveDefaultPnl(account.id);
                       if (e.key === "Escape") setEditingPnlId(null);
                     }}
-                    placeholder={`Default P&L (${account.pnl_unit === "R" ? "R" : "$"})`}
-                    className="input input-bordered input-xs w-28"
+                    placeholder={`e.g. 1.3`}
+                    className="input input-bordered input-xs w-20"
                     autoFocus
                   />
                 ) : (
@@ -450,115 +458,131 @@ export default function TradingLogSettings() {
                       setEditingPnlId(account.id);
                       setPnlEditValue(account.default_pnl != null ? String(account.default_pnl) : "");
                     }}
-                    className="text-xs text-gray-400 hover:text-indigo-600 border border-dashed border-gray-200 hover:border-indigo-300 rounded px-2 py-0.5 transition-colors shrink-0"
+                    className="text-[11px] font-semibold text-slate-500 hover:text-indigo-600 border border-slate-200 hover:border-indigo-300 rounded-lg px-2 py-1 transition-colors shrink-0"
                     title="Set default P&L"
                   >
                     {account.default_pnl != null
                       ? `${account.default_pnl}${account.pnl_unit === "R" ? "R" : "$"}`
-                      : "Set P&L"}
+                      : "SET P&L"}
                   </button>
                 )}
 
-                {/* Actions */}
-                {!account.is_default && (
-                  <div className="flex items-center gap-1 ml-auto shrink-0">
-                    <button
-                      onClick={() => handleSetDefault(account.id)}
-                      className="btn btn-xs btn-ghost text-gray-500 hover:text-gray-700"
-                      title="Set as default"
-                    >
-                      Set default
-                    </button>
+                {/* Divider */}
+                <div className="w-px h-5 bg-slate-200 shrink-0" />
 
-                    {confirmDeleteId === account.id ? (
-                      <>
-                        <button
-                          onClick={() => handleDelete(account.id)}
-                          disabled={deletingId === account.id}
-                          className="btn btn-xs btn-error"
-                        >
-                          {deletingId === account.id ? <span className="loading loading-spinner loading-xs" /> : "Delete"}
-                        </button>
-                        <button
-                          onClick={() => setConfirmDeleteId(null)}
-                          className="btn btn-xs btn-ghost"
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    ) : (
+                {/* Default badge / Set default button */}
+                {account.is_default ? (
+                  <span className="text-[10px] font-bold tracking-wider uppercase text-slate-500 border border-slate-300 rounded-lg px-2 py-1 shrink-0">
+                    Default
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => handleSetDefault(account.id)}
+                    className="text-[9px] font-bold tracking-wider uppercase text-slate-400 hover:text-indigo-600 text-center leading-tight shrink-0 transition-colors"
+                    title="Set as default"
+                  >
+                    SET<br/>DEFAULT
+                  </button>
+                )}
+
+                {/* Delete */}
+                {!account.is_default && (
+                  confirmDeleteId === account.id ? (
+                    <div className="flex items-center gap-1 shrink-0">
                       <button
-                        onClick={() => setConfirmDeleteId(account.id)}
-                        className="btn btn-xs btn-ghost text-red-400 hover:text-red-600"
-                        aria-label={`Delete ${account.name}`}
+                        onClick={() => handleDelete(account.id)}
+                        disabled={deletingId === account.id}
+                        className="btn btn-xs btn-error"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        {deletingId === account.id ? <span className="loading loading-spinner loading-xs" /> : "Delete"}
                       </button>
-                    )}
-                  </div>
+                      <button onClick={() => setConfirmDeleteId(null)} className="btn btn-xs btn-ghost">
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDeleteId(account.id)}
+                      className="text-slate-300 hover:text-red-400 transition-colors shrink-0"
+                      aria-label={`Delete ${account.name}`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  )
                 )}
               </div>
             ))}
 
             {accounts.length === 0 && (
-              <p className="text-sm text-gray-500">No accounts yet. Add one below.</p>
+              <p className="text-sm text-slate-400">No accounts yet. Add one below.</p>
             )}
           </div>
         )}
+      </div>
 
-        {/* Add account form */}
-        <form onSubmit={handleAddAccount} className="border border-gray-200 rounded-xl p-4 space-y-3">
-          <h4 className="text-sm font-semibold text-gray-700">Add Account</h4>
+      {/* Add account form */}
+      <form onSubmit={handleAddAccount} className="px-6 py-6 space-y-5">
+        <h3 className="text-lg font-bold text-slate-900">Add Account</h3>
+
+        <div>
+          <p className="text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-2">Account Name</p>
           <input
             type="text"
-            placeholder="Account name"
+            placeholder="Enter account name..."
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             maxLength={50}
             required
-            className="input input-bordered input-sm w-full"
+            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300 transition-colors"
           />
-          <div>
-            <p className="text-xs font-medium text-gray-700 mb-1">P&L Unit</p>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="radio"
-                  name="pnl_unit"
-                  value="USD"
-                  checked={newUnit === "USD"}
-                  onChange={() => setNewUnit("USD")}
-                  className="radio radio-sm"
-                />
-                $ (US dollars)
-              </label>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="radio"
-                  name="pnl_unit"
-                  value="R"
-                  checked={newUnit === "R"}
-                  onChange={() => setNewUnit("R")}
-                  className="radio radio-sm"
-                />
-                R (risk multiples)
-              </label>
-            </div>
-            <p className="text-xs text-amber-600 mt-1">
+        </div>
+
+        <div>
+          <p className="text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-3">P&L Unit</p>
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2.5 text-sm cursor-pointer">
+              <input
+                type="radio"
+                name="pnl_unit"
+                value="USD"
+                checked={newUnit === "USD"}
+                onChange={() => setNewUnit("USD")}
+                className="radio radio-sm radio-primary"
+              />
+              <span className="text-slate-700">$ (US dollars)</span>
+            </label>
+            <label className="flex items-center gap-2.5 text-sm cursor-pointer">
+              <input
+                type="radio"
+                name="pnl_unit"
+                value="R"
+                checked={newUnit === "R"}
+                onChange={() => setNewUnit("R")}
+                className="radio radio-sm radio-primary"
+              />
+              <span className="text-slate-700">R (risk multiples)</span>
+            </label>
+          </div>
+          <div className="flex items-center gap-1.5 mt-2">
+            <svg className="w-3.5 h-3.5 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 8v4m0 4h.01" />
+            </svg>
+            <p className="text-[11px] font-bold tracking-wider uppercase text-orange-500">
               Cannot be changed after creation.
             </p>
           </div>
-          <button
-            type="submit"
-            disabled={addingAccount || !newName.trim()}
-            className="btn btn-primary btn-sm"
-          >
-            {addingAccount ? <span className="loading loading-spinner loading-xs" /> : "Add Account"}
-          </button>
-        </form>
-      </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={addingAccount || !newName.trim()}
+          className="btn btn-primary btn-sm"
+        >
+          {addingAccount ? <span className="loading loading-spinner loading-xs" /> : "Add Account"}
+        </button>
+      </form>
     </div>
   );
 }
