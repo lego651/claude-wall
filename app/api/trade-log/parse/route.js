@@ -64,10 +64,14 @@ export async function POST(request) {
 
     const raw = completion.choices[0]?.message?.content?.trim() || '';
 
+    // Strip markdown code fences if the model wraps its response
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+
     let parsed;
     try {
-      parsed = JSON.parse(raw);
+      parsed = JSON.parse(cleaned);
     } catch {
+      console.error('[trade-log/parse] Non-JSON response:', raw);
       return NextResponse.json({ error: 'Failed to parse AI response' }, { status: 502 });
     }
 
