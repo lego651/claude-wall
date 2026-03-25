@@ -91,7 +91,8 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
         hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz,
       })
     : null;
-  const tzLabel = formatTimezoneLabel(tz);
+  // Extract just the UTC offset, e.g. "UTC-4" from "New York (UTC-4)"
+  const tzLabel = formatTimezoneLabel(tz).match(/\(([^)]+)\)/)?.[1] ?? "UTC";
 
   // SELL: SL → Entry → TP (red → gray → green)
   // BUY:  TP → Entry → SL (green → gray → red)
@@ -243,10 +244,7 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
         <div className="flex-1" />
 
         {time && (
-          <div className="text-right">
-            <div className="text-xs font-medium text-slate-400">{time}</div>
-            <div className="text-[10px] text-slate-300">{tzLabel}</div>
-          </div>
+          <span className="text-xs font-medium text-slate-400">{time} {tzLabel}</span>
         )}
 
         <button
