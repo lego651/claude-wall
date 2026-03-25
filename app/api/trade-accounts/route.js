@@ -10,9 +10,9 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from('trade_accounts')
-      .select('id, name, is_default, pnl_unit, default_pnl, daily_trade_limit, created_at')
+      .select('id, name, is_default, pnl_unit, default_pnl, daily_trade_limit, created_at, sort_order')
       .eq('user_id', user.id)
-      .order('is_default', { ascending: false })
+      .order('sort_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true });
 
     if (error) {
