@@ -198,6 +198,22 @@ export async function POST(req) {
 - Use `card-sm` instead of `card-compact`
 - Responsive modifiers: `btn btn-primary md:btn-lg`
 
+### Cursor Rules — MANDATORY
+Every interactive element must show a pointer cursor on hover. DaisyUI `btn` handles this automatically, but all other clickable elements require an explicit class:
+
+```jsx
+// ✅ CORRECT — always add cursor-pointer to non-btn interactive elements
+<button className="... cursor-pointer">...</button>
+<div onClick={fn} className="... cursor-pointer">...</div>
+
+// ❌ WRONG — browser default is cursor:default on buttons/divs
+<button className="text-red-400 hover:text-red-600">Delete</button>
+```
+
+Also apply to: icon buttons, close/delete icons, inline-edit triggers, toggle switches, custom selects, and any element with an `onClick` handler that is not a DaisyUI `btn`.
+
+**Inline-editable fields** must visually signal their editability on hover — e.g. a dashed underline + pencil icon appearing on hover.
+
 ## Testing & Quality
 
 ### Write Tests Before Committing — MANDATORY

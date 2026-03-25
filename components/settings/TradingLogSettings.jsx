@@ -382,14 +382,19 @@ export default function TradingLogSettings() {
                     />
                   ) : (
                     <button
-                      className="text-sm font-bold text-slate-900 hover:text-indigo-600 text-left truncate block"
+                      className="group flex items-center gap-1.5 text-sm font-bold text-slate-900 hover:text-indigo-600 text-left cursor-pointer transition-colors"
                       onClick={() => {
                         setRenamingId(account.id);
                         setRenameValue(account.name);
                       }}
                       title="Click to rename"
                     >
-                      {account.name}
+                      <span className="truncate border-b border-dashed border-transparent group-hover:border-indigo-300 transition-colors">
+                        {account.name}
+                      </span>
+                      <svg className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
                     </button>
                   )}
                 </div>
@@ -503,7 +508,7 @@ export default function TradingLogSettings() {
                   ) : (
                     <button
                       onClick={() => setConfirmDeleteId(account.id)}
-                      className="text-red-300 hover:text-red-500 transition-colors shrink-0"
+                      className="text-red-300 hover:text-red-500 transition-colors shrink-0 cursor-pointer"
                       aria-label={`Delete ${account.name}`}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
