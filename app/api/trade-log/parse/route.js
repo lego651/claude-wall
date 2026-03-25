@@ -48,7 +48,7 @@ export async function POST(request) {
     if (imageBase64) {
       userContent.push({
         type: 'image_url',
-        image_url: { url: `data:${imageMimeType};base64,${imageBase64}` },
+        image_url: { url: `data:${imageMimeType};base64,${imageBase64}`, detail: 'high' },
       });
     }
 
