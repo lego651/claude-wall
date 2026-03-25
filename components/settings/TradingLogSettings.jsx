@@ -431,10 +431,13 @@ export default function TradingLogSettings() {
                       setEditingLimitId(account.id);
                       setLimitEditValue(account.daily_trade_limit != null ? String(account.daily_trade_limit) : "");
                     }}
-                    className={`text-[11px] font-semibold rounded-lg px-2 py-1 transition-colors shrink-0 cursor-pointer ${account.daily_trade_limit != null ? "text-slate-500 border border-slate-200 hover:text-indigo-600 hover:border-indigo-300" : "text-indigo-500 border border-dashed border-indigo-300 hover:bg-indigo-50"}`}
+                    className={`flex items-center gap-1 text-[11px] font-semibold rounded-lg px-2 py-1 transition-colors shrink-0 cursor-pointer ${account.daily_trade_limit != null ? "text-slate-500 border border-slate-200 hover:text-indigo-600 hover:border-indigo-300" : "text-indigo-500 border border-dashed border-indigo-300 hover:bg-indigo-50"}`}
                     title="Set daily trade limit"
                   >
                     {account.daily_trade_limit != null ? `${account.daily_trade_limit}/DAY` : "SET LIMIT"}
+                    <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
                   </button>
                 )}
 
@@ -463,12 +466,15 @@ export default function TradingLogSettings() {
                       setEditingPnlId(account.id);
                       setPnlEditValue(account.default_pnl != null ? String(account.default_pnl) : "");
                     }}
-                    className={`text-[11px] font-semibold rounded-lg px-2 py-1 transition-colors shrink-0 cursor-pointer ${account.default_pnl != null ? "text-slate-500 border border-slate-200 hover:text-indigo-600 hover:border-indigo-300" : "text-indigo-500 border border-dashed border-indigo-300 hover:bg-indigo-50"}`}
+                    className={`flex items-center gap-1 text-[11px] font-semibold rounded-lg px-2 py-1 transition-colors shrink-0 cursor-pointer ${account.default_pnl != null ? "text-slate-500 border border-slate-200 hover:text-indigo-600 hover:border-indigo-300" : "text-indigo-500 border border-dashed border-indigo-300 hover:bg-indigo-50"}`}
                     title="Set default P&L"
                   >
                     {account.default_pnl != null
                       ? `${account.default_pnl}${account.pnl_unit === "R" ? "R" : "$"}`
                       : "SET P&L"}
+                    <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
                   </button>
                 )}
 
@@ -483,10 +489,13 @@ export default function TradingLogSettings() {
                 ) : (
                   <button
                     onClick={() => handleSetDefault(account.id)}
-                    className="text-[9px] font-bold tracking-wider uppercase text-indigo-400 hover:text-indigo-600 border border-dashed border-indigo-200 hover:border-indigo-400 rounded-lg px-2 py-1 text-center leading-tight shrink-0 transition-colors hover:bg-indigo-50 cursor-pointer"
+                    className="flex items-center gap-1 text-[9px] font-bold tracking-wider uppercase text-indigo-400 hover:text-indigo-600 border border-dashed border-indigo-200 hover:border-indigo-400 rounded-lg px-2 py-1 text-center leading-tight shrink-0 transition-colors hover:bg-indigo-50 cursor-pointer"
                     title="Set as default"
                   >
-                    SET<br/>DEFAULT
+                    SET DEFAULT
+                    <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
                   </button>
                 )}
 
