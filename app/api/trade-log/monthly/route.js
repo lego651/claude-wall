@@ -120,7 +120,7 @@ export async function GET(request) {
       if (weekIdx < 0 || weekIdx >= weekRows.length) continue;
       weekRows[weekIdx].trade_count += trade_count;
       if (pnl !== null) {
-        weekRows[weekIdx].pnl = (weekRows[weekIdx].pnl ?? 0) + pnl;
+        weekRows[weekIdx].pnl = Math.round(((weekRows[weekIdx].pnl ?? 0) + pnl) * 1e10) / 1e10;
       }
     }
 
