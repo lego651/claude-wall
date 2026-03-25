@@ -426,7 +426,7 @@ export default function TradingLogSettings() {
                       setEditingLimitId(account.id);
                       setLimitEditValue(account.daily_trade_limit != null ? String(account.daily_trade_limit) : "");
                     }}
-                    className={`text-[11px] font-semibold rounded-lg px-2 py-1 transition-colors shrink-0 ${account.daily_trade_limit != null ? "text-slate-500 border border-slate-200 hover:text-indigo-600 hover:border-indigo-300" : "text-indigo-500 border border-dashed border-indigo-300 hover:bg-indigo-50"}`}
+                    className={`text-[11px] font-semibold rounded-lg px-2 py-1 transition-colors shrink-0 cursor-pointer ${account.daily_trade_limit != null ? "text-slate-500 border border-slate-200 hover:text-indigo-600 hover:border-indigo-300" : "text-indigo-500 border border-dashed border-indigo-300 hover:bg-indigo-50"}`}
                     title="Set daily trade limit"
                   >
                     {account.daily_trade_limit != null ? `${account.daily_trade_limit}/DAY` : "SET LIMIT"}
@@ -458,7 +458,7 @@ export default function TradingLogSettings() {
                       setEditingPnlId(account.id);
                       setPnlEditValue(account.default_pnl != null ? String(account.default_pnl) : "");
                     }}
-                    className={`text-[11px] font-semibold rounded-lg px-2 py-1 transition-colors shrink-0 ${account.default_pnl != null ? "text-slate-500 border border-slate-200 hover:text-indigo-600 hover:border-indigo-300" : "text-indigo-500 border border-dashed border-indigo-300 hover:bg-indigo-50"}`}
+                    className={`text-[11px] font-semibold rounded-lg px-2 py-1 transition-colors shrink-0 cursor-pointer ${account.default_pnl != null ? "text-slate-500 border border-slate-200 hover:text-indigo-600 hover:border-indigo-300" : "text-indigo-500 border border-dashed border-indigo-300 hover:bg-indigo-50"}`}
                     title="Set default P&L"
                   >
                     {account.default_pnl != null
@@ -478,7 +478,7 @@ export default function TradingLogSettings() {
                 ) : (
                   <button
                     onClick={() => handleSetDefault(account.id)}
-                    className="text-[9px] font-bold tracking-wider uppercase text-indigo-400 hover:text-indigo-600 border border-dashed border-indigo-200 hover:border-indigo-400 rounded-lg px-2 py-1 text-center leading-tight shrink-0 transition-colors hover:bg-indigo-50"
+                    className="text-[9px] font-bold tracking-wider uppercase text-indigo-400 hover:text-indigo-600 border border-dashed border-indigo-200 hover:border-indigo-400 rounded-lg px-2 py-1 text-center leading-tight shrink-0 transition-colors hover:bg-indigo-50 cursor-pointer"
                     title="Set as default"
                   >
                     SET<br/>DEFAULT
