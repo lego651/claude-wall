@@ -207,6 +207,7 @@ export default function LogsPageClient() {
       ...prev,
       trades: prev.trades.map((t) => (t.id === updatedTrade.id ? updatedTrade : t)),
     }));
+    fetchMonthly(viewMonth, selectedIds);
   }
 
   function handleTradeDeleted(id) {
@@ -217,6 +218,7 @@ export default function LogsPageClient() {
       trades_logged: Math.max(0, prev.trades_logged - 1),
       trades_remaining: prev.trades_remaining !== null ? prev.trades_remaining + 1 : null,
     }));
+    fetchMonthly(viewMonth, selectedIds);
   }
 
   // Account filter handlers
