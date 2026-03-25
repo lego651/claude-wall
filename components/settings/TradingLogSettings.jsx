@@ -549,7 +549,7 @@ export default function TradingLogSettings() {
                 value="USD"
                 checked={newUnit === "USD"}
                 onChange={() => setNewUnit("USD")}
-                className="radio radio-sm radio-primary"
+                className="radio radio-sm radio-primary border-indigo-400"
               />
               <span className="text-slate-700">$ (US dollars)</span>
             </label>
@@ -560,7 +560,7 @@ export default function TradingLogSettings() {
                 value="R"
                 checked={newUnit === "R"}
                 onChange={() => setNewUnit("R")}
-                className="radio radio-sm radio-primary"
+                className="radio radio-sm radio-primary border-indigo-400"
               />
               <span className="text-slate-700">R (risk multiples)</span>
             </label>
