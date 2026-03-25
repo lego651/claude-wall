@@ -18,7 +18,9 @@ export default function TradeEditModal({ trade, accounts, onSave, onClose }) {
   const [rr, setRr] = useState(trade.risk_reward != null ? String(trade.risk_reward) : "");
   const [tradeAt, setTradeAt] = useState(""); // local timezone value for the input
   const [accountId, setAccountId] = useState(trade.account_id || "");
-  const [pnlInput, setPnlInput] = useState(trade.pnl != null ? String(trade.pnl) : "");
+  const [pnlInput, setPnlInput] = useState(
+    trade.pnl != null ? String(trade.pnl) : trade.risk_reward != null ? String(trade.risk_reward) : ""
+  );
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
