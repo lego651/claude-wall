@@ -245,11 +245,11 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
         <div className="flex-1" />
 
         {time && (
-          <span className="text-xs font-medium text-slate-400">
-            {time}{" "}
+          <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-slate-400">
+            {time}
             <Link
               href="/user/settings/trading"
-              className="inline-flex items-center gap-0.5 text-slate-400 hover:text-indigo-500 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-0.5 hover:text-indigo-500 transition-colors cursor-pointer"
               title="Update preferred timezone in Trading Settings"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
