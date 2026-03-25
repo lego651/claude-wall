@@ -14,6 +14,8 @@ const PATCH_SCHEMA = z.object({
   notes: z.string().max(1000).nullable().optional(),
   pnl: z.number().nullable().optional(),
   account_id: z.string().uuid().nullable().optional(),
+  chart_url: z.string().max(2048).nullable().optional(),
+  chart_image_path: z.string().max(512).nullable().optional(),
 });
 
 // PATCH /api/trade-log/[id]
@@ -40,10 +42,10 @@ export async function PATCH(request, { params }) {
   const { id } = await params;
 
   try {
-    // Verify ownership
+    // Verify ownership and fetch existing chart image path for cleanup
     const { data: existing } = await supabase
       .from('trade_logs')
-      .select('id')
+      .select('id, chart_image_path')
       .eq('id', id)
       .eq('user_id', user.id)
       .single();
@@ -59,9 +61,14 @@ export async function PATCH(request, { params }) {
         updates[key] = result.data[key] !== undefined ? result.data[key] : body[key];
       }
     }
-    // Explicitly handle pnl: null case
-    if ('pnl' in body) {
-      updates.pnl = body.pnl;
+    // Explicitly handle nullable fields
+    if ('pnl' in body) updates.pnl = body.pnl;
+    if ('chart_url' in body) updates.chart_url = body.chart_url;
+    if ('chart_image_path' in body) updates.chart_image_path = body.chart_image_path;
+
+    // If chart_image_path is being cleared, delete old file from storage
+    if ('chart_image_path' in updates && updates.chart_image_path === null && existing.chart_image_path) {
+      await supabase.storage.from('trade-charts').remove([existing.chart_image_path]);
     }
 
     const { data, error } = await supabase
@@ -72,6 +79,7 @@ export async function PATCH(request, { params }) {
       .select(`
         id, symbol, direction, entry_price, stop_loss, take_profit,
         lots, risk_reward, trade_at, notes, pnl, account_id,
+        chart_url, chart_image_path,
         trade_accounts!account_id (name, pnl_unit)
       `)
       .single();
@@ -105,10 +113,10 @@ export async function DELETE(request, { params }) {
   const { id } = await params;
 
   try {
-    // Verify ownership
+    // Verify ownership and fetch chart image path for cleanup
     const { data: existing } = await supabase
       .from('trade_logs')
-      .select('id')
+      .select('id, chart_image_path')
       .eq('id', id)
       .eq('user_id', user.id)
       .single();
@@ -126,6 +134,11 @@ export async function DELETE(request, { params }) {
     if (error) {
       console.error('[trade-log/[id]] DELETE error:', error);
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
+
+    // Clean up chart image from storage after successful delete
+    if (existing.chart_image_path) {
+      await supabase.storage.from('trade-charts').remove([existing.chart_image_path]);
     }
 
     return NextResponse.json({ success: true });

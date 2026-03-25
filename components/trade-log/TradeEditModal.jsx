@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { utcToLocalInputValue, localInputValueToUtc, formatTimezoneLabel, getBrowserTimezone } from "@/lib/timezone";
+import { createClient } from "@/lib/supabase/client";
 
 const INPUT = "w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400";
 const LABEL = "block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5";
@@ -23,6 +24,15 @@ export default function TradeEditModal({ trade, accounts, onSave, onClose }) {
   const [error, setError] = useState("");
   const [userTimezone, setUserTimezone] = useState(null);
 
+  // Chart state
+  const [chartUrl, setChartUrl] = useState(trade.chart_url || "");
+  const [newChartImageFile, setNewChartImageFile] = useState(null);
+  const [newChartPreviewUrl, setNewChartPreviewUrl] = useState(null);
+  const [existingChartSignedUrl, setExistingChartSignedUrl] = useState(null);
+  const [removeChartImage, setRemoveChartImage] = useState(false);
+  const [chartUploading, setChartUploading] = useState(false);
+  const chartFileInputRef = useRef(null);
+
   useEffect(() => {
     fetch("/api/user-settings/trading")
       .then((r) => (r.ok ? r.json() : {}))
@@ -41,6 +51,48 @@ export default function TradeEditModal({ trade, accounts, onSave, onClose }) {
         }
       });
   }, [trade.trade_at]);
+
+  // Generate signed URL for existing chart image
+  useEffect(() => {
+    if (trade.chart_image_path) {
+      const supabase = createClient();
+      supabase.storage
+        .from("trade-charts")
+        .createSignedUrl(trade.chart_image_path, 3600)
+        .then(({ data }) => setExistingChartSignedUrl(data?.signedUrl || null))
+        .catch(() => {});
+    }
+  }, [trade.chart_image_path]);
+
+  // Preview URL for newly selected image
+  useEffect(() => {
+    if (newChartImageFile) {
+      const url = URL.createObjectURL(newChartImageFile);
+      setNewChartPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setNewChartPreviewUrl(null);
+    }
+  }, [newChartImageFile]);
+
+  function handleNewChartImageChange(e) {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      setNewChartImageFile(file);
+      setRemoveChartImage(false);
+    }
+  }
+
+  function clearNewChartImage() {
+    setNewChartImageFile(null);
+    if (chartFileInputRef.current) chartFileInputRef.current.value = "";
+  }
+
+  function handleRemoveExistingChart() {
+    setRemoveChartImage(true);
+    setNewChartImageFile(null);
+    if (chartFileInputRef.current) chartFileInputRef.current.value = "";
+  }
 
   const selectedAccount = accounts.find((a) => a.id === accountId);
   const pnlUnit = selectedAccount?.pnl_unit || null;
@@ -65,7 +117,41 @@ export default function TradeEditModal({ trade, accounts, onSave, onClose }) {
       trade_at: utcTradeAt,
       account_id: accountId || null,
       pnl: pnlInput !== "" ? parseFloat(pnlInput) : null,
+      chart_url: chartUrl.trim() || null,
     };
+
+    // Handle chart image changes
+    if (newChartImageFile) {
+      setChartUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("image", newChartImageFile);
+        if (trade.chart_image_path) formData.append("old_path", trade.chart_image_path);
+        const res = await fetch("/api/trade-log/chart-upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          body.chart_image_path = data.chart_image_path;
+        } else {
+          const err = await res.json();
+          if (err.error === "not_trading_chart") {
+            setError("The uploaded image doesn't look like a trading chart.");
+            setSaving(false);
+            setChartUploading(false);
+            return;
+          }
+          // Non-fatal: keep existing chart image
+        }
+      } catch {
+        // Non-fatal
+      } finally {
+        setChartUploading(false);
+      }
+    } else if (removeChartImage && trade.chart_image_path) {
+      body.chart_image_path = null;
+    }
 
     try {
       const res = await fetch(`/api/trade-log/${trade.id}`, {
@@ -270,6 +356,91 @@ export default function TradeEditModal({ trade, accounts, onSave, onClose }) {
               />
             </div>
           </div>
+
+          {/* Chart section */}
+          <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-4 bg-indigo-300 rounded-full" />
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Chart</span>
+              <span className="text-[10px] text-slate-400">optional</span>
+            </div>
+
+            {/* TradingView URL */}
+            <div>
+              <label className={LABEL}>TradingView URL</label>
+              <input
+                type="url"
+                value={chartUrl}
+                onChange={(e) => setChartUrl(e.target.value)}
+                placeholder="https://www.tradingview.com/x/…"
+                className={INPUT}
+              />
+            </div>
+
+            {/* Chart screenshot */}
+            <div>
+              <label className={LABEL}>Chart Screenshot</label>
+
+              {/* New image preview */}
+              {newChartPreviewUrl ? (
+                <div className="space-y-2">
+                  <div className="relative rounded-xl overflow-hidden border border-slate-200">
+                    <img src={newChartPreviewUrl} alt="New chart" className="w-full max-h-40 object-cover" />
+                    <button
+                      onClick={clearNewChartImage}
+                      className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center text-sm cursor-pointer transition-colors"
+                      aria-label="Remove new chart"
+                    >×</button>
+                  </div>
+                  <p className="text-[11px] text-amber-600 font-medium">New screenshot will be saved on update.</p>
+                </div>
+              ) : removeChartImage ? (
+                <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                  <span>Chart image will be removed on save.</span>
+                  <button
+                    onClick={() => setRemoveChartImage(false)}
+                    className="text-indigo-500 hover:text-indigo-700 cursor-pointer font-semibold"
+                  >Undo</button>
+                </div>
+              ) : existingChartSignedUrl && !removeChartImage ? (
+                <div className="space-y-2">
+                  <div className="relative rounded-xl overflow-hidden border border-slate-200">
+                    <img src={existingChartSignedUrl} alt="Chart screenshot" className="w-full max-h-40 object-cover" />
+                  </div>
+                  <div className="flex gap-3">
+                    <label className="text-[11px] font-semibold text-indigo-500 hover:text-indigo-700 cursor-pointer transition-colors">
+                      Replace
+                      <input
+                        ref={chartFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleNewChartImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                    <button
+                      onClick={handleRemoveExistingChart}
+                      className="text-[11px] font-semibold text-red-400 hover:text-red-600 cursor-pointer transition-colors"
+                    >Remove</button>
+                  </div>
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 border border-dashed border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-400 hover:border-indigo-300 hover:text-indigo-400 cursor-pointer transition-colors">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Upload chart screenshot
+                  <input
+                    ref={chartFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleNewChartImageChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
@@ -285,7 +456,7 @@ export default function TradeEditModal({ trade, accounts, onSave, onClose }) {
             disabled={saving}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm uppercase tracking-widest px-10 py-3.5 rounded-full shadow-md transition-all disabled:opacity-60"
           >
-            {saving ? "Saving…" : "Update Trade"}
+            {chartUploading ? "Uploading…" : saving ? "Saving…" : "Update Trade"}
           </button>
         </div>
       </div>

@@ -208,6 +208,7 @@ export default function TradeLogModal({ onClose, onSaved }) {
 
     const userText = input.trim();
     const userImage = imagePreview;
+    const capturedImageFile = imageFile; // capture before clearing
 
     pushMessage({ type: "user", text: userText, image: userImage });
     setInput("");
@@ -238,7 +239,7 @@ export default function TradeLogModal({ onClose, onSaved }) {
               ? data.trade_at
               : data.trade_at + "Z")
           : new Date().toISOString();
-        pushMessage({ type: "trade_card", trade: { ...data, trade_at: tradeAt, pnl: parsePnlInput(), account_id: selectedAccountId } });
+        pushMessage({ type: "trade_card", trade: { ...data, trade_at: tradeAt, pnl: parsePnlInput(), account_id: selectedAccountId }, chartImageFile: capturedImageFile });
       }
     } catch {
       pushMessage({ type: "system", text: "Something went wrong. Please try again." });
@@ -411,7 +412,7 @@ export default function TradeLogModal({ onClose, onSaved }) {
             if (msg.type === "trade_card") {
               return (
                 <div key={i} className="flex justify-start">
-                  <TradeCard trade={msg.trade} accountId={selectedAccountId} pnlUnit={pnlUnit} onSave={onSaved} userTimezone={userTimezone} />
+                  <TradeCard trade={msg.trade} accountId={selectedAccountId} pnlUnit={pnlUnit} onSave={onSaved} userTimezone={userTimezone} initialChartImageFile={msg.chartImageFile || null} />
                 </div>
               );
             }

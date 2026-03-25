@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { utcToLocalInputValue, localInputValueToUtc, getBrowserTimezone } from "@/lib/timezone";
 
 const FIELD_LABELS = {
@@ -38,21 +38,50 @@ function formatValue(key, value, userTimezone) {
   return String(value);
 }
 
-export default function TradeCard({ trade, onSave, userTimezone }) {
+export default function TradeCard({ trade, onSave, userTimezone, initialChartImageFile }) {
   const tz = userTimezone || getBrowserTimezone();
 
   const [mode, setMode] = useState("view"); // "view" | "editing" | "saved"
   const [fields, setFields] = useState({ ...trade });
-  // Separate local-timezone representation for the datetime-local input
   const [localTradeAt, setLocalTradeAt] = useState(() =>
     trade.trade_at ? utcToLocalInputValue(trade.trade_at, tz) : ""
   );
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
+  // Chart state
+  const [chartUrl, setChartUrl] = useState(trade.chart_url || "");
+  const [chartImageFile, setChartImageFile] = useState(initialChartImageFile || null);
+  const [chartPreviewUrl, setChartPreviewUrl] = useState(null);
+  const [chartExpanded, setChartExpanded] = useState(!!initialChartImageFile);
+  const [chartUploading, setChartUploading] = useState(false);
+  const chartFileInputRef = useRef(null);
+
+  // Create preview URL for initial chart image or when file changes
+  useEffect(() => {
+    if (chartImageFile) {
+      const url = URL.createObjectURL(chartImageFile);
+      setChartPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setChartPreviewUrl(null);
+    }
+  }, [chartImageFile]);
+
+  function handleChartImageChange(e) {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      setChartImageFile(file);
+    }
+  }
+
+  function clearChartImage() {
+    setChartImageFile(null);
+    if (chartFileInputRef.current) chartFileInputRef.current.value = "";
+  }
+
   function handleFieldChange(key, value) {
     if (key === "trade_at") {
-      // value here is the local datetime-local input value ("YYYY-MM-DDTHH:mm")
       setLocalTradeAt(value);
       const utcIso = value ? localInputValueToUtc(value, tz) : null;
       setFields((prev) => ({ ...prev, trade_at: utcIso }));
@@ -64,11 +93,48 @@ export default function TradeCard({ trade, onSave, userTimezone }) {
   async function handleSave() {
     setIsSaving(true);
     setSaveError(null);
+
+    let uploadedChartImagePath = null;
+
+    // Upload chart image first if provided
+    if (chartImageFile) {
+      setChartUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("image", chartImageFile);
+        const res = await fetch("/api/trade-log/chart-upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          uploadedChartImagePath = data.chart_image_path;
+        } else {
+          const err = await res.json();
+          if (err.error === "not_trading_chart") {
+            setSaveError("The uploaded image doesn't look like a trading chart. Please use a chart screenshot.");
+            setIsSaving(false);
+            setChartUploading(false);
+            return;
+          }
+          // Other upload errors: non-fatal, save without chart image
+        }
+      } catch {
+        // Non-fatal: save without chart image
+      } finally {
+        setChartUploading(false);
+      }
+    }
+
     try {
       const res = await fetch("/api/trade-log/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(fields),
+        body: JSON.stringify({
+          ...fields,
+          chart_url: chartUrl.trim() || null,
+          chart_image_path: uploadedChartImagePath,
+        }),
       });
       if (!res.ok) {
         const body = await res.json();
@@ -95,6 +161,8 @@ export default function TradeCard({ trade, onSave, userTimezone }) {
       : fields.direction === "sell"
       ? "text-red-500"
       : "text-gray-500";
+
+  const hasChart = chartUrl.trim() || chartImageFile;
 
   return (
     <div className="border border-gray-200 rounded-2xl p-4 bg-white shadow-sm w-full max-w-sm">
@@ -190,6 +258,81 @@ export default function TradeCard({ trade, onSave, userTimezone }) {
         </div>
       )}
 
+      {/* Chart section — always visible before save */}
+      {mode !== "saved" && (
+        <div className="border-t border-gray-100 pt-3 mb-3">
+          <button
+            onClick={() => setChartExpanded(!chartExpanded)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-gray-600 cursor-pointer w-full text-left transition-colors"
+          >
+            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span>Add Chart</span>
+            <span className="text-[10px] text-gray-300 ml-0.5">optional</span>
+            {hasChart && (
+              <span className="ml-1 text-indigo-400 text-[10px] font-bold">✓</span>
+            )}
+            <svg
+              className={`w-3 h-3 ml-auto text-gray-300 transition-transform ${chartExpanded ? "rotate-180" : ""}`}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {chartExpanded && (
+            <div className="mt-2 space-y-2">
+              {/* TradingView URL */}
+              <input
+                type="url"
+                value={chartUrl}
+                onChange={(e) => setChartUrl(e.target.value)}
+                placeholder="TradingView link (e.g. https://www.tradingview.com/x/…)"
+                className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-indigo-400 placeholder:text-gray-300"
+              />
+
+              <div className="flex items-center gap-2 text-[10px] text-gray-300">
+                <div className="flex-1 h-px bg-gray-100" />
+                <span>or upload screenshot</span>
+                <div className="flex-1 h-px bg-gray-100" />
+              </div>
+
+              {chartImageFile && chartPreviewUrl ? (
+                <div className="relative rounded-lg overflow-hidden border border-gray-100">
+                  <img
+                    src={chartPreviewUrl}
+                    alt="Chart preview"
+                    className="w-full max-h-32 object-cover"
+                  />
+                  <button
+                    onClick={clearChartImage}
+                    className="absolute top-1 right-1 w-5 h-5 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center text-xs cursor-pointer transition-colors"
+                    aria-label="Remove chart image"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 border border-dashed border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-400 hover:border-indigo-300 hover:text-indigo-400 cursor-pointer transition-colors">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Upload chart screenshot
+                  <input
+                    ref={chartFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleChartImageChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Error */}
       {saveError && (
         <p className="text-red-500 text-xs mb-2">{saveError}</p>
@@ -211,7 +354,7 @@ export default function TradeCard({ trade, onSave, userTimezone }) {
             disabled={isSaving}
             className="flex-1 bg-gray-900 text-white text-sm font-bold py-2 rounded-xl hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
-            {isSaving ? "Saving…" : "Save"}
+            {chartUploading ? "Uploading…" : isSaving ? "Saving…" : "Save"}
           </button>
         </div>
       )}

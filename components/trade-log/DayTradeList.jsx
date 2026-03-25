@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TradeEditModal from "./TradeEditModal";
+import { createClient } from "@/lib/supabase/client";
 
 function formatPnl(value, unit) {
   if (value === null || value === undefined) return "—";
@@ -13,6 +14,65 @@ function formatPnl(value, unit) {
     return `${sign}$${fmt}`;
   }
   return `${sign}${abs}`;
+}
+
+function ChartImageLightbox({ signedUrl, onClose }) {
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div className="relative max-w-4xl max-h-[90vh] w-full" onClick={(e) => e.stopPropagation()}>
+        <img
+          src={signedUrl}
+          alt="Chart screenshot"
+          className="w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+        />
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 w-8 h-8 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center text-lg cursor-pointer transition-colors"
+          aria-label="Close"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ChartImageTop({ chartImagePath }) {
+  const [signedUrl, setSignedUrl] = useState(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  useEffect(() => {
+    if (!chartImagePath) return;
+    const supabase = createClient();
+    supabase.storage
+      .from("trade-charts")
+      .createSignedUrl(chartImagePath, 3600)
+      .then(({ data }) => setSignedUrl(data?.signedUrl || null))
+      .catch(() => {});
+  }, [chartImagePath]);
+
+  if (!chartImagePath) return null;
+
+  return (
+    <>
+      <div
+        className="w-full h-36 bg-slate-100 overflow-hidden cursor-pointer"
+        onClick={() => signedUrl && setLightboxOpen(true)}
+      >
+        {signedUrl ? (
+          <img src={signedUrl} alt="Chart" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full animate-pulse bg-slate-200" />
+        )}
+      </div>
+      {lightboxOpen && signedUrl && (
+        <ChartImageLightbox signedUrl={signedUrl} onClose={() => setLightboxOpen(false)} />
+      )}
+    </>
+  );
 }
 
 function TradeRow({ trade, accounts, onUpdated, onDeleted }) {
@@ -71,6 +131,10 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted }) {
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+
+      {/* Chart thumbnail — only when screenshot exists */}
+      <ChartImageTop chartImagePath={trade.chart_image_path} />
+
       {/* Header */}
       <div className="flex items-center gap-2 px-4 pt-4 pb-2">
         <span className="text-lg font-black text-slate-900 tracking-tight">{trade.symbol}</span>
@@ -84,9 +148,6 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted }) {
           </span>
         )}
         <div className="flex-1" />
-        {time && (
-          <span className="text-xs font-medium text-slate-400">{time}</span>
-        )}
         {(trade.account_name || account?.name) && (
           <span className="text-xs font-semibold text-slate-600 bg-slate-100 rounded px-2 py-0.5">
             {trade.account_name || account?.name}
@@ -126,7 +187,7 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted }) {
                 {idx === rows.length - 1 && (
                   <>
                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-0.5">P/L</p>
-                    <p className="text-sm font-bold text-slate-700">{pnlFormatted}</p>
+                    <p className={`text-sm font-bold ${pnlColor}`}>{pnlFormatted}</p>
                   </>
                 )}
               </div>
@@ -139,7 +200,7 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted }) {
       <div className="flex items-center gap-5 px-4 py-3 border-t border-slate-100">
         <button
           onClick={() => setEditOpen(true)}
-          className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+          className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -153,13 +214,13 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted }) {
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="text-xs font-bold text-red-600 hover:text-red-800"
+              className="text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer"
             >
               {deleting ? "…" : "YES"}
             </button>
             <button
               onClick={() => setConfirmDelete(false)}
-              className="text-xs font-bold text-slate-400 hover:text-slate-600"
+              className="text-xs font-bold text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               NO
             </button>
@@ -167,7 +228,7 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted }) {
         ) : (
           <button
             onClick={() => setConfirmDelete(true)}
-            className="flex items-center gap-1.5 text-xs font-bold text-red-500 hover:text-red-700 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-bold text-red-500 hover:text-red-700 transition-colors cursor-pointer"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -178,8 +239,15 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted }) {
 
         <div className="flex-1" />
 
-        {/* Share / expand icon */}
-        <button className="text-slate-300 hover:text-slate-500 transition-colors" aria-label="Share trade">
+        {time && (
+          <span className="text-xs font-medium text-slate-400">{time}</span>
+        )}
+
+        <button
+          onClick={() => trade.chart_url && window.open(trade.chart_url, "_blank", "noopener,noreferrer")}
+          className={`ml-3 transition-colors cursor-pointer ${trade.chart_url ? "text-slate-400 hover:text-slate-600" : "text-slate-200"}`}
+          aria-label="Open TradingView chart"
+        >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
@@ -224,7 +292,7 @@ export default function DayTradeList({ trades, accounts, onUpdated, onDeleted, i
         <p className="text-sm text-slate-400 mb-5">Log your first trade for this day.</p>
         <button
           onClick={() => document.querySelector('[data-fab]')?.click()}
-          className="text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+          className="text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
         >
           Log Trade
         </button>

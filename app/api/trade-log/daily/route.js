@@ -37,6 +37,7 @@ export async function GET(request) {
       .select(`
         id, symbol, direction, entry_price, stop_loss, take_profit,
         lots, risk_reward, trade_at, notes, pnl, account_id,
+        chart_url, chart_image_path,
         trade_accounts!account_id (name, pnl_unit)
       `)
       .eq('user_id', user.id)
@@ -73,6 +74,8 @@ export async function GET(request) {
       account_id: t.account_id,
       account_name: t.trade_accounts?.name ?? null,
       pnl_unit: t.trade_accounts?.pnl_unit ?? null,
+      chart_url: t.chart_url ?? null,
+      chart_image_path: t.chart_image_path ?? null,
     }));
 
     // Compute P&L total (null if all null)
