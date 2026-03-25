@@ -81,20 +81,20 @@ const RESULT_STATUSES = [
   {
     key: "TP",
     label: "TP",
-    active: "text-green-600 border-green-300 bg-green-100",
-    inactive: "text-slate-300 border-slate-100 bg-white hover:border-green-200 hover:text-green-500",
+    active:   "text-green-700 border-green-400 bg-green-100",
+    inactive: "text-green-500 border-green-300 bg-white hover:bg-green-50",
   },
   {
     key: "BE",
     label: "BE",
-    active: "text-slate-600 border-slate-300 bg-slate-100",
-    inactive: "text-slate-300 border-slate-100 bg-white hover:border-slate-300 hover:text-slate-500",
+    active:   "text-slate-700 border-slate-400 bg-slate-100",
+    inactive: "text-slate-500 border-slate-300 bg-white hover:bg-slate-50",
   },
   {
     key: "SL",
     label: "SL",
-    active: "text-red-500 border-red-300 bg-red-100",
-    inactive: "text-slate-300 border-slate-100 bg-white hover:border-red-200 hover:text-red-400",
+    active:   "text-red-600 border-red-400 bg-red-100",
+    inactive: "text-red-400 border-red-300 bg-white hover:bg-red-50",
   },
 ];
 
@@ -306,12 +306,12 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
         ) : (
           <button
             onClick={() => setConfirmDelete(true)}
-            className="flex items-center gap-1.5 text-xs font-bold text-red-500 hover:text-red-700 transition-colors cursor-pointer"
+            className="text-red-400 hover:text-red-600 transition-colors cursor-pointer"
+            aria-label="Delete trade"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            DELETE
           </button>
         )}
 
