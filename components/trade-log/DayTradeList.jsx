@@ -81,20 +81,20 @@ const RESULT_STATUSES = [
   {
     key: "TP",
     label: "TP",
-    active:   "text-white bg-green-500",
-    inactive: "text-slate-400 bg-slate-100 hover:text-green-600 hover:bg-green-50",
+    active:   "text-white bg-green-500 border border-green-500",
+    inactive: "text-indigo-400 bg-transparent border border-indigo-300 hover:bg-indigo-50",
   },
   {
     key: "BE",
     label: "BE",
-    active:   "text-white bg-slate-500",
-    inactive: "text-slate-400 bg-slate-100 hover:text-slate-600 hover:bg-slate-200",
+    active:   "text-white bg-slate-500 border border-slate-500",
+    inactive: "text-indigo-400 bg-transparent border border-indigo-300 hover:bg-indigo-50",
   },
   {
     key: "SL",
     label: "SL",
-    active:   "text-white bg-red-500",
-    inactive: "text-slate-400 bg-slate-100 hover:text-red-500 hover:bg-red-50",
+    active:   "text-white bg-red-500 border border-red-500",
+    inactive: "text-indigo-400 bg-transparent border border-indigo-300 hover:bg-indigo-50",
   },
 ];
 
@@ -258,10 +258,10 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
       {/* Footer */}
       <div className="flex items-center px-4 py-3 border-t border-slate-100 gap-2">
 
-        {/* Left: result status — flag icon + TP / BE / SL pills */}
+        {/* Left: result status — pen icon + TP / BE / SL pills */}
         <div className="flex items-center gap-1.5">
-          <svg className="w-3 h-3 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21V4m0 0l9-1 9 1v11l-9-1-9 1V4z" />
+          <svg className="w-3 h-3 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
           </svg>
           {RESULT_STATUSES.map(({ key, label, active, inactive }) => {
             const isActive = getResultStatus(trade.pnl, trade.risk_reward) === key;
@@ -301,25 +301,12 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
           )}
         </div>
 
-        {/* Right: chart link + edit + delete */}
+        {/* Right: edit + delete */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => trade.chart_url && window.open(trade.chart_url, "_blank", "noopener,noreferrer")}
-            className={`transition-colors cursor-pointer ${trade.chart_url ? "text-slate-400 hover:text-slate-600" : "text-slate-200"}`}
-            aria-label="Open TradingView chart"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </button>
-
-          <button
             onClick={() => setEditOpen(true)}
-            className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
+            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
             EDIT
           </button>
 
