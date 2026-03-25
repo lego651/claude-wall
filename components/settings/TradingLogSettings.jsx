@@ -362,170 +362,173 @@ export default function TradingLogSettings() {
             {accounts.map((account) => (
               <div
                 key={account.id}
-                className={`flex items-center gap-2 px-4 py-3 border rounded-xl ${account.is_default ? "border-slate-300" : "border-slate-200"}`}
+                className={`flex flex-col gap-2 px-4 py-3 border rounded-xl ${account.is_default ? "border-slate-300" : "border-slate-200"}`}
               >
-                {/* Name (inline edit or display) */}
-                <div className="flex-1 min-w-0 mr-2">
-                  {renamingId === account.id ? (
+                {/* Row 1: name + delete */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    {renamingId === account.id ? (
+                      <input
+                        type="text"
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onBlur={() => handleRename(account.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleRename(account.id);
+                          if (e.key === "Escape") setRenamingId(null);
+                        }}
+                        className="input input-bordered input-sm w-full"
+                        maxLength={50}
+                        autoFocus
+                      />
+                    ) : (
+                      <button
+                        className="group flex items-center gap-1.5 text-sm font-bold text-slate-900 hover:text-indigo-600 text-left cursor-pointer transition-colors"
+                        onClick={() => {
+                          setRenamingId(account.id);
+                          setRenameValue(account.name);
+                        }}
+                        title="Click to rename"
+                      >
+                        <span className="truncate border-b border-dashed border-transparent group-hover:border-indigo-300 transition-colors">
+                          {account.name}
+                        </span>
+                        <svg className="w-3 h-3 shrink-0 text-indigo-400 group-hover:text-indigo-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Delete (always top-right) */}
+                  {!account.is_default && (
+                    confirmDeleteId === account.id ? (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => handleDelete(account.id)}
+                          disabled={deletingId === account.id}
+                          className="btn btn-xs btn-error"
+                        >
+                          {deletingId === account.id ? <span className="loading loading-spinner loading-xs" /> : "Delete"}
+                        </button>
+                        <button onClick={() => setConfirmDeleteId(null)} className="btn btn-xs btn-ghost">
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteId(account.id)}
+                        className="text-red-300 hover:text-red-500 transition-colors shrink-0 cursor-pointer"
+                        aria-label={`Delete ${account.name}`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )
+                  )}
+                </div>
+
+                {/* Row 2: controls */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* P&L UNIT badge */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-[9px] font-bold tracking-wider uppercase text-slate-400 hidden sm:inline">P&L UNIT</span>
+                    <PnlUnitBadge unit={account.pnl_unit} />
+                  </div>
+
+                  <div className="w-px h-4 bg-slate-200 shrink-0" />
+
+                  {/* Daily limit */}
+                  {editingLimitId === account.id ? (
                     <input
-                      type="text"
-                      value={renameValue}
-                      onChange={(e) => setRenameValue(e.target.value)}
-                      onBlur={() => handleRename(account.id)}
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={limitEditValue}
+                      onChange={(e) => setLimitEditValue(e.target.value)}
+                      onBlur={() => handleSaveAccountLimit(account.id)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") handleRename(account.id);
-                        if (e.key === "Escape") setRenamingId(null);
+                        if (e.key === "Enter") handleSaveAccountLimit(account.id);
+                        if (e.key === "Escape") setEditingLimitId(null);
                       }}
-                      className="input input-bordered input-sm w-full"
-                      maxLength={50}
+                      placeholder="e.g. 3"
+                      className="input input-bordered input-xs w-16"
                       autoFocus
                     />
                   ) : (
                     <button
-                      className="group flex items-center gap-1.5 text-sm font-bold text-slate-900 hover:text-indigo-600 text-left cursor-pointer transition-colors"
                       onClick={() => {
-                        setRenamingId(account.id);
-                        setRenameValue(account.name);
+                        setEditingLimitId(account.id);
+                        setLimitEditValue(account.daily_trade_limit != null ? String(account.daily_trade_limit) : "");
                       }}
-                      title="Click to rename"
+                      className={`flex items-center gap-1 text-[11px] font-semibold rounded-lg px-2 py-1 transition-colors shrink-0 cursor-pointer ${account.daily_trade_limit != null ? "text-slate-500 border border-slate-200 hover:text-indigo-600 hover:border-indigo-300" : "text-indigo-500 border border-dashed border-indigo-300 hover:bg-indigo-50"}`}
+                      title="Set daily trade limit"
                     >
-                      <span className="truncate border-b border-dashed border-transparent group-hover:border-indigo-300 transition-colors">
-                        {account.name}
-                      </span>
-                      <svg className="w-3 h-3 shrink-0 text-indigo-400 group-hover:text-indigo-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      {account.daily_trade_limit != null ? `${account.daily_trade_limit}/DAY` : "SET LIMIT"}
+                      <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                  )}
+
+                  <div className="w-px h-4 bg-slate-200 shrink-0" />
+
+                  {/* Default P&L */}
+                  {editingPnlId === account.id ? (
+                    <input
+                      type="number"
+                      step="any"
+                      value={pnlEditValue}
+                      onChange={(e) => setPnlEditValue(e.target.value)}
+                      onBlur={() => handleSaveDefaultPnl(account.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSaveDefaultPnl(account.id);
+                        if (e.key === "Escape") setEditingPnlId(null);
+                      }}
+                      placeholder="e.g. 1.3"
+                      className="input input-bordered input-xs w-20"
+                      autoFocus
+                    />
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setEditingPnlId(account.id);
+                        setPnlEditValue(account.default_pnl != null ? String(account.default_pnl) : "");
+                      }}
+                      className={`flex items-center gap-1 text-[11px] font-semibold rounded-lg px-2 py-1 transition-colors shrink-0 cursor-pointer ${account.default_pnl != null ? "text-slate-500 border border-slate-200 hover:text-indigo-600 hover:border-indigo-300" : "text-indigo-500 border border-dashed border-indigo-300 hover:bg-indigo-50"}`}
+                      title="Set default P&L"
+                    >
+                      {account.default_pnl != null
+                        ? `${account.default_pnl}${account.pnl_unit === "R" ? "R" : "$"}`
+                        : "SET P&L"}
+                      <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                  )}
+
+                  <div className="w-px h-4 bg-slate-200 shrink-0" />
+
+                  {/* Default badge / Set default */}
+                  {account.is_default ? (
+                    <span className="text-[10px] font-bold tracking-wider uppercase text-slate-500 border border-slate-300 rounded-lg px-2 py-1 shrink-0">
+                      Default
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleSetDefault(account.id)}
+                      className="flex items-center gap-1 text-[9px] font-bold tracking-wider uppercase text-indigo-400 hover:text-indigo-600 border border-dashed border-indigo-200 hover:border-indigo-400 rounded-lg px-2 py-1 leading-tight shrink-0 transition-colors hover:bg-indigo-50 cursor-pointer"
+                      title="Set as default"
+                    >
+                      SET DEFAULT
+                      <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                       </svg>
                     </button>
                   )}
                 </div>
 
-                {/* P&L UNIT label + badge */}
-                <div className="flex items-center gap-1 shrink-0">
-                  <span className="text-[9px] font-bold tracking-wider uppercase text-slate-400">P&L UNIT</span>
-                  <PnlUnitBadge unit={account.pnl_unit} />
-                </div>
-
-                {/* Divider */}
-                <div className="w-px h-5 bg-slate-200 shrink-0" />
-
-                {/* Daily limit inline editor */}
-                {editingLimitId === account.id ? (
-                  <input
-                    type="number"
-                    min={1}
-                    step={1}
-                    value={limitEditValue}
-                    onChange={(e) => setLimitEditValue(e.target.value)}
-                    onBlur={() => handleSaveAccountLimit(account.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSaveAccountLimit(account.id);
-                      if (e.key === "Escape") setEditingLimitId(null);
-                    }}
-                    placeholder="e.g. 3"
-                    className="input input-bordered input-xs w-16"
-                    autoFocus
-                  />
-                ) : (
-                  <button
-                    onClick={() => {
-                      setEditingLimitId(account.id);
-                      setLimitEditValue(account.daily_trade_limit != null ? String(account.daily_trade_limit) : "");
-                    }}
-                    className={`flex items-center gap-1 text-[11px] font-semibold rounded-lg px-2 py-1 transition-colors shrink-0 cursor-pointer ${account.daily_trade_limit != null ? "text-slate-500 border border-slate-200 hover:text-indigo-600 hover:border-indigo-300" : "text-indigo-500 border border-dashed border-indigo-300 hover:bg-indigo-50"}`}
-                    title="Set daily trade limit"
-                  >
-                    {account.daily_trade_limit != null ? `${account.daily_trade_limit}/DAY` : "SET LIMIT"}
-                    <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
-                )}
-
-                {/* Divider */}
-                <div className="w-px h-5 bg-slate-200 shrink-0" />
-
-                {/* Default P&L inline editor */}
-                {editingPnlId === account.id ? (
-                  <input
-                    type="number"
-                    step="any"
-                    value={pnlEditValue}
-                    onChange={(e) => setPnlEditValue(e.target.value)}
-                    onBlur={() => handleSaveDefaultPnl(account.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSaveDefaultPnl(account.id);
-                      if (e.key === "Escape") setEditingPnlId(null);
-                    }}
-                    placeholder={`e.g. 1.3`}
-                    className="input input-bordered input-xs w-20"
-                    autoFocus
-                  />
-                ) : (
-                  <button
-                    onClick={() => {
-                      setEditingPnlId(account.id);
-                      setPnlEditValue(account.default_pnl != null ? String(account.default_pnl) : "");
-                    }}
-                    className={`flex items-center gap-1 text-[11px] font-semibold rounded-lg px-2 py-1 transition-colors shrink-0 cursor-pointer ${account.default_pnl != null ? "text-slate-500 border border-slate-200 hover:text-indigo-600 hover:border-indigo-300" : "text-indigo-500 border border-dashed border-indigo-300 hover:bg-indigo-50"}`}
-                    title="Set default P&L"
-                  >
-                    {account.default_pnl != null
-                      ? `${account.default_pnl}${account.pnl_unit === "R" ? "R" : "$"}`
-                      : "SET P&L"}
-                    <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
-                )}
-
-                {/* Divider */}
-                <div className="w-px h-5 bg-slate-200 shrink-0" />
-
-                {/* Default badge / Set default button */}
-                {account.is_default ? (
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-slate-500 border border-slate-300 rounded-lg px-2 py-1 shrink-0">
-                    Default
-                  </span>
-                ) : (
-                  <button
-                    onClick={() => handleSetDefault(account.id)}
-                    className="flex items-center gap-1 text-[9px] font-bold tracking-wider uppercase text-indigo-400 hover:text-indigo-600 border border-dashed border-indigo-200 hover:border-indigo-400 rounded-lg px-2 py-1 text-center leading-tight shrink-0 transition-colors hover:bg-indigo-50 cursor-pointer"
-                    title="Set as default"
-                  >
-                    SET DEFAULT
-                    <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
-                )}
-
-                {/* Delete */}
-                {!account.is_default && (
-                  confirmDeleteId === account.id ? (
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => handleDelete(account.id)}
-                        disabled={deletingId === account.id}
-                        className="btn btn-xs btn-error"
-                      >
-                        {deletingId === account.id ? <span className="loading loading-spinner loading-xs" /> : "Delete"}
-                      </button>
-                      <button onClick={() => setConfirmDeleteId(null)} className="btn btn-xs btn-ghost">
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setConfirmDeleteId(account.id)}
-                      className="text-red-300 hover:text-red-500 transition-colors shrink-0 cursor-pointer"
-                      aria-label={`Delete ${account.name}`}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  )
-                )}
               </div>
             ))}
 
