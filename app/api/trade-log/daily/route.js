@@ -80,7 +80,7 @@ export async function GET(request) {
 
     // Compute P&L total (null if all null)
     const pnlValues = flatTrades.map((t) => t.pnl).filter((v) => v !== null);
-    const pnlTotal = pnlValues.length > 0 ? pnlValues.reduce((a, b) => a + b, 0) : null;
+    const pnlTotal = pnlValues.length > 0 ? Math.round(pnlValues.reduce((a, b) => a + b, 0) * 1e10) / 1e10 : null;
 
     // pnl_unit only when exactly 1 account_id provided (already fetched above if so)
     let pnlUnit = null;

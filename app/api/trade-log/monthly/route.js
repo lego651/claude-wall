@@ -108,7 +108,7 @@ export async function GET(request) {
     for (const [d, { trade_count, pnlValues }] of Object.entries(dayMap)) {
       days[d] = {
         trade_count,
-        pnl: pnlValues.length > 0 ? pnlValues.reduce((a, b) => a + b, 0) : null,
+        pnl: pnlValues.length > 0 ? Math.round(pnlValues.reduce((a, b) => a + b, 0) * 1e10) / 1e10 : null,
       };
     }
 
@@ -126,7 +126,7 @@ export async function GET(request) {
 
     // Monthly total
     const allPnl = Object.values(days).map((d) => d.pnl).filter((v) => v !== null);
-    const monthlyPnl = allPnl.length > 0 ? allPnl.reduce((a, b) => a + b, 0) : null;
+    const monthlyPnl = allPnl.length > 0 ? Math.round(allPnl.reduce((a, b) => a + b, 0) * 1e10) / 1e10 : null;
 
     return NextResponse.json({
       month,
