@@ -69,7 +69,7 @@ function AccountFilterBar({ accounts, selectedIds, onToggle, onSelectAll }) {
         {/* All Accounts pill — solid indigo when all selected */}
         <button
           onClick={onSelectAll}
-          className={`px-5 py-2 rounded-full text-sm font-bold border transition-all ${
+          className={`px-5 py-2 rounded-full text-sm font-bold border transition-all cursor-pointer ${
             allSelected
               ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
               : "bg-white border-slate-300 text-slate-600 hover:border-slate-400"
@@ -86,7 +86,7 @@ function AccountFilterBar({ accounts, selectedIds, onToggle, onSelectAll }) {
             <button
               key={acct.id}
               onClick={() => onToggle(acct.id)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all flex items-center gap-2 cursor-pointer ${
                 isActive
                   ? "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
                   : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
@@ -370,10 +370,13 @@ export default function LogsPageClient() {
       )}
 
       {/* FAB */}
-      <TradeLogFAB onTradeLogged={() => {
-        fetchDaily(selectedDate, selectedIds);
-        fetchMonthly(viewMonth, selectedIds);
-      }} />
+      <TradeLogFAB
+        onTradeLogged={() => {
+          fetchDaily(selectedDate, selectedIds);
+          fetchMonthly(viewMonth, selectedIds);
+        }}
+        preselectedAccountId={selectedIds.size === 1 ? [...selectedIds][0] : null}
+      />
     </PropProofLayout>
   );
 }
