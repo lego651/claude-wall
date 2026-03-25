@@ -30,7 +30,7 @@ export default function TradeLogFAB({ onTradeLogged }) {
       <button
         data-fab
         onClick={handleClick}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-3 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold text-base px-6 py-3.5 rounded-full shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-3 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold text-base px-6 py-3.5 rounded-full shadow-xl hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
         aria-label="Log a trade"
       >
         <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
