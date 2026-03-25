@@ -82,19 +82,19 @@ const RESULT_STATUSES = [
     key: "TP",
     label: "TP",
     active:   "text-white bg-green-500",
-    inactive: "text-green-600 bg-green-100 hover:bg-green-200",
+    inactive: "text-slate-400 bg-slate-100 hover:text-green-600 hover:bg-green-50",
   },
   {
     key: "BE",
     label: "BE",
     active:   "text-white bg-slate-500",
-    inactive: "text-slate-600 bg-slate-100 hover:bg-slate-200",
+    inactive: "text-slate-400 bg-slate-100 hover:text-slate-600 hover:bg-slate-200",
   },
   {
     key: "SL",
     label: "SL",
     active:   "text-white bg-red-500",
-    inactive: "text-red-600 bg-red-100 hover:bg-red-200",
+    inactive: "text-slate-400 bg-slate-100 hover:text-red-500 hover:bg-red-50",
   },
 ];
 
@@ -258,8 +258,11 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
       {/* Footer */}
       <div className="flex items-center px-4 py-3 border-t border-slate-100 gap-2">
 
-        {/* Left: TP / BE / SL pills */}
-        <div className="flex items-center gap-1">
+        {/* Left: result status — flag icon + TP / BE / SL pills */}
+        <div className="flex items-center gap-1.5">
+          <svg className="w-3 h-3 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21V4m0 0l9-1 9 1v11l-9-1-9 1V4z" />
+          </svg>
           {RESULT_STATUSES.map(({ key, label, active, inactive }) => {
             const isActive = getResultStatus(trade.pnl, trade.risk_reward) === key;
             return (
