@@ -270,7 +270,7 @@ export default function TradeLogModal({ onClose, onSaved }) {
       {/* Modal — full drop zone */}
       <div
         ref={modalRef}
-        className="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh] z-10"
+        className="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[80dvh] sm:max-h-[90vh] z-10"
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
