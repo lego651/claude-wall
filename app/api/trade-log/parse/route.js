@@ -84,6 +84,16 @@ export async function POST(request) {
       parsed.type = 'new_trade';
     }
 
+    // Sanity-check SL/TP direction against entry — null out values that are logically impossible
+    if (parsed.type === 'new_trade' && parsed.entry_price && parsed.stop_loss && parsed.take_profit) {
+      const isBuy = parsed.direction === 'buy';
+      const isSell = parsed.direction === 'sell';
+      if (isBuy && parsed.stop_loss >= parsed.entry_price) parsed.stop_loss = null;
+      if (isBuy && parsed.take_profit <= parsed.entry_price) parsed.take_profit = null;
+      if (isSell && parsed.stop_loss <= parsed.entry_price) parsed.stop_loss = null;
+      if (isSell && parsed.take_profit >= parsed.entry_price) parsed.take_profit = null;
+    }
+
     // Auto-calculate risk_reward if missing but SL and TP are present (new_trade only)
     if (
       parsed.type === 'new_trade' &&
