@@ -354,7 +354,7 @@ export default function TradeLogModal({ onClose, onSaved }) {
           <Link
             href="/user/settings/trading"
             onClick={onClose}
-            className="text-[11px] text-gray-400 hover:text-indigo-500 transition-colors"
+            className="text-[11px] text-indigo-500 hover:text-indigo-700 underline transition-colors"
           >
             Set default account &amp; P&L in Trading Settings →
           </Link>
