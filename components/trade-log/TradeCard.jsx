@@ -106,7 +106,7 @@ export default function TradeCard({ trade, onSave, userTimezone, initialChartIma
     } else {
       setFields((prev) => {
         const next = { ...prev, [key]: value === "" ? null : value };
-        if (key === "entry_price") {
+        if (["entry_price", "stop_loss", "take_profit"].includes(key)) {
           const rr = calcRR(next.entry_price, next.stop_loss, next.take_profit);
           if (rr !== null) next.risk_reward = rr;
         }
