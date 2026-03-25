@@ -81,20 +81,20 @@ const RESULT_STATUSES = [
   {
     key: "TP",
     label: "TP",
-    active:   "text-green-700 border-green-400 bg-green-100",
-    inactive: "text-green-500 border-green-300 bg-white hover:bg-green-50",
+    active:   "text-white bg-green-500",
+    inactive: "text-green-600 bg-green-100 hover:bg-green-200",
   },
   {
     key: "BE",
     label: "BE",
-    active:   "text-slate-700 border-slate-400 bg-slate-100",
-    inactive: "text-slate-500 border-slate-300 bg-white hover:bg-slate-50",
+    active:   "text-white bg-slate-500",
+    inactive: "text-slate-600 bg-slate-100 hover:bg-slate-200",
   },
   {
     key: "SL",
     label: "SL",
-    active:   "text-red-600 border-red-400 bg-red-100",
-    inactive: "text-red-400 border-red-300 bg-white hover:bg-red-50",
+    active:   "text-white bg-red-500",
+    inactive: "text-red-600 bg-red-100 hover:bg-red-200",
   },
 ];
 
@@ -256,8 +256,9 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center gap-3 px-4 py-3 border-t border-slate-100">
-        {/* Quick result status pills */}
+      <div className="flex items-center px-4 py-3 border-t border-slate-100 gap-2">
+
+        {/* Left: TP / BE / SL pills */}
         <div className="flex items-center gap-1">
           {RESULT_STATUSES.map(({ key, label, active, inactive }) => {
             const isActive = getResultStatus(trade.pnl, trade.risk_reward) === key;
@@ -266,7 +267,7 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
                 key={key}
                 onClick={() => handleSetStatus(key)}
                 disabled={updatingStatus}
-                className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-all cursor-pointer disabled:opacity-40 ${isActive ? active : inactive}`}
+                className={`text-[10px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer disabled:opacity-40 ${isActive ? active : inactive}`}
               >
                 {label}
               </button>
@@ -274,74 +275,74 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
           })}
         </div>
 
-        <div className="w-px h-3.5 bg-slate-200 shrink-0" />
+        {/* Middle: time + timezone */}
+        <div className="flex-1 flex items-center justify-center gap-1">
+          {time && (
+            <>
+              <div className="w-px h-3 bg-slate-200 shrink-0" />
+              <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-slate-400">
+                {time}
+                <Link
+                  href="/user/settings/trading"
+                  className="inline-flex items-center gap-0.5 hover:text-indigo-500 transition-colors cursor-pointer"
+                  title="Update preferred timezone in Trading Settings"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {tzLabel}
+                </Link>
+              </span>
+              <div className="w-px h-3 bg-slate-200 shrink-0" />
+            </>
+          )}
+        </div>
 
-        <button
-          onClick={() => setEditOpen(true)}
-          className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-          </svg>
-          EDIT
-        </button>
-
-        {confirmDelete ? (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500">Delete?</span>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer"
-            >
-              {deleting ? "…" : "YES"}
-            </button>
-            <button
-              onClick={() => setConfirmDelete(false)}
-              className="text-xs font-bold text-slate-400 hover:text-slate-600 cursor-pointer"
-            >
-              NO
-            </button>
-          </div>
-        ) : (
+        {/* Right: chart link + edit + delete */}
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setConfirmDelete(true)}
-            className="text-red-400 hover:text-red-600 transition-colors cursor-pointer"
-            aria-label="Delete trade"
+            onClick={() => trade.chart_url && window.open(trade.chart_url, "_blank", "noopener,noreferrer")}
+            className={`transition-colors cursor-pointer ${trade.chart_url ? "text-slate-400 hover:text-slate-600" : "text-slate-200"}`}
+            aria-label="Open TradingView chart"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
           </button>
-        )}
 
-        <div className="flex-1" />
+          <button
+            onClick={() => setEditOpen(true)}
+            className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            EDIT
+          </button>
 
-        {time && (
-          <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-slate-400">
-            {time}
-            <Link
-              href="/user/settings/trading"
-              className="inline-flex items-center gap-0.5 hover:text-indigo-500 transition-colors cursor-pointer"
-              title="Update preferred timezone in Trading Settings"
+          {confirmDelete ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-slate-500">Delete?</span>
+              <button onClick={handleDelete} disabled={deleting} className="text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer">
+                {deleting ? "…" : "YES"}
+              </button>
+              <button onClick={() => setConfirmDelete(false)} className="text-xs font-bold text-slate-400 hover:text-slate-600 cursor-pointer">
+                NO
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="text-red-400 hover:text-red-600 transition-colors cursor-pointer"
+              aria-label="Delete trade"
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-              {tzLabel}
-            </Link>
-          </span>
-        )}
+            </button>
+          )}
+        </div>
 
-        <button
-          onClick={() => trade.chart_url && window.open(trade.chart_url, "_blank", "noopener,noreferrer")}
-          className={`ml-3 transition-colors cursor-pointer ${trade.chart_url ? "text-slate-400 hover:text-slate-600" : "text-slate-200"}`}
-          aria-label="Open TradingView chart"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
-        </button>
       </div>
 
       {editOpen && (
