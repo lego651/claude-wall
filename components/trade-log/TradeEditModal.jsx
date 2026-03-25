@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { utcToLocalInputValue, localInputValueToUtc, formatTimezoneLabel, getBrowserTimezone } from "@/lib/timezone";
 
 const INPUT = "w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400";
 const LABEL = "block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5";
@@ -13,20 +15,44 @@ export default function TradeEditModal({ trade, accounts, onSave, onClose }) {
   const [takeProfit, setTakeProfit] = useState(trade.take_profit != null ? String(trade.take_profit) : "");
   const [lots, setLots] = useState(trade.lots != null ? String(trade.lots) : "");
   const [rr, setRr] = useState(trade.risk_reward != null ? String(trade.risk_reward) : "");
-  const [tradeAt, setTradeAt] = useState(trade.trade_at ? trade.trade_at.substring(0, 16) : "");
+  const [tradeAt, setTradeAt] = useState(""); // local timezone value for the input
   const [accountId, setAccountId] = useState(trade.account_id || "");
   const [pnlInput, setPnlInput] = useState(trade.pnl != null ? String(trade.pnl) : "");
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [userTimezone, setUserTimezone] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/user-settings/trading")
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data) => {
+        const tz = data.preferred_timezone || getBrowserTimezone();
+        setUserTimezone(tz);
+        if (trade.trade_at) {
+          setTradeAt(utcToLocalInputValue(trade.trade_at, tz));
+        }
+      })
+      .catch(() => {
+        const tz = getBrowserTimezone();
+        setUserTimezone(tz);
+        if (trade.trade_at) {
+          setTradeAt(utcToLocalInputValue(trade.trade_at, tz));
+        }
+      });
+  }, [trade.trade_at]);
 
   const selectedAccount = accounts.find((a) => a.id === accountId);
   const pnlUnit = selectedAccount?.pnl_unit || null;
+  const tz = userTimezone || getBrowserTimezone();
+  const tzLabel = formatTimezoneLabel(tz);
 
   async function handleSave() {
     if (!symbol.trim()) { setError("Symbol is required"); return; }
     setSaving(true);
     setError("");
+
+    const utcTradeAt = tradeAt ? localInputValueToUtc(tradeAt, tz) : null;
 
     const body = {
       symbol: symbol.trim(),
@@ -36,7 +62,7 @@ export default function TradeEditModal({ trade, accounts, onSave, onClose }) {
       take_profit: takeProfit !== "" ? parseFloat(takeProfit) : null,
       lots: lots !== "" ? parseFloat(lots) : null,
       risk_reward: rr !== "" ? parseFloat(rr) : null,
-      trade_at: tradeAt ? `${tradeAt}:00Z` : null,
+      trade_at: utcTradeAt,
       account_id: accountId || null,
       pnl: pnlInput !== "" ? parseFloat(pnlInput) : null,
     };
@@ -155,7 +181,18 @@ export default function TradeEditModal({ trade, accounts, onSave, onClose }) {
 
           {/* Trade Date & Time */}
           <div>
-            <label className={LABEL}>Trade Date &amp; Time (UTC)</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className={LABEL + " mb-0"}>
+                Trade Date &amp; Time ({tzLabel})
+              </label>
+              <Link
+                href="/user/settings/trading"
+                onClick={onClose}
+                className="text-[10px] text-indigo-400 hover:text-indigo-600 transition-colors"
+              >
+                Change timezone →
+              </Link>
+            </div>
             <input
               type="datetime-local"
               value={tradeAt}

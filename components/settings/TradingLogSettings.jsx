@@ -2,6 +2,89 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { formatTimezoneLabel, getBrowserTimezone } from "@/lib/timezone";
+
+const COMMON_TIMEZONES = [
+  // UTC
+  'UTC',
+  // UTC-12
+  'Etc/GMT+12',           // UTC-12 (no DST)
+  // UTC-11
+  'Pacific/Midway',       // Midway
+  'Pacific/Pago_Pago',    // Pago Pago
+  // UTC-10
+  'Pacific/Honolulu',     // Honolulu (no DST)
+  'Pacific/Tahiti',       // Tahiti (no DST)
+  // UTC-9  (Gambier is permanent UTC-9; Anchorage is UTC-9 in winter / UTC-8 in summer)
+  'Pacific/Gambier',      // Gambier Islands (always UTC-9)
+  'America/Anchorage',    // Anchorage
+  // UTC-8
+  'America/Los_Angeles',  // Los Angeles
+  'America/Vancouver',    // Vancouver
+  // UTC-7
+  'America/Phoenix',      // Phoenix (no DST, always UTC-7)
+  'America/Denver',       // Denver
+  // UTC-6
+  'America/Mexico_City',  // Mexico City (no DST since 2022, always UTC-6)
+  'America/Chicago',      // Chicago
+  // UTC-5
+  'America/New_York',     // New York
+  'America/Toronto',      // Toronto
+  // UTC-4  (Caracas & La Paz have no DST — permanently UTC-4)
+  'America/Caracas',      // Caracas (no DST)
+  'America/La_Paz',       // La Paz (no DST)
+  // UTC-3
+  'America/Sao_Paulo',    // Sao Paulo
+  'America/Argentina/Buenos_Aires', // Buenos Aires (no DST)
+  // UTC-2
+  'America/Noronha',      // Noronha (no DST)
+  // UTC-1
+  'Atlantic/Cape_Verde',  // Cape Verde (no DST, always UTC-1)
+  'Atlantic/Azores',      // Azores (UTC-1 / UTC+0 in summer)
+  // UTC
+  'Atlantic/Reykjavik',   // Reykjavik (no DST, always UTC)
+  'Europe/London',        // London (UTC / UTC+1 in summer)
+  // UTC+1
+  'Europe/Paris',         // Paris
+  'Europe/Berlin',        // Berlin
+  // UTC+2
+  'Africa/Cairo',         // Cairo (no DST, always UTC+2)
+  'Europe/Athens',        // Athens (UTC+2 / UTC+3 in summer)
+  // UTC+3
+  'Europe/Moscow',        // Moscow (no DST)
+  'Asia/Riyadh',          // Riyadh (no DST)
+  // UTC+4
+  'Asia/Dubai',           // Dubai (no DST)
+  'Asia/Baku',            // Baku
+  // UTC+5
+  'Asia/Karachi',         // Karachi (no DST)
+  'Asia/Tashkent',        // Tashkent (no DST)
+  'Asia/Almaty',          // Almaty (no DST, moved to UTC+5 in 2024)
+  // UTC+6
+  'Asia/Dhaka',           // Dhaka (no DST)
+  'Asia/Bishkek',         // Bishkek (no DST)
+  // UTC+7
+  'Asia/Bangkok',         // Bangkok (no DST)
+  'Asia/Ho_Chi_Minh',     // Ho Chi Minh (no DST)
+  // UTC+8
+  'Asia/Singapore',       // Singapore (no DST)
+  'Asia/Shanghai',        // Shanghai (no DST)
+  // UTC+9
+  'Asia/Tokyo',           // Tokyo (no DST)
+  'Asia/Seoul',           // Seoul (no DST)
+  // UTC+10
+  'Australia/Brisbane',   // Brisbane (no DST, always UTC+10)
+  'Australia/Sydney',     // Sydney (UTC+10 / UTC+11 in summer)
+  // UTC+11
+  'Pacific/Noumea',       // Noumea (no DST)
+  'Pacific/Guadalcanal',  // Guadalcanal (no DST)
+  // UTC+12
+  'Pacific/Fiji',         // Fiji (no DST since 2022, always UTC+12)
+  'Pacific/Auckland',     // Auckland (UTC+12 / UTC+13 in summer)
+  // UTC+13
+  'Pacific/Apia',         // Apia
+  'Pacific/Tongatapu',    // Tongatapu (no DST)
+];
 
 function PnlUnitBadge({ unit }) {
   return (
@@ -14,6 +97,11 @@ function PnlUnitBadge({ unit }) {
 export default function TradingLogSettings() {
   const [accounts, setAccounts] = useState([]);
   const [loadingAccounts, setLoadingAccounts] = useState(true);
+
+  // Timezone preference
+  const [preferredTimezone, setPreferredTimezone] = useState(null);
+  const [loadingTz, setLoadingTz] = useState(true);
+  const [savingTz, setSavingTz] = useState(false);
 
   // New account form
   const [newName, setNewName] = useState("");
@@ -38,6 +126,11 @@ export default function TradingLogSettings() {
 
   useEffect(() => {
     fetchAccounts();
+    fetch('/api/user-settings/trading')
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data) => setPreferredTimezone(data.preferred_timezone || null))
+      .catch(() => {})
+      .finally(() => setLoadingTz(false));
   }, []);
 
   async function fetchAccounts() {
@@ -184,6 +277,31 @@ export default function TradingLogSettings() {
     }
   }
 
+  async function handleSaveTimezone(tz) {
+    setSavingTz(true);
+    try {
+      const res = await fetch('/api/user-settings/trading', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferred_timezone: tz }),
+      });
+      if (!res.ok) throw new Error();
+      setPreferredTimezone(tz);
+      toast.success('Timezone saved');
+    } catch {
+      toast.error('Failed to save timezone');
+    } finally {
+      setSavingTz(false);
+    }
+  }
+
+  // Determine the timezone options, ensuring the user's browser tz is always present
+  const browserTz = getBrowserTimezone();
+  const effectiveTz = preferredTimezone || browserTz;
+  const tzOptions = COMMON_TIMEZONES.includes(effectiveTz)
+    ? COMMON_TIMEZONES
+    : [effectiveTz, ...COMMON_TIMEZONES];
+
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
       <div className="flex items-center gap-2 mb-6">
@@ -191,6 +309,38 @@ export default function TradingLogSettings() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
         <h2 className="text-xl font-bold">Trading Log</h2>
+      </div>
+
+      {/* Timezone Preference */}
+      <div className="mb-8">
+        <h3 className="text-sm font-semibold text-gray-700 mb-1">Trade Timezone</h3>
+        <p className="text-xs text-gray-400 mb-3">
+          All trade date &amp; time fields are displayed in this timezone. Trade history on the calendar uses UTC dates.
+        </p>
+        {loadingTz ? (
+          <div className="h-10 bg-gray-100 rounded-xl animate-pulse w-72" />
+        ) : (
+          <div className="flex items-center gap-3">
+            <select
+              value={effectiveTz}
+              onChange={(e) => handleSaveTimezone(e.target.value)}
+              disabled={savingTz}
+              className="select select-bordered select-sm text-sm"
+            >
+              {tzOptions.map((tz) => (
+                <option key={tz} value={tz}>
+                  {formatTimezoneLabel(tz)}
+                </option>
+              ))}
+            </select>
+            {savingTz && <span className="loading loading-spinner loading-xs text-gray-400" />}
+            {!preferredTimezone && (
+              <span className="text-xs text-gray-400">
+                (auto-detected from browser)
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Trade Accounts */}

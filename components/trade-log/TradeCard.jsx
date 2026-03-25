@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { utcToLocalInputValue, localInputValueToUtc, getBrowserTimezone } from "@/lib/timezone";
 
 const FIELD_LABELS = {
   symbol: "Symbol",
@@ -14,11 +15,20 @@ const FIELD_LABELS = {
   notes: "Notes",
 };
 
-function formatValue(key, value) {
+function formatValue(key, value, userTimezone) {
   if (value === null || value === undefined || value === "") return "—";
   if (key === "trade_at") {
     try {
-      return new Date(value).toLocaleString();
+      const tz = userTimezone || getBrowserTimezone();
+      return new Date(value).toLocaleString("en-US", {
+        timeZone: tz,
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
     } catch {
       return value;
     }
@@ -28,14 +38,27 @@ function formatValue(key, value) {
   return String(value);
 }
 
-export default function TradeCard({ trade, onSave }) {
+export default function TradeCard({ trade, onSave, userTimezone }) {
+  const tz = userTimezone || getBrowserTimezone();
+
   const [mode, setMode] = useState("view"); // "view" | "editing" | "saved"
   const [fields, setFields] = useState({ ...trade });
+  // Separate local-timezone representation for the datetime-local input
+  const [localTradeAt, setLocalTradeAt] = useState(() =>
+    trade.trade_at ? utcToLocalInputValue(trade.trade_at, tz) : ""
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
   function handleFieldChange(key, value) {
-    setFields((prev) => ({ ...prev, [key]: value === "" ? null : value }));
+    if (key === "trade_at") {
+      // value here is the local datetime-local input value ("YYYY-MM-DDTHH:mm")
+      setLocalTradeAt(value);
+      const utcIso = value ? localInputValueToUtc(value, tz) : null;
+      setFields((prev) => ({ ...prev, trade_at: utcIso }));
+    } else {
+      setFields((prev) => ({ ...prev, [key]: value === "" ? null : value }));
+    }
   }
 
   async function handleSave() {
@@ -104,7 +127,7 @@ export default function TradeCard({ trade, onSave }) {
             .map(([key, label]) => (
               <div key={key}>
                 <div className="text-gray-400 text-[10px] font-semibold uppercase tracking-wider">{label}</div>
-                <div className="text-gray-800 font-medium">{formatValue(key, fields[key])}</div>
+                <div className="text-gray-800 font-medium">{formatValue(key, fields[key], tz)}</div>
               </div>
             ))}
         </div>
@@ -138,9 +161,16 @@ export default function TradeCard({ trade, onSave }) {
                           rows={2}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:border-indigo-400 resize-none"
                         />
+                      ) : key === "trade_at" ? (
+                        <input
+                          type="datetime-local"
+                          value={localTradeAt}
+                          onChange={(e) => handleFieldChange("trade_at", e.target.value)}
+                          className="w-full border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:border-indigo-400"
+                        />
                       ) : (
                         <input
-                          type={key === "trade_at" ? "datetime-local" : "text"}
+                          type="text"
                           value={fields[key] ?? ""}
                           onChange={(e) => handleFieldChange(key, e.target.value)}
                           className="w-full border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:border-indigo-400"

@@ -12,12 +12,13 @@ export async function GET() {
   try {
     const { data } = await supabase
       .from('user_trading_settings')
-      .select('daily_trade_limit')
+      .select('daily_trade_limit, preferred_timezone')
       .eq('user_id', user.id)
       .single();
 
     return NextResponse.json({
       daily_trade_limit: data?.daily_trade_limit ?? DEFAULT_DAILY_LIMIT,
+      preferred_timezone: data?.preferred_timezone ?? null,
     });
   } catch (err) {
     console.error('[user-settings/trading] GET unexpected:', err);
@@ -38,27 +39,37 @@ export async function PATCH(request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { daily_trade_limit } = body;
+  const { daily_trade_limit, preferred_timezone } = body;
+  const hasLimit = daily_trade_limit !== undefined;
+  const hasTz = preferred_timezone !== undefined;
 
-  if (
-    daily_trade_limit === undefined ||
-    !Number.isInteger(daily_trade_limit) ||
-    daily_trade_limit < 1
-  ) {
+  if (!hasLimit && !hasTz) {
+    return NextResponse.json({ error: 'No valid fields provided' }, { status: 400 });
+  }
+
+  if (hasLimit && (!Number.isInteger(daily_trade_limit) || daily_trade_limit < 1)) {
     return NextResponse.json(
       { error: 'daily_trade_limit must be an integer >= 1' },
       { status: 400 }
     );
   }
 
+  if (hasTz && (typeof preferred_timezone !== 'string' || !preferred_timezone.trim())) {
+    return NextResponse.json(
+      { error: 'preferred_timezone must be a non-empty string' },
+      { status: 400 }
+    );
+  }
+
+  const upsertData = { user_id: user.id, updated_at: new Date().toISOString() };
+  if (hasLimit) upsertData.daily_trade_limit = daily_trade_limit;
+  if (hasTz) upsertData.preferred_timezone = preferred_timezone.trim();
+
   try {
     const { data, error } = await supabase
       .from('user_trading_settings')
-      .upsert(
-        { user_id: user.id, daily_trade_limit, updated_at: new Date().toISOString() },
-        { onConflict: 'user_id' }
-      )
-      .select('daily_trade_limit')
+      .upsert(upsertData, { onConflict: 'user_id' })
+      .select('daily_trade_limit, preferred_timezone')
       .single();
 
     if (error) {
@@ -66,7 +77,10 @@ export async function PATCH(request) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
 
-    return NextResponse.json({ daily_trade_limit: data.daily_trade_limit });
+    return NextResponse.json({
+      daily_trade_limit: data.daily_trade_limit ?? DEFAULT_DAILY_LIMIT,
+      preferred_timezone: data.preferred_timezone ?? null,
+    });
   } catch (err) {
     console.error('[user-settings/trading] PATCH unexpected:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -28,6 +28,7 @@ export default function TradeLogModal({ onClose, onSaved }) {
   // Account picker
   const [accounts, setAccounts] = useState([]);
   const [selectedAccountId, setSelectedAccountId] = useState(null);
+  const [userTimezone, setUserTimezone] = useState(null);
   const selectedAccount = accounts.find((a) => a.id === selectedAccountId) || null;
   const pnlUnit = selectedAccount?.pnl_unit || null;
 
@@ -55,6 +56,13 @@ export default function TradeLogModal({ onClose, onSaved }) {
           setSelectedAccountId(def.id);
           if (def.default_pnl != null) setPnlInput(String(def.default_pnl));
         }
+      })
+      .catch(() => {});
+
+    fetch("/api/user-settings/trading")
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data) => {
+        if (data.preferred_timezone) setUserTimezone(data.preferred_timezone);
       })
       .catch(() => {});
   }, []);
@@ -403,7 +411,7 @@ export default function TradeLogModal({ onClose, onSaved }) {
             if (msg.type === "trade_card") {
               return (
                 <div key={i} className="flex justify-start">
-                  <TradeCard trade={msg.trade} accountId={selectedAccountId} pnlUnit={pnlUnit} onSave={onSaved} />
+                  <TradeCard trade={msg.trade} accountId={selectedAccountId} pnlUnit={pnlUnit} onSave={onSaved} userTimezone={userTimezone} />
                 </div>
               );
             }
