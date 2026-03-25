@@ -3,6 +3,17 @@
 import { useState, useRef, useEffect } from "react";
 import { utcToLocalInputValue, localInputValueToUtc, getBrowserTimezone, formatTimezoneLabel } from "@/lib/timezone";
 
+function calcRR(entry, sl, tp) {
+  const e = parseFloat(entry);
+  const s = parseFloat(sl);
+  const t = parseFloat(tp);
+  if (isNaN(e) || isNaN(s) || isNaN(t)) return null;
+  const risk = Math.abs(e - s);
+  const reward = Math.abs(t - e);
+  if (risk === 0) return null;
+  return Math.round((reward / risk) * 100) / 100;
+}
+
 const FIELD_LABELS = {
   symbol: "Symbol",
   direction: "Direction",
@@ -42,7 +53,14 @@ export default function TradeCard({ trade, onSave, userTimezone, initialChartIma
   const tz = userTimezone || getBrowserTimezone();
 
   const [mode, setMode] = useState("view"); // "view" | "editing" | "saved"
-  const [fields, setFields] = useState({ ...trade });
+  const [fields, setFields] = useState(() => {
+    const f = { ...trade };
+    if (f.risk_reward == null) {
+      const rr = calcRR(f.entry_price, f.stop_loss, f.take_profit);
+      if (rr !== null) f.risk_reward = rr;
+    }
+    return f;
+  });
   const [localTradeAt, setLocalTradeAt] = useState(() =>
     trade.trade_at ? utcToLocalInputValue(trade.trade_at, tz) : ""
   );
@@ -86,7 +104,14 @@ export default function TradeCard({ trade, onSave, userTimezone, initialChartIma
       const utcIso = value ? localInputValueToUtc(value, tz) : null;
       setFields((prev) => ({ ...prev, trade_at: utcIso }));
     } else {
-      setFields((prev) => ({ ...prev, [key]: value === "" ? null : value }));
+      setFields((prev) => {
+        const next = { ...prev, [key]: value === "" ? null : value };
+        if (key === "entry_price") {
+          const rr = calcRR(next.entry_price, next.stop_loss, next.take_profit);
+          if (rr !== null) next.risk_reward = rr;
+        }
+        return next;
+      });
     }
   }
 
