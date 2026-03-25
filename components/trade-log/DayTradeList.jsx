@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import TradeEditModal from "./TradeEditModal";
 import { createClient } from "@/lib/supabase/client";
 import { getBrowserTimezone, formatTimezoneLabel } from "@/lib/timezone";
@@ -244,7 +245,19 @@ function TradeRow({ trade, accounts, onUpdated, onDeleted, userTimezone }) {
         <div className="flex-1" />
 
         {time && (
-          <span className="text-xs font-medium text-slate-400">{time} {tzLabel}</span>
+          <span className="text-xs font-medium text-slate-400">
+            {time}{" "}
+            <Link
+              href="/user/settings/trading"
+              className="inline-flex items-center gap-0.5 text-slate-400 hover:text-indigo-500 transition-colors cursor-pointer"
+              title="Update preferred timezone in Trading Settings"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {tzLabel}
+            </Link>
+          </span>
         )}
 
         <button
