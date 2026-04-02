@@ -7,7 +7,7 @@ export const syncTraderPayouts = inngest.createFunction(
     name: "Sync Trader Payouts (24h realtime)",
   },
   {
-    cron: "*/5 * * * *",
+    cron: "0 8 * * *",
   },
   async ({ step }) => {
     const result = await step.run("sync-all-traders-realtime", async () => {

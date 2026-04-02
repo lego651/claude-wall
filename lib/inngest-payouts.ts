@@ -8,8 +8,8 @@ export const syncPropFirmPayouts = inngest.createFunction(
     name: "Sync Prop Firm Payouts",
   },
   {
-    // Run every 5 minutes for more frequent updates
-    cron: "*/5 * * * *",
+    // Run once daily at 8am UTC to stay within Vercel free tier CPU limits
+    cron: "0 8 * * *",
   },
   async ({ step }) => {
     const result = await step.run("sync-all-firms", async () => {
